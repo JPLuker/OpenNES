@@ -1,25 +1,60 @@
 # OpenNES
 
-**OpenNES** is a work-in-progress, open-source NES/Famicom emulator for Android.
+**A dedicated, open-source NES emulator for Android — built around a premium touchscreen controller and a clean, mobile-first interface.**
 
-The goal is a dedicated NES experience: polished original NES-controller-inspired touchscreen layouts for **portrait and landscape**, a redesigned game library and settings experience, and integrated [RetroAchievements](https://retroachievements.org/).
+[Development roadmap](ROADMAP.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
 
-> **Early development status:** This repository is currently a fork of [Lemuroid](https://github.com/Swordfish90/Lemuroid). The user interface and multi-console code have **not yet** been replaced or removed. The initial engineering milestone is establishing a reliable Android build and OpenNES's own app identity. Please do not mistake the current fork for a released, NES-only emulator.
+> **Early development (0.1.0):** OpenNES is currently a fork of [Lemuroid](https://github.com/Swordfish90/Lemuroid). The initial debug APK **compiles and is uploaded by GitHub Actions**, but device testing, the full UI replacement, NES-only debloating, and RetroAchievements are **not complete**. The current build will still resemble Lemuroid and still includes other systems. Please do not treat it as a finished OpenNES release.
 
-## Product direction
+## What OpenNES is meant to be
 
-- **NES/Famicom only.** Keep the FCEUmm emulator core, remove other console emulators and unneeded assets/dependencies after baseline verification.
-- **Completely original OpenNES interface.** Replace Lemuroid's onboarding, library, game details, menus, settings, and in-game overlays.
-- **Premium touchscreen controls.** The classic NES gray/charcoal/red controller is the visual inspiration, with smooth tactile styling and no copied Pizza Boy artwork.
-- **Two layouts designed independently.** Portrait handheld and landscape split-controller modes; adjustable control sizes and positions for each orientation.
-- **RetroAchievements support.** Planned account integration, supported game identification, earned/locked achievements, discreet in-game notifications, and compliance-aware Hardcore handling.
-- **Local game files.** No commercial ROMs or copyrighted game art are bundled.
+The goal is the convenience and polish of a dedicated Android emulator, designed **specifically for NES/Famicom**, not a general-purpose emulation frontend.
 
-Read [ROADMAP.md](ROADMAP.md) for phased milestones and acceptance criteria.
+- **NES-inspired controller skin:** original, polished warm-gray, charcoal and deep-red tactile controls, with classic D-pad, A/B, Start and Select.
+- **Designed twice for phones:** portrait should feel like a dedicated handheld; landscape should frame a large game viewport with controls on both sides. Each orientation will have independent control positions, sizes and opacity.
+- **Entirely new UI:** game library, onboarding, game details, menus, settings, quick actions and achievement overlays will be redesigned under the OpenNES identity.
+- **RetroAchievements:** planned native sign-in, game identification, achievement tracking and notifications. Hardcore support will follow RetroAchievements' actual emulator-approval rules.
+- **Natively Android:** touchscreen play, external gamepads, local ROM folders, save data and convenient installation.
+- **Truly NES-only distribution:** remove unused emulator cores, non-NES system routes, files and packaged assets, not just hide other systems in the interface.
+- **Open source:** preserve applicable GPL and third-party notices. No commercial ROMs are included.
 
-## Build from source (development)
+The visual direction takes inspiration from Pizza Boy's level of polish, **not its copyrighted visual assets or source code**. All final OpenNES artwork and UI will be original.
 
-The project uses Kotlin, Gradle and Android SDK tooling, plus a Git submodule for emulator cores.
+## Development status
+
+| Milestone | Status |
+| --- | --- |
+| M0 — Own Android package/name and reproducible APK workflow | In progress; baseline APK assembled in CI |
+| M1 — Remove non-NES cores, assets and system selection | Not started |
+| M2 — Replace the complete Lemuroid user interface | Not started |
+| M3 — Premium NES portrait controller skin | Not started |
+| M4 — Dedicated landscape controller skin | Not started |
+| M5 — Gameplay, saves, input and performance polish | Not started |
+| M6 — RetroAchievements integration | Not started |
+| M7 — Production releases and maintenance | Not started |
+
+See the [full roadmap](ROADMAP.md) for sequencing and acceptance tests.
+
+### What works in the fork today?
+
+The inherited Lemuroid project provides a working Android emulation frontend, FCEUmm support, ROM scanning, gamepad/touch input and save-state infrastructure. **Those existing features have not all been validated in OpenNES on real hardware yet.** Current development is keeping this functionality intact while preparing the NES-only conversion.
+
+Currently retained from upstream: multi-console UI, multi-console emulation binaries, Lemuroid internal source package names, and Lemuroid launcher artwork. None of those are part of the planned final OpenNES experience.
+
+## Install a development APK
+
+1. Open [OpenNES GitHub Actions](https://github.com/JPLuker/OpenNES/actions) and select the latest successful **OpenNES Android CI** run for the development PR/branch.
+2. Open the **Artifacts** section and download `OpenNES-debug-apk` (GitHub sign-in may be required).
+3. Unzip the artifact and install `OpenNES-debug.apk` on your Android device. Allow APK installation for the app you're using to open it if Android prompts you.
+4. Import your own legally obtained NES ROM and test gameplay.
+
+This is a **debug test build**, not a GitHub Release or Play Store release. No ROMs or commercial game artwork are supplied. It has the application ID `com.jpluker.opennes.debug`, so it can install alongside upstream Lemuroid.
+
+**Important:** A CI run can be marked failed because of lint even if its earlier APK build and artifact upload succeeded. The updated workflow exposes **Build OpenNES debug APK** and **Kotlin lint** as separate jobs to distinguish those outcomes.
+
+## Build from source
+
+You need a working Android SDK, **JDK 17**, and Android/Gradle build tools. Clone recursively to include the emulator-core submodule:
 
 ```sh
 git clone --recurse-submodules https://github.com/JPLuker/OpenNES.git
@@ -27,27 +62,22 @@ cd OpenNES
 ./gradlew :lemuroid-app:assembleFreeBundleDebug
 ```
 
-The **free + bundle** development variant is intended to include open-source cores in the APK and avoid the Play Store dynamic-download path. An Android SDK, Java 17, and relevant native/build tools may be required. The installed APK package ID is `com.jpluker.opennes.debug` for debug builds; release is `com.jpluker.opennes`.
+The test APK is produced in `lemuroid-app/build/outputs/apk/freeBundle/debug/`. For local testing, use `adb install -r path/to/OpenNES-debug.apk` with the actual generated file path. On Windows, use `gradlew.bat` instead of `./gradlew`.
 
-When GitHub Actions succeeds, the **OpenNES Android CI** workflow uploads an `OpenNES-debug-apk` build artifact on pull requests and pushes to `master`. This is a test build, not a signed production release.
+For more details and troubleshooting, see [docs/BUILDING.md](docs/BUILDING.md). You can inspect which native emulator binaries are packaged with:
 
-## Current implementation status
+```sh
+python3 scripts/inspect-apk.py path/to/OpenNES-debug.apk
+```
 
-| Milestone | Status |
-|---|---|
-| M0 — Baseline build, identity, CI | In progress |
-| M1 — Remove non-NES systems and assets | Planned |
-| M2 — Replace entire UI | Planned |
-| M3 — Portrait controller | Planned |
-| M4 — Landscape controller | Planned |
-| M5 — Gameplay quality | Planned |
-| M6 — RetroAchievements | Planned |
-| M7 — Public release | Planned |
+Once NES-only cleanup is complete, this tool will also be used with `--nes-only` to reject non-NES libretro cores.
 
-The source packages and modules still include Lemuroid naming until planned refactoring is complete. Renaming every source package before the baseline build would increase avoidable migration risk.
+## Contributing and reporting bugs
 
-## Licensing and provenance
+Open a [GitHub issue](https://github.com/JPLuker/OpenNES/issues) with your Android version, device, emulator build/commit, reproduction steps and logs or screenshots when relevant. Do not upload copyrighted ROMs, RetroAchievements credentials, or other sensitive data. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-OpenNES is based on [Lemuroid](https://github.com/Swordfish90/Lemuroid), which is licensed under the **GNU General Public License v3.0**. The original project's `COPYING` license file and applicable code notices are retained. Included native components and other dependencies may have their own license and attribution requirements; these will be audited for distribution.
+## Licensing and acknowledgments
 
-OpenNES is not affiliated with Nintendo, Pizza Boy, Lemuroid's original maintainers, or RetroAchievements. ROMs are not provided.
+OpenNES is forked from [Lemuroid](https://github.com/Swordfish90/Lemuroid), based on Libretro and [LibretroDroid](https://github.com/Swordfish90/LibretroDroid); the intended NES core is [FCEUmm](https://github.com/libretro/libretro-fceumm). Lemuroid is licensed under **GNU GPL version 3**. This fork retains `COPYING` and source notices; its dependencies and included native code must retain their applicable licensing and attribution.
+
+OpenNES is not endorsed by or affiliated with Nintendo, Pizza Boy, Lemuroid's maintainers, or RetroAchievements. RetroAchievements integration is planned, not currently shipped.
