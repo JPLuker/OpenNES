@@ -28,6 +28,10 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      - name: Remove non-NES metadata from release artifact
+        run: |
+          python3 scripts/trim-libretro-db.py --in-place lemuroid-metadata-libretro-db/src/main/assets/libretro-db.sqlite
+
       - name: Assemble open-source bundled debug APK
         run: |
           chmod +x gradlew
@@ -39,7 +43,7 @@ jobs:
           APK="$(find lemuroid-app/build/outputs/apk/freeBundle/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
           test -n "$APK"
           cp "$APK" dist/OpenNES-debug.apk
-          python3 scripts/inspect-apk.py dist/OpenNES-debug.apk
+          python3 scripts/inspect-apk.py --nes-only dist/OpenNES-debug.apk
 
       - name: Upload installable debug APK
         uses: actions/upload-artifact@v4

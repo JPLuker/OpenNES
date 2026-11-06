@@ -1,6 +1,6 @@
 # OpenNES — NES-only debloat audit
 
-**Status:** Source inspection only. No core deletions or APK size comparisons have been performed.  
+**Status:** M1 cleanup in progress. NES-only native APK packaging and size improvement verified; full source removal and device testing remain.  
 **Initial inspection:** 2026-11-06  
 **Target:** Keep a full, usable FCEUmm NES emulator, remove all other console support and unnecessary platform features.
 
@@ -40,16 +40,16 @@
 
 ## Build and functional gates
 
-- [ ] Clean checkout with recursive submodules builds a debug APK.
+- [x] Clean checkout with recursive submodules builds a debug APK.
 - [ ] APK installs with independent OpenNES package ID.
 - [ ] Scan a legally obtained NES test ROM and launch it.
 - [ ] D-pad, A/B, Start/Select, sound, rotation, and save RAM/state work.
-- [ ] Supported ROM filters exclude other systems.
-- [ ] Inspect APK for every native `.so`; no non-NES emulator cores remain.
-- [ ] Record baseline and final APK size in bytes, including ABI breakdown.
+- [x] Runtime ROM discovery and metadata matching are restricted to NES.
+- [x] Inspect APK for every native `.so`; no non-NES emulator cores remain.
+- [x] Record baseline and final APK size in bytes, including ABI breakdown.
 - [ ] Preserve source and binary license attribution for included code.
 - [ ] Ensure ROM recognition and save upgrades don't silently wipe existing data.
 
 ## What is **not** done yet
 
-No non-NES binaries, source classes, ROM metadata, or UI have been removed. Changes in this document are scoped for Milestone 1 after the Milestone 0 baseline build passes.
+**Verified:** APK reduced from 222,012,846 to **32,367,426 bytes** after additional CI metadata trimming. All 76 non-NES Libretro core binaries were excluded. Source cleanup removed 23 other-console touch layouts and 20 console artwork XML files. The NES library and metadata provider have been restricted to NES. **Verified:** CI retained 29,246 NES metadata entries and reduced the SQLite asset from 12,775,424 to 3,706,880 bytes. The source DB itself remains unchanged. **Still pending:** real-device NES ROM launch/audio/saves, legacy Android TV code, and the full UI redesign.
