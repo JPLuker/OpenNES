@@ -2,7 +2,16 @@
 
 This file tracks OpenNES-specific changes, not the upstream Lemuroid release history.
 
-## Unreleased — 0.1.0 foundation (M0)
+## Unreleased — NES-only foundation (M1)
+
+- Register only NES/Famicom cartridge games, using FCEUmm.
+- Exclude 19 non-NES Libretro cores across all Android ABIs from the APK.
+- Remove non-NES dynamic feature modules and the multi-system bottom navigation button.
+- Hide irrelevant BIOS and core-selection links from settings.
+- Add CI verification that no non-NES libretro core ships.
+- Full source/resource pruning and real-device gameplay testing remain.
+
+## 0.1.0 foundation (M0)
 
 - Established the OpenNES Android app display name and a distinct `com.jpluker.opennes` application ID.
 - Added a complete NES-only roadmap and a source-level audit of non-NES emulator components.

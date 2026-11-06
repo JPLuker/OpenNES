@@ -39,7 +39,7 @@ jobs:
           APK="$(find lemuroid-app/build/outputs/apk/freeBundle/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
           test -n "$APK"
           cp "$APK" dist/OpenNES-debug.apk
-          python3 scripts/inspect-apk.py dist/OpenNES-debug.apk
+          python3 scripts/inspect-apk.py --nes-only dist/OpenNES-debug.apk
 
       - name: Upload installable debug APK
         uses: actions/upload-artifact@v4

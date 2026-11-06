@@ -17,31 +17,7 @@ android {
     flavorDimensions += listOf("opensource", "cores")
 
     if (usePlayDynamicFeatures()) {
-        println("Building Google Play version. Bundling dynamic features.")
-        dynamicFeatures.addAll(
-            setOf(
-                ":lemuroid_core_desmume",
-                ":lemuroid_core_dosbox_pure",
-                ":lemuroid_core_fbneo",
-                ":lemuroid_core_fceumm",
-                ":lemuroid_core_gambatte",
-                ":lemuroid_core_genesis_plus_gx",
-                ":lemuroid_core_handy",
-                ":lemuroid_core_mame2003_plus",
-                ":lemuroid_core_mednafen_ngp",
-                ":lemuroid_core_mednafen_pce_fast",
-                ":lemuroid_core_mednafen_wswan",
-                ":lemuroid_core_melonds",
-                ":lemuroid_core_mgba",
-                ":lemuroid_core_mupen64plus_next_gles3",
-                ":lemuroid_core_pcsx_rearmed",
-                ":lemuroid_core_ppsspp",
-                ":lemuroid_core_prosystem",
-                ":lemuroid_core_snes9x",
-                ":lemuroid_core_stella",
-                ":lemuroid_core_citra",
-            ),
-        )
+        dynamicFeatures.add(":lemuroid_core_fceumm")
     }
 
     // Since some dependencies are closed source we make a completely free as in free speech variant.
@@ -69,8 +45,31 @@ android {
 
     packagingOptions {
         jniLibs {
-            // Stripping created some issues with some libretro cores such as ppsspp
-            keepDebugSymbols += setOf("*/*/*_libretro_android.so")
+            // Prevent non-NES emulator binaries from being packaged.
+            // The upstream bundled-cores submodule remains available as source.
+            excludes +=
+                setOf(
+                    "**/libcitra_libretro_android.so",
+                    "**/libdesmume_libretro_android.so",
+                    "**/libdosbox_pure_libretro_android.so",
+                    "**/libfbneo_libretro_android.so",
+                    "**/libgambatte_libretro_android.so",
+                    "**/libgenesis_plus_gx_libretro_android.so",
+                    "**/libhandy_libretro_android.so",
+                    "**/libmame2003_plus_libretro_android.so",
+                    "**/libmednafen_ngp_libretro_android.so",
+                    "**/libmednafen_pce_fast_libretro_android.so",
+                    "**/libmednafen_wswan_libretro_android.so",
+                    "**/libmelonds_libretro_android.so",
+                    "**/libmgba_libretro_android.so",
+                    "**/libmupen64plus_next_gles3_libretro_android.so",
+                    "**/libpcsx_rearmed_libretro_android.so",
+                    "**/libppsspp_libretro_android.so",
+                    "**/libprosystem_libretro_android.so",
+                    "**/libsnes9x_libretro_android.so",
+                    "**/libstella_libretro_android.so",
+                )
+            keepDebugSymbols += setOf("*/*/libfceumm_libretro_android.so")
             useLegacyPackaging = true
         }
         resources {

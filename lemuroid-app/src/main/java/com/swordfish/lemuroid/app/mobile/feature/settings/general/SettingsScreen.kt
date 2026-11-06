@@ -56,7 +56,6 @@ fun SettingsScreen(
         GeneralSettings()
         InputSettings(navController = navController)
         MiscSettings(
-            indexingInProgress = indexingInProgress,
             isSaveSyncSupported = state.isSaveSyncSupported,
             navController = navController,
         )
@@ -65,7 +64,6 @@ fun SettingsScreen(
 
 @Composable
 private fun MiscSettings(
-    indexingInProgress: Boolean,
     isSaveSyncSupported: Boolean,
     navController: NavController,
 ) {
@@ -81,21 +79,6 @@ private fun MiscSettings(
                 onClick = { navController.navigateToRoute(MainRoute.SETTINGS_SAVE_SYNC) },
             )
         }
-        LemuroidSettingsMenuLink(
-            title = { Text(text = stringResource(id = R.string.settings_title_open_cores_selection)) },
-            subtitle = {
-                Text(text = stringResource(id = R.string.settings_description_open_cores_selection))
-            },
-            onClick = { navController.navigateToRoute(MainRoute.SETTINGS_CORES_SELECTION) },
-        )
-        LemuroidSettingsMenuLink(
-            title = { Text(text = stringResource(id = R.string.settings_title_display_bios_info)) },
-            subtitle = {
-                Text(text = stringResource(id = R.string.settings_description_display_bios_info))
-            },
-            enabled = !indexingInProgress,
-            onClick = { navController.navigateToRoute(MainRoute.SETTINGS_BIOS) },
-        )
         LemuroidSettingsMenuLink(
             title = { Text(text = stringResource(id = R.string.settings_title_advanced_settings)) },
             subtitle = {
