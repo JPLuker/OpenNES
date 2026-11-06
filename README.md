@@ -1,61 +1,53 @@
-# Lemuroid
+# OpenNES
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="80">](https://f-droid.org/packages/com.swordfish.lemuroid/)
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
-     alt="Get it on Google Play"
-     height="80">](https://play.google.com/store/apps/details?id=com.swordfish.lemuroid)
+**OpenNES** is a work-in-progress, open-source NES/Famicom emulator for Android.
 
-## Description
+The goal is a dedicated NES experience: polished original NES-controller-inspired touchscreen layouts for **portrait and landscape**, a redesigned game library and settings experience, and integrated [RetroAchievements](https://retroachievements.org/).
 
-Lemuroid is an open-source emulation project for Android based on Libretro. Its main goal is ease of use, good Android integration and a great user experience.
+> **Early development status:** This repository is currently a fork of [Lemuroid](https://github.com/Swordfish90/Lemuroid). The user interface and multi-console code have **not yet** been replaced or removed. The initial engineering milestone is establishing a reliable Android build and OpenNES's own app identity. Please do not mistake the current fork for a released, NES-only emulator.
 
-It originated from a rib of [Retrograde](https://github.com/retrograde/retrograde-android), but graduated to a standalone project integrating [LibretroDroid](https://github.com/Swordfish90/LibretroDroid).
+## Product direction
 
-|Screen 1|Screen 2|Screen 3|
-|---|---|---|
-|![Screen1](https://github.com/Swordfish90/Lemuroid/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg)|![Screen2](https://github.com/Swordfish90/Lemuroid/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg)|![Screen3](https://github.com/Swordfish90/Lemuroid/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg)|
+- **NES/Famicom only.** Keep the FCEUmm emulator core, remove other console emulators and unneeded assets/dependencies after baseline verification.
+- **Completely original OpenNES interface.** Replace Lemuroid's onboarding, library, game details, menus, settings, and in-game overlays.
+- **Premium touchscreen controls.** The classic NES gray/charcoal/red controller is the visual inspiration, with smooth tactile styling and no copied Pizza Boy artwork.
+- **Two layouts designed independently.** Portrait handheld and landscape split-controller modes; adjustable control sizes and positions for each orientation.
+- **RetroAchievements support.** Planned account integration, supported game identification, earned/locked achievements, discreet in-game notifications, and compliance-aware Hardcore handling.
+- **Local game files.** No commercial ROMs or copyrighted game art are bundled.
 
-### Supported Systems:
-- Atari 2600 (A26) ([stella](https://docs.libretro.com/library/stella/))
-- Atari 7800 (A78) ([prosystem](https://docs.libretro.com/library/prosystem/))
-- Atari Lynx (Lynx) ([handy](https://docs.libretro.com/library/handy/))
-- Nintendo (NES) ([fceumm](https://docs.libretro.com/library/fceumm/))
-- Super Nintendo (SNES) ([snes9x](https://docs.libretro.com/library/snes9x/))
-- Game Boy (GB) ([gambatte](https://docs.libretro.com/library/gambatte/))
-- Game Boy Color (GBC) ([gambatte](https://docs.libretro.com/library/gambatte/))
-- Game Boy Advance (GBA) ([mgba](https://docs.libretro.com/library/mgba/))
-- Sega Genesis (aka Megadrive) ([genesis_plus_gx](https://docs.libretro.com/library/genesis_plus_gx/))
-- Sega CD (aka Mega CD) ([genesis_plus_gx](https://docs.libretro.com/library/genesis_plus_gx/))
-- Sega Master System (SMS) ([genesis_plus_gx](https://docs.libretro.com/library/genesis_plus_gx/))
-- Sega Game Gear (GG) ([genesis_plus_gx](https://docs.libretro.com/library/genesis_plus_gx/))
-- Nintendo 64 (N64) ([mupen64plus](https://docs.libretro.com/library/mupen64plus/))
-- PlayStation (PSX) ([PCSX-ReARMed](https://docs.libretro.com/library/pcsx_rearmed/))
-- PlayStation Portable (PSP) ([ppsspp](https://docs.libretro.com/library/ppsspp/))
-- FinalBurn Neo (Arcade) ([fbneo](https://github.com/libretro/FBNeo/))
-- Nintendo DS (NDS) ([desmume](https://docs.libretro.com/library/desmume/)/[MelonDS](https://docs.libretro.com/library/melonds/))
-- NEC PC Engine (PCE) ([beetle_pce_fast](https://docs.libretro.com/library/beetle_pce_fast/))
-- Neo Geo Pocket (NGP) ([mednafen_ngp](https://docs.libretro.com/library/beetle_neopop/))
-- Neo Geo Pocket Color (NGC) ([mednafen_ngp](https://docs.libretro.com/library/beetle_neopop/))
-- WonderSwan (WS) ([beetle_cygne](https://docs.libretro.com/library/beetle_cygne/))
-- WonderSwan Color (WSC) ([beetle_cygne](https://docs.libretro.com/library/beetle_cygne/))
-- Nintendo 3DS (3DS) ([citra](https://docs.libretro.com/library/citra/))
+Read [ROADMAP.md](ROADMAP.md) for phased milestones and acceptance criteria.
 
-### Features:
-- Android TV support
-- Automatically save and restore game states.
-- ROMs scanning and indexing
-- Optimized touch controls
-- Quick save/load
-- Support for Zipped ROMs
-- Display simulation (LCD/CRT)
-- Gamepad support
-- Local multiplayer
-- Tilt input
-- Customizable touch controls (size and position)
-- Cloud save sync
-- HD mode
+## Build from source (development)
 
-### Languages:
-You can help translate Lemuroid in your native language by going here: https://crowdin.com/project/lemuroid
+The project uses Kotlin, Gradle and Android SDK tooling, plus a Git submodule for emulator cores.
+
+```sh
+git clone --recurse-submodules https://github.com/JPLuker/OpenNES.git
+cd OpenNES
+./gradlew :lemuroid-app:assembleFreeBundleDebug
+```
+
+The **free + bundle** development variant is intended to include open-source cores in the APK and avoid the Play Store dynamic-download path. An Android SDK, Java 17, and relevant native/build tools may be required. The installed APK package ID is `com.jpluker.opennes.debug` for debug builds; release is `com.jpluker.opennes`.
+
+When GitHub Actions succeeds, the **OpenNES Android CI** workflow uploads an `OpenNES-debug-apk` build artifact on pull requests and pushes to `master`. This is a test build, not a signed production release.
+
+## Current implementation status
+
+| Milestone | Status |
+|---|---|
+| M0 — Baseline build, identity, CI | In progress |
+| M1 — Remove non-NES systems and assets | Planned |
+| M2 — Replace entire UI | Planned |
+| M3 — Portrait controller | Planned |
+| M4 — Landscape controller | Planned |
+| M5 — Gameplay quality | Planned |
+| M6 — RetroAchievements | Planned |
+| M7 — Public release | Planned |
+
+The source packages and modules still include Lemuroid naming until planned refactoring is complete. Renaming every source package before the baseline build would increase avoidable migration risk.
+
+## Licensing and provenance
+
+OpenNES is based on [Lemuroid](https://github.com/Swordfish90/Lemuroid), which is licensed under the **GNU General Public License v3.0**. The original project's `COPYING` license file and applicable code notices are retained. Included native components and other dependencies may have their own license and attribution requirements; these will be audited for distribution.
+
+OpenNES is not affiliated with Nintendo, Pizza Boy, Lemuroid's original maintainers, or RetroAchievements. ROMs are not provided.
