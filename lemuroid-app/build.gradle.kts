@@ -10,9 +10,9 @@ plugins {
 
 android {
     defaultConfig {
-        versionCode = 252
-        versionName = "1.17.0" // Always remember to update Cores Tag!
-        applicationId = "com.swordfish.lemuroid"
+        versionCode = 1
+        versionName = "0.1.0"
+        applicationId = "com.jpluker.opennes"
     }
     flavorDimensions += listOf("opensource", "cores")
 
@@ -96,12 +96,12 @@ android {
             isMinifyEnabled = true
             signingConfig = signingConfigs["release"]
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-            resValue("string", "lemuroid_name", "Lemuroid")
+            resValue("string", "lemuroid_name", "OpenNES")
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
-            resValue("string", "lemuroid_name", "LemuroiDebug")
+            resValue("string", "lemuroid_name", "OpenNES Debug")
         }
     }
 
