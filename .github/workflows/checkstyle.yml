@@ -28,6 +28,10 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      - name: Remove non-NES metadata from release artifact
+        run: |
+          python3 scripts/trim-libretro-db.py --in-place lemuroid-metadata-libretro-db/src/main/assets/libretro-db.sqlite
+
       - name: Assemble open-source bundled debug APK
         run: |
           chmod +x gradlew
