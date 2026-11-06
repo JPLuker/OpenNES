@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — NES-only foundation (M1)
+
+- Only NES/Famicom games and FCEUmm are registered.
+- Excluded non-NES native cores from the APK and enforced the NES-only inspection in CI.
+- Removed non-NES controller layouts and console-specific artwork from the source tree.
+- Removed DS microphone and DeSmuME warning flows from Home; retained general notification permission handling.
+- Real-device NES gameplay verification and metadata/source cleanup remain in progress.
+
 This file tracks OpenNES-specific changes, not the upstream Lemuroid release history.
 
 ## Unreleased — NES-only foundation (M1)
