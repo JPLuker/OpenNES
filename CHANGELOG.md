@@ -4,13 +4,14 @@ OpenNES-specific history; upstream Lemuroid release history is not reproduced.
 
 ## Unreleased — NES-only cleanup (M1)
 
-- Reduced the debug APK from **222,012,846** to **35,346,475 bytes** in the first NES-only build, eliminating all 76 unrelated Libretro core binaries while retaining FCEUmm across four ABIs.
+- Reduced the debug APK from **222,012,846** to **32,367,426 bytes** (85.4% smaller), eliminating all 76 unrelated Libretro core binaries while retaining FCEUmm across four ABIs.
 - Restricted registered game systems and library discovery to NES/Famicom.
 - Removed non-NES dynamic-feature builds, 23 unrelated touchscreen layouts, 20 non-NES system icons, and the multi-console navigation entry.
 - Removed unnecessary core-selection and BIOS settings links.
 - Fixed Home initialization for a single NES core, plus the old Game Boy default controller.
 - Removed DS microphone/DeSmuME Home warnings and unused microphone permission.
 - Hardened game metadata identification to ignore non-NES matches in the inherited database.
+- Added CI SQLite trimming: 104,073 original records reduced to 29,246 NES records; database size 12,775,424 to 3,706,880 bytes.
 - Made CI inspect and reject any non-NES packaged Libretro core.
 
 **Not finished:** On-device verification, unused metadata/source pruning, original OpenNES UI, custom controller skins and RetroAchievements.

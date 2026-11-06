@@ -83,6 +83,14 @@ python3 scripts/inspect-apk.py --nes-only /absolute/path/to/OpenNES-debug.apk
 
 That command will fail if the FCEUmm core is absent or if any other Libretro core remains.
 
+## NES-only metadata in packaged CI builds
+
+GitHub Actions runs `python3 scripts/trim-libretro-db.py --in-place lemuroid-metadata-libretro-db/src/main/assets/libretro-db.sqlite` in its temporary checkout. The script retains NES records, checks database integrity and vacuums the SQLite file.
+
+Local Gradle builds do not automatically trim this asset. To reproduce the slim CI build, run the command explicitly before Gradle; `git restore lemuroid-metadata-libretro-db/src/main/assets/libretro-db.sqlite` restores the tracked original afterward.
+
+The CI-packaged database has 29,246 NES records (3,706,880 bytes), down from 104,073 records (12,775,424 bytes).
+
 ## Troubleshooting
 
 **The GitHub workflow is red but there's an APK artifact.** Check **Kotlin lint** separately. The first CI run on 2026-11-06 compiled an APK and uploaded the artifact but failed because pre-existing code in `retrograde-app-shared` had style violations; those reported violations are being corrected.
@@ -93,7 +101,7 @@ That command will fail if the FCEUmm core is absent or if any other Libretro cor
 
 **Signing error.** Use the debug variant. Release builds require OpenNES-specific signing configuration and are not part of M0.
 
-**APK is unexpectedly large.** The M0 baseline measured 222,012,846 bytes; the first NES-only M1 APK measured 35,346,475 bytes. Inspect the included cores using the script above.
+**APK is unexpectedly large.** The M0 baseline measured 222,012,846 bytes; the first NES-only M1 APK measured 35,346,475 bytes, and the trimmed-metadata build measured **32,367,426 bytes**. Inspect the included cores using the script above.
 
 **ROM won't start.** Test with a known-good, legally obtained NES test ROM; note the file type and capture logs. Do not assume that an unrelated console ROM should work in the final NES-only build.
 
