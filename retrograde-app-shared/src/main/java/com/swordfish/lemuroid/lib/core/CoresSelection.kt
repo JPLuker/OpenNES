@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -42,6 +43,12 @@ class CoresSelection(
                 getSelectedCoreConfigForSystem(system)
                     .map { SelectedCore(system, it) }
             }
+
+        // A single NES core leaves no configurable systems. Always emit an
+        // initial empty selection so Home and settings streams can initialize.
+        if (configurationFlows.isEmpty()) {
+            return flowOf(emptyList())
+        }
 
         return combine(configurationFlows) { it.toList() }
     }

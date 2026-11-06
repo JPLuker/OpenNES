@@ -18,11 +18,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         private val THUMB_REPLACE = Regex("[&*/:`<>?\\\\|]")
     }
 
-    private val sortedSystemIds: List<String> by lazy {
-        SystemID.values()
-            .map { it.dbname }
-            .sortedByDescending { it.length }
-    }
+    private val sortedSystemIds = listOf(SystemID.NES.dbname)
 
     override suspend fun retrieveMetadata(storageFile: StorageFile): GameMetadata? {
         val db = ovgdbManager.dbInstance
@@ -64,6 +60,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         file: StorageFile,
     ): GameMetadata? {
         return db.gameDao().findByFileName(file.name)
+            .filterNullable { it.system == SystemID.NES.dbname }
             .filterNullable { extractGameSystem(it).scanOptions.scanByFilename }
             ?.let { convertToGameMetadata(it) }
     }
@@ -73,6 +70,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         file: StorageFile,
     ): GameMetadata? {
         return db.gameDao().findByFileName(file.name)
+            .filterNullable { it.system == SystemID.NES.dbname }
             .filterNullable { extractGameSystem(it).scanOptions.scanByPathAndFilename }
             .filterNullable { parentContainsSystem(file.path, extractGameSystem(it).id.dbname) }
             ?.let { convertToGameMetadata(it) }
@@ -110,6 +108,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
     ): GameMetadata? {
         if (file.crc == null || file.crc == "0") return null
         return file.crc?.let { crc32 -> db.gameDao().findByCRC(crc32) }
+            .filterNullable { it.system == SystemID.NES.dbname }
             ?.let { convertToGameMetadata(it) }
     }
 
@@ -119,11 +118,12 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
     ): GameMetadata? {
         if (file.serial == null) return null
         return db.gameDao().findBySerial(file.serial!!)
+            .filterNullable { it.system == SystemID.NES.dbname }
             ?.let { convertToGameMetadata(it) }
     }
 
     private fun findByKnownSystem(file: StorageFile): GameMetadata? {
-        if (file.systemID == null) return null
+        if (file.systemID != SystemID.NES) return null
 
         return GameMetadata(
             name = file.extensionlessName,
@@ -163,12 +163,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         system: GameSystem,
         name: String?,
     ): String? {
-        var systemName = system.libretroFullName
-
-        // Specific mame version don't have any thumbnails in Libretro database
-        if (system.id == SystemID.MAME2003PLUS) {
-            systemName = "MAME"
-        }
+        val systemName = system.libretroFullName
 
         if (name == null) {
             return null
