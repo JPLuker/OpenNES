@@ -1,6 +1,6 @@
 # OpenNES — Development Roadmap
 
-**Status:** Planned (no implementation work completed)  
+**Status:** In progress — M0 foundation and CI verified to compile an APK; Android installation/gameplay not yet validated  
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -154,3 +154,10 @@
 - Direct copying of Pizza Boy source, UI assets or controller art.
 - Hardcore-compliant claim or competitive Hardcore awards without RetroAchievements approval.
 - Android TV-specific experience unless needed for a future, separately approved scope.
+
+## Current baseline evidence (2026-11-06)
+
+- The first GitHub Actions run successfully compiled `:lemuroid-app:assembleFreeBundleDebug` and uploaded `OpenNES-debug-apk`; its overall status was **failure due to Kotlin lint**, not failure to assemble the APK.
+- Lint violations from inherited Lemuroid files are being corrected; separate APK and lint jobs now make failures unambiguous.
+- No mobile gameplay or NES-only APK acceptance test has yet been completed.
+- APK inspection and debloat work remain subject to the M0 baseline verification gate.
