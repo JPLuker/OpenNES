@@ -1,29 +1,51 @@
-name: Checkstyle
+name: OpenNES Android CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-
+  android:
+    name: Build and lint Android APK
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+      - name: Check out source and emulator cores
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Run ktlint tests
-      run: ./gradlew assembleDebug ktlintCheck
+      - name: Assemble open-source bundled debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :lemuroid-app:assembleFreeBundleDebug --stacktrace
+
+      - name: Stage OpenNES APK
+        run: |
+          mkdir -p dist
+          APK="$(find lemuroid-app/build/outputs/apk/freeBundle/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
+          test -n "$APK"
+          cp "$APK" dist/OpenNES-debug.apk
+
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenNES-debug-apk
+          path: dist/OpenNES-debug.apk
+          if-no-files-found: error
+
+      - name: Run Kotlin style checks
+        run: ./gradlew ktlintCheck --stacktrace
