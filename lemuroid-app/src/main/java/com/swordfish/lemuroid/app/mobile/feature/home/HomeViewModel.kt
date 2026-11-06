@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
@@ -128,5 +127,4 @@ class HomeViewModel(
 
     private fun favoritesGames(retrogradeDb: RetrogradeDatabase) =
         retrogradeDb.gameDao().selectFirstFavorites(CAROUSEL_MAX_ITEMS)
-
 }
