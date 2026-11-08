@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased — Verified online NES information
+## Unreleased — Bounded library metadata queue
+
+- Add explicit library-wide **Check missing details** action with progress and Stop controls; no unsolicited API requests at startup.
+- Process at most 12 eligible NES games per tap, sequentially, with at least a 2.5-second pause between distinct lookups.
+- Cache successful/unmatched game checks for 30 days in Room schema 15, and deduplicate identical titles within a batch.
+- Only fill blank genre, year and description fields when Wikidata returns one verified NES match; preserve manually entered details, games, saves and playtime.
+- Stop a batch on unavailable/rate-limited API responses instead of repeatedly retrying; network failures are not cached as successful checks.
+- Process is scoped to the Home ViewModel and ends when the user stops it or the screen is destroyed. No background sync service.
+
+## Verified online NES information
 
 - Add key-free, user-requested lookup from Wikidata's CC0 game catalogue for matching NES titles.
 - Verify an exact normalized title, the Wikidata video-game type and the Nintendo Entertainment System platform before suggesting an online result; ambiguous records are rejected.

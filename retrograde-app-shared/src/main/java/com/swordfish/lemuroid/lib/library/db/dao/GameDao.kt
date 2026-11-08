@@ -76,6 +76,38 @@ interface GameDao {
     @Query("SELECT count(*) count, systemId systemId FROM games GROUP BY systemId")
     fun selectSystemsWithCount(): Flow<List<SystemCount>>
 
+    /**
+     * The user explicitly starts a bounded online enrichment batch.
+     * Only NES titles with empty details and an expired per-game check cache
+     * enter the queue. Never scan or upload game files.
+     */
+    @Query(
+        """
+        SELECT * FROM games
+        WHERE systemId = 'nes'
+          AND (genre IS NULL OR TRIM(genre) = '' OR releaseYear IS NULL
+               OR description IS NULL OR TRIM(description) = '')
+          AND lastOnlineMetadataCheckedAt <= :retryBefore
+        ORDER BY lastOnlineMetadataCheckedAt ASC, id ASC
+        LIMIT :limit
+        """,
+    )
+    suspend fun selectOnlineMetadataCandidates(
+        retryBefore: Long,
+        limit: Int,
+    ): List<Game>
+
+    @Query(
+        """
+        UPDATE games SET lastOnlineMetadataCheckedAt = :checkedAt
+        WHERE id = :gameId AND systemId = 'nes'
+        """,
+    )
+    suspend fun markOnlineMetadataChecked(
+        gameId: Int,
+        checkedAt: Long,
+    ): Int
+
     @Insert
     fun insert(games: List<Game>): List<Long>
 
@@ -90,7 +122,7 @@ interface GameDao {
         """
         UPDATE games
         SET genre = :genre, releaseYear = :releaseYear, description = :description,
-            wikidataEntityId = NULL
+            wikidataEntityId = NULL, lastOnlineMetadataCheckedAt = 0
         WHERE id = :gameId
         """,
     )
@@ -111,7 +143,8 @@ interface GameDao {
         SET genre = CASE WHEN genre IS NULL OR TRIM(genre) = '' THEN :genre ELSE genre END,
             releaseYear = COALESCE(releaseYear, :releaseYear),
             description = CASE WHEN description IS NULL OR TRIM(description) = '' THEN :description ELSE description END,
-            wikidataEntityId = :sourceId
+            wikidataEntityId = :sourceId,
+            lastOnlineMetadataCheckedAt = :checkedAt
         WHERE id = :gameId AND systemId = 'nes'
         """,
     )
@@ -121,6 +154,7 @@ interface GameDao {
         releaseYear: Int?,
         description: String?,
         sourceId: String,
+        checkedAt: Long,
     ): Int
 
     @Query(
@@ -128,7 +162,7 @@ interface GameDao {
         UPDATE games
         SET title = :title, developer = :developer,
             coverFrontUrl = :coverFrontUrl, lastMetadataCheckedAt = :lastChecked,
-            wikidataEntityId = NULL
+            wikidataEntityId = NULL, lastOnlineMetadataCheckedAt = 0
         WHERE id = :gameId
         """,
     )

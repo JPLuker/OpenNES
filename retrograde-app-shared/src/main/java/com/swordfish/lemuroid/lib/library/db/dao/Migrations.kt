@@ -94,6 +94,16 @@ object Migrations {
             }
         }
 
+    val VERSION_14_15: Migration =
+        object : Migration(14, 15) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Persist lookup cooldowns without deleting or rewriting games or saves.
+                database.execSQL(
+                    "ALTER TABLE games ADD COLUMN lastOnlineMetadataCheckedAt INTEGER NOT NULL DEFAULT 0",
+                )
+            }
+        }
+
     private fun migrateGamesTableToVersion10(database: SupportSQLiteDatabase) {
         database.execSQL(
             "ALTER TABLE games ADD COLUMN customName TEXT DEFAULT NULL",

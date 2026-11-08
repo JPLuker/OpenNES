@@ -109,11 +109,15 @@ fun HomeScreen(
         }
 
     val state = viewModel.getViewStates().collectAsState(HomeViewModel.UIState()).value
+    val batchState = viewModel.onlineBatchState.collectAsState(HomeViewModel.OnlineBatchState()).value
     var selectedGame by remember { mutableStateOf<Game?>(null) }
 
     OpenNesLibrary(
         modifier = modifier,
         state = state,
+        batchState = batchState,
+        onStartOnlineBatch = viewModel::startOnlineBatch,
+        onStopOnlineBatch = viewModel::stopOnlineBatch,
         onGameClick = onGameClick,
         onGameLongClick = onGameLongClick,
         onGameDetailsClick = { selectedGame = it },
@@ -163,6 +167,9 @@ fun HomeScreen(
 private fun OpenNesLibrary(
     modifier: Modifier,
     state: HomeViewModel.UIState,
+    batchState: HomeViewModel.OnlineBatchState,
+    onStartOnlineBatch: () -> Unit,
+    onStopOnlineBatch: () -> Unit,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
     onGameDetailsClick: (Game) -> Unit,
@@ -200,6 +207,15 @@ private fun OpenNesLibrary(
             )
         }
 
+        if (!state.showNoGamesCard) {
+            LibraryOnlineRefresh(
+                batchState = batchState,
+                indexed = !state.indexInProgress,
+                onStart = onStartOnlineBatch,
+                onStop = onStopOnlineBatch,
+            )
+        }
+
         // A real, previously played game is the only eligible "Continue" item.
         state.recentGames.firstOrNull()?.let { game ->
             FeaturedGame(game, onGameClick)
@@ -224,6 +240,101 @@ private fun OpenNesLibrary(
             onGameLongClick = onGameLongClick,
         )
         Spacer(modifier = Modifier.height(20.dp))
+    }
+}
+
+@Composable
+private fun LibraryOnlineRefresh(
+    batchState: HomeViewModel.OnlineBatchState,
+    indexed: Boolean,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        color = LibraryColors.panel,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, LibraryColors.border),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.opennes_bulk_title),
+                color = LibraryColors.foreground,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+            )
+            Text(
+                text = stringResource(R.string.opennes_bulk_privacy),
+                color = LibraryColors.muted,
+                fontSize = 12.sp,
+            )
+            if (batchState.status == HomeViewModel.OnlineBatchStatus.RUNNING) {
+                Text(
+                    text =
+                        stringResource(
+                            R.string.opennes_bulk_progress,
+                            batchState.checked,
+                            batchState.total,
+                            batchState.updated,
+                        ),
+                    color = LibraryColors.foreground,
+                    fontSize = 12.sp,
+                )
+                batchState.currentTitle?.let {
+                    Text(text = it, color = LibraryColors.muted, fontSize = 12.sp)
+                }
+                OutlinedButton(
+                    onClick = onStop,
+                    border = BorderStroke(1.dp, LibraryColors.border),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                ) {
+                    Text(stringResource(R.string.opennes_bulk_stop))
+                }
+            } else {
+                when (batchState.status) {
+                    HomeViewModel.OnlineBatchStatus.COMPLETE ->
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.opennes_bulk_complete,
+                                    batchState.checked,
+                                    batchState.updated,
+                                ),
+                            color = LibraryColors.muted,
+                            fontSize = 12.sp,
+                        )
+                    HomeViewModel.OnlineBatchStatus.STOPPED ->
+                        Text(
+                            text = stringResource(R.string.opennes_bulk_stopped),
+                            color = LibraryColors.muted,
+                            fontSize = 12.sp,
+                        )
+                    HomeViewModel.OnlineBatchStatus.UNAVAILABLE ->
+                        Text(
+                            text = stringResource(R.string.opennes_bulk_unavailable),
+                            color = LibraryColors.muted,
+                            fontSize = 12.sp,
+                        )
+                    HomeViewModel.OnlineBatchStatus.NOTHING_TO_CHECK ->
+                        Text(
+                            text = stringResource(R.string.opennes_bulk_none),
+                            color = LibraryColors.muted,
+                            fontSize = 12.sp,
+                        )
+                    else -> Unit
+                }
+                Button(
+                    onClick = onStart,
+                    enabled = indexed,
+                    colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                ) {
+                    Text(stringResource(R.string.opennes_bulk_start))
+                }
+            }
+        }
     }
 }
 

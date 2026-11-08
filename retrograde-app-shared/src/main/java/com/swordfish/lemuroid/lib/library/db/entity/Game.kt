@@ -62,6 +62,8 @@ data class Game(
     val description: String? = null,
     // Provenance for optional Wikidata details, not for user-supplied overrides.
     val wikidataEntityId: String? = null,
+    @ColumnInfo(defaultValue = "0")
+    val lastOnlineMetadataCheckedAt: Long = 0L,
 ) : Serializable {
     fun displayName(): String = customName ?: title
 

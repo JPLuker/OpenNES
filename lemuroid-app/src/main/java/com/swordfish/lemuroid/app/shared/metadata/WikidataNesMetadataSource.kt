@@ -66,6 +66,7 @@ class WikidataNesMetadataSource {
                     "type" to "item",
                     "limit" to "10",
                     "format" to "json",
+                    "maxlag" to "5",
                 ),
             )
         val names = search.optJSONArray("search") ?: return Result.NoMatch
@@ -88,6 +89,7 @@ class WikidataNesMetadataSource {
                     "props" to "claims|descriptions",
                     "languages" to "en",
                     "format" to "json",
+                    "maxlag" to "5",
                 ),
             )
         val entities = response.optJSONObject("entities") ?: return Result.NoMatch
@@ -144,6 +146,7 @@ class WikidataNesMetadataSource {
                     "props" to "labels",
                     "languages" to "en",
                     "format" to "json",
+                    "maxlag" to "5",
                 ),
             ).optJSONObject("entities") ?: return null
 

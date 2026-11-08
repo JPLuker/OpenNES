@@ -19,6 +19,9 @@ import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -62,6 +65,34 @@ class HomeViewModel(
     private val uiStates = MutableStateFlow(UIState())
     private val coverPrefetcher = NesCoverPrefetcher(appContext.applicationContext)
     private val wikidataSource = WikidataNesMetadataSource()
+
+    enum class OnlineBatchStatus {
+        IDLE,
+        RUNNING,
+        COMPLETE,
+        STOPPED,
+        UNAVAILABLE,
+        NOTHING_TO_CHECK,
+    }
+
+    data class OnlineBatchState(
+        val status: OnlineBatchStatus = OnlineBatchStatus.IDLE,
+        val checked: Int = 0,
+        val total: Int = 0,
+        val updated: Int = 0,
+        val unmatched: Int = 0,
+        val currentTitle: String? = null,
+    )
+
+    private val batchState = MutableStateFlow(OnlineBatchState())
+    val onlineBatchState: Flow<OnlineBatchState> = batchState
+    private var onlineBatchJob: Job? = null
+
+    companion object {
+        private const val ONLINE_BATCH_SIZE = 12
+        private const val ONLINE_BATCH_GAP_MS = 2_500L
+        private const val ONLINE_RETRY_INTERVAL_MS = 30L * 24L * 60L * 60L * 1000L
+    }
 
     fun getViewStates(): Flow<UIState> {
         return uiStates
@@ -204,6 +235,7 @@ class HomeViewModel(
                                 releaseYear = candidate.releaseYear,
                                 description = candidate.description,
                                 sourceId = candidate.entityId,
+                                checkedAt = System.currentTimeMillis(),
                             )
                         if (changed == 0) null else dao.selectById(gameId)
                     }.onFailure {
@@ -212,6 +244,144 @@ class HomeViewModel(
                 }
             onResult(updated)
         }
+    }
+
+    /**
+     * On-demand bulk enrichment. Each tap checks up to 12 eligible NES titles.
+     * Successful or unmatched lookups are cached for 30 days in Room.
+     * Transient service errors stop the queue and remain retryable.
+     *
+     * This job belongs to the screen's ViewModel, not an indefinite background
+     * worker: leaving the activity/process stops requests. No ROM data is sent.
+     */
+    fun startOnlineBatch() {
+        if (onlineBatchJob?.isActive == true || uiStates.value.indexInProgress) return
+
+        onlineBatchJob =
+            viewModelScope.launch {
+                batchState.value = OnlineBatchState(status = OnlineBatchStatus.RUNNING)
+                val candidates =
+                    runCatching {
+                        withContext(Dispatchers.IO) {
+                            retrogradeDb.gameDao().selectOnlineMetadataCandidates(
+                                retryBefore = System.currentTimeMillis() - ONLINE_RETRY_INTERVAL_MS,
+                                limit = ONLINE_BATCH_SIZE,
+                            )
+                        }
+                    }.onFailure {
+                        Timber.w(it, "Could not load eligible NES metadata candidates")
+                    }.getOrNull()
+                if (candidates == null) {
+                    batchState.value = OnlineBatchState(status = OnlineBatchStatus.UNAVAILABLE)
+                    return@launch
+                }
+                if (candidates.isEmpty()) {
+                    batchState.value = OnlineBatchState(status = OnlineBatchStatus.NOTHING_TO_CHECK)
+                    return@launch
+                }
+
+                batchState.value =
+                    OnlineBatchState(
+                        status = OnlineBatchStatus.RUNNING,
+                        total = candidates.size,
+                    )
+                val resultsByTitle = mutableMapOf<String, WikidataNesMetadataSource.Result>()
+                var checked = 0
+                var updated = 0
+                var unmatched = 0
+                try {
+                    for ((index, game) in candidates.withIndex()) {
+                        if (!isActive) break
+                        batchState.value =
+                            batchState.value.copy(currentTitle = game.displayName())
+
+                        // Don't issue an additional search for identical titles.
+                        // Network requests for distinct games are sequential.
+                        val cacheKey = game.title.trim().lowercase(java.util.Locale.ROOT)
+                        val result =
+                            resultsByTitle[cacheKey] ?: wikidataSource.lookup(game.title).also {
+                                if (it !is WikidataNesMetadataSource.Result.Unavailable) {
+                                    resultsByTitle[cacheKey] = it
+                                }
+                            }
+                        if (!isActive) break
+                        if (result is WikidataNesMetadataSource.Result.Unavailable) {
+                            batchState.value =
+                                batchState.value.copy(
+                                    status = OnlineBatchStatus.UNAVAILABLE,
+                                    currentTitle = null,
+                                )
+                            return@launch
+                        }
+
+                        val changed =
+                            withContext(Dispatchers.IO) {
+                                val dao = retrogradeDb.gameDao()
+                                when (result) {
+                                    is WikidataNesMetadataSource.Result.Match -> {
+                                        // Re-read now; skip fields filled during the HTTP call.
+                                        val latest = dao.selectById(game.id)
+                                        val canFill =
+                                            latest != null &&
+                                                (
+                                                    (latest.genre.isNullOrBlank() && !result.genre.isNullOrBlank()) ||
+                                                        (latest.releaseYear == null && result.releaseYear != null) ||
+                                                        (latest.description.isNullOrBlank() && !result.description.isNullOrBlank())
+                                                )
+                                        if (canFill) {
+                                            dao.fillMissingOnlineGameInfo(
+                                                gameId = game.id,
+                                                genre = result.genre,
+                                                releaseYear = result.releaseYear,
+                                                description = result.description,
+                                                sourceId = result.entityId,
+                                                checkedAt = System.currentTimeMillis(),
+                                            ) > 0
+                                        } else {
+                                            dao.markOnlineMetadataChecked(game.id, System.currentTimeMillis())
+                                            false
+                                        }
+                                    }
+                                    WikidataNesMetadataSource.Result.NoMatch -> {
+                                        dao.markOnlineMetadataChecked(game.id, System.currentTimeMillis())
+                                        false
+                                    }
+                                    WikidataNesMetadataSource.Result.Unavailable -> false
+                                }
+                            }
+                        checked++
+                        if (changed) updated++ else unmatched++
+                        batchState.value =
+                            OnlineBatchState(
+                                status = OnlineBatchStatus.RUNNING,
+                                checked = checked,
+                                total = candidates.size,
+                                updated = updated,
+                                unmatched = unmatched,
+                            )
+
+                        // Limit the request rate even on fast or cached responses.
+                        if (index < candidates.lastIndex) delay(ONLINE_BATCH_GAP_MS)
+                    }
+                    batchState.value =
+                        batchState.value.copy(
+                            status = OnlineBatchStatus.COMPLETE,
+                            currentTitle = null,
+                        )
+                } finally {
+                    if (!isActive) {
+                        batchState.value =
+                            batchState.value.copy(
+                                status = OnlineBatchStatus.STOPPED,
+                                currentTitle = null,
+                            )
+                    }
+                }
+            }
+    }
+
+    fun stopOnlineBatch() {
+        onlineBatchJob?.cancel()
     }
 
     fun changeLocalStorageFolder(context: Context) {
