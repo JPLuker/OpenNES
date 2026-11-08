@@ -272,6 +272,12 @@ private fun FeaturedGame(
                     color = LibraryColors.muted,
                     fontSize = 12.sp,
                 )
+                Text(
+                    text = stringResource(R.string.opennes_achievements_future),
+                    color = LibraryColors.muted,
+                    fontSize = 11.sp,
+                    maxLines = 2,
+                )
                 Button(
                     onClick = { onGameClick(game) },
                     colors =
@@ -459,6 +465,8 @@ private fun LibraryNotice(
                 modifier = Modifier.align(Alignment.End),
                 enabled = enabled,
                 onClick = onAction,
+                border = BorderStroke(1.dp, LibraryColors.border),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
             ) {
                 Text(action)
             }
