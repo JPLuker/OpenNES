@@ -25,6 +25,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.io.Serializable
+import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
 
 @Entity(
     tableName = "games",
@@ -65,7 +66,7 @@ data class Game(
     @ColumnInfo(defaultValue = "0")
     val lastOnlineMetadataCheckedAt: Long = 0L,
 ) : Serializable {
-    fun displayName(): String = customName ?: title
+    fun displayName(): String = customName ?: NesGameTitle.clean(title)
 
     fun displayCoverUrl(): String? =
         customCoverUri
