@@ -68,6 +68,9 @@
     <string name="settings_description_advanced_settings">Display advanced settings</string>
     <string name="settings_title_low_latency_audio">Prefer low-latency audio</string>
     <string name="settings_description_low_latency_audio">Reduce audio latency on supported devices. Might increase audio glitches.</string>
+    <string name="pref_key_nes_stable_audio" translatable="false">pref_nes_stable_audio</string>
+    <string name="settings_title_nes_stable_audio">Prefer 60 Hz NES gameplay</string>
+    <string name="settings_description_nes_stable_audio">Request a 60 Hz display mode when available. May improve sound stability on high-refresh-rate phones. Restart the game to apply.</string>
 
     <string name="settings_title_direct_game_load">Direct game load</string>
     <string name="settings_description_direct_game_load">(Experimental) Reduce loading time and cache usage on supported consoles.</string>

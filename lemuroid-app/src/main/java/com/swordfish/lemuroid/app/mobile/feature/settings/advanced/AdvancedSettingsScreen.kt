@@ -95,6 +95,11 @@ private fun GeneralSettings(
             title = { Text(text = stringResource(id = R.string.settings_title_low_latency_audio)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_low_latency_audio)) },
         )
+        LemuroidSettingsSwitch(
+            state = booleanPreferenceState(R.string.pref_key_nes_stable_audio, true),
+            title = { Text(text = stringResource(id = R.string.settings_title_nes_stable_audio)) },
+            subtitle = { Text(text = stringResource(id = R.string.settings_description_nes_stable_audio)) },
+        )
         LemuroidSettingsList(
             title = { Text(text = stringResource(R.string.settings_title_maximum_cache_usage)) },
             items = cacheState.displayNames,

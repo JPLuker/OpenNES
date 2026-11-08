@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — NES audio pacing experiment (Issue #3)
+
+- Request a display mode near 60 Hz for phone NES gameplay when available, to test whether more consistent frame pacing resolves intermittent audio cutouts on high-refresh-rate displays.
+- Add a default-on **Prefer 60 Hz NES gameplay** Advanced setting, with a user-controlled opt-out for comparison. Mode selection never changes display resolution.
+- Preserve the existing low-latency audio option (off by default) independently.
+- **Unverified fix:** actual sound quality must be checked on affected hardware with the setting both on and off.
+
 OpenNES-specific history; upstream Lemuroid release history is not reproduced.
 
 ## Unreleased — OpenNES game library (M2, first batch)
