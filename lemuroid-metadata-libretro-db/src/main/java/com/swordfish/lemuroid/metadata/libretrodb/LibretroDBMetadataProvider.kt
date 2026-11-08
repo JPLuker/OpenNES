@@ -30,6 +30,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
                 findByCRC(storageFile, db)
                     ?: findBySerial(storageFile, db)
                     ?: findByFilename(db, storageFile)
+                    ?: findByTitleCandidates(db, storageFile)
                     ?: findByPathAndFilename(db, storageFile)
                     ?: findByUniqueExtension(storageFile)
                     ?: findByKnownSystem(storageFile)
@@ -63,6 +64,46 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
             .filterNullable { it.system == SystemID.NES.dbname }
             .filterNullable { extractGameSystem(it).scanOptions.scanByFilename }
             ?.let { convertToGameMetadata(it) }
+    }
+
+    /**
+     * No-Intro-style ROM filenames often carry a region or revision tag that
+     * differs from the catalogue's box-art title. Only accept an unambiguous
+     * title match; never guess between similarly named games.
+     */
+    private suspend fun findByTitleCandidates(
+        db: LibretroDatabase,
+        file: StorageFile,
+    ): GameMetadata? {
+        val title = file.extensionlessName
+        val prefix =
+            title.substringBefore('(')
+                .substringBefore('[')
+                .trim()
+
+        if (prefix.length < 4 || prefix.contains('%') || prefix.contains('_')) return null
+
+        val canonicalTitle = canonicalNesTitle(title)
+        val matches =
+            db.gameDao().findByTitlePrefix(prefix)
+                .filter { candidate ->
+                    candidate.name?.let { canonicalNesTitle(it) == canonicalTitle } == true
+                }
+        val uniqueMatch =
+            when (matches.size) {
+                0 -> null
+                1 -> matches.first()
+                else -> matches.singleOrNull { it.romName.equals(file.name, ignoreCase = true) }
+            }
+
+        return uniqueMatch?.let { convertToGameMetadata(it) }
+    }
+
+    private fun canonicalNesTitle(raw: String): String {
+        val noExtension = raw.replace(Regex("\\.(nes|zip|7z)$", RegexOption.IGNORE_CASE), "")
+        val noTags = noExtension.replace(Regex("\\([^)]*\\)|\\[[^]]*\\]"), " ")
+        return noTags.lowercase(Locale.ROOT)
+            .replace(Regex("[^a-z0-9]"), "")
     }
 
     private suspend fun findByPathAndFilename(

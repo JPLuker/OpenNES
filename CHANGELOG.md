@@ -4,6 +4,7 @@
 
 - Recheck previously imported NES ROMs when their indexed title, developer, or default box art is incomplete, without requiring users to remove and reimport games.
 - Cache the last metadata check per game and defer unsuccessful or incomplete repeat lookups for 30 days to avoid unnecessary work on each library scan.
+- Restrict filename, CRC and serial metadata queries to NES at the SQL level and cautiously match region-tagged ROM filenames against catalogue names only when the title match is unambiguous.
 - Preserve favorites, custom names, user-supplied covers, saves and cumulative playtime when enriching records.
 - Add a non-destructive Room 11→12 database migration. New enrichment uses the existing bundled NES metadata; external Plex-style provider matching remains future work.
 
