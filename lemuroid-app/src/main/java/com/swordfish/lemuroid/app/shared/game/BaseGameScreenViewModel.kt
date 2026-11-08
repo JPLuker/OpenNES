@@ -217,6 +217,16 @@ class BaseGameScreenViewModel(
         touchControls.resetTouchControls()
     }
 
+    fun previewTouchControllerSettings(settings: TouchControllerSettingsManager.Settings) {
+        touchControls.previewTouchControllerSettings(settings)
+    }
+
+    fun isDragEditMode(): Flow<Boolean> = touchControls.isDragEditMode()
+
+    fun setDragEditMode(enabled: Boolean) {
+        touchControls.setDragEditMode(enabled)
+    }
+
     fun onScreenOrientationChanged(orientation: TouchControllerSettingsManager.Orientation) {
         touchControls.updateScreenOrientation(orientation)
     }

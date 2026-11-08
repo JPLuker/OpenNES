@@ -48,6 +48,7 @@ class GameViewModelTouchControls(
     private val screenOrientation = MutableStateFlow(TouchControllerSettingsManager.Orientation.PORTRAIT)
     private val menuPressed = MutableStateFlow(false)
     private val showEditControls = MutableStateFlow(false)
+    private val dragEditMode = MutableStateFlow(false)
     private val hapticFeedbackMode = MutableStateFlow(HapticFeedbackMode.NONE)
 
     private var loadingMenuJob: Job? = null
@@ -83,25 +84,46 @@ class GameViewModelTouchControls(
     }
 
     fun updateTouchControllerSettings(touchControllerSettings: TouchControllerSettingsManager.Settings) {
+        // Capture orientation before dispatch: a rotation must not save a
+        // portrait gesture into the landscape slot (or vice versa).
+        val controller = touchControlId.value
+        val orientation = screenOrientation.value
         scope.launch {
             touchControllerSettingsManager.storeSettings(
-                touchControlId.value,
-                screenOrientation.value,
+                controller,
+                orientation,
                 touchControllerSettings,
             )
         }
     }
 
+    fun previewTouchControllerSettings(touchControllerSettings: TouchControllerSettingsManager.Settings) {
+        touchControllerSettingsManager.previewSettings(
+            touchControlId.value,
+            screenOrientation.value,
+            touchControllerSettings,
+        )
+    }
+
+    fun isDragEditMode(): Flow<Boolean> = dragEditMode
+
+    fun setDragEditMode(enabled: Boolean) {
+        dragEditMode.value = enabled
+        if (enabled) showEditControls.value = false
+    }
+
     fun resetTouchControls() {
+        val controller = touchControlId.value
+        val orientation = screenOrientation.value
         scope.launch {
-            touchControllerSettingsManager.resetSettings(
-                touchControlId.value,
-                screenOrientation.value,
-            )
+            touchControllerSettingsManager.resetSettings(controller, orientation)
         }
     }
 
     fun updateScreenOrientation(orientation: TouchControllerSettingsManager.Orientation) {
+        if (screenOrientation.value != orientation) {
+            dragEditMode.value = false
+        }
         screenOrientation.value = orientation
     }
 
@@ -118,6 +140,9 @@ class GameViewModelTouchControls(
     }
 
     fun handleVirtualInputEvent(events: List<InputEvent>) {
+        // PadKit may still see touches on a displayed control. Never forward
+        // button/axis input while the player is repositioning the controls.
+        if (dragEditMode.value) return
         val menuEvent = events.firstOrNull { it is InputEvent.Button && it.id == KeyEvent.KEYCODE_BUTTON_MODE }
         if (menuEvent != null) {
             onMenuPressed((menuEvent as InputEvent.Button).pressed)

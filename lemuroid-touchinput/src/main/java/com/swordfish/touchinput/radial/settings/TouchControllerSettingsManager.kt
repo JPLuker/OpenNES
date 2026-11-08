@@ -93,6 +93,19 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         return cachedStateFlow.map { it ?: defaultSettings }
     }
 
+    /**
+     * Applies changes to the visible controls immediately, without performing
+     * a disk write for every pointer movement. Call storeSettings when a
+     * gesture finishes to persist the final position.
+     */
+    fun previewSettings(
+        touchControllerID: TouchControllerID,
+        orientation: Orientation,
+        settings: Settings,
+    ) {
+        updateCachedSettings(touchControllerID, orientation, settings)
+    }
+
     suspend fun storeSettings(
         touchControllerID: TouchControllerID,
         orientation: Orientation,
