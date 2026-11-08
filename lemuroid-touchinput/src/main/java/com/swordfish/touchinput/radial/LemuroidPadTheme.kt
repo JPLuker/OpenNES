@@ -43,8 +43,10 @@ class LemuroidPadTheme(opacity: Float = 1f) {
 
     fun foregroundFill(pressed: Boolean): Color = if (pressed) level3FillPressed else level3Fill
 
-    fun icons(pressed: Boolean): Color =
-        (if (pressed) iconsPressedColor else iconsColor).copy(alpha = this.opacity)
+    fun icons(pressed: Boolean): Color {
+        val tint = if (pressed) iconsPressedColor else iconsColor
+        return tint.copy(alpha = opacity)
+    }
 }
 
 val LocalLemuroidPadTheme =
