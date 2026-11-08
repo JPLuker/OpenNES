@@ -100,18 +100,53 @@ class HomeViewModel(
                         val selectedTitle =
                             selected.name?.trim()?.takeIf { it.isNotEmpty() }
                                 ?: return@runCatching null
-                        val current = retrogradeDb.gameDao().selectById(gameId) ?: return@runCatching null
-                        val corrected =
-                            current.copy(
+                        val gameDao = retrogradeDb.gameDao()
+                        if (
+                            gameDao.updateCatalogueMatch(
+                                gameId = gameId,
                                 title = selectedTitle,
                                 developer = selected.developer,
                                 coverFrontUrl = selected.thumbnail,
-                                lastMetadataCheckedAt = System.currentTimeMillis(),
-                            )
-                        retrogradeDb.gameDao().update(corrected)
-                        corrected
+                                lastChecked = System.currentTimeMillis(),
+                            ) == 0
+                        ) {
+                            return@runCatching null
+                        }
+                        gameDao.selectById(gameId)
                     }.onFailure {
                         Timber.e(it, "Failed to update selected NES game metadata")
+                    }.getOrNull()
+                }
+            onComplete(updated)
+        }
+    }
+
+    /**
+     * Save user-authored game information without modifying unrelated fields.
+     * Blank entries intentionally clear these optional profile fields.
+     */
+    fun saveGameProfile(
+        gameId: Int,
+        genre: String?,
+        releaseYear: Int?,
+        description: String?,
+        onComplete: (Game?) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val updated =
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        val dao = retrogradeDb.gameDao()
+                        val changed =
+                            dao.updateGameProfile(
+                                gameId = gameId,
+                                genre = genre?.trim()?.takeIf { it.isNotEmpty() },
+                                releaseYear = releaseYear,
+                                description = description?.trim()?.takeIf { it.isNotEmpty() },
+                            )
+                        if (changed == 0) null else dao.selectById(gameId)
+                    }.onFailure {
+                        Timber.e(it, "Failed to save optional NES game information")
                     }.getOrNull()
                 }
             onComplete(updated)

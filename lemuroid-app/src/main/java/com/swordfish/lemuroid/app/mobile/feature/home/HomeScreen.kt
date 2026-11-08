@@ -142,6 +142,9 @@ fun HomeScreen(
                 viewModel.applyMetadataMatch(game.id, match, onApplied)
             },
             onGameUpdated = { updatedGame -> selectedGame = updatedGame },
+            onSaveProfile = { genre, year, description, onSaved ->
+                viewModel.saveGameProfile(game.id, genre, year, description, onSaved)
+            },
         )
     }
 }
@@ -430,6 +433,7 @@ private fun GameDetailsSheet(
     onSearchMetadata: (String, (List<GameMetadata>) -> Unit) -> Unit,
     onApplyMetadata: (GameMetadata, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
+    onSaveProfile: (String?, Int?, String?, (Game?) -> Unit) -> Unit,
 ) {
     var searchExpanded by remember(game.id) { mutableStateOf(false) }
     var searchText by remember(game.id) { mutableStateOf(game.title.substringBefore('(').trim()) }
@@ -490,6 +494,12 @@ private fun GameDetailsSheet(
                     value = it,
                 )
             }
+
+            GameProfileSection(
+                game = game,
+                onSave = onSaveProfile,
+                onGameUpdated = onGameUpdated,
+            )
 
             game.lastPlayedAt?.let { lastPlayed ->
                 val date =
@@ -627,6 +637,138 @@ private fun GameDetailsSheet(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
                 ) {
                     Text(stringResource(R.string.opennes_game_more))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameProfileSection(
+    game: Game,
+    onSave: (String?, Int?, String?, (Game?) -> Unit) -> Unit,
+    onGameUpdated: (Game) -> Unit,
+) {
+    var editing by remember(game.id) { mutableStateOf(false) }
+    var genreInput by remember(game.id) { mutableStateOf(game.genre.orEmpty()) }
+    var yearInput by remember(game.id) { mutableStateOf(game.releaseYear?.toString().orEmpty()) }
+    var descriptionInput by remember(game.id) { mutableStateOf(game.description.orEmpty()) }
+    var saving by remember(game.id) { mutableStateOf(false) }
+    var saveFailed by remember(game.id) { mutableStateOf(false) }
+    var invalidYear by remember(game.id) { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        game.genre?.takeIf { it.isNotBlank() }?.let {
+            GameDetailField(stringResource(R.string.opennes_game_genre), it)
+        }
+        game.releaseYear?.let {
+            GameDetailField(stringResource(R.string.opennes_game_release_year), it.toString())
+        }
+        game.description?.takeIf { it.isNotBlank() }?.let {
+            GameDetailField(stringResource(R.string.opennes_game_description), it)
+        }
+
+        if (!editing) {
+            if (game.genre.isNullOrBlank() && game.releaseYear == null && game.description.isNullOrBlank()) {
+                Text(
+                    text = stringResource(R.string.opennes_profile_empty),
+                    color = LibraryColors.muted,
+                    fontSize = 12.sp,
+                )
+            }
+            OutlinedButton(
+                onClick = {
+                    genreInput = game.genre.orEmpty()
+                    yearInput = game.releaseYear?.toString().orEmpty()
+                    descriptionInput = game.description.orEmpty()
+                    saveFailed = false
+                    invalidYear = false
+                    editing = true
+                },
+                border = BorderStroke(1.dp, LibraryColors.border),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+            ) {
+                Text(stringResource(R.string.opennes_profile_edit))
+            }
+        } else {
+            OutlinedTextField(
+                value = genreInput,
+                onValueChange = { if (it.length <= 80) genreInput = it },
+                label = { Text(stringResource(R.string.opennes_game_genre)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = yearInput,
+                onValueChange = {
+                    if (it.length <= 4 && it.all(Char::isDigit)) {
+                        yearInput = it
+                        invalidYear = false
+                    }
+                },
+                label = { Text(stringResource(R.string.opennes_game_release_year)) },
+                isError = invalidYear,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (invalidYear) {
+                Text(
+                    text = stringResource(R.string.opennes_profile_invalid_year),
+                    color = LibraryColors.red,
+                    fontSize = 12.sp,
+                )
+            }
+            OutlinedTextField(
+                value = descriptionInput,
+                onValueChange = { if (it.length <= 1500) descriptionInput = it },
+                label = { Text(stringResource(R.string.opennes_game_description)) },
+                minLines = 3,
+                maxLines = 7,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (saveFailed) {
+                Text(
+                    text = stringResource(R.string.opennes_profile_failed),
+                    color = LibraryColors.red,
+                    fontSize = 12.sp,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { editing = false },
+                    enabled = !saving,
+                    border = BorderStroke(1.dp, LibraryColors.border),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                ) {
+                    Text(stringResource(R.string.opennes_profile_cancel))
+                }
+                Button(
+                    onClick = {
+                        val parsedYear = yearInput.toIntOrNull()
+                        if (yearInput.isNotBlank() && (parsedYear == null || parsedYear !in 1950..2100)) {
+                            invalidYear = true
+                        } else {
+                            saving = true
+                            saveFailed = false
+                            onSave(
+                                genreInput,
+                                parsedYear,
+                                descriptionInput,
+                            ) { updated ->
+                                saving = false
+                                if (updated == null) {
+                                    saveFailed = true
+                                } else {
+                                    editing = false
+                                    onGameUpdated(updated)
+                                }
+                            }
+                        }
+                    },
+                    enabled = !saving,
+                    colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                ) {
+                    Text(stringResource(R.string.opennes_profile_save))
                 }
             }
         }

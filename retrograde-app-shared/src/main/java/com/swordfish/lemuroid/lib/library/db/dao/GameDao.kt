@@ -82,6 +82,40 @@ interface GameDao {
     @Delete
     fun delete(games: List<Game>)
 
+    /**
+     * Targeted edits avoid overwriting concurrent playtime, favorites, custom
+     * artwork, and ROM scan timestamps with a stale Game object.
+     */
+    @Query(
+        """
+        UPDATE games
+        SET genre = :genre, releaseYear = :releaseYear, description = :description
+        WHERE id = :gameId
+        """,
+    )
+    suspend fun updateGameProfile(
+        gameId: Int,
+        genre: String?,
+        releaseYear: Int?,
+        description: String?,
+    ): Int
+
+    @Query(
+        """
+        UPDATE games
+        SET title = :title, developer = :developer,
+            coverFrontUrl = :coverFrontUrl, lastMetadataCheckedAt = :lastChecked
+        WHERE id = :gameId
+        """,
+    )
+    suspend fun updateCatalogueMatch(
+        gameId: Int,
+        title: String,
+        developer: String?,
+        coverFrontUrl: String?,
+        lastChecked: Long,
+    ): Int
+
     @Update
     suspend fun update(game: Game)
 

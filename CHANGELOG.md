@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased — User-controlled metadata correction
+## Unreleased — Game profile information
+
+- Add optional genre, release year and description fields to each NES game, including a native edit/save interface in game details.
+- Preserve existing records through Room 12→13 migration; missing fields remain blank rather than displaying invented metadata.
+- Use targeted SQL updates for both personal game details and selected catalogue matches to avoid overwriting concurrent playtime, favorite status or custom artwork.
+- Keep existing game saves, ROM paths, custom covers and title overrides untouched.
+- External enrichment of these fields is not yet implemented; they can be entered manually until a verified provider is connected.
+
+## User-controlled metadata correction
 
 - Add an offline **Find game info** search inside game details, using the bundled NES Libretro catalogue.
 - Present candidate titles and developers for explicit selection; do not automatically assign uncertain matches.

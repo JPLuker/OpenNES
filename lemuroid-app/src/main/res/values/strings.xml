@@ -259,6 +259,15 @@
     <string name="opennes_game_last_played">Last played</string>
     <string name="opennes_game_rom_file">ROM file</string>
     <string name="opennes_game_more">More options</string>
+    <string name="opennes_game_genre">Genre</string>
+    <string name="opennes_game_release_year">Release year</string>
+    <string name="opennes_game_description">Description</string>
+    <string name="opennes_profile_empty">No additional game information has been recorded.</string>
+    <string name="opennes_profile_edit">Edit game details</string>
+    <string name="opennes_profile_save">Save details</string>
+    <string name="opennes_profile_cancel">Cancel</string>
+    <string name="opennes_profile_invalid_year">Enter a year between 1950 and 2100, or leave it blank.</string>
+    <string name="opennes_profile_failed">Could not save game details.</string>
     <string name="opennes_artwork_gallery">Artwork</string>
     <string name="opennes_artwork_title_screen">Title screen</string>
     <string name="opennes_artwork_gameplay">Gameplay screenshot</string>

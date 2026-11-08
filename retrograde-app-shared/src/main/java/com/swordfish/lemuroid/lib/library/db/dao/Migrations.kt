@@ -75,6 +75,17 @@ object Migrations {
             }
         }
 
+    val VERSION_12_13: Migration =
+        object : Migration(12, 13) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add optional editorial fields; keep every existing row, game save,
+                // custom cover/name, favorites, metadata and recorded playtime.
+                database.execSQL("ALTER TABLE games ADD COLUMN genre TEXT")
+                database.execSQL("ALTER TABLE games ADD COLUMN releaseYear INTEGER")
+                database.execSQL("ALTER TABLE games ADD COLUMN description TEXT")
+            }
+        }
+
     private fun migrateGamesTableToVersion10(database: SupportSQLiteDatabase) {
         database.execSQL(
             "ALTER TABLE games ADD COLUMN customName TEXT DEFAULT NULL",

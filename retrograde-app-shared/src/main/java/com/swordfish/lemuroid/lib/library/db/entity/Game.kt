@@ -56,6 +56,10 @@ data class Game(
     val totalPlayTimeMillis: Long = 0L,
     @ColumnInfo(defaultValue = "0")
     val lastMetadataCheckedAt: Long = 0L,
+    // Optional editorial details. Never infer or fabricate missing metadata.
+    val genre: String? = null,
+    val releaseYear: Int? = null,
+    val description: String? = null,
 ) : Serializable {
     fun displayName(): String = customName ?: title
 
