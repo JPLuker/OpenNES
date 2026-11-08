@@ -60,6 +60,8 @@ data class Game(
     val genre: String? = null,
     val releaseYear: Int? = null,
     val description: String? = null,
+    // Provenance for optional Wikidata details, not for user-supplied overrides.
+    val wikidataEntityId: String? = null,
 ) : Serializable {
     fun displayName(): String = customName ?: title
 

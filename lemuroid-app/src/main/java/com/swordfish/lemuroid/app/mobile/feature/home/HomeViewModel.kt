@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
+import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.lib.library.SystemID
@@ -60,6 +61,7 @@ class HomeViewModel(
     private val notificationsPermissionEnabledState = MutableStateFlow(true)
     private val uiStates = MutableStateFlow(UIState())
     private val coverPrefetcher = NesCoverPrefetcher(appContext.applicationContext)
+    private val wikidataSource = WikidataNesMetadataSource()
 
     fun getViewStates(): Flow<UIState> {
         return uiStates
@@ -150,6 +152,65 @@ class HomeViewModel(
                     }.getOrNull()
                 }
             onComplete(updated)
+        }
+    }
+
+    /**
+     * User-invoked online lookup. The service verifies an exact title match,
+     * video-game identity and NES platform before returning any candidate.
+     */
+    fun lookupWikidata(
+        title: String,
+        onResult: (WikidataNesMetadataSource.Result) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result =
+                withContext(Dispatchers.IO) {
+                    wikidataSource.lookup(title)
+                }
+            onResult(result)
+        }
+    }
+
+    /**
+     * The user confirms the verified online record before it is applied.
+     * Only previously blank editorial fields are populated; re-read the row
+     * after a targeted update to avoid changing concurrent game state.
+     */
+    fun applyWikidata(
+        gameId: Int,
+        candidate: WikidataNesMetadataSource.Result.Match,
+        onResult: (Game?) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val updated =
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        if (!candidate.entityId.matches(Regex("Q[1-9][0-9]*"))) {
+                            return@runCatching null
+                        }
+                        val dao = retrogradeDb.gameDao()
+                        val old = dao.selectById(gameId) ?: return@runCatching null
+                        val canFill =
+                            (old.genre.isNullOrBlank() && !candidate.genre.isNullOrBlank()) ||
+                                (old.releaseYear == null && candidate.releaseYear != null) ||
+                                (old.description.isNullOrBlank() && !candidate.description.isNullOrBlank())
+                        if (!canFill) return@runCatching null
+
+                        val changed =
+                            dao.fillMissingOnlineGameInfo(
+                                gameId = gameId,
+                                genre = candidate.genre,
+                                releaseYear = candidate.releaseYear,
+                                description = candidate.description,
+                                sourceId = candidate.entityId,
+                            )
+                        if (changed == 0) null else dao.selectById(gameId)
+                    }.onFailure {
+                        Timber.e(it, "Could not save verified Wikidata game information")
+                    }.getOrNull()
+                }
+            onResult(updated)
         }
     }
 

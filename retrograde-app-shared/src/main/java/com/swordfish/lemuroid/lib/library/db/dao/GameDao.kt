@@ -89,7 +89,8 @@ interface GameDao {
     @Query(
         """
         UPDATE games
-        SET genre = :genre, releaseYear = :releaseYear, description = :description
+        SET genre = :genre, releaseYear = :releaseYear, description = :description,
+            wikidataEntityId = NULL
         WHERE id = :gameId
         """,
     )
@@ -98,6 +99,28 @@ interface GameDao {
         genre: String?,
         releaseYear: Int?,
         description: String?,
+    ): Int
+
+    /**
+     * A verified external NES game record can fill only missing editorial
+     * fields. Never overwrite local edits or other game-state columns.
+     */
+    @Query(
+        """
+        UPDATE games
+        SET genre = CASE WHEN genre IS NULL OR TRIM(genre) = '' THEN :genre ELSE genre END,
+            releaseYear = COALESCE(releaseYear, :releaseYear),
+            description = CASE WHEN description IS NULL OR TRIM(description) = '' THEN :description ELSE description END,
+            wikidataEntityId = :sourceId
+        WHERE id = :gameId AND systemId = 'nes'
+        """,
+    )
+    suspend fun fillMissingOnlineGameInfo(
+        gameId: Int,
+        genre: String?,
+        releaseYear: Int?,
+        description: String?,
+        sourceId: String,
     ): Int
 
     @Query(

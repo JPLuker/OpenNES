@@ -86,6 +86,14 @@ object Migrations {
             }
         }
 
+    val VERSION_13_14: Migration =
+        object : Migration(13, 14) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Optional source reference; do not touch saves, ROMs or custom data.
+                database.execSQL("ALTER TABLE games ADD COLUMN wikidataEntityId TEXT")
+            }
+        }
+
     private fun migrateGamesTableToVersion10(database: SupportSQLiteDatabase) {
         database.execSQL(
             "ALTER TABLE games ADD COLUMN customName TEXT DEFAULT NULL",
