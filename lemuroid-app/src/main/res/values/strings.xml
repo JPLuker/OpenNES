@@ -317,4 +317,7 @@
     <string name="opennes_controls_rotation">Button arrangement</string>
     <string name="opennes_controls_reset_left">Reset D-pad position and size</string>
     <string name="opennes_controls_reset_right">Reset A/B position and size</string>
+    <string name="opennes_controls_drag_start">Drag controls on screen</string>
+    <string name="opennes_controls_drag_hint">Drag the outlined D-pad or A/B group to reposition it</string>
+    <string name="opennes_controls_drag_sliders">Fine-tune</string>
 </resources>

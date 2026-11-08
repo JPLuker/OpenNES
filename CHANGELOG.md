@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased — Independent NES controller positioning
+## Unreleased — Direct on-screen controller dragging
+
+- Add a drag-edit mode launched from the existing controller editor. The D-pad and A/B clusters receive visible outlines and can be moved by touch.
+- Preview movement immediately without writing preferences on every pointer update; persist the final position when a drag ends.
+- Suppress virtual gameplay input while drag-edit mode is active, and support Done, Android Back and Fine-tune (return to sliders).
+- Keep previously configured per-orientation and per-side size and position values. Rotation exits drag mode to prevent editing the wrong orientation.
+- The original PadKit controls remain in place for normal NES gameplay and external controller handling.
+- Direct dragging is bounded by the existing cluster offset limits; device ergonomics and gesture reliability still require testing.
+
+## Independent NES controller positioning
 
 - Give the D-pad/Select and A/B/Start clusters separate live size, horizontal, and vertical position controls.
 - Display actual horizontal and vertical movement in dp instead of unlabeled sliders; support positive and negative offsets with bounded movement.

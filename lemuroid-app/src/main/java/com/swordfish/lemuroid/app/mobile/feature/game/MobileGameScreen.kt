@@ -1,6 +1,7 @@
 package com.swordfish.lemuroid.app.mobile.feature.game
 
 import android.graphics.RectF
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -79,6 +80,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
 
         val controllerConfigState = viewModel.getTouchControllerConfig().collectAsState(null)
         val touchControlsVisibleState = viewModel.isTouchControllerVisible().collectAsState(false)
+        val dragEditMode = viewModel.isDragEditMode().collectAsState(false).value
+
+        BackHandler(enabled = dragEditMode) {
+            viewModel.setDragEditMode(false)
+        }
         val touchControllerSettingsState =
             viewModel
                 .getTouchControlsSettings(LocalDensity.current, WindowInsets.displayCutout)
@@ -119,6 +125,8 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
 
             val fullScreenPosition = remember { mutableStateOf<Rect?>(null) }
             val viewportPosition = remember { mutableStateOf<Rect?>(null) }
+            val leftPadBounds = remember { mutableStateOf<Rect?>(null) }
+            val rightPadBounds = remember { mutableStateOf<Rect?>(null) }
 
             AndroidView(
                 modifier =
@@ -186,12 +194,16 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
 
                         leftGamePad?.invoke(
                             this,
-                            Modifier.layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD),
+                            Modifier
+                                .layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD)
+                                .onGloballyPositioned { leftPadBounds.value = it.boundsInRoot() },
                             touchControllerSettings,
                         )
                         rightGamePad?.invoke(
                             this,
-                            Modifier.layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD),
+                            Modifier
+                                .layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD)
+                                .onGloballyPositioned { rightPadBounds.value = it.boundsInRoot() },
                             touchControllerSettings,
                         )
 
@@ -204,6 +216,21 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         )
                     }
                 }
+            }
+
+            if (dragEditMode && touchControllerSettings != null) {
+                NesControllerDragOverlay(
+                    leftBounds = leftPadBounds.value,
+                    rightBounds = rightPadBounds.value,
+                    settings = touchControllerSettings,
+                    onPreview = viewModel::previewTouchControllerSettings,
+                    onCommit = viewModel::updateTouchControllerSettings,
+                    onDone = { viewModel.setDragEditMode(false) },
+                    onFineTune = {
+                        viewModel.setDragEditMode(false)
+                        viewModel.showEditControls(true)
+                    },
+                )
             }
         }
 
@@ -298,6 +325,9 @@ private fun MenuEditTouchControls(
                     text = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_editor_hint),
                     fontSize = 12.sp,
                 )
+                TextButton(onClick = { viewModel.setDragEditMode(true) }) {
+                    Text(stringResource(com.swordfish.lemuroid.R.string.opennes_controls_drag_start))
+                }
                 MenuEditControllerCluster(
                     label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_left_group),
                     resetLabel = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_left),

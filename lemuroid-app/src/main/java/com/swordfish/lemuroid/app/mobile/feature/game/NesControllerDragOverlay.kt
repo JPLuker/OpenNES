@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
+import com.swordfish.touchinput.controller.R as TouchInputR
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import kotlin.math.roundToInt
 
@@ -102,7 +103,7 @@ internal fun NesControllerDragOverlay(
                         Text(stringResource(R.string.opennes_controls_drag_sliders))
                     }
                     TextButton(onClick = onDone) {
-                        Text(stringResource(R.string.touch_customize_button_done))
+                        Text(stringResource(TouchInputR.string.touch_customize_button_done))
                     }
                 }
             }
