@@ -44,7 +44,7 @@ class GameViewModelTouchControls(
     private val sideEffects: GameViewModelSideEffects,
     private val scope: CoroutineScope,
 ) : DefaultLifecycleObserver {
-    private val touchControlId = MutableStateFlow(TouchControllerID.GB)
+    private val touchControlId = MutableStateFlow(TouchControllerID.NES)
     private val screenOrientation = MutableStateFlow(TouchControllerSettingsManager.Orientation.PORTRAIT)
     private val menuPressed = MutableStateFlow(false)
     private val showEditControls = MutableStateFlow(false)

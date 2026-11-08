@@ -198,12 +198,10 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                         HomeViewModel.Factory(
                                             applicationContext,
                                             retrogradeDb,
-                                            coresSelection,
                                         ),
                                 ),
                             onGameClick = onGameClick,
                             onGameLongClick = onGameLongClick,
-                            onOpenCoreSelection = { navController.navigateToRoute(MainRoute.SETTINGS_CORES_SELECTION) },
                         )
                     }
                     composable(MainRoute.FAVORITES) {
