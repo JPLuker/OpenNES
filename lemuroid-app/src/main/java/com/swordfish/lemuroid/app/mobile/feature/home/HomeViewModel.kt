@@ -97,8 +97,9 @@ class HomeViewModel(
                 withContext(Dispatchers.IO) {
                     runCatching {
                         if (selected.system != SystemID.NES.dbname) return@runCatching null
-                        val selectedTitle = selected.name?.trim()?.takeIf { it.isNotEmpty() }
-                            ?: return@runCatching null
+                        val selectedTitle =
+                            selected.name?.trim()?.takeIf { it.isNotEmpty() }
+                                ?: return@runCatching null
                         val current = retrogradeDb.gameDao().selectById(gameId) ?: return@runCatching null
                         val corrected =
                             current.copy(
