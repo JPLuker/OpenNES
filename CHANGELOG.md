@@ -9,7 +9,14 @@
 
 OpenNES-specific history; upstream Lemuroid release history is not reproduced.
 
-## Unreleased — Simple APK distribution
+## Unreleased — Library details and artwork fixes
+
+- Tap a game on the OpenNES shelf to see its NES game-detail panel: existing cover, title, developer when available, ROM filename, last played, and recorded playtime.
+- Provide direct Play and More options actions using existing functional game/context handlers.
+- Switch Libretro box-art URLs to HTTPS for newly scanned games and upgrade legacy HTTP links at display time without changing custom user cover URIs.
+- This uses existing indexed metadata; automatic enrichment, artwork matching beyond Libretro, and RetroAchievements remain separate ongoing work.
+
+## Simple APK distribution
 
 - Publish a directly downloadable `OpenNES-debug.apk` to a rolling GitHub development prerelease after every successful master build and Kotlin lint pass.
 - Update the same download URL after successful builds and keep the previous known-good APK if validation fails.

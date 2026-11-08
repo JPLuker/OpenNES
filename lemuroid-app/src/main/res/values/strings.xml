@@ -254,6 +254,11 @@
     <string name="opennes_library_subtitle">An entire era, one shelf at a time.</string>
     <string name="opennes_continue">CONTINUE PLAYING</string>
     <string name="opennes_play">Play</string>
+    <string name="opennes_system_nes">NINTENDO ENTERTAINMENT SYSTEM</string>
+    <string name="opennes_game_developer">Developer</string>
+    <string name="opennes_game_last_played">Last played</string>
+    <string name="opennes_game_rom_file">ROM file</string>
+    <string name="opennes_game_more">More options</string>
     <string name="opennes_recent_shelf">Recently played</string>
     <string name="opennes_favorites_shelf">Your favorites</string>
     <string name="opennes_discover_shelf">Not yet played</string>

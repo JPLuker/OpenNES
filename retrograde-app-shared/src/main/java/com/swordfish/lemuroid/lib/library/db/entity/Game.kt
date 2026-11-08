@@ -57,7 +57,12 @@ data class Game(
 ) : Serializable {
     fun displayName(): String = customName ?: title
 
-    fun displayCoverUrl(): String? = customCoverUri ?: coverFrontUrl
+    fun displayCoverUrl(): String? =
+        customCoverUri
+            ?: coverFrontUrl?.replace(
+                "http://thumbnails.libretro.com/",
+                "https://thumbnails.libretro.com/",
+            )
 
     companion object {
         val DIFF_CALLBACK =
