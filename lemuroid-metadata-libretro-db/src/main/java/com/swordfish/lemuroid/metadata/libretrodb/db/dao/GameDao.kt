@@ -20,6 +20,18 @@ interface GameDao {
     @Query("SELECT * FROM games WHERE system = 'nes' AND serial = :serial LIMIT 1")
     suspend fun findBySerial(serial: String): LibretroRom?
 
+    // Offline manual matching. instr() treats %, _ and other user input literally.
+    @Query(
+        """
+        SELECT * FROM games
+        WHERE system = 'nes' AND name IS NOT NULL
+          AND instr(lower(name), lower(:query)) > 0
+        ORDER BY name COLLATE NOCASE
+        LIMIT 80
+        """,
+    )
+    suspend fun searchNesTitles(query: String): List<LibretroRom>
+
     // Used only as a cautious fallback when exact ROM/CRC matching fails.
     @Query("SELECT * FROM games WHERE system = 'nes' AND name LIKE :prefix || '%' LIMIT 80")
     suspend fun findByTitlePrefix(prefix: String): List<LibretroRom>

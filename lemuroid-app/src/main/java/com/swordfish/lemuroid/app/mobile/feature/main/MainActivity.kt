@@ -68,6 +68,7 @@ import com.swordfish.lemuroid.lib.library.SystemID
 import com.swordfish.lemuroid.lib.library.covers.CustomCoverManager
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import com.swordfish.lemuroid.lib.savesync.SaveSyncManager
 import com.swordfish.lemuroid.lib.storage.DirectoriesManager
@@ -87,6 +88,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
     @Inject
     lateinit var retrogradeDb: RetrogradeDatabase
+
+    @Inject
+    lateinit var gameMetadataProvider: GameMetadataProvider
 
     @Inject
     lateinit var gameInteractor: GameInteractor
@@ -200,6 +204,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                         HomeViewModel.Factory(
                                             applicationContext,
                                             retrogradeDb,
+                                            gameMetadataProvider,
                                         ),
                                 ),
                             onGameClick = onGameClick,

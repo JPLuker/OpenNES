@@ -262,6 +262,12 @@
     <string name="opennes_artwork_gallery">Artwork</string>
     <string name="opennes_artwork_title_screen">Title screen</string>
     <string name="opennes_artwork_gameplay">Gameplay screenshot</string>
+    <string name="opennes_find_game_info">Find game info</string>
+    <string name="opennes_search_game_hint">Search NES title</string>
+    <string name="opennes_search_catalogue">Search catalogue</string>
+    <string name="opennes_no_catalog_matches">No matches found in the offline NES catalogue.</string>
+    <string name="opennes_metadata_update_failed">Couldn’t apply this match. Your existing details are unchanged.</string>
+    <string name="opennes_use_catalog_match">Use</string>
     <string name="opennes_recent_shelf">Recently played</string>
     <string name="opennes_favorites_shelf">Your favorites</string>
     <string name="opennes_discover_shelf">Not yet played</string>

@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased — NES artwork gallery and caching
+## Unreleased — User-controlled metadata correction
+
+- Add an offline **Find game info** search inside game details, using the bundled NES Libretro catalogue.
+- Present candidate titles and developers for explicit selection; do not automatically assign uncertain matches.
+- Applying a chosen catalogue match corrects the base title, developer and box art while preserving custom names, user artwork, saved games, favorites and playtime.
+- No new internet provider, account or credential required. ROM file paths and emulator-core data are not altered.
+
+## NES artwork gallery and caching
 
 - Display available NES title screens and gameplay screenshots in the game-details panel, using trusted URLs derived from matched Libretro box art.
 - Load gallery images lazily; unavailable images disappear instead of leaving broken previews.

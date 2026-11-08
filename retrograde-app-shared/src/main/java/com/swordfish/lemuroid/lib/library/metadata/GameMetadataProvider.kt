@@ -23,4 +23,7 @@ import com.swordfish.lemuroid.lib.storage.StorageFile
 
 interface GameMetadataProvider {
     suspend fun retrieveMetadata(storageFile: StorageFile): GameMetadata?
+
+    /** Searchable offline catalogue; providers without search support return no results. */
+    suspend fun searchMetadata(title: String): List<GameMetadata> = emptyList()
 }

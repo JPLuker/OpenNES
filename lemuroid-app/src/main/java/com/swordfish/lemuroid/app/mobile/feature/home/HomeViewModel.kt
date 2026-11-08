@@ -12,7 +12,10 @@ import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
+import com.swordfish.lemuroid.lib.library.SystemID
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
+import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -21,11 +24,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @OptIn(FlowPreview::class)
 class HomeViewModel(
     appContext: Context,
     retrogradeDb: RetrogradeDatabase,
+    private val metadataProvider: GameMetadataProvider,
 ) : ViewModel() {
     companion object {
         const val CAROUSEL_MAX_ITEMS = 10
@@ -35,9 +41,10 @@ class HomeViewModel(
     class Factory(
         val appContext: Context,
         val retrogradeDb: RetrogradeDatabase,
+        val metadataProvider: GameMetadataProvider,
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return HomeViewModel(appContext, retrogradeDb) as T
+            return HomeViewModel(appContext, retrogradeDb, metadataProvider) as T
         }
     }
 
@@ -56,6 +63,58 @@ class HomeViewModel(
 
     fun getViewStates(): Flow<UIState> {
         return uiStates
+    }
+
+    /**
+     * Search the bundled NES catalogue explicitly; no remote account, scraping
+     * credentials or modifications to existing games are involved.
+     */
+    fun searchMetadata(
+        query: String,
+        onComplete: (List<GameMetadata>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val matches =
+                withContext(Dispatchers.IO) {
+                    metadataProvider.searchMetadata(query)
+                }
+            onComplete(matches)
+        }
+    }
+
+    /**
+     * Apply only the catalogue fields explicitly selected by the player.
+     * Load the latest database row first so saves, favorites, custom art,
+     * custom names and time tracked since opening the detail sheet survive.
+     */
+    fun applyMetadataMatch(
+        gameId: Int,
+        selected: GameMetadata,
+        onComplete: (Game?) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val updated =
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        if (selected.system != SystemID.NES.dbname || selected.name.isNullOrBlank()) {
+                            return@runCatching null
+                        }
+                        val current = retrogradeDb.gameDao().selectById(gameId) ?: return@runCatching null
+                        val corrected =
+                            current.copy(
+                                title = selected.name,
+                                developer = selected.developer,
+                                coverFrontUrl = selected.thumbnail,
+                                lastMetadataCheckedAt = System.currentTimeMillis(),
+                            )
+                        retrogradeDb.gameDao().update(corrected)
+                        corrected
+                    }.onFailure {
+                        Timber.e(it, "Failed to update selected NES game metadata")
+                    }.getOrNull()
+                }
+            onComplete(updated)
+        }
     }
 
     fun changeLocalStorageFolder(context: Context) {

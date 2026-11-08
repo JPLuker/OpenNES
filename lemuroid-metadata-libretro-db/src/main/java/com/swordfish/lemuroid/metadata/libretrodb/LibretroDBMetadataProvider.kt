@@ -20,6 +20,20 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
 
     private val sortedSystemIds = listOf(SystemID.NES.dbname)
 
+    override suspend fun searchMetadata(title: String): List<GameMetadata> {
+        val query = title.trim()
+        if (query.length < 3) return emptyList()
+
+        return runCatching {
+            ovgdbManager.dbInstance.gameDao().searchNesTitles(query)
+                .distinctBy { it.name?.lowercase(Locale.ROOT) }
+                .take(20)
+                .map { convertToGameMetadata(it) }
+        }.onFailure {
+            Timber.w(it, "Could not search the local NES metadata catalogue")
+        }.getOrDefault(emptyList())
+    }
+
     override suspend fun retrieveMetadata(storageFile: StorageFile): GameMetadata? {
         val db = ovgdbManager.dbInstance
 

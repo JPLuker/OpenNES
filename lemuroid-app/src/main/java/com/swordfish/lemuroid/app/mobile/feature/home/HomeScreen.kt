@@ -36,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -66,6 +67,7 @@ import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 
 /** Original OpenNES home palette. The rest of the application will adopt these in M2. */
 private object LibraryColors {
@@ -133,6 +135,13 @@ fun HomeScreen(
                 selectedGame = null
                 onGameLongClick(game)
             },
+            onSearchMetadata = { query, onResults ->
+                viewModel.searchMetadata(query, onResults)
+            },
+            onApplyMetadata = { match, onApplied ->
+                viewModel.applyMetadataMatch(game.id, match, onApplied)
+            },
+            onGameUpdated = { updatedGame -> selectedGame = updatedGame },
         )
     }
 }
@@ -418,7 +427,18 @@ private fun GameDetailsSheet(
     onDismiss: () -> Unit,
     onPlay: () -> Unit,
     onMore: () -> Unit,
+    onSearchMetadata: (String, (List<GameMetadata>) -> Unit) -> Unit,
+    onApplyMetadata: (GameMetadata, (Game?) -> Unit) -> Unit,
+    onGameUpdated: (Game) -> Unit,
 ) {
+    var searchExpanded by remember(game.id) { mutableStateOf(false) }
+    var searchText by remember(game.id) { mutableStateOf(game.title.substringBefore('(').trim()) }
+    var searchResults by remember(game.id) { mutableStateOf(emptyList<GameMetadata>()) }
+    var searched by remember(game.id) { mutableStateOf(false) }
+    var searching by remember(game.id) { mutableStateOf(false) }
+    var applying by remember(game.id) { mutableStateOf(false) }
+    var matchFailed by remember(game.id) { mutableStateOf(false) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = LibraryColors.panel,
@@ -490,6 +510,97 @@ private fun GameDetailsSheet(
             )
 
             GameArtworkGallery(game)
+
+            OutlinedButton(
+                onClick = { searchExpanded = !searchExpanded },
+                border = BorderStroke(1.dp, LibraryColors.border),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+            ) {
+                Text(stringResource(R.string.opennes_find_game_info))
+            }
+
+            if (searchExpanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = {
+                            searchText = it
+                            searched = false
+                        },
+                        label = { Text(stringResource(R.string.opennes_search_game_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Button(
+                        onClick = {
+                            searching = true
+                            searched = false
+                            onSearchMetadata(searchText) { matches ->
+                                searchResults = matches
+                                searched = true
+                                searching = false
+                            }
+                        },
+                        enabled = !searching && searchText.trim().length >= 3,
+                        colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                    ) {
+                        Text(stringResource(R.string.opennes_search_catalogue))
+                    }
+                    if (searched && searchResults.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.opennes_no_catalog_matches),
+                            color = LibraryColors.muted,
+                            fontSize = 13.sp,
+                        )
+                    }
+                    if (matchFailed) {
+                        Text(
+                            text = stringResource(R.string.opennes_metadata_update_failed),
+                            color = LibraryColors.red,
+                            fontSize = 13.sp,
+                        )
+                    }
+                    searchResults.forEach { match ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = match.name.orEmpty(),
+                                    color = LibraryColors.foreground,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                )
+                                match.developer?.takeIf { it.isNotBlank() }?.let {
+                                    Text(text = it, color = LibraryColors.muted, fontSize = 12.sp)
+                                }
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    applying = true
+                                    matchFailed = false
+                                    onApplyMetadata(match) { updated ->
+                                        applying = false
+                                        if (updated == null) {
+                                            matchFailed = true
+                                        } else {
+                                            searchExpanded = false
+                                            onGameUpdated(updated)
+                                        }
+                                    }
+                                },
+                                enabled = !applying,
+                                border = BorderStroke(1.dp, LibraryColors.border),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                            ) {
+                                Text(stringResource(R.string.opennes_use_catalog_match))
+                            }
+                        }
+                    }
+                }
+            }
 
             Text(
                 text = stringResource(R.string.opennes_achievements_future),
