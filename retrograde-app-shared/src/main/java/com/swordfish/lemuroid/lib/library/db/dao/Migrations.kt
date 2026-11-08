@@ -64,6 +64,17 @@ object Migrations {
             }
         }
 
+    val VERSION_11_12: Migration =
+        object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Existing games are eligible for one metadata enrichment check.
+                // Preserve their custom names/covers, saves and recorded playtime.
+                database.execSQL(
+                    "ALTER TABLE games ADD COLUMN lastMetadataCheckedAt INTEGER NOT NULL DEFAULT 0",
+                )
+            }
+        }
+
     private fun migrateGamesTableToVersion10(database: SupportSQLiteDatabase) {
         database.execSQL(
             "ALTER TABLE games ADD COLUMN customName TEXT DEFAULT NULL",

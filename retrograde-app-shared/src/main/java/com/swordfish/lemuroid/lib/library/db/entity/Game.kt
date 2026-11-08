@@ -54,6 +54,8 @@ data class Game(
     val customCoverUri: String? = null,
     @ColumnInfo(defaultValue = "0")
     val totalPlayTimeMillis: Long = 0L,
+    @ColumnInfo(defaultValue = "0")
+    val lastMetadataCheckedAt: Long = 0L,
 ) : Serializable {
     fun displayName(): String = customName ?: title
 

@@ -97,7 +97,7 @@ class LemuroidLibrary(
         val entries = batch.map { fetchEntriesFromDatabase(it) }
 
         val existingEntries = entries.filterIsInstance<ScanEntry.GameFile>()
-        handleExistingEntries(existingEntries, startedAtMs)
+        handleExistingEntries(existingEntries, startedAtMs, provider, gameMetadata)
 
         val newEntries =
             entries.filterIsInstance<ScanEntry.File>()
@@ -123,26 +123,77 @@ class LemuroidLibrary(
         }
     }
 
-    private fun handleExistingEntries(
+    private suspend fun handleExistingEntries(
         entries: List<ScanEntry.GameFile>,
         startedAtMs: Long,
+        provider: StorageProvider,
+        gameMetadata: GameMetadataProvider,
     ) {
-        updateGames(entries, startedAtMs)
+        updateGames(entries, startedAtMs, provider, gameMetadata)
         updateDataFiles(entries, startedAtMs)
     }
 
-    private fun updateGames(
+    private suspend fun updateGames(
         entries: List<ScanEntry.GameFile>,
         startedAtMs: Long,
+        provider: StorageProvider,
+        gameMetadata: GameMetadataProvider,
     ) {
         val updatedGames =
-            entries
-                .map { it.game.copy(lastIndexedAt = startedAtMs) }
+            entries.map { entry ->
+                val existing = entry.game
+                if (needsMetadataEnrichment(existing, startedAtMs)) {
+                    val refreshed =
+                        runCatching {
+                            val storageFile = safeStorageFile(provider, entry.file.primaryFile)
+                            storageFile?.let { gameMetadata.retrieveMetadata(it) }
+                        }.onFailure {
+                            Timber.w(it, "Could not enrich NES metadata for: ${existing.fileName}")
+                        }.getOrNull()
 
-        updatedGames
-            .forEach { Timber.d("Updating game: $it") }
+                    enrichExistingGame(existing, refreshed, startedAtMs)
+                        .copy(lastIndexedAt = startedAtMs)
+                } else {
+                    existing.copy(lastIndexedAt = startedAtMs)
+                }
+            }
 
         retrogradedb.gameDao().update(updatedGames)
+    }
+
+    private fun needsMetadataEnrichment(
+        game: Game,
+        now: Long,
+    ): Boolean {
+        val missingDeveloper = game.developer.isNullOrBlank()
+        val missingArtwork = game.coverFrontUrl.isNullOrBlank() && game.customCoverUri.isNullOrBlank()
+        val missingTitle = game.title == game.fileName || game.title == game.fileName.substringBeforeLast('.')
+        if (!missingDeveloper && !missingArtwork && !missingTitle) return false
+
+        val lastChecked = game.lastMetadataCheckedAt
+        return lastChecked <= 0L || now - lastChecked >= METADATA_RETRY_INTERVAL_MS
+    }
+
+    private fun enrichExistingGame(
+        game: Game,
+        metadata: GameMetadata?,
+        checkedAt: Long,
+    ): Game {
+        val fallbackName = game.fileName.substringBeforeLast('.')
+        val newTitle =
+            if (game.title == game.fileName || game.title == fallbackName) {
+                metadata?.name?.takeIf { it.isNotBlank() } ?: game.title
+            } else {
+                game.title
+            }
+
+        return game.copy(
+            title = newTitle,
+            developer = game.developer?.takeIf { it.isNotBlank() } ?: metadata?.developer,
+            coverFrontUrl = game.coverFrontUrl?.takeIf { it.isNotBlank() } ?: metadata?.thumbnail,
+            // Never reset a user's customName, customCoverUri, favorites, saves or playtime.
+            lastMetadataCheckedAt = checkedAt,
+        )
     }
 
     private fun updateDataFiles(
@@ -343,5 +394,6 @@ class LemuroidLibrary(
         // We batch database updates to avoid unnecessary UI updates.
         const val MAX_BUFFER_SIZE = 200
         const val MAX_TIME = 5000
+        private const val METADATA_RETRY_INTERVAL_MS = 30L * 24L * 60L * 60L * 1000L
     }
 }

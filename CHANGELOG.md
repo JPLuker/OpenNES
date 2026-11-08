@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased — NES audio pacing experiment (Issue #3)
+## Unreleased — Metadata enrichment foundation
+
+- Recheck previously imported NES ROMs when their indexed title, developer, or default box art is incomplete, without requiring users to remove and reimport games.
+- Cache the last metadata check per game and defer unsuccessful or incomplete repeat lookups for 30 days to avoid unnecessary work on each library scan.
+- Preserve favorites, custom names, user-supplied covers, saves and cumulative playtime when enriching records.
+- Add a non-destructive Room 11→12 database migration. New enrichment uses the existing bundled NES metadata; external Plex-style provider matching remains future work.
+
+## NES audio pacing experiment (Issue #3)
 
 - Request a display mode near 60 Hz for phone NES gameplay when available, to test whether more consistent frame pacing resolves intermittent audio cutouts on high-refresh-rate displays.
 - Add a default-on **Prefer 60 Hz NES gameplay** Advanced setting, with a user-controlled opt-out for comparison. Mode selection never changes display resolution.
