@@ -30,6 +30,14 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val marginX: Float = DEFAULT_MARGIN_X,
         val marginY: Float = DEFAULT_MARGIN_Y,
         val opacity: Float = DEFAULT_OPACITY,
+        // Null per-side scale preserves existing saved shared scale on upgrade.
+        val leftScale: Float? = null,
+        val rightScale: Float? = null,
+        // Relative signed offsets: positive X is right, positive Y is down.
+        val leftOffsetX: Float = 0f,
+        val leftOffsetY: Float = 0f,
+        val rightOffsetX: Float = 0f,
+        val rightOffsetY: Float = 0f,
     )
 
     private fun computeInsetsPaddings(
@@ -138,6 +146,8 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         const val MAX_SCALE = 1.5f
 
         const val MAX_MARGINS = 96f
+        const val MAX_CLUSTER_OFFSET_X = 56f
+        const val MAX_CLUSTER_OFFSET_Y = 72f
     }
 
     private fun getPreferenceString(

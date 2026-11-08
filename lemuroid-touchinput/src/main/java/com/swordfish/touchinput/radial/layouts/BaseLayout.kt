@@ -1,6 +1,7 @@
 package com.swordfish.touchinput.radial.layouts
 
 import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,11 +23,11 @@ fun BaseLayoutLeft(
     secondaryDials: @Composable LayoutRadialSecondaryDialsScope.() -> Unit,
 ) {
     val interpolatedDialSize =
-        remember(settings.scale) {
+        remember(settings.leftScale, settings.scale) {
             lerp(
                 TouchControllerSettingsManager.MIN_SCALE,
                 TouchControllerSettingsManager.MAX_SCALE,
-                settings.scale,
+                (settings.leftScale ?: settings.scale).coerceIn(0f, 1f),
             )
         }
 
@@ -36,6 +37,12 @@ fun BaseLayoutLeft(
                 .absolutePadding(
                     left = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX,
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
+                )
+                .offset(
+                    x = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp *
+                        settings.leftOffsetX.coerceIn(-1f, 1f),
+                    y = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp *
+                        settings.leftOffsetY.coerceIn(-1f, 1f),
                 )
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
@@ -60,6 +67,12 @@ fun BaseLayoutRight(
                     right = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX,
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
                 )
+                .offset(
+                    x = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp *
+                        settings.rightOffsetX.coerceIn(-1f, 1f),
+                    y = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp *
+                        settings.rightOffsetY.coerceIn(-1f, 1f),
+                )
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
         secondaryDials = secondaryDials,
@@ -68,7 +81,7 @@ fun BaseLayoutRight(
                 lerp(
                     TouchControllerSettingsManager.MIN_SCALE,
                     TouchControllerSettingsManager.MAX_SCALE,
-                    settings.scale,
+                    (settings.rightScale ?: settings.scale).coerceIn(0f, 1f),
                 ),
         secondaryDialsBaseRotationInDegrees = -settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
