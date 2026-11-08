@@ -127,7 +127,8 @@ interface GameDao {
         """
         UPDATE games
         SET title = :title, developer = :developer,
-            coverFrontUrl = :coverFrontUrl, lastMetadataCheckedAt = :lastChecked
+            coverFrontUrl = :coverFrontUrl, lastMetadataCheckedAt = :lastChecked,
+            wikidataEntityId = NULL
         WHERE id = :gameId
         """,
     )

@@ -19,8 +19,9 @@ import java.util.concurrent.TimeUnit
  * be an instance of video game (Q7889), explicitly list NES (Q172742) as a
  * platform, and be the one and only qualifying entity.
  *
- * No gameplay data, ROM bytes, IP addresses or private library URIs are sent.
- * Only the game title is used as the remote search string.
+ * Only the game title appears in the query, not ROM bytes or local paths.
+ * Like any remote HTTP service, Wikidata can observe the request's IP address
+ * and user agent. The lookup runs only after the user presses the online button.
  */
 class WikidataNesMetadataSource {
     sealed interface Result {
