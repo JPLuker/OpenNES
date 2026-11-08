@@ -1101,11 +1101,47 @@ private fun GameCover(
 ) {
     val fallbackDrawable = remember(game.id, game.systemId) { CoverUtils.getFallbackDrawable(game) }
     val fallbackPainter = rememberDrawablePainter(drawable = fallbackDrawable)
+    val primaryArtwork = game.displayCoverUrl()
+
+    // Some old Libretro DB titles produce a missing thumbnail URL. For a ROM
+    // with an explicit No-Intro-style region in its filename, try the matching
+    // Libretro box-art filename only if the original URL fails. Keep custom
+    // artwork and existing successful catalogue covers as first priority.
+    val romArtwork =
+        remember(game.fileName, game.systemId, game.customCoverUri) {
+            if (game.systemId != "nes" || !game.customCoverUri.isNullOrBlank()) {
+                null
+            } else {
+                val fileTitle =
+                    game.fileName.substringAfterLast('/')
+                        .replace(Regex("""\\.(?:nes|zip|7z)$""", RegexOption.IGNORE_CASE), "")
+                if (fileTitle.contains(
+                        Regex("""\\((?:USA|Europe|Japan|World)(?:[,)]|\\s)""", RegexOption.IGNORE_CASE),
+                    )
+                ) {
+                    "https://thumbnails.libretro.com/" +
+                        "Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/" +
+                        Uri.encode(fileTitle) + ".png"
+                } else {
+                    null
+                }
+            }
+        }
+    var usingRomArtwork by remember(game.id, primaryArtwork, romArtwork) { mutableStateOf(false) }
+    val artworkUrl =
+        if (primaryArtwork.isNullOrBlank() || usingRomArtwork) romArtwork ?: primaryArtwork else primaryArtwork
 
     AsyncImage(
         model =
             ImageRequest.Builder(LocalContext.current)
-                .data(game.displayCoverUrl())
+                .data(artworkUrl)
+                .listener(
+                    onError = { _, _ ->
+                        if (!usingRomArtwork && romArtwork != null && artworkUrl != romArtwork) {
+                            usingRomArtwork = true
+                        }
+                    },
+                )
                 .build(),
         contentDescription = game.displayName(),
         modifier = modifier.aspectRatio(0.78f),
