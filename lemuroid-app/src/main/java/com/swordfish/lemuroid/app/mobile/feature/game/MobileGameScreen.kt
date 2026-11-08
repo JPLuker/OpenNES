@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.OpenInFull
@@ -282,6 +284,7 @@ private fun MenuEditTouchControls(
                     Modifier
                         .fillMaxWidth()
                         .wrapContentHeight()
+                        .verticalScroll(rememberScrollState())
                         .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {

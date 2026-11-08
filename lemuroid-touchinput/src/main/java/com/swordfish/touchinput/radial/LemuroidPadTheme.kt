@@ -39,11 +39,9 @@ class LemuroidPadTheme(opacity: Float = 1f) {
     val level0Shadow = Color.Black.copy(alpha = 0.15f * this.opacity)
     val level0ShadowWidth = 2.dp
 
-    fun compositeFill(pressed: Boolean): Color =
-        if (pressed) level2FillPressed else level2Fill
+    fun compositeFill(pressed: Boolean): Color = if (pressed) level2FillPressed else level2Fill
 
-    fun foregroundFill(pressed: Boolean): Color =
-        if (pressed) level3FillPressed else level3Fill
+    fun foregroundFill(pressed: Boolean): Color = if (pressed) level3FillPressed else level3Fill
 
     fun icons(pressed: Boolean): Color =
         (if (pressed) iconsPressedColor else iconsColor).copy(alpha = this.opacity)
