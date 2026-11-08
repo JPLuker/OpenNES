@@ -26,7 +26,7 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | --- | --- |
 | M0 — Own Android package/name and reproducible APK workflow | CI complete; device testing pending |
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
-| M2 — Replace the complete Lemuroid user interface | Not started |
+| M2 — Replace the complete Lemuroid user interface | In progress: original Home shelf, Continue Playing and recorded playtime (PR #7) |
 | M3 — Premium NES portrait controller skin | Not started |
 | M4 — Dedicated landscape controller skin | Not started |
 | M5 — Gameplay, saves, input and performance polish | Not started |
