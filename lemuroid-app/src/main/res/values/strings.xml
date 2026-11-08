@@ -246,4 +246,18 @@
     <string name="tilt_configuration_buttons_l1_r1">L1 - R1</string>
     <string name="tilt_configuration_buttons_l2_r2">L2 - R2</string>
 
+    <!-- OpenNES shelf / library, original UI (M2) -->
+    <string name="opennes_library_title">Your NES library</string>
+    <string name="opennes_library_subtitle">An entire era, one shelf at a time.</string>
+    <string name="opennes_continue">CONTINUE PLAYING</string>
+    <string name="opennes_play">Play</string>
+    <string name="opennes_recent_shelf">Recently played</string>
+    <string name="opennes_favorites_shelf">Your favorites</string>
+    <string name="opennes_discover_shelf">Not yet played</string>
+    <string name="opennes_achievements_future">RetroAchievements integration is coming later</string>
+    <string name="opennes_playtime_not_recorded">Playtime tracking starts with this update</string>
+    <string name="opennes_not_played">Not played yet</string>
+    <string name="opennes_playtime_under_minute">Under 1 min</string>
+    <string name="opennes_playtime_minutes">%1$d min played</string>
+    <string name="opennes_playtime_hours">%1$dh %2$dm played</string>
 </resources>
