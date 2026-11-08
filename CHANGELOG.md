@@ -9,7 +9,13 @@
 
 OpenNES-specific history; upstream Lemuroid release history is not reproduced.
 
-## Unreleased — OpenNES game library (M2, first batch)
+## Unreleased — Simple APK distribution
+
+- Publish a directly downloadable `OpenNES-debug.apk` to a rolling GitHub development prerelease after every successful master build and Kotlin lint pass.
+- Update the same download URL after successful builds and keep the previous known-good APK if validation fails.
+- Use direct commits to `master` for routine development rather than new pull requests; retain the unsigned-production-key debug build path.
+
+## OpenNES game library (M2, first batch)
 
 - Introduce an original NES-inspired home library: recently played, favorites, discovery shelf, and a prominent resume-game panel.
 - Add true cumulative foreground gameplay session tracking, displayed on game tiles; paused/background time is excluded, and prior sessions are intentionally reported as untracked.

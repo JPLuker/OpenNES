@@ -41,16 +41,19 @@ The inherited Lemuroid project provides a working Android emulation frontend, FC
 
 Still inherited: portions of Lemuroid's library/settings UI, multi-system metadata data, some dormant source, internal package names and launcher artwork. **Non-NES Libretro binaries are excluded from the APK.** The remaining upstream UI and branding are scheduled for replacement.
 
-## Install a development APK
+## Download the latest OpenNES APK
 
-1. Open [OpenNES GitHub Actions](https://github.com/JPLuker/OpenNES/actions) and select the latest successful **OpenNES Android CI** run for the development PR/branch.
-2. Open the **Artifacts** section and download `OpenNES-debug-apk` (GitHub sign-in may be required).
-3. Unzip the artifact and install `OpenNES-debug.apk` on your Android device. Allow APK installation for the app you're using to open it if Android prompts you.
-4. Import your own legally obtained NES ROM and test gameplay.
+**[Download OpenNES-debug.apk directly](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk)** · [Development release page](https://github.com/JPLuker/OpenNES/releases/tag/dev-latest)
 
-This is a **debug test build**, not a GitHub Release or Play Store release. No ROMs or commercial game artwork are supplied. It has the application ID `com.jpluker.opennes.debug`, so it can install alongside upstream Lemuroid.
+Each successful push to `master` builds and publishes a new APK at this same address. No pull requests, ZIP extraction, or GitHub Actions artifact hunting is needed. If the build fails, the previously successful APK remains available.
 
-**Important:** A CI run can be marked failed because of lint even if its earlier APK build and artifact upload succeeded. The updated workflow exposes **Build OpenNES debug APK** and **Kotlin lint** as separate jobs to distinguish those outcomes.
+1. Download `OpenNES-debug.apk` and install it on Android (allow installation from the browser/files app if prompted).
+2. Import your own legally obtained NES ROMs.
+3. To update, download from the **same link** and install over the existing OpenNES debug build.
+
+This is a **debug/test APK**, not a production-signed release. Package ID: `com.jpluker.opennes.debug`. The project will add separately signed production releases later. No commercial ROMs are provided. Android will reject an in-place update if a build uses a different signing certificate.
+
+For diagnostics, the [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) page still provides test results and build artifacts.
 
 ## Build from source
 

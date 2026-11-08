@@ -3,9 +3,12 @@ name: OpenNES Android CI
 on:
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
   workflow_dispatch:
+
+# Only the newest master build needs to publish a rolling development APK.
+concurrency:
+  group: opennes-development-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -28,16 +31,16 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Remove non-NES metadata from release artifact
+      - name: Retain only NES metadata in the build
         run: |
           python3 scripts/trim-libretro-db.py --in-place lemuroid-metadata-libretro-db/src/main/assets/libretro-db.sqlite
 
-      - name: Assemble open-source bundled debug APK
+      - name: Assemble installable debug APK
         run: |
           chmod +x gradlew
           ./gradlew :lemuroid-app:assembleFreeBundleDebug --stacktrace
 
-      - name: Stage and inspect OpenNES APK
+      - name: Stage and inspect NES-only APK
         run: |
           mkdir -p dist
           APK="$(find lemuroid-app/build/outputs/apk/freeBundle/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
@@ -45,7 +48,7 @@ jobs:
           cp "$APK" dist/OpenNES-debug.apk
           python3 scripts/inspect-apk.py --nes-only dist/OpenNES-debug.apk
 
-      - name: Upload installable debug APK
+      - name: Upload test APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenNES-debug-apk
@@ -83,3 +86,54 @@ jobs:
             **/build/reports/ktlint/**/*.txt
             **/build/reports/ktlint/**/*.html
           if-no-files-found: warn
+
+  publish-development:
+    name: Publish direct-download development APK
+    needs: [build, lint]
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download tested APK
+        uses: actions/download-artifact@v4
+        with:
+          name: OpenNES-debug-apk
+          path: dist
+
+      - name: Publish rolling OpenNES development release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -s dist/OpenNES-debug.apk
+
+          SHA_SHORT="${GITHUB_SHA:0:12}"
+          NOTES="Automated OpenNES **debug/test build** from master.
+
+          Source commit: https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}
+
+          This release contains an installable APK only; it is not signed with the OpenNES production release key. Android package ID: \`com.jpluker.opennes.debug\`.
+
+          Existing installations from this same debug-signing identity can be updated in place. Official release signing is deferred. The latest successful build replaces the APK on this page."
+
+          if gh release view dev-latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload dev-latest dist/OpenNES-debug.apk --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit dev-latest \
+              --title "OpenNES Development APK" \
+              --notes "$NOTES" \
+              --prerelease \
+              --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create dev-latest dist/OpenNES-debug.apk \
+              --target "$GITHUB_SHA" \
+              --title "OpenNES Development APK" \
+              --notes "$NOTES" \
+              --prerelease \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+
+          echo "### OpenNES APK published" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: \`$SHA_SHORT\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/dev-latest/OpenNES-debug.apk" >> "$GITHUB_STEP_SUMMARY"
