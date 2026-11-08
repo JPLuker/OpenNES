@@ -33,10 +33,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -49,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.text.format.DateUtils
 import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -95,11 +101,14 @@ fun HomeScreen(
         }
 
     val state = viewModel.getViewStates().collectAsState(HomeViewModel.UIState()).value
+    var selectedGame by remember { mutableStateOf<Game?>(null) }
+
     OpenNesLibrary(
         modifier = modifier,
         state = state,
         onGameClick = onGameClick,
         onGameLongClick = onGameLongClick,
+        onGameDetailsClick = { selectedGame = it },
         onSearchClick = onSearchClick,
         onSettingsClick = onSettingsClick,
         onEnableNotificationsClicked = {
@@ -109,6 +118,21 @@ fun HomeScreen(
         },
         onSetDirectoryClicked = { viewModel.changeLocalStorageFolder(context) },
     )
+
+    selectedGame?.let { game ->
+        GameDetailsSheet(
+            game = game,
+            onDismiss = { selectedGame = null },
+            onPlay = {
+                selectedGame = null
+                onGameClick(game)
+            },
+            onMore = {
+                selectedGame = null
+                onGameLongClick(game)
+            },
+        )
+    }
 }
 
 @Composable
@@ -117,6 +141,7 @@ private fun OpenNesLibrary(
     state: HomeViewModel.UIState,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
+    onGameDetailsClick: (Game) -> Unit,
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onEnableNotificationsClicked: () -> Unit,
@@ -159,19 +184,19 @@ private fun OpenNesLibrary(
         GameShelf(
             title = stringResource(R.string.opennes_recent_shelf),
             games = state.recentGames,
-            onGameClick = onGameClick,
+            onGameClick = onGameDetailsClick,
             onGameLongClick = onGameLongClick,
         )
         GameShelf(
             title = stringResource(R.string.opennes_favorites_shelf),
             games = state.favoritesGames,
-            onGameClick = onGameClick,
+            onGameClick = onGameDetailsClick,
             onGameLongClick = onGameLongClick,
         )
         GameShelf(
             title = stringResource(R.string.opennes_discover_shelf),
             games = state.discoveryGames,
-            onGameClick = onGameClick,
+            onGameClick = onGameDetailsClick,
             onGameLongClick = onGameLongClick,
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -381,6 +406,133 @@ private fun ShelfGame(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GameDetailsSheet(
+    game: Game,
+    onDismiss: () -> Unit,
+    onPlay: () -> Unit,
+    onMore: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = LibraryColors.panel,
+        contentColor = LibraryColors.foreground,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, bottom = 30.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                GameCover(game, Modifier.width(110.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.opennes_system_nes),
+                        color = LibraryColors.red,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.sp,
+                    )
+                    Text(
+                        text = game.displayName(),
+                        color = LibraryColors.foreground,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 21.sp,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = playTimeLabel(game),
+                        color = LibraryColors.muted,
+                        fontSize = 13.sp,
+                    )
+                }
+            }
+
+            game.developer?.takeIf { it.isNotBlank() }?.let {
+                GameDetailField(
+                    label = stringResource(R.string.opennes_game_developer),
+                    value = it,
+                )
+            }
+
+            game.lastPlayedAt?.let { lastPlayed ->
+                val date =
+                    DateUtils.getRelativeTimeSpanString(
+                        lastPlayed,
+                        System.currentTimeMillis(),
+                        DateUtils.MINUTE_IN_MILLIS,
+                    ).toString()
+                GameDetailField(
+                    label = stringResource(R.string.opennes_game_last_played),
+                    value = date,
+                )
+            }
+
+            GameDetailField(
+                label = stringResource(R.string.opennes_game_rom_file),
+                value = game.fileName,
+            )
+
+            Text(
+                text = stringResource(R.string.opennes_achievements_future),
+                color = LibraryColors.muted,
+                fontSize = 12.sp,
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = onPlay,
+                    modifier = Modifier.weight(1f),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = LibraryColors.red,
+                            contentColor = LibraryColors.foreground,
+                        ),
+                ) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Text(stringResource(R.string.opennes_play))
+                }
+                OutlinedButton(
+                    onClick = onMore,
+                    border = BorderStroke(1.dp, LibraryColors.border),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                ) {
+                    Text(stringResource(R.string.opennes_game_more))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameDetailField(
+    label: String,
+    value: String,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(
+            text = label,
+            color = LibraryColors.muted,
+            fontSize = 11.sp,
+        )
+        Text(
+            text = value,
+            color = LibraryColors.foreground,
+            fontSize = 14.sp,
+        )
     }
 }
 
