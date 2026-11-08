@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased — Bounded library metadata queue
+## Unreleased — NES touch controller redesign (first milestone)
+
+- Replace the inherited virtual controller appearance with an original warm-gray/charcoal/deep-red NES-inspired material palette.
+- Draw raised cross-shaped D-pad segments, red A/B buttons and capsule-style Start/Select controls while keeping existing PadKit button/axis mappings intact.
+- Add an opacity slider in the in-game control editor; visual opacity does not shrink or change the input hit regions.
+- Improve independent portrait and landscape controller starting scales, while preserving previously saved per-orientation adjustments.
+- Existing menu, multi-touch behavior, external gamepad support, and saved layouts remain handled by the upstream input framework.
+- Device testing and deeper independently positioned/dragged control layout customization remain outstanding.
+
+## Bounded library metadata queue
 
 - Add explicit library-wide **Check missing details** action with progress and Stop controls; no unsolicited API requests at startup.
 - Process at most 12 eligible NES games per tap, sequentially, with at least a 2.5-second pause between distinct lookups.

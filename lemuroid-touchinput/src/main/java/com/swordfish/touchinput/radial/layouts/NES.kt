@@ -9,15 +9,18 @@ import com.swordfish.touchinput.radial.controls.LemuroidControlFaceButtons
 import com.swordfish.touchinput.radial.layouts.shared.ComposeTouchLayouts
 import com.swordfish.touchinput.radial.layouts.shared.SecondaryButtonMenu
 import com.swordfish.touchinput.radial.layouts.shared.SecondaryButtonMenuPlaceholder
-import com.swordfish.touchinput.radial.layouts.shared.SecondaryButtonSelect
-import com.swordfish.touchinput.radial.layouts.shared.SecondaryButtonStart
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
-import com.swordfish.touchinput.radial.ui.LemuroidButtonForeground
+import com.swordfish.touchinput.radial.ui.NesCrossForeground
+import com.swordfish.touchinput.radial.ui.NesFaceButtonForeground
+import com.swordfish.touchinput.radial.ui.NesPillButtonForeground
 import gg.padkit.PadKitScope
+import gg.padkit.controls.ControlButton
 import gg.padkit.ids.Id
+import gg.padkit.layouts.radial.secondarydials.LayoutRadialSecondaryDialsScope
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 
+/** NES-only touch presentation. Keep the existing PadKit input event IDs. */
 @Composable
 fun PadKitScope.NESLeft(
     modifier: Modifier = Modifier,
@@ -26,9 +29,14 @@ fun PadKitScope.NESLeft(
     BaseLayoutLeft(
         settings = settings,
         modifier = modifier,
-        primaryDial = { LemuroidControlCross(id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD)) },
+        primaryDial = {
+            LemuroidControlCross(
+                id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
+                foreground = { NesCrossForeground(directionState = it) },
+            )
+        },
         secondaryDials = {
-            SecondaryButtonSelect()
+            NesSecondarySelect()
             SecondaryButtonMenuPlaceholder(settings)
         },
     )
@@ -51,14 +59,40 @@ fun PadKitScope.NESRight(
                     ),
                 idsForegrounds =
                     persistentMapOf<Id.Key, @Composable (State<Boolean>) -> Unit>(
-                        Id.Key(KeyEvent.KEYCODE_BUTTON_A) to { LemuroidButtonForeground(pressed = it, label = "A") },
-                        Id.Key(KeyEvent.KEYCODE_BUTTON_B) to { LemuroidButtonForeground(pressed = it, label = "B") },
+                        Id.Key(KeyEvent.KEYCODE_BUTTON_A) to {
+                            NesFaceButtonForeground(pressed = it, label = "A")
+                        },
+                        Id.Key(KeyEvent.KEYCODE_BUTTON_B) to {
+                            NesFaceButtonForeground(pressed = it, label = "B")
+                        },
                     ),
             )
         },
         secondaryDials = {
-            SecondaryButtonStart()
+            NesSecondaryStart()
             SecondaryButtonMenu(settings)
         },
+    )
+}
+
+context(PadKitScope, LayoutRadialSecondaryDialsScope)
+@Composable
+private fun NesSecondarySelect() {
+    ControlButton(
+        modifier = Modifier.radialPosition(120f),
+        id = Id.Key(KeyEvent.KEYCODE_BUTTON_SELECT),
+        foreground = { NesPillButtonForeground(pressed = it, label = "SELECT") },
+        background = {},
+    )
+}
+
+context(PadKitScope, LayoutRadialSecondaryDialsScope)
+@Composable
+private fun NesSecondaryStart() {
+    ControlButton(
+        modifier = Modifier.radialPosition(60f),
+        id = Id.Key(KeyEvent.KEYCODE_BUTTON_START),
+        foreground = { NesPillButtonForeground(pressed = it, label = "START") },
+        background = {},
     )
 }

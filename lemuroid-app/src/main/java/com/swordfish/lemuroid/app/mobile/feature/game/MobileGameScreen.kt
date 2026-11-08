@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -170,7 +171,9 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         touchControlsVisibleState.value
 
                 if (isVisible) {
-                    CompositionLocalProvider(LocalLemuroidPadTheme provides LemuroidPadTheme()) {
+                    CompositionLocalProvider(
+                        LocalLemuroidPadTheme provides LemuroidPadTheme(touchControllerSettings.opacity),
+                    ) {
                         if (!isLandscape) {
                             PadContainer(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_BOTTOM_CONTAINER),
@@ -200,6 +203,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             controllerConfig = currentControllerConfig,
                             touchControllerSettings = touchControllerSettings,
                             viewModel = viewModel,
+                            isLandscape = isLandscape,
                         )
                     }
                 }
@@ -240,6 +244,7 @@ private fun GameScreenRunningCentralMenu(
     viewModel: BaseGameScreenViewModel,
     touchControllerSettings: TouchControllerSettingsManager.Settings,
     controllerConfig: ControllerConfig,
+    isLandscape: Boolean,
 ) {
     val menuPressed = viewModel.isMenuPressed().collectAsState(false)
     Box(
@@ -251,7 +256,7 @@ private fun GameScreenRunningCentralMenu(
             animationDurationMillis = MENU_LOADING_ANIMATION_MILLIS,
             icon = R.drawable.button_menu,
         )
-        MenuEditTouchControls(viewModel, controllerConfig, touchControllerSettings)
+        MenuEditTouchControls(viewModel, controllerConfig, touchControllerSettings, isLandscape)
     }
 }
 
@@ -260,6 +265,7 @@ private fun MenuEditTouchControls(
     viewModel: BaseGameScreenViewModel,
     controllerConfig: ControllerConfig,
     touchControllerSettings: TouchControllerSettingsManager.Settings,
+    isLandscape: Boolean,
 ) {
     val showEditControls = viewModel.isEditControlShown().collectAsState(false)
     if (!showEditControls.value) return
@@ -279,12 +285,34 @@ private fun MenuEditTouchControls(
                         .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                Text(
+                    text =
+                        stringResource(
+                            if (isLandscape) {
+                                com.swordfish.lemuroid.R.string.opennes_landscape_controls
+                            } else {
+                                com.swordfish.lemuroid.R.string.opennes_portrait_controls
+                            },
+                        ),
+                    fontSize = 14.sp,
+                )
                 MenuEditTouchControlRow(Icons.Default.OpenInFull, "Scale", 0f) {
                     Slider(
                         value = touchControllerSettings.scale,
                         onValueChange = {
                             viewModel.updateTouchControllerSettings(
                                 touchControllerSettings.copy(scale = it),
+                            )
+                        },
+                    )
+                }
+                MenuEditTouchControlRow(Icons.Default.OpenInFull, "Opacity", 0f) {
+                    Slider(
+                        value = touchControllerSettings.opacity.coerceIn(0.35f, 1f),
+                        valueRange = 0.35f..1f,
+                        onValueChange = {
+                            viewModel.updateTouchControllerSettings(
+                                touchControllerSettings.copy(opacity = it),
                             )
                         },
                     )

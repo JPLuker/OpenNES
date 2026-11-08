@@ -29,6 +29,7 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val rotation: Float = DEFAULT_ROTATION,
         val marginX: Float = DEFAULT_MARGIN_X,
         val marginY: Float = DEFAULT_MARGIN_Y,
+        val opacity: Float = DEFAULT_OPACITY,
     )
 
     private fun computeInsetsPaddings(
@@ -62,7 +63,12 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val verticalPadding = paddings.calculateBottomPadding()
         val defaultSettings =
             Settings(
-                scale = DEFAULT_SCALE,
+                scale =
+                    if (orientation == Orientation.PORTRAIT) {
+                        DEFAULT_PORTRAIT_SCALE
+                    } else {
+                        DEFAULT_LANDSCAPE_SCALE
+                    },
                 rotation = DEFAULT_ROTATION,
                 marginX = horizontalPadding.value / MAX_MARGINS,
                 marginY = verticalPadding.value / MAX_MARGINS,
@@ -123,6 +129,9 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         const val DEFAULT_ROTATION = 0.0f
         const val DEFAULT_MARGIN_X = 0.0f
         const val DEFAULT_MARGIN_Y = 0.0f
+        const val DEFAULT_OPACITY = 1.0f
+        const val DEFAULT_PORTRAIT_SCALE = 0.57f
+        const val DEFAULT_LANDSCAPE_SCALE = 0.42f
 
         const val MAX_ROTATION = 45f
         const val MIN_SCALE = 0.75f

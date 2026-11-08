@@ -304,4 +304,6 @@
     <string name="opennes_playtime_under_minute">Under 1 min</string>
     <string name="opennes_playtime_minutes">%1$d min played</string>
     <string name="opennes_playtime_hours">%1$dh %2$dm played</string>
+    <string name="opennes_portrait_controls">NES portrait controls · saved separately from landscape</string>
+    <string name="opennes_landscape_controls">NES landscape controls · saved separately from portrait</string>
 </resources>
