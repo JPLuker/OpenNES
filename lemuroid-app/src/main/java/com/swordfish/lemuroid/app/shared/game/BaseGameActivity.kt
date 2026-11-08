@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.activity.OnBackPressedCallback
@@ -86,7 +87,10 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     private lateinit var baseGameScreenViewModel: BaseGameScreenViewModel
 
-    private val startGameTime = System.currentTimeMillis()
+    // Track foreground play only. Paused games and the system's background time
+    // must not inflate the playtime shown on the OpenNES library shelves.
+    private var foregroundStartMillis: Long? = null
+    private var accumulatedPlayMillis = 0L
     private var finishTriggered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -299,7 +303,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     private fun performSuccessfulActivityFinish() {
         val resultIntent =
             Intent().apply {
-                putExtra(PLAY_GAME_RESULT_SESSION_DURATION, System.currentTimeMillis() - startGameTime)
+                putExtra(PLAY_GAME_RESULT_SESSION_DURATION, currentPlayDuration())
                 putExtra(PLAY_GAME_RESULT_GAME, intent.getSerializableExtra(EXTRA_GAME))
                 putExtra(PLAY_GAME_RESULT_LEANBACK, intent.getBooleanExtra(EXTRA_LEANBACK, false))
             }
@@ -341,6 +345,29 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     open fun onFinishTriggered() {
         finishTriggered = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        foregroundStartMillis = SystemClock.elapsedRealtime()
+    }
+
+    override fun onPause() {
+        finishForegroundSession()
+        super.onPause()
+    }
+
+    private fun finishForegroundSession() {
+        val startMillis = foregroundStartMillis ?: return
+        accumulatedPlayMillis += (SystemClock.elapsedRealtime() - startMillis).coerceAtLeast(0L)
+        foregroundStartMillis = null
+    }
+
+    private fun currentPlayDuration(): Long {
+        val activeDuration =
+            foregroundStartMillis?.let { (SystemClock.elapsedRealtime() - it).coerceAtLeast(0L) }
+                ?: 0L
+        return accumulatedPlayMillis + activeDuration
     }
 
     override fun onStop() {
