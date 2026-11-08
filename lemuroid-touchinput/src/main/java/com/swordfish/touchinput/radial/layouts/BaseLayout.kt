@@ -39,10 +39,12 @@ fun BaseLayoutLeft(
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
                 )
                 .offset(
-                    x = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp *
-                        settings.leftOffsetX.coerceIn(-1f, 1f),
-                    y = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp *
-                        settings.leftOffsetY.coerceIn(-1f, 1f),
+                    x =
+                        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp *
+                            settings.leftOffsetX.coerceIn(-1f, 1f),
+                    y =
+                        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp *
+                            settings.leftOffsetY.coerceIn(-1f, 1f),
                 )
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
@@ -68,10 +70,12 @@ fun BaseLayoutRight(
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
                 )
                 .offset(
-                    x = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp *
-                        settings.rightOffsetX.coerceIn(-1f, 1f),
-                    y = TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp *
-                        settings.rightOffsetY.coerceIn(-1f, 1f),
+                    x =
+                        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp *
+                            settings.rightOffsetX.coerceIn(-1f, 1f),
+                    y =
+                        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp *
+                            settings.rightOffsetY.coerceIn(-1f, 1f),
                 )
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
