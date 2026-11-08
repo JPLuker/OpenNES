@@ -20,6 +20,7 @@
 package com.swordfish.lemuroid.lib.library.db.entity
 
 import androidx.recyclerview.widget.DiffUtil
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -51,6 +52,8 @@ data class Game(
     val isFavorite: Boolean = false,
     val customName: String? = null,
     val customCoverUri: String? = null,
+    @ColumnInfo(defaultValue = "0")
+    val totalPlayTimeMillis: Long = 0L,
 ) : Serializable {
     fun displayName(): String = customName ?: title
 

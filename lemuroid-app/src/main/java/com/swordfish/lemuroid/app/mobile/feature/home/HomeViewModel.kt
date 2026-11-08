@@ -123,7 +123,7 @@ class HomeViewModel(
         retrogradeDb.gameDao().selectFirstNotPlayed(CAROUSEL_MAX_ITEMS)
 
     private fun recentGames(retrogradeDb: RetrogradeDatabase) =
-        retrogradeDb.gameDao().selectFirstUnfavoriteRecents(CAROUSEL_MAX_ITEMS)
+        retrogradeDb.gameDao().selectRecentGames(CAROUSEL_MAX_ITEMS)
 
     private fun favoritesGames(retrogradeDb: RetrogradeDatabase) =
         retrogradeDb.gameDao().selectFirstFavorites(CAROUSEL_MAX_ITEMS)

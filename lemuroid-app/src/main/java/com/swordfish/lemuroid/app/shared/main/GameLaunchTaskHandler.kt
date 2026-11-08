@@ -75,7 +75,7 @@ class GameLaunchTaskHandler(
                 ?: 0L
         val game = data?.extras?.getSerializable(BaseGameActivity.PLAY_GAME_RESULT_GAME) as Game
 
-        updateGamePlayedTimestamp(game)
+        updateGamePlayedTimestamp(game, duration)
         if (enableRatingFlow) {
             displayReviewRequest(activity, duration)
         }
@@ -89,7 +89,17 @@ class GameLaunchTaskHandler(
         reviewManager.launchReviewFlow(activity, durationMillis)
     }
 
-    private suspend fun updateGamePlayedTimestamp(game: Game) {
-        retrogradeDb.gameDao().update(game.copy(lastPlayedAt = System.currentTimeMillis()))
+    private suspend fun updateGamePlayedTimestamp(
+        game: Game,
+        durationMillis: Long,
+    ) {
+        val currentGame = retrogradeDb.gameDao().selectById(game.id) ?: return
+        val elapsedMillis = durationMillis.coerceAtLeast(0L)
+        retrogradeDb.gameDao().update(
+            currentGame.copy(
+                lastPlayedAt = System.currentTimeMillis(),
+                totalPlayTimeMillis = currentGame.totalPlayTimeMillis + elapsedMillis,
+            ),
+        )
     }
 }

@@ -174,13 +174,15 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
             Scaffold(
                 topBar = {
-                    MainTopBar(
-                        currentRoute = currentRoute,
-                        navController = navController,
-                        onHelpPressed = onHelpPressed,
-                        mainUIState = mainUIState,
-                        onUpdateQueryString = { mainViewModel.changeQueryString(it) },
-                    )
+                    if (currentRoute != MainRoute.HOME) {
+                        MainTopBar(
+                            currentRoute = currentRoute,
+                            navController = navController,
+                            onHelpPressed = onHelpPressed,
+                            mainUIState = mainUIState,
+                            onUpdateQueryString = { mainViewModel.changeQueryString(it) },
+                        )
+                    }
                 },
                 bottomBar = { MainNavigationBar(currentRoute, navController) },
             ) { padding ->
@@ -202,6 +204,8 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                 ),
                             onGameClick = onGameClick,
                             onGameLongClick = onGameLongClick,
+                            onSearchClick = { navController.navigateToRoute(MainRoute.SEARCH) },
+                            onSettingsClick = { navController.navigateToRoute(MainRoute.SETTINGS) },
                         )
                     }
                     composable(MainRoute.FAVORITES) {

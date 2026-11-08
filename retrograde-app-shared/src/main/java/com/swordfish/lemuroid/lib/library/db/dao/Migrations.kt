@@ -54,6 +54,16 @@ object Migrations {
             }
         }
 
+    val VERSION_10_11: Migration =
+        object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Keep all existing games and saves; historic sessions are unknown.
+                database.execSQL(
+                    "ALTER TABLE games ADD COLUMN totalPlayTimeMillis INTEGER NOT NULL DEFAULT 0",
+                )
+            }
+        }
+
     private fun migrateGamesTableToVersion10(database: SupportSQLiteDatabase) {
         database.execSQL(
             "ALTER TABLE games ADD COLUMN customName TEXT DEFAULT NULL",

@@ -2,7 +2,15 @@
 
 OpenNES-specific history; upstream Lemuroid release history is not reproduced.
 
-## Unreleased — NES-only cleanup (M1)
+## Unreleased — OpenNES game library (M2, first batch)
+
+- Introduce an original NES-inspired home library: recently played, favorites, discovery shelf, and a prominent resume-game panel.
+- Add true cumulative foreground gameplay session tracking, displayed on game tiles; paused/background time is excluded, and prior sessions are intentionally reported as untracked.
+- Add a Room 10→11 migration that preserves existing games and saves while initializing historic playtime to zero.
+- Provide direct search and settings controls on the new home screen instead of the inherited top bar.
+- Achievement progress is not fabricated: RetroAchievements remains a separate implementation milestone.
+
+## NES-only cleanup (M1)
 
 - Reduced the debug APK from **222,012,846** to **32,367,426 bytes** (85.4% smaller), eliminating all 76 unrelated Libretro core binaries while retaining FCEUmm across four ABIs.
 - Restricted registered game systems and library discovery to NES/Famicom.

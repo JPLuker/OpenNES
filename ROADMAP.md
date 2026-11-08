@@ -1,6 +1,6 @@
 # OpenNES — Development Roadmap
 
-**Status:** In progress — M0 foundation and CI verified to compile an APK; Android installation/gameplay not yet validated  
+**Status:** M0/M1 buildable; M1 NES-only cleanup merged; M2 library redesign in progress (PR #7). Audio stutter remains open (#3).  
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
