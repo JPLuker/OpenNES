@@ -30,7 +30,7 @@ import timber.log.Timber
 @OptIn(FlowPreview::class)
 class HomeViewModel(
     appContext: Context,
-    retrogradeDb: RetrogradeDatabase,
+    private val retrogradeDb: RetrogradeDatabase,
     private val metadataProvider: GameMetadataProvider,
 ) : ViewModel() {
     companion object {
