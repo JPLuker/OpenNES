@@ -11,7 +11,7 @@
 The goal is the convenience and polish of a dedicated Android emulator, designed **specifically for NES/Famicom**, not a general-purpose emulation frontend.
 
 - **NES-inspired controller skin:** original, polished warm-gray, charcoal and deep-red tactile controls, with classic D-pad, A/B, Start and Select.
-- **Designed twice for phones:** portrait should feel like a dedicated handheld; landscape should frame a large game viewport with controls on both sides. Each orientation already saves its own size, margins, rotation and opacity; deeper independent drag placement is still planned.
+- **Designed twice for phones:** portrait should feel like a dedicated handheld; landscape should frame a large game viewport with controls on both sides. Each orientation independently saves D-pad and A/B sizes and X/Y positions, plus shared visual settings. Direct on-screen dragging is still planned.
 - **Entirely new UI:** game library, onboarding, game details, menus, settings, quick actions and achievement overlays will be redesigned under the OpenNES identity.
 - **RetroAchievements:** planned native sign-in, game identification, achievement tracking and notifications. Hardcore support will follow RetroAchievements' actual emulator-approval rules.
 - **Natively Android:** touchscreen play, external gamepads, local ROM folders, save data and convenient installation.

@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased — NES touch controller redesign (first milestone)
+## Unreleased — Independent NES controller positioning
+
+- Give the D-pad/Select and A/B/Start clusters separate live size, horizontal, and vertical position controls.
+- Display actual horizontal and vertical movement in dp instead of unlabeled sliders; support positive and negative offsets with bounded movement.
+- Save the left and right clusters independently for portrait and landscape, retaining older saved shared scale and margin settings.
+- Allow each cluster to reset independently without changing the other, with existing per-orientation full Reset unchanged.
+- Move the underlying PadKit controls with their visual elements so touch hit regions track adjustments.
+- Direct on-screen dragging remains future work and real-device layout verification is still needed.
+
+## NES touch controller redesign (first milestone)
 
 - Replace the inherited virtual controller appearance with an original warm-gray/charcoal/deep-red NES-inspired material palette.
 - Draw raised cross-shaped D-pad segments, red A/B buttons and capsule-style Start/Select controls while keeping existing PadKit button/axis mappings intact.

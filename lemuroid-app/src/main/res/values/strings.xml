@@ -306,4 +306,15 @@
     <string name="opennes_playtime_hours">%1$dh %2$dm played</string>
     <string name="opennes_portrait_controls">NES portrait controls · saved separately from landscape</string>
     <string name="opennes_landscape_controls">NES landscape controls · saved separately from portrait</string>
+    <string name="opennes_controls_editor_hint">Adjust the D-pad and A/B separately. Positive X moves right; positive Y moves down. Changes only affect this screen orientation.</string>
+    <string name="opennes_controls_left_group">D-pad and Select</string>
+    <string name="opennes_controls_right_group">A/B and Start</string>
+    <string name="opennes_controls_shared_group">Shared appearance</string>
+    <string name="opennes_controls_size">Size</string>
+    <string name="opennes_controls_horizontal">Horizontal position</string>
+    <string name="opennes_controls_vertical">Vertical position</string>
+    <string name="opennes_controls_opacity">Opacity</string>
+    <string name="opennes_controls_rotation">Button arrangement</string>
+    <string name="opennes_controls_reset_left">Reset D-pad position and size</string>
+    <string name="opennes_controls_reset_right">Reset A/B position and size</string>
 </resources>

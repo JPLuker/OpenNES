@@ -18,16 +18,12 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Height
-import androidx.compose.material.icons.filled.OpenInFull
-import androidx.compose.material.icons.filled.RotateLeft
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -37,9 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -66,6 +60,7 @@ import com.swordfish.touchinput.radial.ui.LemuroidButtonPressFeedback
 import gg.padkit.PadKit
 import gg.padkit.config.HapticFeedbackType
 import gg.padkit.inputstate.InputState
+import kotlin.math.roundToInt
 
 @Composable
 fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
@@ -299,55 +294,75 @@ private fun MenuEditTouchControls(
                         ),
                     fontSize = 14.sp,
                 )
-                MenuEditTouchControlRow(Icons.Default.OpenInFull, "Scale", 0f) {
-                    Slider(
-                        value = touchControllerSettings.scale,
-                        onValueChange = {
-                            viewModel.updateTouchControllerSettings(
-                                touchControllerSettings.copy(scale = it),
-                            )
-                        },
-                    )
-                }
-                MenuEditTouchControlRow(Icons.Default.OpenInFull, "Opacity", 0f) {
+                Text(
+                    text = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_editor_hint),
+                    fontSize = 12.sp,
+                )
+                MenuEditControllerCluster(
+                    label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_left_group),
+                    resetLabel = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_left),
+                    size = touchControllerSettings.leftScale ?: touchControllerSettings.scale,
+                    offsetX = touchControllerSettings.leftOffsetX,
+                    offsetY = touchControllerSettings.leftOffsetY,
+                    onSizeChange = {
+                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftScale = it))
+                    },
+                    onXChange = {
+                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetX = it))
+                    },
+                    onYChange = {
+                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetY = it))
+                    },
+                    onReset = {
+                        viewModel.updateTouchControllerSettings(
+                            touchControllerSettings.copy(leftScale = null, leftOffsetX = 0f, leftOffsetY = 0f),
+                        )
+                    },
+                )
+                MenuEditControllerCluster(
+                    label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_right_group),
+                    resetLabel = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_right),
+                    size = touchControllerSettings.rightScale ?: touchControllerSettings.scale,
+                    offsetX = touchControllerSettings.rightOffsetX,
+                    offsetY = touchControllerSettings.rightOffsetY,
+                    onSizeChange = {
+                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightScale = it))
+                    },
+                    onXChange = {
+                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetX = it))
+                    },
+                    onYChange = {
+                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetY = it))
+                    },
+                    onReset = {
+                        viewModel.updateTouchControllerSettings(
+                            touchControllerSettings.copy(rightScale = null, rightOffsetX = 0f, rightOffsetY = 0f),
+                        )
+                    },
+                )
+                Text(
+                    text = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_shared_group),
+                    fontWeight = FontWeight.Bold,
+                )
+                MenuEditTouchControlRow(
+                    label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_opacity),
+                ) {
                     Slider(
                         value = touchControllerSettings.opacity.coerceIn(0.35f, 1f),
                         valueRange = 0.35f..1f,
                         onValueChange = {
-                            viewModel.updateTouchControllerSettings(
-                                touchControllerSettings.copy(opacity = it),
-                            )
-                        },
-                    )
-                }
-                MenuEditTouchControlRow(Icons.Default.Height, "Horizontal Margin", 90f) {
-                    Slider(
-                        value = touchControllerSettings.marginX,
-                        onValueChange = {
-                            viewModel.updateTouchControllerSettings(
-                                touchControllerSettings.copy(marginX = it),
-                            )
-                        },
-                    )
-                }
-                MenuEditTouchControlRow(Icons.Default.Height, "Vertical Margin", 0f) {
-                    Slider(
-                        value = touchControllerSettings.marginY,
-                        onValueChange = {
-                            viewModel.updateTouchControllerSettings(
-                                touchControllerSettings.copy(marginY = it),
-                            )
+                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(opacity = it))
                         },
                     )
                 }
                 if (controllerConfig.allowTouchRotation) {
-                    MenuEditTouchControlRow(Icons.Default.RotateLeft, "Rotate", 0f) {
+                    MenuEditTouchControlRow(
+                        label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_rotation),
+                    ) {
                         Slider(
-                            value = touchControllerSettings.rotation,
+                            value = touchControllerSettings.rotation.coerceIn(0f, 1f),
                             onValueChange = {
-                                viewModel.updateTouchControllerSettings(
-                                    touchControllerSettings.copy(rotation = it),
-                                )
+                                viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rotation = it))
                             },
                         )
                     }
@@ -375,22 +390,63 @@ private fun MenuEditTouchControls(
 }
 
 @Composable
-private fun MenuEditTouchControlRow(
-    icon: ImageVector,
+private fun MenuEditControllerCluster(
     label: String,
-    rotation: Float,
+    resetLabel: String,
+    size: Float,
+    offsetX: Float,
+    offsetY: Float,
+    onSizeChange: (Float) -> Unit,
+    onXChange: (Float) -> Unit,
+    onYChange: (Float) -> Unit,
+    onReset: () -> Unit,
+) {
+    Text(text = label, fontWeight = FontWeight.Bold)
+    MenuEditTouchControlRow(
+        label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_size),
+    ) {
+        Slider(
+            value = size.coerceIn(0f, 1f),
+            onValueChange = onSizeChange,
+        )
+    }
+    MenuEditTouchControlRow(
+        label =
+            stringResource(com.swordfish.lemuroid.R.string.opennes_controls_horizontal) +
+                " (${(offsetX * TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X).roundToInt()} dp)",
+    ) {
+        Slider(
+            value = offsetX.coerceIn(-1f, 1f),
+            valueRange = -1f..1f,
+            onValueChange = onXChange,
+        )
+    }
+    MenuEditTouchControlRow(
+        label =
+            stringResource(com.swordfish.lemuroid.R.string.opennes_controls_vertical) +
+                " (${(offsetY * TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y).roundToInt()} dp)",
+    ) {
+        Slider(
+            value = offsetY.coerceIn(-1f, 1f),
+            valueRange = -1f..1f,
+            onValueChange = onYChange,
+        )
+    }
+    TextButton(onClick = onReset) {
+        Text(text = resetLabel)
+    }
+}
+
+@Composable
+private fun MenuEditTouchControlRow(
+    label: String,
     slider: @Composable () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Icon(
-            modifier = Modifier.rotate(rotation),
-            imageVector = icon,
-            contentDescription = label,
-        )
+        Text(text = label, fontSize = 12.sp)
         slider()
     }
 }
