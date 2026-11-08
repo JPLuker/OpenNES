@@ -107,7 +107,23 @@ class HomeViewModel(
         viewModelScope.launch {
             val matches =
                 withContext(Dispatchers.IO) {
-                    metadataProvider.searchMetadata(query)
+                    val direct = metadataProvider.searchMetadata(query)
+                    if (direct.isNotEmpty()) {
+                        direct
+                    } else {
+                        // The offline database sometimes stores inverted articles
+                        // ("Legend of Zelda, The") and extra ROM revision tags.
+                        val withoutArticle =
+                            query.trim().replace(
+                                Regex("""^(?:The|An|A)\\s+""", RegexOption.IGNORE_CASE),
+                                "",
+                            )
+                        if (withoutArticle.length >= 3 && withoutArticle != query.trim()) {
+                            metadataProvider.searchMetadata(withoutArticle)
+                        } else {
+                            emptyList()
+                        }
+                    }
                 }
             onComplete(matches)
         }
