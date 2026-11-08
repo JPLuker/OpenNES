@@ -40,6 +40,9 @@ class HomeViewModel(
     companion object {
         const val CAROUSEL_MAX_ITEMS = 10
         const val DEBOUNCE_TIME = 100L
+        private const val ONLINE_BATCH_SIZE = 12
+        private const val ONLINE_BATCH_GAP_MS = 2_500L
+        private const val ONLINE_RETRY_INTERVAL_MS = 30L * 24L * 60L * 60L * 1000L
     }
 
     class Factory(
@@ -87,12 +90,6 @@ class HomeViewModel(
     private val batchState = MutableStateFlow(OnlineBatchState())
     val onlineBatchState: Flow<OnlineBatchState> = batchState
     private var onlineBatchJob: Job? = null
-
-    companion object {
-        private const val ONLINE_BATCH_SIZE = 12
-        private const val ONLINE_BATCH_GAP_MS = 2_500L
-        private const val ONLINE_RETRY_INTERVAL_MS = 30L * 24L * 60L * 60L * 1000L
-    }
 
     fun getViewStates(): Flow<UIState> {
         return uiStates
