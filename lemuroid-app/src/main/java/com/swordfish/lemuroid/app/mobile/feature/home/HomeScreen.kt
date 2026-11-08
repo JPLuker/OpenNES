@@ -559,7 +559,7 @@ private fun GameDetailsSheet(
     onApplyOnline: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
 ) {
     var searchExpanded by remember(game.id) { mutableStateOf(false) }
-    var searchText by remember(game.id) { mutableStateOf(game.title.substringBefore('(').trim()) }
+    var searchText by remember(game.id) { mutableStateOf(game.displayName()) }
     var searchResults by remember(game.id) { mutableStateOf(emptyList<GameMetadata>()) }
     var searched by remember(game.id) { mutableStateOf(false) }
     var searching by remember(game.id) { mutableStateOf(false) }
