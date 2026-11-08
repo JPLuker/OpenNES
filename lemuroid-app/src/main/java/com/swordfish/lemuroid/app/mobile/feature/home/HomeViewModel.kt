@@ -11,8 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
-import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.SystemID
+import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
@@ -96,13 +96,13 @@ class HomeViewModel(
             val updated =
                 withContext(Dispatchers.IO) {
                     runCatching {
-                        if (selected.system != SystemID.NES.dbname || selected.name.isNullOrBlank()) {
-                            return@runCatching null
-                        }
+                        if (selected.system != SystemID.NES.dbname) return@runCatching null
+                        val selectedTitle = selected.name?.trim()?.takeIf { it.isNotEmpty() }
+                            ?: return@runCatching null
                         val current = retrogradeDb.gameDao().selectById(gameId) ?: return@runCatching null
                         val corrected =
                             current.copy(
-                                title = selected.name,
+                                title = selectedTitle,
                                 developer = selected.developer,
                                 coverFrontUrl = selected.thumbnail,
                                 lastMetadataCheckedAt = System.currentTimeMillis(),
