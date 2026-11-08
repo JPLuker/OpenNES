@@ -259,6 +259,9 @@
     <string name="opennes_game_last_played">Last played</string>
     <string name="opennes_game_rom_file">ROM file</string>
     <string name="opennes_game_more">More options</string>
+    <string name="opennes_artwork_gallery">Artwork</string>
+    <string name="opennes_artwork_title_screen">Title screen</string>
+    <string name="opennes_artwork_gameplay">Gameplay screenshot</string>
     <string name="opennes_recent_shelf">Recently played</string>
     <string name="opennes_favorites_shelf">Your favorites</string>
     <string name="opennes_discover_shelf">Not yet played</string>

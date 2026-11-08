@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased — Metadata enrichment foundation
+## Unreleased — NES artwork gallery and caching
+
+- Display available NES title screens and gameplay screenshots in the game-details panel, using trusted URLs derived from matched Libretro box art.
+- Load gallery images lazily; unavailable images disappear instead of leaving broken previews.
+- Prefetch up to 24 shelf cover images into Coil's disk cache for faster repeat browsing and best-effort offline access.
+- Suppress only permanent missing-thumbnail (404/410) requests; transient 429/5xx server errors remain retryable.
+- Keep manual custom covers, ROMs and saves unchanged.
+
+## Metadata enrichment foundation
 
 - Recheck previously imported NES ROMs when their indexed title, developer, or default box art is incomplete, without requiring users to remove and reimport games.
 - Cache the last metadata check per game and defer unsuccessful or incomplete repeat lookups for 30 days to avoid unnecessary work on each library scan.

@@ -4,7 +4,7 @@
 
 [Development roadmap](ROADMAP.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
 
-> **Early development:** The latest NES-only APK passed CI at **32.4 MB**, down from a 222 MB multi-console baseline, after removing non-NES cores and pruning packaged metadata. It contains FCEUmm only. Other-console layouts and artwork are also being removed. The UI is still largely inherited from [Lemuroid](https://github.com/Swordfish90/Lemuroid); RetroAchievements and the custom portrait/landscape skins are not built, and real-device gameplay has not been verified.
+> **Early development:** The latest NES-only APK passed CI at **32.4 MB**, down from a 222 MB multi-console baseline, after removing non-NES cores and pruning packaged metadata. It contains FCEUmm only. Other-console layouts and artwork are also being removed. The UI is still largely inherited from [Lemuroid](https://github.com/Swordfish90/Lemuroid); RetroAchievements and the custom portrait/landscape skins are not built, and NES gameplay and audio have been tested on a physical device, but the latest metadata and artwork changes still need device testing.
 
 ## What OpenNES is meant to be
 
@@ -19,6 +19,8 @@ The goal is the convenience and polish of a dedicated Android emulator, designed
 - **Open source:** preserve applicable GPL and third-party notices. No commercial ROMs are included.
 
 The visual direction takes inspiration from Pizza Boy's level of polish, **not its copyrighted visual assets or source code**. All final OpenNES artwork and UI will be original.
+
+**Artwork progress:** Matched NES games can show Libretro box art, title screens and gameplay screenshots in the game-details panel. The library prefetches a bounded group of visible covers into Coil's disk cache. Android can evict this cache, so offline artwork is best-effort rather than permanent. Custom covers always take priority. External metadata providers and full Plex-style refresh controls are still planned.
 
 ## Development status
 

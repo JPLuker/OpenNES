@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
@@ -51,6 +52,7 @@ class HomeViewModel(
 
     private val notificationsPermissionEnabledState = MutableStateFlow(true)
     private val uiStates = MutableStateFlow(UIState())
+    private val coverPrefetcher = NesCoverPrefetcher(appContext.applicationContext)
 
     fun getViewStates(): Flow<UIState> {
         return uiStates
@@ -112,7 +114,12 @@ class HomeViewModel(
             uiStatesFlow
                 .debounce(DEBOUNCE_TIME)
                 .flowOn(Dispatchers.IO)
-                .collect { uiStates.value = it }
+                .collect { state ->
+                    uiStates.value = state
+                    val games = state.recentGames + state.favoritesGames + state.discoveryGames
+                    // Cache just shelf covers; never download an entire ROM collection.
+                    launch(Dispatchers.IO) { coverPrefetcher.prefetch(games) }
+                }
         }
     }
 
