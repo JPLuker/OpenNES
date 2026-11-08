@@ -21,12 +21,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -323,7 +323,10 @@ class HomeViewModel(
                                                 (
                                                     (latest.genre.isNullOrBlank() && !result.genre.isNullOrBlank()) ||
                                                         (latest.releaseYear == null && result.releaseYear != null) ||
-                                                        (latest.description.isNullOrBlank() && !result.description.isNullOrBlank())
+                                                        (
+                                                            latest.description.isNullOrBlank() &&
+                                                                !result.description.isNullOrBlank()
+                                                        )
                                                 )
                                         if (canFill) {
                                             dao.fillMissingOnlineGameInfo(
