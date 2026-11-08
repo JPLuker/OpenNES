@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,6 +62,7 @@ import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
+import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -426,7 +428,8 @@ private fun GameDetailsSheet(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, bottom = 30.dp),
+                    .padding(start = 24.dp, end = 24.dp, bottom = 30.dp)
+                    .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             Row(
@@ -486,6 +489,8 @@ private fun GameDetailsSheet(
                 value = game.fileName,
             )
 
+            GameArtworkGallery(game)
+
             Text(
                 text = stringResource(R.string.opennes_achievements_future),
                 color = LibraryColors.muted,
@@ -533,6 +538,64 @@ private fun GameDetailField(
             color = LibraryColors.foreground,
             fontSize = 14.sp,
         )
+    }
+}
+
+@Composable
+private fun GameArtworkGallery(game: Game) {
+    val allPreviews = remember(game.id, game.coverFrontUrl) { NesArtwork.previews(game) }
+    val failedUrls = remember(game.id, game.coverFrontUrl) { mutableStateListOf<String>() }
+    val previews = allPreviews.filterNot { it.url in failedUrls }
+
+    // No related art for unrecognized games; absent URLs disappear cleanly after
+    // Coil reports a failure, rather than showing broken image placeholders.
+    if (previews.isEmpty()) return
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = stringResource(R.string.opennes_artwork_gallery),
+            color = LibraryColors.foreground,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+        )
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(previews, key = { it.kind }) { preview ->
+                Column(
+                    modifier = Modifier.width(224.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    AsyncImage(
+                        model =
+                            ImageRequest.Builder(LocalContext.current)
+                                .data(preview.url)
+                                .build(),
+                        contentDescription =
+                            when (preview.kind) {
+                                NesArtwork.Kind.TITLE_SCREEN ->
+                                    stringResource(R.string.opennes_artwork_title_screen)
+                                NesArtwork.Kind.GAMEPLAY ->
+                                    stringResource(R.string.opennes_artwork_gameplay)
+                            },
+                        modifier = Modifier.fillMaxWidth().aspectRatio(4f / 3f),
+                        contentScale = ContentScale.Fit,
+                        onError = { failedUrls.add(preview.url) },
+                    )
+                    Text(
+                        text =
+                            when (preview.kind) {
+                                NesArtwork.Kind.TITLE_SCREEN ->
+                                    stringResource(R.string.opennes_artwork_title_screen)
+                                NesArtwork.Kind.GAMEPLAY ->
+                                    stringResource(R.string.opennes_artwork_gameplay)
+                            },
+                        color = LibraryColors.muted,
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+        }
     }
 }
 
