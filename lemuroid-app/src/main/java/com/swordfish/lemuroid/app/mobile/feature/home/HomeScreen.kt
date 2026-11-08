@@ -1114,9 +1114,9 @@ private fun GameCover(
             } else {
                 val fileTitle =
                     game.fileName.substringAfterLast('/')
-                        .replace(Regex("""\\.(?:nes|zip|7z)$""", RegexOption.IGNORE_CASE), "")
+                        .replace(Regex("""\.(?:nes|zip|7z)$""", RegexOption.IGNORE_CASE), "")
                 if (fileTitle.contains(
-                        Regex("""\\((?:USA|Europe|Japan|World)(?:[,)]|\\s)""", RegexOption.IGNORE_CASE),
+                        Regex("""\((?:USA|Europe|Japan|World)(?:[,)]|\s)""", RegexOption.IGNORE_CASE),
                     )
                 ) {
                     "https://thumbnails.libretro.com/" +
