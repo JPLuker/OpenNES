@@ -1,6 +1,8 @@
 package com.swordfish.lemuroid.app.mobile.feature.home
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.text.format.DateUtils
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,6 +42,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,6 +67,7 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
+import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -144,6 +148,12 @@ fun HomeScreen(
             onGameUpdated = { updatedGame -> selectedGame = updatedGame },
             onSaveProfile = { genre, year, description, onSaved ->
                 viewModel.saveGameProfile(game.id, genre, year, description, onSaved)
+            },
+            onLookupOnline = { onResult ->
+                viewModel.lookupWikidata(game.title, onResult)
+            },
+            onApplyOnline = { match, onApplied ->
+                viewModel.applyWikidata(game.id, match, onApplied)
             },
         )
     }
@@ -434,6 +444,8 @@ private fun GameDetailsSheet(
     onApplyMetadata: (GameMetadata, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
     onSaveProfile: (String?, Int?, String?, (Game?) -> Unit) -> Unit,
+    onLookupOnline: ((WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onApplyOnline: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
 ) {
     var searchExpanded by remember(game.id) { mutableStateOf(false) }
     var searchText by remember(game.id) { mutableStateOf(game.title.substringBefore('(').trim()) }
@@ -498,6 +510,13 @@ private fun GameDetailsSheet(
             GameProfileSection(
                 game = game,
                 onSave = onSaveProfile,
+                onGameUpdated = onGameUpdated,
+            )
+
+            WikidataLookupSection(
+                game = game,
+                onLookup = onLookupOnline,
+                onApply = onApplyOnline,
                 onGameUpdated = onGameUpdated,
             )
 
@@ -644,6 +663,107 @@ private fun GameDetailsSheet(
 }
 
 @Composable
+private fun WikidataLookupSection(
+    game: Game,
+    onLookup: ((WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onApply: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
+    onGameUpdated: (Game) -> Unit,
+) {
+    var searching by remember(game.id) { mutableStateOf(false) }
+    var applying by remember(game.id) { mutableStateOf(false) }
+    var candidate by remember(game.id) { mutableStateOf<WikidataNesMetadataSource.Result.Match?>(null) }
+    var statusMessage by remember(game.id) { mutableStateOf<Int?>(null) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedButton(
+            onClick = {
+                searching = true
+                candidate = null
+                statusMessage = null
+                onLookup { result ->
+                    searching = false
+                    when (result) {
+                        is WikidataNesMetadataSource.Result.Match -> candidate = result
+                        WikidataNesMetadataSource.Result.NoMatch ->
+                            statusMessage = R.string.opennes_online_no_match
+                        WikidataNesMetadataSource.Result.Unavailable ->
+                            statusMessage = R.string.opennes_online_unavailable
+                    }
+                }
+            },
+            enabled = !searching && !applying,
+            border = BorderStroke(1.dp, LibraryColors.border),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+        ) {
+            Text(stringResource(R.string.opennes_online_lookup))
+        }
+
+        statusMessage?.let { message ->
+            Text(
+                text = stringResource(message),
+                color = LibraryColors.muted,
+                fontSize = 13.sp,
+            )
+        }
+
+        candidate?.let { match ->
+            Text(
+                text = stringResource(R.string.opennes_online_verified_match),
+                color = LibraryColors.foreground,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+            )
+            match.genre?.let {
+                GameDetailField(stringResource(R.string.opennes_game_genre), it)
+            }
+            match.releaseYear?.let {
+                GameDetailField(stringResource(R.string.opennes_game_release_year), it.toString())
+            }
+            match.description?.let {
+                GameDetailField(stringResource(R.string.opennes_game_description), it)
+            }
+            if (match.genre == null && match.releaseYear == null && match.description == null) {
+                Text(
+                    text = stringResource(R.string.opennes_online_no_fields),
+                    color = LibraryColors.muted,
+                    fontSize = 12.sp,
+                )
+            }
+            val canFill =
+                (game.genre.isNullOrBlank() && !match.genre.isNullOrBlank()) ||
+                    (game.releaseYear == null && match.releaseYear != null) ||
+                    (game.description.isNullOrBlank() && !match.description.isNullOrBlank())
+            Button(
+                onClick = {
+                    applying = true
+                    statusMessage = null
+                    onApply(match) { updated ->
+                        applying = false
+                        if (updated == null) {
+                            statusMessage = R.string.opennes_online_apply_failed
+                        } else {
+                            candidate = null
+                            onGameUpdated(updated)
+                        }
+                    }
+                },
+                enabled = canFill && !searching && !applying,
+                colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+            ) {
+                Text(stringResource(R.string.opennes_online_apply))
+            }
+            if (!canFill) {
+                Text(
+                    text = stringResource(R.string.opennes_online_all_filled),
+                    color = LibraryColors.muted,
+                    fontSize = 12.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun GameProfileSection(
     game: Game,
     onSave: (String?, Int?, String?, (Game?) -> Unit) -> Unit,
@@ -656,6 +776,7 @@ private fun GameProfileSection(
     var saving by remember(game.id) { mutableStateOf(false) }
     var saveFailed by remember(game.id) { mutableStateOf(false) }
     var invalidYear by remember(game.id) { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         game.genre?.takeIf { it.isNotBlank() }?.let {
@@ -666,6 +787,16 @@ private fun GameProfileSection(
         }
         game.description?.takeIf { it.isNotBlank() }?.let {
             GameDetailField(stringResource(R.string.opennes_game_description), it)
+        }
+        game.wikidataEntityId?.takeIf { it.matches(Regex("Q[1-9][0-9]*")) }?.let { entityId ->
+            TextButton(
+                onClick = {
+                    val uri = Uri.parse("https://www.wikidata.org/wiki/" + entityId)
+                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                },
+            ) {
+                Text(stringResource(R.string.opennes_online_source))
+            }
         }
 
         if (!editing) {

@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased — Game profile information
+## Unreleased — Verified online NES information
+
+- Add key-free, user-requested lookup from Wikidata's CC0 game catalogue for matching NES titles.
+- Verify an exact normalized title, the Wikidata video-game type and the Nintendo Entertainment System platform before suggesting an online result; ambiguous records are rejected.
+- Show candidate genre, first publication year and short description before the player confirms the match.
+- Fill only empty profile fields via a targeted database update. Existing descriptions, genre, dates, custom names, artwork, ROM paths, playtime and saves remain untouched.
+- Store and display a link to the source Wikidata record, removable when the user edits those profile fields manually.
+- Add a non-destructive Room 13→14 migration for source provenance; remote provider failures do not block emulator operation.
+- This is an explicit lookup feature, not yet an unattended library-wide metadata scraper. The bundled NES catalogue remains the first line of ROM identification.
+
+## Game profile information
 
 - Add optional genre, release year and description fields to each NES game, including a native edit/save interface in game details.
 - Preserve existing records through Room 12→13 migration; missing fields remain blank rather than displaying invented metadata.

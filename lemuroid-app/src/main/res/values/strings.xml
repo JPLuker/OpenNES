@@ -268,6 +268,15 @@
     <string name="opennes_profile_cancel">Cancel</string>
     <string name="opennes_profile_invalid_year">Enter a year between 1950 and 2100, or leave it blank.</string>
     <string name="opennes_profile_failed">Could not save game details.</string>
+    <string name="opennes_online_lookup">Find online game info</string>
+    <string name="opennes_online_verified_match">Verified NES game · Wikidata (CC0)</string>
+    <string name="opennes_online_no_match">No unambiguous NES game match found online. Existing details were not changed.</string>
+    <string name="opennes_online_unavailable">Online catalogue unavailable. Check your connection and try again.</string>
+    <string name="opennes_online_no_fields">No additional game information is available for this entry.</string>
+    <string name="opennes_online_all_filled">No empty game-detail fields to fill. You can change details manually.</string>
+    <string name="opennes_online_apply">Fill missing details</string>
+    <string name="opennes_online_apply_failed">Could not update this record. Existing details were left unchanged.</string>
+    <string name="opennes_online_source">Source: Wikidata (CC0) · View record</string>
     <string name="opennes_artwork_gallery">Artwork</string>
     <string name="opennes_artwork_title_screen">Title screen</string>
     <string name="opennes_artwork_gameplay">Gameplay screenshot</string>

@@ -20,6 +20,8 @@ The goal is the convenience and polish of a dedicated Android emulator, designed
 
 The visual direction takes inspiration from Pizza Boy's level of polish, **not its copyrighted visual assets or source code**. All final OpenNES artwork and UI will be original.
 
+**Online metadata progress:** Game details now support an optional **Find online game info** lookup via Wikidata (CC0) with no API key. OpenNES only proposes verified NES video-game matches, previews genre/year/description, and fills fields only after confirmation. Existing manually entered fields are never overwritten; source attribution links to Wikidata. This is not yet an unattended Plex-style bulk scraper.
+
 **Artwork progress:** Matched NES games can show Libretro box art, title screens and gameplay screenshots in the game-details panel. The library prefetches a bounded group of visible covers into Coil's disk cache. Android can evict this cache, so offline artwork is best-effort rather than permanent. Custom covers always take priority. External metadata providers and full Plex-style refresh controls are still planned.
 
 ## Development status
