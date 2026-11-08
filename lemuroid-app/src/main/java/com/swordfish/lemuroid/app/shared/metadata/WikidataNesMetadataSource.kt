@@ -1,6 +1,7 @@
 package com.swordfish.lemuroid.app.shared.metadata
 
 import android.net.Uri
+import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -46,7 +47,7 @@ class WikidataNesMetadataSource {
 
     suspend fun lookup(title: String): Result =
         withContext(Dispatchers.IO) {
-            val searchTerm = title.substringBefore('(').substringBefore('[').trim()
+            val searchTerm = NesGameTitle.clean(title)
             if (searchTerm.length < 3 || searchTerm.length > 120) {
                 return@withContext Result.NoMatch
             }
