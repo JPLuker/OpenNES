@@ -17,6 +17,7 @@ import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
+import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -294,7 +295,7 @@ class HomeViewModel(
 
                         // Don't issue an additional search for identical titles.
                         // Network requests for distinct games are sequential.
-                        val cacheKey = game.title.trim().lowercase(java.util.Locale.ROOT)
+                        val cacheKey = NesGameTitle.clean(game.title).lowercase(java.util.Locale.ROOT)
                         val result =
                             resultsByTitle[cacheKey] ?: wikidataSource.lookup(game.title).also {
                                 if (it !is WikidataNesMetadataSource.Result.Unavailable) {
