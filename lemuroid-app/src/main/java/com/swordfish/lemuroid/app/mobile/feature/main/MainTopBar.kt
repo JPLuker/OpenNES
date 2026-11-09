@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -168,6 +170,7 @@ private fun OpenNesSearchView(
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val searchLabel = stringResource(R.string.opennes_search_field_hint)
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -193,9 +196,10 @@ private fun OpenNesSearchView(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .semantics { contentDescription = searchLabel },
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFFF2EDE6)),
-            placeholder = { Text(stringResource(R.string.opennes_search_field_hint), color = Color(0xFFB2B2B4)) },
+            placeholder = { Text(searchLabel, color = Color(0xFFB2B2B4)) },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFB2B2B4))
             },

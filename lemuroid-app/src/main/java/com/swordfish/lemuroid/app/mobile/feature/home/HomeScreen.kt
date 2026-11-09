@@ -71,6 +71,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -379,6 +381,7 @@ private fun LibraryHeader(
             )
             Text(
                 text = stringResource(R.string.opennes_library_title),
+                modifier = Modifier.semantics { heading() },
                 color = LibraryColors.foreground,
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
@@ -482,7 +485,7 @@ private fun GameShelf(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
-            modifier = Modifier.padding(horizontal = 20.dp),
+            modifier = Modifier.padding(horizontal = 20.dp).semantics { heading() },
             color = LibraryColors.foreground,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,

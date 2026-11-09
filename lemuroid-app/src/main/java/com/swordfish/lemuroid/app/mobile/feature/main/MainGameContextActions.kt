@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
@@ -298,7 +298,8 @@ private fun ContextActionEntry(
             modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
-                .height(56.dp),
+                .heightIn(min = 56.dp)
+                .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
