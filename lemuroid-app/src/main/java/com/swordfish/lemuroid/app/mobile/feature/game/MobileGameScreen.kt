@@ -24,14 +24,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -470,6 +471,7 @@ private fun GameScreenRunningCentralMenu(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MenuEditTouchControls(
     viewModel: BaseGameScreenViewModel,
@@ -632,7 +634,9 @@ private fun MenuEditTouchControls(
                             TouchControlEditorSlider(
                                 value = touchControllerSettings.rotation,
                                 onPreview = {
-                                    viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rotation = it))
+                                    viewModel.previewTouchControllerSettings(
+                                        touchControllerSettings.copy(rotation = it),
+                                    )
                                 },
                                 onCommit = {
                                     viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rotation = it))
@@ -650,7 +654,9 @@ private fun MenuEditTouchControls(
                                 modifier = Modifier.weight(1f),
                             )
                             Switch(
-                                checked = !(touchControllerSettings.landscapeOverlay ?: controllerConfig.allowTouchOverlay),
+                                checked =
+                                    !(touchControllerSettings.landscapeOverlay
+                                        ?: controllerConfig.allowTouchOverlay),
                                 onCheckedChange = {
                                     viewModel.updateTouchControllerSettings(
                                         touchControllerSettings.copy(landscapeOverlay = !it),
