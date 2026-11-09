@@ -61,12 +61,12 @@ class SaveSyncSettingsViewModel(
     }
 
     private fun computeCoreNames(): List<String> {
-        return CoreID.values().map { it.coreName }
+        return listOf(CoreID.FCEUMM.coreName)
     }
 
     private fun computeCoreVisibleNames(): List<String> {
         val context = getContext()
-        return CoreID.values().map { saveSyncManager.getDisplayNameForCore(context, it) }
+        return listOf(saveSyncManager.getDisplayNameForCore(context, CoreID.FCEUMM))
     }
 
     private fun getContext(): Context {
