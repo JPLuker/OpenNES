@@ -85,8 +85,13 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val cachedStateFlow =
             cachedSettings.getOrPut(settingsKey) {
                 val currentSettings =
-                    sharedPreferences.getString(settingsKey, null)
-                        ?.let { Json.decodeFromString(Settings.serializer(), it) }
+                    sharedPreferences.getString(settingsKey, null)?.let { raw ->
+                        runCatching { Json.decodeFromString(Settings.serializer(), raw) }
+                            .onFailure { error ->
+                                Timber.w(error, "Ignoring invalid saved NES touch layout")
+                            }
+                            .getOrNull()
+                    }
 
                 MutableStateFlow(currentSettings)
             }
