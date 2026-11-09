@@ -56,7 +56,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LemuroidGameTexts
-import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LemuroidSmallGameImage
+import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import timber.log.Timber
 
@@ -262,13 +262,13 @@ private fun ContextActionHeader(game: Game) {
                 end = 16.dp,
             ),
     ) {
-        LemuroidSmallGameImage(
+        // Use the same box-art resolver as the NES shelf instead of initials.
+        NesBoxArtwork(
+            game = game,
             modifier =
                 Modifier
-                    .width(40.dp)
-                    .height(40.dp)
+                    .width(48.dp)
                     .align(Alignment.CenterVertically),
-            game = game,
         )
         LemuroidGameTexts(
             modifier =
