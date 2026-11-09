@@ -277,8 +277,10 @@
     <string name="opennes_online_apply">Fill missing details</string>
     <string name="opennes_online_apply_failed">Could not update this record. Existing details were left unchanged.</string>
     <string name="opennes_online_source">Source: Wikidata (CC0) · View record</string>
+    <string name="opennes_library_maintenance">Library maintenance</string>
+    <string name="opennes_library_maintenance_description">Manually update missing game information</string>
     <string name="opennes_bulk_title">Find missing game information</string>
-    <string name="opennes_bulk_privacy">Checks up to 12 NES titles per batch with Wikidata. Only titles are sent (not ROMs or saves). Previous checks are cached for 30 days. Fills empty details only.</string>
+    <string name="opennes_bulk_privacy">Checks up to 12 NES games using Wikidata. Only game titles are sent, never ROM files or saves. Previous results are cached for 30 days.</string>
     <string name="opennes_bulk_start">Check missing details</string>
     <string name="opennes_bulk_stop">Stop checking</string>
     <string name="opennes_bulk_progress">Checked %1$d of %2$d · %3$d updated</string>
