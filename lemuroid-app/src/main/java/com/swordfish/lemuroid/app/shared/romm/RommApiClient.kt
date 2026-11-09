@@ -69,7 +69,14 @@ class RommApiClient {
         require(offset >= 0 && limit in 1..100) { "Invalid RomM page" }
         val ids = findNesPlatformIds(connection)
         if (ids.isEmpty()) return@withContext Page(emptyList(), 0, offset, limit)
-        val params = mutableListOf("offset" to offset.toString(), "limit" to limit.toString())
+        val params =
+            mutableListOf(
+                "offset" to offset.toString(),
+                "limit" to limit.toString(),
+                "with_total" to "true",
+                "with_char_index" to "false",
+                "with_filter_values" to "false",
+            )
         ids.forEach { id -> params += "platform_ids" to id.toString() }
         val document = getJson(connection, listOf("api", "roms"), params)
         val items = document.optJSONArray("items") ?: JSONArray()
@@ -294,10 +301,13 @@ class RommApiClient {
                 parsed.password.isEmpty() && parsed.query == null && parsed.fragment == null) {
                 "RomM requires an HTTPS URL without login details or query"
             }
-            require(parsed.encodedPath.endsWith("/")) {
-                "Use the RomM server root URL, ending with a slash"
+            // Accept both https://host and https://host/subpath.
+            // The trailing slash is needed before appending /api endpoints.
+            return if (parsed.encodedPath.endsWith("/")) {
+                parsed.toString()
+            } else {
+                parsed.newBuilder().addPathSegment("").build().toString()
             }
-            return parsed.toString()
         }
 
         fun safeRomFileName(fileName: String): Boolean {

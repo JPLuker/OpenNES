@@ -27,6 +27,9 @@ class RommConnectionStore(context: Context) {
     fun configuredServer(): String? = prefs.getString(SERVER_KEY, null)
 
     @Synchronized
+    fun hasSavedToken(): Boolean = secretFile.baseFile.isFile
+
+    @Synchronized
     fun save(serverUrl: String, token: String) {
         val url = RommApiClient.validatedServerUrl(serverUrl)
         val trimmed = token.trim()

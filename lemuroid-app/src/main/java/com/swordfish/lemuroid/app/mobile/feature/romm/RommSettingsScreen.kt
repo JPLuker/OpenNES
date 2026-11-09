@@ -46,7 +46,9 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
 
     var serverUrl by remember { mutableStateOf(store.configuredServer().orEmpty()) }
     var tokenInput by remember { mutableStateOf("") }
-    var configured by remember { mutableStateOf(store.configuredServer() != null) }
+    var configured by remember {
+        mutableStateOf(store.configuredServer() != null && store.hasSavedToken())
+    }
     var signedInAs by remember { mutableStateOf<String?>(null) }
     var page by remember { mutableStateOf<RommApiClient.Page?>(null) }
     var status by remember { mutableStateOf("") }
