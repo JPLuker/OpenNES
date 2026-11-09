@@ -239,7 +239,10 @@ class HomeViewModel(
                         val canFill =
                             (old.genre.isNullOrBlank() && !candidate.genre.isNullOrBlank()) ||
                                 (old.releaseYear == null && candidate.releaseYear != null) ||
-                                (old.description.isNullOrBlank() && !candidate.description.isNullOrBlank())
+                                (old.description.isNullOrBlank() && !candidate.description.isNullOrBlank()) ||
+                                (old.wikidataEntityId != null &&
+                                    old.wikipediaArticleTitle == null &&
+                                    candidate.wikipediaArticleTitle != null)
                         if (!canFill) return@runCatching null
 
                         val changed =
@@ -249,6 +252,7 @@ class HomeViewModel(
                                 releaseYear = candidate.releaseYear,
                                 description = candidate.description,
                                 sourceId = candidate.entityId,
+                                wikipediaTitle = candidate.wikipediaArticleTitle,
                                 checkedAt = System.currentTimeMillis(),
                             )
                         if (changed == 0) null else dao.selectById(gameId)
@@ -343,7 +347,10 @@ class HomeViewModel(
                                                         (
                                                             latest.description.isNullOrBlank() &&
                                                                 !result.description.isNullOrBlank()
-                                                        )
+                                                        ) ||
+                                                    (latest.wikidataEntityId != null &&
+                                                        latest.wikipediaArticleTitle == null &&
+                                                        result.wikipediaArticleTitle != null)
                                                 )
                                         if (canFill) {
                                             dao.fillMissingOnlineGameInfo(
@@ -352,6 +359,7 @@ class HomeViewModel(
                                                 releaseYear = result.releaseYear,
                                                 description = result.description,
                                                 sourceId = result.entityId,
+                                                wikipediaTitle = result.wikipediaArticleTitle,
                                                 checkedAt = System.currentTimeMillis(),
                                             ) > 0
                                         } else {
