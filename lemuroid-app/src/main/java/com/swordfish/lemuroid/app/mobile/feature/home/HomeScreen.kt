@@ -883,28 +883,50 @@ private fun WikidataLookupSection(
     var candidate by remember(game.id) { mutableStateOf<WikidataNesMetadataSource.Result.Match?>(null) }
     var statusMessage by remember(game.id) { mutableStateOf<Int?>(null) }
 
+    LaunchedEffect(game.id) {
+        searching = true
+        onLookup { result ->
+            searching = false
+            when (result) {
+                is WikidataNesMetadataSource.Result.Match -> candidate = result
+                WikidataNesMetadataSource.Result.NoMatch ->
+                    statusMessage = R.string.opennes_online_no_match
+                WikidataNesMetadataSource.Result.Unavailable ->
+                    statusMessage = R.string.opennes_online_unavailable
+            }
+        }
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedButton(
-            onClick = {
-                searching = true
-                candidate = null
-                statusMessage = null
-                onLookup { result ->
-                    searching = false
-                    when (result) {
-                        is WikidataNesMetadataSource.Result.Match -> candidate = result
-                        WikidataNesMetadataSource.Result.NoMatch ->
-                            statusMessage = R.string.opennes_online_no_match
-                        WikidataNesMetadataSource.Result.Unavailable ->
-                            statusMessage = R.string.opennes_online_unavailable
+        if (searching) {
+            Text(
+                text = stringResource(R.string.opennes_online_searching),
+                color = LibraryColors.muted,
+                fontSize = 13.sp,
+            )
+        } else {
+            OutlinedButton(
+                onClick = {
+                    searching = true
+                    candidate = null
+                    statusMessage = null
+                    onLookup { result ->
+                        searching = false
+                        when (result) {
+                            is WikidataNesMetadataSource.Result.Match -> candidate = result
+                            WikidataNesMetadataSource.Result.NoMatch ->
+                                statusMessage = R.string.opennes_online_no_match
+                            WikidataNesMetadataSource.Result.Unavailable ->
+                                statusMessage = R.string.opennes_online_unavailable
+                        }
                     }
-                }
-            },
-            enabled = !searching && !applying,
-            border = BorderStroke(1.dp, LibraryColors.border),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-        ) {
-            Text(stringResource(R.string.opennes_online_lookup))
+                },
+                enabled = !applying,
+                border = BorderStroke(1.dp, LibraryColors.border),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+            ) {
+                Text(stringResource(R.string.opennes_online_retry))
+            }
         }
 
         statusMessage?.let { message ->
@@ -916,32 +938,31 @@ private fun WikidataLookupSection(
         }
 
         candidate?.let { match ->
-            Text(
-                text = stringResource(R.string.opennes_online_verified_match),
-                color = LibraryColors.foreground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-            )
-            match.genre?.let {
-                GameDetailField(stringResource(R.string.opennes_game_genre), it)
-            }
-            match.releaseYear?.let {
-                GameDetailField(stringResource(R.string.opennes_game_release_year), it.toString())
-            }
-            match.description?.let {
-                GameDetailField(stringResource(R.string.opennes_game_description), it)
-            }
-            if (match.genre == null && match.releaseYear == null && match.description == null) {
-                Text(
-                    text = stringResource(R.string.opennes_online_no_fields),
-                    color = LibraryColors.muted,
-                    fontSize = 12.sp,
-                )
-            }
             val canFill = game.needsOnlineMetadata(match)
-            Button(
-                onClick = {
-                    applying = true
+            if (canFill) {
+                Text(
+                    text = stringResource(R.string.opennes_online_verified_match),
+                    color = LibraryColors.foreground,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                )
+                match.genre?.takeIf { game.genre.isNullOrBlank() }?.let {
+                    GameDetailField(stringResource(R.string.opennes_game_genre), it)
+                }
+                match.releaseYear?.takeIf { game.releaseYear == null }?.let {
+                    GameDetailField(stringResource(R.string.opennes_game_release_year), it.toString())
+                }
+                match.description?.takeIf {
+                    game.description.isNullOrBlank() ||
+                        (game.wikidataEntityId != null && game.wikipediaArticleTitle == null)
+                }?.let {
+                    GameDetailField(stringResource(R.string.opennes_game_description), it)
+                }
+            }
+            if (canFill) {
+                Button(
+                    onClick = {
+                        applying = true
                     statusMessage = null
                     onApply(match) { updated ->
                         applying = false
@@ -953,10 +974,11 @@ private fun WikidataLookupSection(
                         }
                     }
                 },
-                enabled = canFill && !searching && !applying,
+                enabled = !searching && !applying,
                 colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
             ) {
                 Text(stringResource(R.string.opennes_online_apply))
+            }
             }
             if (!canFill) {
                 Text(
