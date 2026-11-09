@@ -267,6 +267,8 @@
     <string name="opennes_setup_scan_error_description">OpenNES could not finish scanning your NES folder. Existing games have been preserved. Try rescanning or select a different folder.</string>
     <string name="opennes_setup_rescan_action">Rescan</string>
     <string name="opennes_setup_change_action">Change folder</string>
+    <string name="opennes_open_game_details">View details for %1$s</string>
+    <string name="opennes_game_actions_for">More actions for %1$s</string>
     <string name="opennes_setup_folder_setting">NES game folder</string>
     <string name="opennes_setup_no_folder_selected">No folder selected</string>
     <string name="opennes_setup_rescan_description">Look again for NES game files in the selected folder</string>
