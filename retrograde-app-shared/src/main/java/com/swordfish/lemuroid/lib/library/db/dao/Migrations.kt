@@ -104,6 +104,24 @@ object Migrations {
             }
         }
 
+    val VERSION_15_16: Migration =
+        object : Migration(15, 16) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Preserve all ROMs, saves, favorites, titles and editable metadata.
+                database.execSQL("ALTER TABLE games ADD COLUMN wikipediaArticleTitle TEXT")
+                // Older lookup failures used less capable title matching. Recheck
+                // incomplete records once under the new automated pipeline.
+                database.execSQL(
+                    """
+                    UPDATE games SET lastOnlineMetadataCheckedAt = 0
+                    WHERE systemId = 'nes'
+                      AND (description IS NULL OR TRIM(description) = ''
+                           OR (wikidataEntityId IS NOT NULL AND wikipediaArticleTitle IS NULL))
+                    """.trimIndent(),
+                )
+            }
+        }
+
     private fun migrateGamesTableToVersion10(database: SupportSQLiteDatabase) {
         database.execSQL(
             "ALTER TABLE games ADD COLUMN customName TEXT DEFAULT NULL",
