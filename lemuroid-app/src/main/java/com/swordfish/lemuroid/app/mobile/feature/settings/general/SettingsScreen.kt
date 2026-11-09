@@ -14,12 +14,12 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
 import com.swordfish.lemuroid.app.mobile.feature.main.navigateToRoute
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidCardSettingsGroup
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsList
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsMenuLink
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsPage
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsSlider
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsSwitch
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsLink
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSlider
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSwitch
 import com.swordfish.lemuroid.app.utils.android.settings.booleanPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.indexPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.intPreferenceState
@@ -46,7 +46,7 @@ fun SettingsScreen(
             .collectAsState(false)
             .value
 
-    LemuroidSettingsPage(modifier = modifier) {
+    OpenNesSettingsPage(modifier = modifier) {
         RomsSettings(
             state = state,
             onChangeFolder = { viewModel.changeLocalStorageFolder() },
@@ -68,11 +68,11 @@ private fun MiscSettings(
     isSaveSyncSupported: Boolean,
     navController: NavController,
 ) {
-    LemuroidCardSettingsGroup(
+    OpenNesSettingsGroup(
         title = { Text(text = stringResource(id = R.string.settings_category_misc)) },
     ) {
         if (isSaveSyncSupported) {
-            LemuroidSettingsMenuLink(
+            OpenNesSettingsLink(
                 title = { Text(text = stringResource(id = R.string.settings_title_save_sync)) },
                 subtitle = {
                     Text(text = stringResource(id = R.string.settings_description_save_sync))
@@ -80,7 +80,7 @@ private fun MiscSettings(
                 onClick = { navController.navigateToRoute(MainRoute.SETTINGS_SAVE_SYNC) },
             )
         }
-        LemuroidSettingsMenuLink(
+        OpenNesSettingsLink(
             title = { Text(text = stringResource(id = R.string.settings_title_advanced_settings)) },
             subtitle = {
                 Text(text = stringResource(id = R.string.settings_description_advanced_settings))
@@ -92,10 +92,10 @@ private fun MiscSettings(
 
 @Composable
 private fun InputSettings(navController: NavController) {
-    LemuroidCardSettingsGroup(
+    OpenNesSettingsGroup(
         title = { Text(text = stringResource(id = R.string.settings_category_input)) },
     ) {
-        LemuroidSettingsList(
+        OpenNesSettingsChoice(
             state =
                 indexPreferenceState(
                     R.string.pref_key_haptic_feedback_mode,
@@ -107,7 +107,7 @@ private fun InputSettings(navController: NavController) {
             },
             items = stringListResource(R.array.pref_key_haptic_feedback_mode_display_names),
         )
-        LemuroidSettingsMenuLink(
+        OpenNesSettingsLink(
             title = { Text(text = stringResource(id = R.string.settings_title_gamepad_settings)) },
             subtitle = {
                 Text(text = stringResource(id = R.string.settings_description_gamepad_settings))
@@ -122,25 +122,25 @@ private fun GeneralSettings() {
     val hdMode = booleanPreferenceState(R.string.pref_key_hd_mode, false)
     val immersiveMode = booleanPreferenceState(R.string.pref_key_enable_immersive_mode, false)
 
-    LemuroidCardSettingsGroup(
+    OpenNesSettingsGroup(
         title = { Text(text = stringResource(id = R.string.settings_category_general)) },
     ) {
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             state = booleanPreferenceState(R.string.pref_key_autosave, true),
             title = { Text(text = stringResource(id = R.string.settings_title_enable_autosave)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_enable_autosave)) },
         )
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             state = immersiveMode,
             title = { Text(text = stringResource(id = R.string.settings_title_immersive_mode)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_immersive_mode)) },
         )
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             state = hdMode,
             title = { Text(text = stringResource(id = R.string.settings_title_hd_mode)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_hd_mode)) },
         )
-        LemuroidSettingsSlider(
+        OpenNesSettingsSlider(
             enabled = hdMode.value,
             state =
                 intPreferenceState(
@@ -152,7 +152,7 @@ private fun GeneralSettings() {
             title = { Text(text = stringResource(R.string.settings_title_hd_quality)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_hd_quality)) },
         )
-        LemuroidSettingsList(
+        OpenNesSettingsChoice(
             enabled = !hdMode.value,
             state =
                 indexPreferenceState(
@@ -163,7 +163,7 @@ private fun GeneralSettings() {
             title = { Text(text = stringResource(id = R.string.display_filter)) },
             items = stringListResource(R.array.pref_key_shader_filter_display_names),
         )
-        LemuroidSettingsList(
+        OpenNesSettingsChoice(
             state =
                 indexPreferenceState(
                     R.string.pref_key_viewport_alignment,
@@ -196,25 +196,25 @@ private fun RomsSettings(
             }.getOrNull() ?: emptyDirectory
         }
 
-    LemuroidCardSettingsGroup(title = { Text(text = stringResource(id = R.string.roms)) }) {
-        LemuroidSettingsMenuLink(
+    OpenNesSettingsGroup(title = { Text(text = stringResource(id = R.string.roms)) }) {
+        OpenNesSettingsLink(
             title = { Text(text = stringResource(id = R.string.directory)) },
             subtitle = { Text(text = currentDirectoryName) },
             onClick = { onChangeFolder() },
             enabled = !indexingInProgress,
         )
-        LemuroidSettingsMenuLink(
+        OpenNesSettingsLink(
             title = { Text(text = stringResource(R.string.opennes_library_maintenance)) },
             subtitle = { Text(text = stringResource(R.string.opennes_library_maintenance_description)) },
             onClick = onLibraryMaintenance,
         )
         if (scanInProgress) {
-            LemuroidSettingsMenuLink(
+            OpenNesSettingsLink(
                 title = { Text(text = stringResource(id = R.string.stop)) },
                 onClick = { LibraryIndexScheduler.cancelLibrarySync(context) },
             )
         } else {
-            LemuroidSettingsMenuLink(
+            OpenNesSettingsLink(
                 title = { Text(text = stringResource(id = R.string.rescan)) },
                 onClick = { LibraryIndexScheduler.scheduleLibrarySync(context) },
                 enabled = !indexingInProgress,
