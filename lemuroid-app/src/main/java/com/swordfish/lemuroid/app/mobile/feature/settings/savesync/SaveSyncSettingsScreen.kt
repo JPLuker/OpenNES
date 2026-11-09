@@ -9,12 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsLink
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsMultiChoice
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSwitch
 import com.swordfish.lemuroid.app.shared.savesync.SaveSyncWork
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidCardSettingsGroup
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsListMultiSelect
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsMenuLink
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsPage
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsSwitch
 import com.swordfish.lemuroid.app.utils.android.settings.booleanPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.stringsSetPreferenceState
 
@@ -35,9 +35,9 @@ fun SaveSyncSettingsScreen(
             .collectAsState(true)
             .value
 
-    LemuroidSettingsPage(modifier = modifier.fillMaxSize()) {
-        LemuroidCardSettingsGroup {
-            LemuroidSettingsMenuLink(
+    OpenNesSettingsPage(modifier = modifier.fillMaxSize()) {
+        OpenNesSettingsGroup {
+            OpenNesSettingsLink(
                 title = {
                     Text(
                         text =
@@ -49,9 +49,13 @@ fun SaveSyncSettingsScreen(
                 },
                 subtitle = { Text(text = saveSyncState.configInfo) },
                 enabled = !isSyncInProgress,
-                onClick = { context.startActivity(Intent(context, saveSyncState.settingsActivity)) },
+                onClick = {
+                    saveSyncState.settingsActivity?.let {
+                        context.startActivity(Intent(context, it))
+                    }
+                },
             )
-            LemuroidSettingsSwitch(
+            OpenNesSettingsSwitch(
                 state = booleanPreferenceState(R.string.pref_key_save_sync_enable, default = false),
                 title = { Text(text = stringResource(id = R.string.settings_save_sync_include_saves)) },
                 subtitle = {
@@ -65,7 +69,7 @@ fun SaveSyncSettingsScreen(
                 },
                 enabled = saveSyncState.isConfigured && !isSyncInProgress,
             )
-            LemuroidSettingsListMultiSelect(
+            OpenNesSettingsMultiChoice(
                 state =
                     stringsSetPreferenceState(
                         stringResource(R.string.pref_key_save_sync_cores),
@@ -78,13 +82,13 @@ fun SaveSyncSettingsScreen(
                 enabled = saveSyncState.isConfigured && !isSyncInProgress,
                 confirmButton = stringResource(id = R.string.ok),
             )
-            LemuroidSettingsSwitch(
+            OpenNesSettingsSwitch(
                 state = booleanPreferenceState(R.string.pref_key_save_sync_auto, default = false),
                 title = { Text(text = stringResource(id = R.string.settings_save_sync_enable_auto)) },
                 subtitle = { Text(text = stringResource(id = R.string.settings_save_sync_enable_auto_description)) },
                 enabled = saveSyncState.isConfigured && !isSyncInProgress,
             )
-            LemuroidSettingsMenuLink(
+            OpenNesSettingsLink(
                 title = { Text(text = stringResource(id = R.string.settings_save_sync_refresh)) },
                 subtitle = {
                     Text(
