@@ -16,7 +16,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | **M5 — Gameplay reliability** | **ACTIVE**: existing audio/input fixes and save infrastructure; now auditing state operation results, lifecycle ownership and errors | Improve save/resume feedback and cancellation handling; audio and device acceptance deferred |
 | **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
 | **M7 — Public release** | **ACTIVE — release-hardening source**: rolling debug APK workflow remains; inherited release-signing credentials removed and production signing is optional/secret-provided | Verify production key custody, reproducible builds, licensing, CI permissions, APK contents and device acceptance |
-| M8 — RomM integration (additional planned workstream) | Not implemented | Server authentication, game sync, offline save/conflict design |
+| **M8 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 
 ## M3 source completion checklist
 
@@ -87,6 +87,17 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [ ] Pin GitHub Actions dependencies to audited immutable revisions and complete third-party license and binary provenance review
 - [ ] Inspect signing certificates, APK contents and native binaries against release requirements (testing paused)
 - [ ] **M7 acceptance deferred:** verified install/upgrade path, input, audio, saves, crash reporting and RetroAchievements claims
+
+## M8 active source checklist
+
+- [x] Add user-configurable HTTPS RomM server and scoped read-only bearer-token authentication
+- [x] Encrypt tokens with Android Keystore and store ciphertext outside Android Auto Backup
+- [x] Browse RomM's NES/Famicom platforms and paginated ROMs without touching non-NES entries
+- [x] Explicitly download supported NES/FDS/ZIP files into the already selected local ROM folder, refuse overwrite, verify optional MD5 and schedule rescan
+- [x] Provide Settings → RomM library UI with Connect, Check, Disconnect, Browse, Next page and per-ROM Import
+- [ ] Validate against a real RomM server's OpenAPI schema and acceptance permissions
+- [ ] Add optional save sync only with explicit conflict resolution and independently versioned backups
+- [ ] **M8 acceptance deferred:** TLS/proxy, offline/revoked tokens, interrupted downloads and real ROM imports on-device
 
 ## M2 active checklist
 

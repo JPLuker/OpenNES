@@ -25,7 +25,7 @@
 
 ## Outstanding gates
 
-- Wire the client and secure store into a user-visible Connect/Browse/Import settings screen.
+- [x] Settings → RomM library now contains Connect/Browse/Import, pagination, connection check and disconnect controls. All imports are explicitly initiated and respect the configured local NES folder.
 - Validate pagination, platform filtering, download sizes, content schema and checksum behavior against RomM 5.x and any legacy version to be supported.
 - Verify Android document-tree permissions, duplicate handling, interruption/cancellation, server failures, token revocation and offline behavior.
 - Optionally add remote save sync, only with explicit direction/conflict UI and a design that never overwrites existing saves by default.

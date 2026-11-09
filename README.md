@@ -35,7 +35,8 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | M4 — Dedicated landscape controller skin | **Code-complete (source scope)**: selectable framed/overlay gameplay, minimal appearance, dedicated secondary controls, adaptive sizing, cutout handling and separate settings; on-device acceptance deferred |
 | M5 — Gameplay, saves, input and performance polish | Partly implemented: audio, controller persistence and stuck-input fixes; regression testing pending |
 | M6 — RetroAchievements integration | Native integration started: local NES ROM hashing and LibretroDroid/rc_client technical handoff; sign-in, runtime and unlocks not implemented |
-| M7 — Production releases and maintenance | Source hardening underway: inherited release credentials removed, secret-provided optional production signing configured; debug APK distribution retained; production audits/QA pending |
+| M7 — Production releases and maintenance | Source hardening underway: inherited release credentials removed, secret-provided optional production signing configured; debug APK/checksum distribution retained; production audits/QA pending |
+| M8 — Optional RomM integration | Source implementation underway: secure read-only connection and local NES import screen; untested against a server, save sync/conflicts not implemented |
 
 See the [module progress tracker](docs/MODULE_PROGRESS.md) for the current implementation checklist, M2 code-complete disposition and deferred device acceptance; the [full roadmap](ROADMAP.md) retains original acceptance gates.
 

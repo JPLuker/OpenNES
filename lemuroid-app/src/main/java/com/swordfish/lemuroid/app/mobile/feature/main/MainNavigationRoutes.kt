@@ -59,6 +59,11 @@ enum class MainRoute(
         titleId = R.string.settings_title_save_sync,
         parent = SETTINGS,
     ),
+    SETTINGS_ROMM(
+        route = "settings/romm",
+        titleId = R.string.opennes_romm_title,
+        parent = SETTINGS,
+    ),
     ;
 
     companion object {
