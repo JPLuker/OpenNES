@@ -19,10 +19,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alorma.compose.settings.storage.base.SettingValueState
 import com.swordfish.lemuroid.R
-import androidx.compose.ui.res.stringResource
 
 /** A staged multi-select: dismissing does not silently change sync preferences. */
 @Composable
