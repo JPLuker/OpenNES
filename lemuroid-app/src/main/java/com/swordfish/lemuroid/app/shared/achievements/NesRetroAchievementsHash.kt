@@ -23,6 +23,7 @@ import java.util.zip.ZipInputStream
  */
 object NesRetroAchievementsHash {
     private const val MAX_ROM_BYTES = 64L * 1024L * 1024L
+
     // Includes ignored archive members. A malformed ZIP must not make
     // a pause-menu identification request inflate unlimited data.
     private const val MAX_ZIP_UNCOMPRESSED_BYTES = 96L * 1024L * 1024L
