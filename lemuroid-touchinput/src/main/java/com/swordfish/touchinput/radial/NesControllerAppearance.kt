@@ -41,7 +41,10 @@ data class NesControllerPalette(
             NesColorPart.OUTLINE -> outline
         }
 
-    fun withColor(part: NesColorPart, color: Color): NesControllerPalette =
+    fun withColor(
+        part: NesColorPart,
+        color: Color,
+    ): NesControllerPalette =
         when (part) {
             NesColorPart.PANEL -> copy(panel = color)
             NesColorPart.ACCENT -> copy(accent = color)
@@ -177,6 +180,7 @@ object NesControllerPresets {
         )
 
     val default = all.first()
+
     fun forId(id: String?): NesControllerPreset = all.firstOrNull { it.id == id } ?: default
 }
 
@@ -216,7 +220,10 @@ class NesControllerAppearanceStore(context: Context) {
         }
     }
 
-    fun setColor(part: NesColorPart, value: String): Boolean {
+    fun setColor(
+        part: NesColorPart,
+        value: String,
+    ): Boolean {
         if (!isValidHex(value)) return false
         preferences.edit()
             .putString("color_" + part.name, value.uppercase(Locale.ROOT))
@@ -239,10 +246,10 @@ class NesControllerAppearanceStore(context: Context) {
     companion object {
         private const val PRESET_KEY = "preset_id"
         private val HEX_PATTERN = Regex("^#[0-9A-Fa-f]{6}$")
+
         fun isValidHex(value: String) = HEX_PATTERN.matches(value.trim())
 
-        fun toHex(color: Color): String =
-            "#%06X".format(Locale.ROOT, color.toArgb() and 0xFFFFFF)
+        fun toHex(color: Color): String = "#%06X".format(Locale.ROOT, color.toArgb() and 0xFFFFFF)
     }
 }
 
