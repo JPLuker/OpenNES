@@ -5,14 +5,16 @@ import android.content.Intent
 import android.view.InputDevice
 import android.view.KeyEvent
 import com.swordfish.lemuroid.R
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
 
-@OptIn(DelicateCoroutinesApi::class)
-class InputBindingUpdater(private val inputDeviceManager: InputDeviceManager, intent: Intent) {
+/**
+ * Captures a physical input for one controller. The mobile activity persists
+ * asynchronously and only closes when the binding write has completed.
+ */
+class InputBindingUpdater(
+    private val inputDeviceManager: InputDeviceManager,
+    intent: Intent,
+) {
     val extras = parseExtras(intent)
 
     fun getTitle(context: Context): String {
@@ -20,44 +22,44 @@ class InputBindingUpdater(private val inputDeviceManager: InputDeviceManager, in
         return context.getString(R.string.gamepad_binding_update_title, keyName)
     }
 
-    fun getMessage(context: Context): String {
-        return context.getString(R.string.gamepad_binding_update_description, extras.device.name)
-    }
+    fun getMessage(context: Context): String =
+        context.getString(R.string.gamepad_binding_update_description, extras.device.name)
 
-    fun handleKeyEvent(event: KeyEvent): Boolean {
-        Timber.d("Received input binding event: $event ${event.device}")
-        return when (event.action) {
-            KeyEvent.ACTION_DOWN -> onKeyDown(event)
-            KeyEvent.ACTION_UP -> onKeyUp(event)
-            else -> false
-        }
-    }
+    fun accepts(event: KeyEvent): Boolean =
+        (event.action == KeyEvent.ACTION_DOWN || event.action == KeyEvent.ACTION_UP) &&
+            event.keyCode != KeyEvent.KEYCODE_UNKNOWN &&
+            isTargetedDevice(event.device)
 
-    private fun onKeyDown(event: KeyEvent): Boolean {
-        return isTargetedDevice(event.device)
-    }
-
-    private fun onKeyUp(event: KeyEvent): Boolean {
-        if (!isTargetedDevice(event.device)) return false
-
-        runBlocking {
-            GlobalScope.async {
-                inputDeviceManager.updateBinding(event.device, RetroKey(extras.retroKey), InputKey(event.keyCode))
-            }
-        }
-
+    /**
+     * Must be called for a released key only. The underlying manager commits
+     * the preference before this function completes; there is no detached job.
+     */
+    suspend fun saveReleasedKey(event: KeyEvent): Boolean {
+        if (!accepts(event) || event.action != KeyEvent.ACTION_UP) return false
+        inputDeviceManager.updateBinding(
+            event.device ?: return false,
+            RetroKey(extras.retroKey),
+            InputKey(event.keyCode),
+        )
         return true
     }
 
-    private fun isTargetedDevice(device: InputDevice?): Boolean {
-        return device != null && extras.device.name == device.name
+    /** Legacy Android TV handler (OpenNES ships the mobile NES experience). */
+    fun handleKeyEvent(event: KeyEvent): Boolean {
+        if (!accepts(event)) return false
+        if (event.action == KeyEvent.ACTION_UP) {
+            return runBlocking { saveReleasedKey(event) }
+        }
+        return true
     }
+
+    private fun isTargetedDevice(device: InputDevice?): Boolean =
+        device != null && extras.device.descriptor == device.descriptor
 
     private fun parseExtras(intent: Intent): IntentExtras {
         val device =
             intent.extras?.getParcelable<InputDevice>(REQUEST_DEVICE)
                 ?: throw IllegalArgumentException("REQUEST_DEVICE has not been passed")
-
         val retroKey =
             intent.extras?.getInt(REQUEST_RETRO_KEY)
                 ?: throw IllegalArgumentException("REQUEST_RETRO_KEY has not been passed")
