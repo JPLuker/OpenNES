@@ -253,6 +253,14 @@
     <string name="opennes_library_title">Your NES library</string>
     <string name="opennes_library_subtitle">An entire era, one shelf at a time.</string>
     <string name="opennes_continue">CONTINUE PLAYING</string>
+    <string name="opennes_pause_label">PAUSED</string>
+    <string name="opennes_pause_audio_on">On</string>
+    <string name="opennes_pause_audio_off">Off</string>
+    <string name="opennes_pause_fast_on">On</string>
+    <string name="opennes_pause_fast_off">Off</string>
+    <string name="opennes_confirm_restart_title">Restart this game?</string>
+    <string name="opennes_confirm_quit_title">Quit to library?</string>
+    <string name="opennes_confirm_progress_warning">Unsaved progress may be lost.</string>
     <string name="opennes_play">Play</string>
     <string name="opennes_system_nes">NINTENDO ENTERTAINMENT SYSTEM</string>
     <string name="opennes_game_developer">Developer</string>
