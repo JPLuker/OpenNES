@@ -37,7 +37,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -66,6 +70,10 @@ import java.security.InvalidParameterException
 import javax.inject.Inject
 
 class GameMenuActivity : RetrogradeComponentActivity() {
+    // The audio switch stays in the pause menu. Its selection is returned
+    // when the player resumes, quits or closes the menu by system Back.
+    private var pendingAudioEnabled: Boolean? = null
+
     @Inject
     lateinit var inputDeviceManager: InputDeviceManager
 
@@ -91,6 +99,13 @@ class GameMenuActivity : RetrogradeComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState?.containsKey(PENDING_AUDIO_KEY) == true) {
+            pendingAudioEnabled = savedInstanceState.getBoolean(PENDING_AUDIO_KEY)
+            setResult(
+                RESULT_OK,
+                Intent().putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, pendingAudioEnabled),
+            )
+        }
 
         enableEdgeToEdge(
             SystemBarStyle.dark(Color.TRANSPARENT),
@@ -139,10 +154,18 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        pendingAudioEnabled?.let { outState.putBoolean(PENDING_AUDIO_KEY, it) }
+        super.onSaveInstanceState(outState)
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun GameMenuScreen(gameMenuRequest: GameMenuRequest) {
         AppTheme {
+            var audioEnabled by rememberSaveable {
+                mutableStateOf(pendingAudioEnabled ?: gameMenuRequest.audioEnabled)
+            }
             val navController = rememberNavController()
             val navBackStackEntry = navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry.value?.destination
@@ -196,7 +219,20 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     exitTransition = { fadeOut() },
                 ) {
                     composable(GameMenuRoute.HOME) {
-                        GameMenuHomeScreen(navController, gameMenuRequest, ::onResult)
+                        GameMenuHomeScreen(
+                            navController = navController,
+                            gameMenuRequest = gameMenuRequest,
+                            audioEnabled = audioEnabled,
+                            onAudioChanged = { enabled ->
+                                audioEnabled = enabled
+                                pendingAudioEnabled = enabled
+                                setResult(
+                                    RESULT_OK,
+                                    Intent().putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, enabled),
+                                )
+                            },
+                            onResult = ::onResult,
+                        )
                     }
                     composable(GameMenuRoute.SAVE) {
                         GameMenuStatesScreen(
@@ -290,8 +326,15 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     private fun onResult(block: Intent.() -> Unit) {
         val resultIntent = Intent()
         resultIntent.block()
+        pendingAudioEnabled?.let { enabled ->
+            resultIntent.putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, enabled)
+        }
         setResult(RESULT_OK, resultIntent)
         finish()
+    }
+
+    companion object {
+        private const val PENDING_AUDIO_KEY = "opennes_menu_pending_audio_enabled"
     }
 
     @dagger.Module

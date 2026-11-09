@@ -56,6 +56,8 @@ private enum class Confirmation {
 fun GameMenuHomeScreen(
     navController: NavController,
     gameMenuRequest: GameMenuActivity.GameMenuRequest,
+    audioEnabled: Boolean,
+    onAudioChanged: (Boolean) -> Unit,
     onResult: KFunction1<Intent.() -> Unit, Unit>,
 ) {
     var confirmation by remember { mutableStateOf<Confirmation?>(null) }
@@ -146,12 +148,8 @@ fun GameMenuHomeScreen(
 
         GameMenuSwitchAction(
             title = stringResource(R.string.opennes_pause_game_audio),
-            checked = gameMenuRequest.audioEnabled,
-            onCheckedChange = { enabled ->
-                onResult {
-                    putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, enabled)
-                }
-            },
+            checked = audioEnabled,
+            onCheckedChange = onAudioChanged,
         )
 
         if (gameMenuRequest.fastForwardSupported) {
@@ -336,7 +334,7 @@ private fun GameMenuAction(
 /**
  * The full row owns the accessibility toggle action. The Switch itself has
  * no separate click handler, avoiding duplicate switches and conflicting taps.
- * Changing audio uses the same game-menu result contract as before.
+ * The setting is returned to gameplay when the menu closes, not immediately.
  */
 @Composable
 private fun GameMenuSwitchAction(
