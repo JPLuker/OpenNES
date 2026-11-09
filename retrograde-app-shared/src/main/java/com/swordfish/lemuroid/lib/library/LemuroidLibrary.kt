@@ -55,13 +55,16 @@ class LemuroidLibrary(
     suspend fun indexLibrary() {
         val startedAtMs = System.currentTimeMillis()
 
+        // Only prune missing games after every storage provider finishes.
+        // An unreadable ROM folder or interrupted scan must never erase the
+        // previously indexed collection.
         try {
             indexProviders(startedAtMs)
-        } catch (e: Throwable) {
-            Timber.e(e, "Library indexing stopped due to exception")
-        } finally {
-            cleanUp(startedAtMs)
+        } catch (e: Exception) {
+            Timber.e(e, "Library indexing failed; preserving existing games")
+            throw e
         }
+        cleanUp(startedAtMs)
 
         val executionTime = System.currentTimeMillis() - startedAtMs
         Timber.i("Library indexing completed in: $executionTime ms")
