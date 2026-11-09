@@ -3,17 +3,11 @@ package com.swordfish.lemuroid.app.mobile.feature.main
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
@@ -32,13 +26,10 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -50,13 +41,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
-import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LemuroidGameTexts
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import timber.log.Timber
 
@@ -89,6 +82,8 @@ fun MainGameContextActions(
         ModalBottomSheet(
             sheetState = modalSheetState,
             onDismissRequest = { selectedGameState.value = null },
+            containerColor = Color(0xFF1C2027),
+            contentColor = Color(0xFFF2EDE6),
         ) {
             ContextActionContent(
                 selectedGame = selectedGame,
@@ -150,7 +145,7 @@ private fun ContextActionContent(
                 .windowInsetsPadding(WindowInsets.safeContent.only(WindowInsetsSides.Bottom)),
     ) {
         ContextActionHeader(game = selectedGame)
-        Divider()
+        Divider(color = Color(0xFF414650))
         ContextActionEntry(
             label = stringResource(id = R.string.game_context_menu_resume),
             icon = Icons.Default.PlayArrow,
@@ -270,13 +265,24 @@ private fun ContextActionHeader(game: Game) {
                     .width(48.dp)
                     .align(Alignment.CenterVertically),
         )
-        LemuroidGameTexts(
+        Column(
             modifier =
                 Modifier
                     .weight(1f)
-                    .padding(start = 8.dp),
-            game = game,
-        )
+                    .align(Alignment.CenterVertically)
+                    .padding(start = 12.dp),
+        ) {
+            Text(
+                text = game.displayName(),
+                color = Color(0xFFF2EDE6),
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = stringResource(R.string.opennes_system_nes),
+                color = Color(0xFFB2B2B4),
+                fontSize = 11.sp,
+            )
+        }
     }
 }
 
@@ -298,28 +304,14 @@ private fun ContextActionEntry(
         Icon(
             modifier = Modifier.padding(start = 16.dp),
             imageVector = icon,
-            contentDescription = label,
+            contentDescription = null,
+            tint = Color(0xFFB2B2B4),
         )
         Text(
             modifier = Modifier.padding(start = 16.dp),
             text = label,
+            color = Color(0xFFF2EDE6),
         )
     }
 }
 
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun FakeScrim(modalSheetState: SheetState) {
-    AnimatedVisibility(
-        visible = modalSheetState.targetValue != SheetValue.Hidden,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(BottomSheetDefaults.ScrimColor),
-        )
-    }
-}
