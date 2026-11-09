@@ -30,7 +30,7 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | --- | --- |
 | M0 — Own Android package/name and reproducible APK workflow | CI complete; device testing pending |
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
-| M2 — Replace the complete Lemuroid user interface | Active: library, metadata, menus, settings, and navigation implemented; onboarding and remaining cleanup pending |
+| M2 — Replace the complete Lemuroid user interface | Active: NES library, metadata, menus, settings, navigation and first-run ROM import states implemented; remaining cleanup and acceptance pending |
 | M3 — Premium NES portrait controller skin | In progress: NES-style D-pad, A/B, Start/Select and separate opacity/scale |
 | M4 — Dedicated landscape controller skin | In progress: separate landscape scale, margins, rotation and opacity; placement refinements pending |
 | M5 — Gameplay, saves, input and performance polish | Partly implemented: audio, controller persistence and stuck-input fixes; regression testing pending |
@@ -52,7 +52,7 @@ Still inherited: some dormant Lemuroid source, shared internal package names, le
 Each successful push to `master` builds and publishes a new APK at this same address. No pull requests, ZIP extraction, or GitHub Actions artifact hunting is needed. If the build fails, the previously successful APK remains available.
 
 1. Download `OpenNES-debug.apk` and install it on Android (allow installation from the browser/files app if prompted).
-2. Import your own legally obtained NES ROMs.
+2. On first launch, choose the folder containing your own legally obtained NES ROM files (such as `.nes`). OpenNES scans it and adds supported games to your shelves. If none are detected, the home screen offers **Rescan** and **Change folder**. You can also change the folder from Settings.
 3. To update, download from the **same link** and install over the existing OpenNES debug build.
 
 This is a **debug/test APK**, not a production-signed release. Package ID: `com.jpluker.opennes.debug`. The project will add separately signed production releases later. No commercial ROMs are provided. Android will reject an in-place update if a build uses a different signing certificate.
