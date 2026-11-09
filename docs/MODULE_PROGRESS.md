@@ -33,6 +33,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Reserve portrait video space against the taller of the D-pad or A/B groups instead of only the left group
 - [x] Add a compact-phone side gutter to generated portrait defaults, accounting for the gutter in default dial sizing; saved layouts remain authoritative
 - [x] Skip zero-size viewport calculations during initial layout or rotation
+- [x] Keep drag editor targets within the visible editor bounds when the target can fit; freeze bounds for each gesture to avoid moving clamps
 - [ ] Review final portrait visual balance and custom-offset edge cases on device (testing paused)
 - [ ] Physically verify multi-touch, diagonals, touch cancellation, save/resume and portrait orientation (testing paused)
 
@@ -155,6 +156,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Phones at or under 360 dp of unobstructed width receive an 8 dp inset for each default portrait control side, and the generated dial-size calculation accounts for both insets. Saved preferences stay authoritative and landscape is untouched.
 - The viewport does not receive invalid fractions while the root or video region has a zero dimension during initial layout/rotation.
 - Source-only implementation. Controller alignment and video appearance still require device verification after the testing pause.
+
+## Latest M3 source batch — bounded portrait controller drag editing
+
+- Edit-mode drag previews clamp each D-pad/A/B cluster to the currently visible viewport with an 8 dp inset when that cluster can fit. The clamp uses root-relative bounds from both the target and its editing overlay.
+- The editor captures starting bounds at gesture start, avoiding a feedback loop where the clamp shifts as the control is dragged. Existing saved layouts are neither modified nor forcibly brought onscreen until the user deliberately drags the controls.
+- Oversized custom controls fall back to the existing normalized offset range instead of applying invalid clamps. Editor group labels may wrap to two lines rather than disappearing behind ellipsis.
+- Source-only, untested while deliberate compilation and device testing remain paused.
 
 ## Development rules
 

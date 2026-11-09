@@ -22,6 +22,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,9 +31,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,10 +60,19 @@ internal fun NesControllerDragOverlay(
     onDone: () -> Unit,
     onFineTune: () -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize().background(Color(0x330B0D12))) {
+    val editingBounds = remember { mutableStateOf<Rect?>(null) }
+
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color(0x330B0D12))
+                .onGloballyPositioned { editingBounds.value = it.boundsInRoot() },
+    ) {
         leftBounds?.let {
             NesDragTarget(
                 bounds = it,
+                editingBounds = editingBounds.value,
                 label = stringResource(R.string.opennes_controls_left_group),
                 isLeft = true,
                 settings = settings,
@@ -69,6 +83,7 @@ internal fun NesControllerDragOverlay(
         rightBounds?.let {
             NesDragTarget(
                 bounds = it,
+                editingBounds = editingBounds.value,
                 label = stringResource(R.string.opennes_controls_right_group),
                 isLeft = false,
                 settings = settings,
@@ -114,6 +129,7 @@ internal fun NesControllerDragOverlay(
 @Composable
 private fun NesDragTarget(
     bounds: Rect,
+    editingBounds: Rect?,
     label: String,
     isLeft: Boolean,
     settings: TouchControllerSettingsManager.Settings,
@@ -122,10 +138,13 @@ private fun NesDragTarget(
 ) {
     val density = LocalDensity.current
     val latestSettings = rememberUpdatedState(settings)
+    val latestBounds = rememberUpdatedState(bounds)
+    val latestEditingBounds = rememberUpdatedState(editingBounds)
     val latestPreview = rememberUpdatedState(onPreview)
     val latestCommit = rememberUpdatedState(onCommit)
     val width = with(density) { bounds.width.toDp().coerceAtLeast(72.dp) }
     val height = with(density) { bounds.height.toDp().coerceAtLeast(72.dp) }
+    val edgeInsetPx = with(density) { 8.dp.toPx() }
     val corner = RoundedCornerShape(16.dp)
 
     Box(
@@ -142,11 +161,15 @@ private fun NesDragTarget(
                 .border(2.dp, Color(0xFFC74356), corner)
                 .pointerInput(isLeft, density.density) {
                     var startSettings = latestSettings.value
+                    var startBounds = latestBounds.value
+                    var startEditingBounds = latestEditingBounds.value
                     var totalDrag = Offset.Zero
                     var finalSettings: TouchControllerSettingsManager.Settings? = null
                     detectDragGestures(
                         onDragStart = {
                             startSettings = latestSettings.value
+                            startBounds = latestBounds.value
+                            startEditingBounds = latestEditingBounds.value
                             totalDrag = Offset.Zero
                             finalSettings = null
                         },
@@ -161,8 +184,33 @@ private fun NesDragTarget(
                         onDrag = { change, movement ->
                             change.consume()
                             totalDrag += movement
-                            val xDp = totalDrag.x / density.density
-                            val yDp = totalDrag.y / density.density
+                            // Freeze the measured starting bounds for this gesture.
+                            // Otherwise recomposition would shift the clamp as
+                            // the edited cluster follows the finger.
+                            val limitedX =
+                                startEditingBounds?.let { viewport ->
+                                    clampDragToVisibleBounds(
+                                        totalDrag.x,
+                                        startBounds.left,
+                                        startBounds.right,
+                                        viewport.left,
+                                        viewport.right,
+                                        edgeInsetPx,
+                                    )
+                                } ?: totalDrag.x
+                            val limitedY =
+                                startEditingBounds?.let { viewport ->
+                                    clampDragToVisibleBounds(
+                                        totalDrag.y,
+                                        startBounds.top,
+                                        startBounds.bottom,
+                                        viewport.top,
+                                        viewport.bottom,
+                                        edgeInsetPx,
+                                    )
+                                } ?: totalDrag.y
+                            val xDp = limitedX / density.density
+                            val yDp = limitedY / density.density
                             val revised =
                                 if (isLeft) {
                                     startSettings.copy(
@@ -207,7 +255,26 @@ private fun NesDragTarget(
             color = Color.White,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            maxLines = 1,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
         )
     }
+}
+
+/**
+ * Limit user-driven drag deltas to the current editor viewport. If an
+ * oversized custom control group cannot fit at all, retain the previous
+ * offset limits instead of applying an invalid reversed clamp range.
+ */
+private fun clampDragToVisibleBounds(
+    deltaPx: Float,
+    groupStartPx: Float,
+    groupEndPx: Float,
+    viewportStartPx: Float,
+    viewportEndPx: Float,
+    insetPx: Float,
+): Float {
+    val minimum = viewportStartPx + insetPx - groupStartPx
+    val maximum = viewportEndPx - insetPx - groupEndPx
+    return if (minimum <= maximum) deltaPx.coerceIn(minimum, maximum) else deltaPx
 }
