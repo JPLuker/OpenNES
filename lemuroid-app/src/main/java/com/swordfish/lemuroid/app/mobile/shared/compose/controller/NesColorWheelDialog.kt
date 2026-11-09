@@ -57,8 +57,7 @@ private data class HsvSelection(
     val saturation: Float,
     val brightness: Float,
 ) {
-    fun toColor(): Color =
-        Color(AndroidColor.HSVToColor(floatArrayOf(hue, saturation, brightness)))
+    fun toColor(): Color = Color(AndroidColor.HSVToColor(floatArrayOf(hue, saturation, brightness)))
 
     companion object {
         fun fromColor(color: Color): HsvSelection {
