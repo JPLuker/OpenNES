@@ -35,9 +35,17 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Restyle game-actions sheet with native OpenNES typography and NES box art; remove its last inherited text component
 - [x] Replace remaining user-visible English references to Lemuroid in loading, save-state, reset and crash messages
 - [ ] Audit remaining legacy resources, TV code and internal identifiers without breaking runtime dependencies or license notices
-- [ ] Review ROM import failure reporting and inaccessible-folder errors (currently surfaced as an empty result when scanning cannot read a folder)
+- [x] Propagate failed ROM scans instead of reporting success, preflight selected-folder read grants, preserve indexed games on failure, and show recovery actions even when earlier games remain visible (device acceptance still paused)
 - [ ] Polish accessibility, small screens, system bars, display cutouts and orientation layouts
 - [ ] Verify all interactions on a physical device (paused)
+
+## Latest M2 source batch — ROM import failure protection
+
+- Scan exceptions now propagate out of the library indexer; cleanup of old games runs only after the scan finishes successfully.
+- The worker checks selected Android document-tree permissions and readability before scanning. Folder-access and other indexing failures are saved and reported as failed work.
+- The home library displays a recoverable, specific error instead of calling a failed scan an empty collection. Previously indexed shelves remain visible.
+- Re-selecting an existing folder retries permission acquisition. Newly selected folder access is secured before previously granted access is released.
+- **Not accepted on-device:** blocked/revoked folder flows, canceled scans, empty valid folders, successful rescan, and retention of existing saves remain regression scenarios for later verification.
 
 ## Development rules
 
