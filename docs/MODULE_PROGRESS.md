@@ -10,7 +10,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | --- | --- | --- |
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
-| **M2 — UI completion and cleanup** | **Active — cleanup pass**: NES library, first-run onboarding, settings, game menus and shortcuts implemented; dormant mobile multi-console screens and inherited UI widgets pruned | Finish unreadable-folder feedback, device-size/accessibility polish and safe legacy resource auditing; verification postponed |
+| **M2 — UI completion and cleanup** | **Active — legacy audit**: NES library/menus, ROM recovery, responsive layouts, search accessibility and safe drawing insets implemented in source | Audit remaining TV/resources and screen-reader/inset edge cases; device acceptance postponed |
 | M3 — Portrait NES controller | Partially implemented: NES visual skin, independent settings, drag/slider customization | Polish D-pad/A/B ergonomics and verify input interactions |
 | M4 — Landscape NES controller | Partially implemented: dedicated orientation settings and placements | Design-specific responsive layout and cutout review |
 | M5 — Gameplay reliability | Partially implemented: audio/input fixes, save infrastructure and virtual input release handling | Comprehensive save/audio/suspend/regression verification |
@@ -37,7 +37,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [ ] Audit remaining legacy resources, TV code and internal identifiers without breaking runtime dependencies or license notices
 - [x] Propagate failed ROM scans instead of reporting success, preflight selected-folder read grants, preserve indexed games on failure, and show recovery actions even when earlier games remain visible (device acceptance still paused)
 - [x] Improve narrow-phone and large-text layouts for game-details actions, featured cover and ROM folder recovery buttons; add explicit screen-reader labels for shelf taps and long-press actions (device acceptance paused)
-- [ ] Review additional accessibility paths, system bars, display cutouts and portrait/landscape edge cases
+- [x] Apply safe-drawing insets to main navigation, non-home top bars and the pause-menu side panel; label search actions and add Help dialog dismissal (source-only)
+- [ ] Review further accessibility, large-font focus behavior and remaining landscape cutout edge cases on device (paused)
 - [ ] Verify all interactions on a physical device (paused)
 
 ## Latest M2 source batch — ROM import failure protection
@@ -55,6 +56,15 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - Shelf covers expose explicit tap-to-details and long-press-for-actions screen-reader labels. The hamburger action label includes the selected game title.
 - ROM scan recovery actions stack vertically when narrow widths or enlarged text make side-by-side buttons cramped.
 - **Implementation only:** no emulator, APK or UI device tests were executed. Next M2 review should focus on insets/cutouts, screen reader focus order, and legacy resources.
+
+## Latest M2 source batch — system insets and search accessibility
+
+- Main navigation's Compose scaffold uses safe-drawing insets; search/settings top bars also account for landscape cutouts.
+- The separate pause-menu side panel retains its edge-to-edge background while its interactive content avoids top, bottom, and end cutouts/system bars.
+- Search results announce game-specific Play and long-press actions and the specific game being added to or removed from Favorites; search IME uses the Search action.
+- Settings Help now has an explicit labeled Close button, and inherited store-review initialization no longer runs on app startup.
+- **Legacy audit findings:** the manifest still registers Android TV activities/Leanback launcher and TV EPG permission; Gradle retains open-source/Play and bundled/dynamic build flavors and Leanback dependencies. Internal `lemuroid` identifiers still support app resources, navigation, saved data, and compatibility paths. Removing these requires a separate reference/dependency audit; none were deleted in this batch.
+- **Not tested:** TalkBack focus order, large-font clipping, cutout placements, keyboard/resume behavior, emulator/gameplay UI, and APK compatibility remain for later device verification.
 
 ## Development rules
 
