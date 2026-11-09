@@ -6,12 +6,15 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -62,13 +65,14 @@ internal fun NesControllerDragOverlay(
 ) {
     val editingBounds = remember { mutableStateOf<Rect?>(null) }
 
-    Box(
+    BoxWithConstraints(
         modifier =
             Modifier
                 .fillMaxSize()
                 .background(Color(0x330B0D12))
                 .onGloballyPositioned { editingBounds.value = it.boundsInRoot() },
     ) {
+        val compactActions = maxWidth < 360.dp || LocalDensity.current.fontScale > 1.2f
         leftBounds?.let {
             NesDragTarget(
                 bounds = it,
@@ -95,30 +99,44 @@ internal fun NesControllerDragOverlay(
             modifier =
                 Modifier
                     .align(Alignment.TopCenter)
-                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
-                    .padding(top = 12.dp, start = 12.dp, end = 12.dp),
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+                    .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                    .widthIn(max = 420.dp),
             color = Color(0xFF25272D),
             contentColor = Color.White,
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, Color(0xFF9A394A)),
         ) {
             Column(
-                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp),
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = stringResource(R.string.opennes_controls_drag_hint),
                     fontSize = 12.sp,
-                    maxLines = 2,
+                    maxLines = 3,
+                    textAlign = TextAlign.Center,
                 )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    TextButton(onClick = onFineTune) {
-                        Text(stringResource(R.string.opennes_controls_drag_sliders))
+                if (compactActions) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        TextButton(onClick = onFineTune, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.opennes_controls_drag_sliders))
+                        }
+                        TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(TouchInputR.string.touch_customize_button_done))
+                        }
                     }
-                    TextButton(onClick = onDone) {
-                        Text(stringResource(TouchInputR.string.touch_customize_button_done))
+                } else {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        TextButton(onClick = onFineTune) {
+                            Text(stringResource(R.string.opennes_controls_drag_sliders))
+                        }
+                        TextButton(onClick = onDone) {
+                            Text(stringResource(TouchInputR.string.touch_customize_button_done))
+                        }
                     }
                 }
             }

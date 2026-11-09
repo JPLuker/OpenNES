@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -476,21 +477,44 @@ private fun MenuEditTouchControls(
                         )
                     }
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        onClick = { confirmReset.value = true },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text(text = stringResource(R.string.touch_customize_button_reset))
-                    }
-                    TextButton(
-                        onClick = { viewModel.showEditControls(false) },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text(text = stringResource(R.string.touch_customize_button_done))
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val compactFooter = maxWidth < 300.dp || LocalDensity.current.fontScale > 1.2f
+                    if (compactFooter) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            TextButton(
+                                onClick = { confirmReset.value = true },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(text = stringResource(R.string.touch_customize_button_reset))
+                            }
+                            TextButton(
+                                onClick = { viewModel.showEditControls(false) },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(text = stringResource(R.string.touch_customize_button_done))
+                            }
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            TextButton(
+                                onClick = { confirmReset.value = true },
+                                modifier = Modifier.padding(8.dp),
+                            ) {
+                                Text(text = stringResource(R.string.touch_customize_button_reset))
+                            }
+                            TextButton(
+                                onClick = { viewModel.showEditControls(false) },
+                                modifier = Modifier.padding(8.dp),
+                            ) {
+                                Text(text = stringResource(R.string.touch_customize_button_done))
+                            }
+                        }
                     }
                 }
             }
