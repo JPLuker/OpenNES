@@ -97,7 +97,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Explicitly download supported NES/FDS/ZIP files into the already selected local ROM folder, refuse overwrite, verify optional MD5 and schedule rescan
 - [x] Provide Settings → RomM library UI with Connect, Check, Disconnect, Browse, Next page and per-ROM Import
 - [ ] Validate against a real RomM server's OpenAPI schema and acceptance permissions
-- [ ] Add optional save sync only with explicit conflict resolution and independently versioned backups
+- [x] Add optional RomM save listing (assets.read scope) and per-save manual SAF backup export without writing to live OpenNES saves
+- [ ] Add two-way save sync only with explicit conflict resolution and independently versioned backups
 - [ ] **M8 acceptance deferred:** TLS/proxy, offline/revoked tokens, interrupted downloads and real ROM imports on-device
 
 ## M2 active checklist
@@ -310,6 +311,12 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Pinned `actions/checkout`, `actions/setup-java`, `actions/upload-artifact` and `actions/download-artifact` to the exact commit IDs resolved from their official v4 tag refs. A moving tag can no longer silently change the build/upload action code.
 - Existing least-privilege workflow permissions, build-then-lint-then-publish sequence and rolling debug APK distribution are unchanged.
 - This is a source-level supply-chain hardening step, not a run or verification of the modified workflow.
+
+## M8 source batch — safe remote save backup export
+
+- RomM's current saves API supplies a bare per-ROM `SaveSchema` list, with `GET /api/saves/{id}/content` gated by the optional `assets.read` scope. The OpenNES RomM screen exposes per-ROM Saves and a manual Export backup action.
+- Save backups download to bounded app cache (16 MiB maximum), optionally check a 64-hex SHA-256 content hash, then write to a document chosen explicitly in Android's system Save As picker. They are never imported into SRAM, save states or local game files automatically.
+- This is manual backup/export, **not automatic or bidirectional sync**. The user must reconcile saves manually; no server or device testing was run.
 
 ## Development rules
 

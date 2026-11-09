@@ -405,4 +405,10 @@
     <string name="opennes_romm_import_note">Import stores a new file in your selected OpenNES NES ROM folder. Existing files and game saves are not overwritten.</string>
     <string name="opennes_romm_action_busy">Working: %1$s</string>
     <string name="opennes_romm_no_folder">Select a writable ROM folder in OpenNES settings before importing games.</string>
+    <string name="opennes_romm_view_saves">Saves</string>
+    <string name="opennes_romm_save_backups_for">RomM saves · %1$s</string>
+    <string name="opennes_romm_save_backups_note">Optional assets.read scope required. Exporting makes a separate backup document. It never replaces OpenNES live save data.</string>
+    <string name="opennes_romm_no_saves">No RomM saves found for this game.</string>
+    <string name="opennes_romm_export_save">Export backup</string>
+    <string name="opennes_romm_save_exported">RomM save backup exported. OpenNES save data was not changed.</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.swordfish.lemuroid.app.mobile.feature.romm
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +53,9 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     }
     var signedInAs by remember { mutableStateOf<String?>(null) }
     var page by remember { mutableStateOf<RommApiClient.Page?>(null) }
+    var remoteSaves by remember { mutableStateOf<List<RommApiClient.RemoteSave>?>(null) }
+    var selectedSaveGame by remember { mutableStateOf<RommApiClient.Rom?>(null) }
+    var pendingSave by remember { mutableStateOf<RommApiClient.RemoteSave?>(null) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var operation by remember { mutableStateOf("") }
@@ -75,12 +80,31 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    val backupPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/octet-stream"),
+        ) { destination ->
+            val chosen = pendingSave
+            pendingSave = null
+            if (destination != null && chosen != null) {
+                perform("Exporting save backup") {
+                    val connection = withContext(Dispatchers.IO) {
+                        store.load() ?: error("Reconnect to RomM")
+                    }
+                    client.exportSaveBackup(context, connection, chosen, destination)
+                    status = context.getString(R.string.opennes_romm_save_exported)
+                }
+            }
+        }
+
     val browse: (Int) -> Unit = { offset ->
         perform("Browsing NES games") {
             val connection = withContext(Dispatchers.IO) {
                 store.load() ?: error("Connect to a RomM server first")
             }
             page = client.listNesRoms(connection, offset = offset)
+            remoteSaves = null
+            selectedSaveGame = null
         }
     }
 
@@ -158,6 +182,9 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                     tokenInput = ""
                                     signedInAs = null
                                     page = null
+                                    remoteSaves = null
+                                    selectedSaveGame = null
+                                    pendingSave = null
                                     status = "Disconnected"
                                 }
                             },
@@ -202,6 +229,20 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                 TextButton(
                                     enabled = !busy,
                                     onClick = {
+                                        perform("Viewing save backups") {
+                                            val connection = withContext(Dispatchers.IO) {
+                                                store.load() ?: error("Reconnect to RomM")
+                                            }
+                                            remoteSaves = client.listRemoteSaves(connection, rom.id)
+                                            selectedSaveGame = rom
+                                        }
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.opennes_romm_view_saves))
+                                }
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = {
                                         perform("Importing " + rom.name) {
                                             val connection = withContext(Dispatchers.IO) {
                                                 store.load() ?: error("Reconnect to RomM")
@@ -225,6 +266,43 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                         if (loaded.offset + loaded.limit < loaded.total) {
                             Button(enabled = !busy, onClick = { browse(loaded.offset + loaded.limit) }) {
                                 Text(stringResource(R.string.opennes_romm_more))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val saves = remoteSaves
+        val game = selectedSaveGame
+        if (configured && saves != null && game != null) {
+            OpenNesSettingsGroup(
+                title = { Text(stringResource(R.string.opennes_romm_save_backups_for, game.name)) },
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(stringResource(R.string.opennes_romm_save_backups_note))
+                    if (saves.isEmpty()) Text(stringResource(R.string.opennes_romm_no_saves))
+                    saves.forEach { save ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(save.fileName)
+                                save.slot?.let { Text(it) }
+                            }
+                            TextButton(
+                                enabled = !busy,
+                                onClick = {
+                                    pendingSave = save
+                                    backupPicker.launch(save.fileName)
+                                },
+                            ) {
+                                Text(stringResource(R.string.opennes_romm_export_save))
                             }
                         }
                     }

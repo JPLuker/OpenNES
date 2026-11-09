@@ -44,6 +44,15 @@ class RommApiClient {
         val limit: Int,
     )
 
+    data class RemoteSave(
+        val id: Int,
+        val romId: Int,
+        val fileName: String,
+        val slot: String?,
+        val sizeBytes: Long,
+        val contentHash: String?,
+    )
+
     private val http =
         OkHttpClient.Builder()
             .connectTimeout(8, TimeUnit.SECONDS)
@@ -105,6 +114,123 @@ class RommApiClient {
             offset = offset,
             limit = limit,
         )
+    }
+
+    /** Requires an optional RomM token scope: assets.read. No writes to RomM. */
+    suspend fun listRemoteSaves(
+        connection: RommConnection,
+        romId: Int,
+    ): List<RemoteSave> = withContext(Dispatchers.IO) {
+        require(romId > 0) { "Invalid RomM game" }
+        val response =
+            fetchJsonText(
+                connection,
+                listOf("api", "saves"),
+                listOf("rom_id" to romId.toString()),
+            )
+        // RomM 5.x exposes a bare SaveSchema array rather than a ROM page.
+        val array =
+            if (response.trimStart().startsWith("[")) {
+                JSONArray(response)
+            } else {
+                JSONObject(response).optJSONArray("items") ?: JSONArray()
+            }
+        (0 until array.length()).mapNotNull { index ->
+            val row = array.optJSONObject(index) ?: return@mapNotNull null
+            val id = row.optInt("id", -1)
+            if (id <= 0 || row.optInt("rom_id", -1) != romId) return@mapNotNull null
+            val filename = row.optString("file_name")
+            if (!safeAttachmentFileName(filename)) return@mapNotNull null
+            RemoteSave(
+                id = id,
+                romId = romId,
+                fileName = filename,
+                slot = row.optString("slot").takeIf { it.isNotBlank() && it != "null" },
+                sizeBytes = row.optLong("file_size_bytes", 0L),
+                contentHash = row.optString("content_hash").takeIf { it.isNotBlank() },
+            )
+        }
+    }
+
+    /**
+     * Exports a copy to a user-selected SAF document, never to OpenNES's live
+     * SRAM or save-state storage. The destination chooser is responsible for
+     * explicit overwrite confirmation if the player picks an existing file.
+     */
+    suspend fun exportSaveBackup(
+        context: Context,
+        connection: RommConnection,
+        save: RemoteSave,
+        destination: Uri,
+    ) = withContext(Dispatchers.IO) {
+        require(save.id > 0 && save.romId > 0 && safeAttachmentFileName(save.fileName)) {
+            "Invalid RomM save metadata"
+        }
+        val temporary = File.createTempFile("opennes-romm-save-", ".part", context.cacheDir)
+        try {
+            val request =
+                Request.Builder()
+                    .url(buildUrl(connection, listOf("api", "saves", save.id.toString(), "content")))
+                    .get()
+                    .header("Authorization", "Bearer " + connection.token)
+                    .header("User-Agent", "OpenNES/0.1 RomM backup export")
+                    .build()
+            http.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw httpError(response.code)
+                val body = response.body ?: throw IOException("Empty RomM save response")
+                if (body.contentLength() > MAX_SAVE_BYTES) {
+                    throw IOException("RomM save exceeds supported backup size")
+                }
+                var total = 0L
+                val digest = MessageDigest.getInstance("SHA-256")
+                body.byteStream().use { input ->
+                    temporary.outputStream().use { output ->
+                        val buffer = ByteArray(16 * 1024)
+                        while (true) {
+                            coroutineContext.ensureActive()
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            if (count == 0) continue
+                            total += count
+                            if (total > MAX_SAVE_BYTES) {
+                                throw IOException("RomM save exceeds supported backup size")
+                            }
+                            digest.update(buffer, 0, count)
+                            output.write(buffer, 0, count)
+                        }
+                    }
+                }
+                if (total == 0L) throw IOException("RomM returned an empty save")
+                val knownSha256 = save.contentHash
+                    ?.lowercase(Locale.ROOT)
+                    ?.takeIf { it.matches(Regex("[a-f0-9]{64}")) }
+                if (knownSha256 != null) {
+                    val actual = digest.digest().joinToString("") {
+                        (it.toInt() and 0xFF).toString(16).padStart(2, '0')
+                    }
+                    if (actual != knownSha256) {
+                        throw IOException("RomM save content hash mismatch")
+                    }
+                }
+            }
+            coroutineContext.ensureActive()
+            val output = context.contentResolver.openOutputStream(destination, "w")
+                ?: throw IOException("Cannot write the selected backup document")
+            output.use { stream ->
+                temporary.inputStream().use { input ->
+                    val buffer = ByteArray(16 * 1024)
+                    while (true) {
+                        coroutineContext.ensureActive()
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        if (count > 0) stream.write(buffer, 0, count)
+                    }
+                }
+                stream.flush()
+            }
+        } finally {
+            temporary.delete()
+        }
     }
 
     /** A RomM import never overwrites an existing local file or save. */
@@ -290,6 +416,7 @@ class RommApiClient {
     companion object {
         private const val MAX_JSON_BYTES = 3 * 1024 * 1024L
         private const val MAX_ROM_BYTES = 96 * 1024 * 1024L
+        private const val MAX_SAVE_BYTES = 16 * 1024 * 1024L
         private val NES_SLUGS = setOf("nes", "famicom", "fds", "famicom-disk-system")
 
         /** HTTPS-only: never expose bearer tokens over cleartext HTTP. */
@@ -311,10 +438,14 @@ class RommApiClient {
         }
 
         fun safeRomFileName(fileName: String): Boolean {
-            if (fileName.isBlank() || fileName.length > 230 || fileName.startsWith(".")) return false
-            if (fileName.any { it == '/' || it == '\\' || it.isISOControl() }) return false
+            if (!safeAttachmentFileName(fileName)) return false
             val ext = fileName.substringAfterLast('.', "").lowercase(Locale.ROOT)
             return ext in setOf("nes", "fds", "zip")
+        }
+
+        private fun safeAttachmentFileName(fileName: String): Boolean {
+            if (fileName.isBlank() || fileName.length > 230 || fileName.startsWith(".")) return false
+            return fileName.none { it == '/' || it == '\\' || it.isISOControl() }
         }
 
         private fun readBounded(input: java.io.InputStream, maxBytes: Long): ByteArray {
