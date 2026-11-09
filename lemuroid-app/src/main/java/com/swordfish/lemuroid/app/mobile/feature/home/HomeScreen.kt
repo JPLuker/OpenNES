@@ -40,6 +40,8 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +53,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -104,6 +107,9 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
+    onPinShortcut: (Game) -> Unit,
+    pinShortcutSupported: Boolean,
+    onFavoriteToggle: (Game, Boolean) -> Unit,
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
@@ -152,6 +158,12 @@ fun HomeScreen(
             onMore = {
                 selectedGame = null
                 onGameLongClick(game)
+            },
+            onPinShortcut = { onPinShortcut(game) },
+            pinShortcutSupported = pinShortcutSupported,
+            onFavoriteToggle = { favorite ->
+                onFavoriteToggle(game, favorite)
+                selectedGame = game.copy(isFavorite = favorite)
             },
             onSearchMetadata = { query, onResults ->
                 viewModel.searchMetadata(query, onResults)
@@ -536,6 +548,9 @@ private fun GameDetailsSheet(
     onDismiss: () -> Unit,
     onPlay: () -> Unit,
     onMore: () -> Unit,
+    onPinShortcut: () -> Unit,
+    pinShortcutSupported: Boolean,
+    onFavoriteToggle: (Boolean) -> Unit,
     onSearchMetadata: (String, (List<GameMetadata>) -> Unit) -> Unit,
     onApplyMetadata: (GameMetadata, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
@@ -544,6 +559,9 @@ private fun GameDetailsSheet(
     onApplyOnline: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
 ) {
     var searchExpanded by remember(game.id) { mutableStateOf(false) }
+    var onlineExpanded by remember(game.id) { mutableStateOf(false) }
+    var editingProfile by remember(game.id) { mutableStateOf(false) }
+    var menuExpanded by remember(game.id) { mutableStateOf(false) }
     var searchText by remember(game.id) { mutableStateOf(game.displayName()) }
     var searchResults by remember(game.id) { mutableStateOf(emptyList<GameMetadata>()) }
     var searched by remember(game.id) { mutableStateOf(false) }
@@ -619,16 +637,84 @@ private fun GameDetailsSheet(
                                 Icon(Icons.Filled.PlayArrow, contentDescription = null)
                                 Text(stringResource(R.string.opennes_play))
                             }
-                            OutlinedIconButton(
-                                onClick = onMore,
-                                modifier = Modifier.size(48.dp),
-                                border = BorderStroke(1.dp, LibraryColors.border),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Menu,
-                                    contentDescription = stringResource(R.string.opennes_game_more),
-                                    tint = LibraryColors.foreground,
-                                )
+                            Box {
+                                OutlinedIconButton(
+                                    onClick = { menuExpanded = true },
+                                    modifier = Modifier.size(48.dp),
+                                    border = BorderStroke(1.dp, LibraryColors.border),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Menu,
+                                        contentDescription = stringResource(R.string.opennes_game_more),
+                                        tint = LibraryColors.foreground,
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = menuExpanded,
+                                    onDismissRequest = { menuExpanded = false },
+                                    containerColor = LibraryColors.surface,
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.opennes_profile_edit)) },
+                                        onClick = {
+                                            menuExpanded = false
+                                            editingProfile = true
+                                            onlineExpanded = false
+                                            searchExpanded = false
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.opennes_online_lookup)) },
+                                        onClick = {
+                                            menuExpanded = false
+                                            onlineExpanded = true
+                                            editingProfile = false
+                                            searchExpanded = false
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.opennes_find_game_info)) },
+                                        onClick = {
+                                            menuExpanded = false
+                                            searchExpanded = true
+                                            editingProfile = false
+                                            onlineExpanded = false
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(
+                                                    if (game.isFavorite) {
+                                                        R.string.game_context_menu_remove_from_favorites
+                                                    } else {
+                                                        R.string.game_context_menu_add_to_favorites
+                                                    },
+                                                ),
+                                            )
+                                        },
+                                        onClick = {
+                                            menuExpanded = false
+                                            onFavoriteToggle(!game.isFavorite)
+                                        },
+                                    )
+                                    if (pinShortcutSupported) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.game_context_menu_create_shortcut)) },
+                                            onClick = {
+                                                menuExpanded = false
+                                                onPinShortcut()
+                                            },
+                                        )
+                                    }
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.opennes_other_game_actions)) },
+                                        onClick = {
+                                            menuExpanded = false
+                                            onMore()
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
