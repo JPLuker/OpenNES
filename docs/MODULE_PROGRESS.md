@@ -15,7 +15,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | M4 — Landscape NES controller | **CODE-COMPLETE (source scope; unverified)**: framed and overlay modes, minimal overlaid controls, NES secondary buttons, independent layout settings, cutout padding and adaptive defaults | Hardware acceptance deferred: gameplay framing, touch boundaries, landscape rotations and external devices |
 | **M5 — Gameplay reliability** | **ACTIVE**: existing audio/input fixes and save infrastructure; now auditing state operation results, lifecycle ownership and errors | Improve save/resume feedback and cancellation handling; audio and device acceptance deferred |
 | **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
-| M7 — Public release | Development distribution in place | Testing, security/license audit, signing and release docs |
+| **M7 — Public release** | **ACTIVE — release-hardening source**: rolling debug APK workflow remains; inherited release-signing credentials removed and production signing is optional/secret-provided | Verify production key custody, reproducible builds, licensing, CI permissions, APK contents and device acceptance |
 | M8 — RomM integration (additional planned workstream) | Not implemented | Server authentication, game sync, offline save/conflict design |
 
 ## M3 source completion checklist
@@ -77,6 +77,15 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [ ] Login/token security, game association, unlock events, achievement lists, progress, rich presence and leaderboard UI
 - [ ] Implement hardcore pause/savestate/cheat constraints and network failure handling
 - [ ] **M6 acceptance deferred:** verify actual RA account logins, supported NES game hashes and real unlocks on approved device/core
+
+## M7 active source checklist
+
+- [x] Preserve rolling development debug APK distribution without bundling commercial ROMs
+- [x] Remove inherited hardcoded release keystore alias/passwords and require explicit OpenNES environment-provided secrets
+- [x] Ignore new keystore material and document the unsigned-release default
+- [ ] Audit GitHub Actions permissions, pinned dependencies, third-party license notices and reproducibility
+- [ ] Inspect signing certificates, APK contents and native binaries against release requirements (testing paused)
+- [ ] **M7 acceptance deferred:** verified install/upgrade path, input, audio, saves, crash reporting and RetroAchievements claims
 
 ## M2 active checklist
 
@@ -269,6 +278,12 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - A single-flight guard prevents repeated Back/Quit requests from starting overlapping save snapshots and repeated finish results. A missing or failed snapshot shows an error and allows a retry; successful finish stays single-flight.
 - Redundant resume callbacks no longer overwrite an ongoing playtime interval. Reset rethrows cancellation and missing menu tilt configuration no longer triggers a non-null assertion crash.
 - Device suspend/resume, saves and process lifetime remain untested.
+
+## M7 source batch — isolated release signing
+
+- Removed upstream hardcoded release key alias/password and inherited release-signing fallback. Production credentials are passed only through `OPENNES_RELEASE_*` environment variables. All four are required to activate the optional `openNesRelease` signing configuration; otherwise the release artifact is unsigned.
+- `.gitignore` now ignores newly created JKS/keystore files. Existing tracked developer/debug signing material remains unaffected.
+- Updated build instructions to distinguish code-complete UI source from unverified APKs, and to document production signing and publication blockers. No build or signing test was run.
 
 ## Development rules
 

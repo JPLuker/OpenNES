@@ -82,18 +82,27 @@ android {
             storeFile = file("$rootDir/debug.keystore")
         }
 
-        maybeCreate("release").apply {
-            storeFile = file("$rootDir/release.jks")
-            keyAlias = "lemuroid"
-            storePassword = "lemuroid"
-            keyPassword = "lemuroid"
+        // A production release must NEVER be signed with inherited
+        // upstream credentials. Without all four environment variables,
+        // Gradle can assemble only an unsigned release artifact.
+        val keystore = System.getenv("OPENNES_RELEASE_KEYSTORE")
+        val storeSecret = System.getenv("OPENNES_RELEASE_STORE_PASSWORD")
+        val alias = System.getenv("OPENNES_RELEASE_KEY_ALIAS")
+        val keySecret = System.getenv("OPENNES_RELEASE_KEY_PASSWORD")
+        if (listOf(keystore, storeSecret, alias, keySecret).all { !it.isNullOrBlank() }) {
+            create("openNesRelease") {
+                storeFile = file(requireNotNull(keystore))
+                storePassword = requireNotNull(storeSecret)
+                keyAlias = requireNotNull(alias)
+                keyPassword = requireNotNull(keySecret)
+            }
         }
     }
 
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
-            signingConfig = signingConfigs["release"]
+            signingConfig = signingConfigs.findByName("openNesRelease")
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
             resValue("string", "lemuroid_name", "OpenNES")
         }
