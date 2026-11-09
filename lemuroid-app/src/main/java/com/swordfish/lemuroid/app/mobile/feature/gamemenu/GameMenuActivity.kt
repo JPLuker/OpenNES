@@ -100,10 +100,11 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState?.containsKey(PENDING_AUDIO_KEY) == true) {
-            pendingAudioEnabled = savedInstanceState.getBoolean(PENDING_AUDIO_KEY)
+            val restoredAudio = savedInstanceState.getBoolean(PENDING_AUDIO_KEY)
+            pendingAudioEnabled = restoredAudio
             setResult(
                 RESULT_OK,
-                Intent().putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, pendingAudioEnabled),
+                Intent().putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, restoredAudio),
             )
         }
 
