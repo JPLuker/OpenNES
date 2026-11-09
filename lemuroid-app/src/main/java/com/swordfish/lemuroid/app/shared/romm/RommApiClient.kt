@@ -207,7 +207,7 @@ class RommApiClient {
             coroutineContext.ensureActive()
             val output =
                 context.contentResolver.openOutputStream(destination, "w")
-                    
+                    ?: throw IOException("Cannot write the selected backup document")
             output.use { stream ->
                 temporary.inputStream().use { input ->
                     val buffer = ByteArray(16 * 1024)
@@ -240,7 +240,7 @@ class RommApiClient {
             val treeKey = context.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
             val treeString =
                 legacyPrefs.getString(treeKey, null)
-                    
+                    ?: throw IOException("Choose an OpenNES ROM folder in Settings first")
             val folder =
                 DocumentFile.fromTreeUri(context, Uri.parse(treeString))
                     ?: throw IOException("The selected NES ROM folder is unavailable")
@@ -265,7 +265,7 @@ class RommApiClient {
                 try {
                     val stream =
                         context.contentResolver.openOutputStream(newFile.uri, "w")
-                            
+                            ?: throw IOException("Cannot write to selected NES folder")
                     stream.use { output ->
                         temporary.inputStream().use { input ->
                             val buffer = ByteArray(16 * 1024)
@@ -396,7 +396,7 @@ class RommApiClient {
     ): HttpUrl {
         val root =
             validatedServerUrl(connection.serverUrl).toHttpUrlOrNull()
-                
+                ?: throw IllegalArgumentException("Invalid RomM HTTPS address")
         return root.newBuilder().apply {
             path.forEach { addPathSegment(it) }
             params.forEach { (name, value) -> addQueryParameter(name, value) }
@@ -425,7 +425,7 @@ class RommApiClient {
             val candidate = raw.trim()
             val parsed =
                 candidate.toHttpUrlOrNull()
-                    
+                    ?: throw IllegalArgumentException("Enter a valid RomM URL")
             require(
                 parsed.scheme == "https" &&
                     parsed.username.isEmpty() &&
