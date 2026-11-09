@@ -83,6 +83,7 @@ import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
+import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
@@ -220,10 +221,11 @@ private fun OpenNesLibrary(
             )
         }
 
-        AnimatedVisibility(state.showNoGamesCard) {
+        AnimatedVisibility(state.showNoGamesCard || (state.scanError != null && !state.scanInProgress)) {
             LibrarySetupCard(
                 hasRomDirectory = state.hasRomDirectory,
                 scanInProgress = state.scanInProgress,
+                scanError = state.scanError,
                 onChooseFolder = onSetDirectoryClicked,
                 onRescan = onRescanClicked,
             )
@@ -1343,6 +1345,7 @@ private fun playTimeLabel(game: Game): String {
 private fun LibrarySetupCard(
     hasRomDirectory: Boolean,
     scanInProgress: Boolean,
+    scanError: String?,
     onChooseFolder: () -> Unit,
     onRescan: () -> Unit,
 ) {
@@ -1360,12 +1363,16 @@ private fun LibrarySetupCard(
                 when {
                     !hasRomDirectory -> R.string.opennes_setup_choose_title
                     scanInProgress -> R.string.opennes_setup_scanning_title
+                    scanError == LibraryScanStatus.FOLDER_UNAVAILABLE -> R.string.opennes_setup_folder_error_title
+                    scanError != null -> R.string.opennes_setup_scan_error_title
                     else -> R.string.opennes_setup_no_games_title
                 }
             val message =
                 when {
                     !hasRomDirectory -> R.string.opennes_setup_choose_description
                     scanInProgress -> R.string.opennes_setup_scanning_description
+                    scanError == LibraryScanStatus.FOLDER_UNAVAILABLE -> R.string.opennes_setup_folder_error_description
+                    scanError != null -> R.string.opennes_setup_scan_error_description
                     else -> R.string.opennes_setup_no_games_description
                 }
 
