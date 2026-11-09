@@ -1369,6 +1369,9 @@ private fun LibrarySetupCard(
     onChooseFolder: () -> Unit,
     onRescan: () -> Unit,
 ) {
+    val compactActions =
+        LocalConfiguration.current.screenWidthDp < 360 || LocalDensity.current.fontScale > 1.2f
+
     Surface(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         color = LibraryColors.panel,
@@ -1440,28 +1443,55 @@ private fun LibrarySetupCard(
                     }
                 }
                 else -> {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = onRescan,
-                            modifier = Modifier.weight(1f),
-                            colors =
-                                ButtonDefaults.buttonColors(
-                                    containerColor = LibraryColors.red,
-                                    contentColor = LibraryColors.foreground,
-                                ),
-                        ) {
-                            Text(stringResource(R.string.opennes_setup_rescan_action))
+                    if (compactActions) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = onRescan,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = LibraryColors.red,
+                                        contentColor = LibraryColors.foreground,
+                                    ),
+                            ) {
+                                Text(stringResource(R.string.opennes_setup_rescan_action))
+                            }
+                            OutlinedButton(
+                                onClick = onChooseFolder,
+                                modifier = Modifier.fillMaxWidth(),
+                                border = BorderStroke(1.dp, LibraryColors.border),
+                                colors =
+                                    ButtonDefaults.outlinedButtonColors(
+                                        contentColor = LibraryColors.foreground,
+                                    ),
+                            ) {
+                                Text(stringResource(R.string.opennes_setup_change_action))
+                            }
                         }
-                        OutlinedButton(
-                            onClick = onChooseFolder,
-                            modifier = Modifier.weight(1f),
-                            border = BorderStroke(1.dp, LibraryColors.border),
-                            colors =
-                                ButtonDefaults.outlinedButtonColors(
-                                    contentColor = LibraryColors.foreground,
-                                ),
-                        ) {
-                            Text(stringResource(R.string.opennes_setup_change_action))
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = onRescan,
+                                modifier = Modifier.weight(1f),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = LibraryColors.red,
+                                        contentColor = LibraryColors.foreground,
+                                    ),
+                            ) {
+                                Text(stringResource(R.string.opennes_setup_rescan_action))
+                            }
+                            OutlinedButton(
+                                onClick = onChooseFolder,
+                                modifier = Modifier.weight(1f),
+                                border = BorderStroke(1.dp, LibraryColors.border),
+                                colors =
+                                    ButtonDefaults.outlinedButtonColors(
+                                        contentColor = LibraryColors.foreground,
+                                    ),
+                            ) {
+                                Text(stringResource(R.string.opennes_setup_change_action))
+                            }
                         }
                     }
                 }
