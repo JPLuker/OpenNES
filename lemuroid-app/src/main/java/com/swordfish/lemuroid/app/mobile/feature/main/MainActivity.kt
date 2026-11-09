@@ -142,6 +142,21 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                     ?.let { MainRoute.findByRoute(it) }
                     ?: MainRoute.HOME
 
+            val favoriteCount =
+                remember(retrogradeDb) { retrogradeDb.gameDao().observeFavoriteGameCount() }
+                    .collectAsState(initial = -1)
+                    .value
+
+            // When the last favorite is removed, do not leave an empty orphaned tab.
+            LaunchedEffect(favoriteCount, currentRoute) {
+                if (favoriteCount == 0 && currentRoute == MainRoute.FAVORITES) {
+                    navController.navigate(MainRoute.HOME.route) {
+                        popUpTo(MainRoute.HOME.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
+            }
+
             val infoDialogDisplayed =
                 remember {
                     mutableStateOf(false)
@@ -189,7 +204,13 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                         )
                     }
                 },
-                bottomBar = { MainNavigationBar(currentRoute, navController) },
+                bottomBar = {
+                    MainNavigationBar(
+                        currentRoute = currentRoute,
+                        navController = navController,
+                        hasFavorites = favoriteCount > 0,
+                    )
+                },
             ) { padding ->
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
