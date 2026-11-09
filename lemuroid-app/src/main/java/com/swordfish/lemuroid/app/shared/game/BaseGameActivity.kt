@@ -25,7 +25,6 @@ import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelSideEffects
 import com.swordfish.lemuroid.app.shared.input.InputDeviceManager
 import com.swordfish.lemuroid.app.shared.rumble.RumbleManager
 import com.swordfish.lemuroid.app.shared.settings.ControllerConfigsManager
-import com.swordfish.lemuroid.app.tv.game.TVGameActivity
 import com.swordfish.lemuroid.common.animationDuration
 import com.swordfish.lemuroid.common.coroutines.launchOnState
 import com.swordfish.lemuroid.common.displayToast
@@ -467,14 +466,10 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             loadSave: Boolean,
             useLeanback: Boolean,
         ) {
-            val gameActivity =
-                if (useLeanback) {
-                    TVGameActivity::class.java
-                } else {
-                    GameActivity::class.java
-                }
+            // OpenNES is mobile-only; retain the legacy boolean in the intent
+            // for stored session/result compatibility, not activity selection.
             activity.startActivityForResult(
-                Intent(activity, gameActivity).apply {
+                Intent(activity, GameActivity::class.java).apply {
                     putExtra(EXTRA_GAME, game)
                     putExtra(EXTRA_LOAD_SAVE, loadSave)
                     putExtra(EXTRA_LEANBACK, useLeanback)

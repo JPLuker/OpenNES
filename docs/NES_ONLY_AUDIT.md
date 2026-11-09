@@ -61,6 +61,14 @@ M2 also added safe-drawing insets to the main navigation, top bars and pause men
 - The TV source files still exist for a later reference-by-reference pruning pass. Leanback dependencies and shared identities cannot yet be removed safely because some legacy source classes still import them.
 - **Source-only implementation:** no build, device, emulator or migration testing was run. Restore the TV launcher only as part of an explicitly planned platform effort, not by re-enabling orphaned screens.
 
+## Dormant Android TV implementation removal (2026-11-09)
+
+- Audited all **130** non-TV app Kotlin sources for TV and Leanback class references. Only the application module's injected TV-specific BIOS/core preferences and the shared BaseGameActivity's TV-game selector referenced deleted app TV classes.
+- Deleted **36 TV Kotlin files** and **8 TV-specific Android resources**, including the TV navigation graph, layouts, Leanback app themes/colors, TV settings XML and TV channel art. The TV channel and launcher registrations had already been removed.
+- App Gradle no longer directly depends on Leanback or Leanback Paging. The app **still retains Leanback Preferences**, because `retrograde-app-shared` exposes `LeanbackPreferenceFragment` through the StorageProvider interface. Removing that type requires a shared API migration and is not part of this batch.
+- Shared platform packages, preferences/migrations, ROM scanning, FCEUmm, saves, controllers, and the legacy external-game deep-link scheme remain untouched. The game activity now always opens the mobile NES interface; the old launch flag remains in the intent for compatibility.
+- Removed TV support is intentional. This is **source-only**; no build, CI, APK inspection, or on-device testing was performed.
+
 ## Build and functional gates
 
 - [x] Clean checkout with recursive submodules builds a debug APK.
@@ -75,4 +83,4 @@ M2 also added safe-drawing insets to the main navigation, top bars and pause men
 
 ## What is **not** done yet
 
-**Verified:** APK reduced from 222,012,846 to **32,367,426 bytes** after additional CI metadata trimming. All 76 non-NES Libretro core binaries were excluded. Source cleanup removed 23 other-console touch layouts and 20 console artwork XML files. The NES library and metadata provider have been restricted to NES. **Verified:** CI retained 29,246 NES metadata entries and reduced the SQLite asset from 12,775,424 to 3,706,880 bytes. The source DB itself remains unchanged. **Still pending:** real-device NES ROM launch/audio/saves, legacy Android TV code, and the full UI redesign.
+**Verified:** APK reduced from 222,012,846 to **32,367,426 bytes** after additional CI metadata trimming. All 76 non-NES Libretro core binaries were excluded. Source cleanup removed 23 other-console touch layouts and 20 console artwork XML files. The NES library and metadata provider have been restricted to NES. **Verified:** CI retained 29,246 NES metadata entries and reduced the SQLite asset from 12,775,424 to 3,706,880 bytes. The source DB itself remains unchanged. **Still pending:** real-device NES ROM launch/audio/saves, inherited shared API cleanup, and final UI accessibility/device acceptance. Android TV's app-specific source and UI resources have now been removed.

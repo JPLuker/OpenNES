@@ -156,9 +156,7 @@ dependencies {
 
     kapt(deps.libs.androidx.lifecycle.processor)
 
-    implementation(deps.libs.androidx.leanback.leanback)
     implementation(deps.libs.androidx.leanback.leanbackPreference)
-    implementation(deps.libs.androidx.leanback.leanbackPaging)
 
     implementation(deps.libs.androidx.appcompat.recyclerView)
     implementation(deps.libs.androidx.paging.common)

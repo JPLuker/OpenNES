@@ -30,7 +30,7 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | --- | --- |
 | M0 — Own Android package/name and reproducible APK workflow | CI complete; device testing pending |
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
-| M2 — Replace the complete Lemuroid user interface | Active: library, menus, import error recovery, narrow-screen layouts, safe system insets and accessible search actions implemented in source; legacy platform/resource audit and device acceptance pending |
+| M2 — Replace the complete Lemuroid user interface | Active: NES UI, import error recovery, compact layouts and accessible search actions implemented; obsolete Android TV app source/assets removed; final accessibility work and device acceptance pending |
 | M3 — Premium NES portrait controller skin | In progress: NES-style D-pad, A/B, Start/Select and separate opacity/scale |
 | M4 — Dedicated landscape controller skin | In progress: separate landscape scale, margins, rotation and opacity; placement refinements pending |
 | M5 — Gameplay, saves, input and performance polish | Partly implemented: audio, controller persistence and stuck-input fixes; regression testing pending |
@@ -43,7 +43,7 @@ See the [module progress tracker](docs/MODULE_PROGRESS.md) for the current imple
 
 The inherited Lemuroid project provides a working Android emulation frontend, FCEUmm support, ROM scanning, gamepad/touch input and save-state infrastructure. **Those existing features have not all been validated in OpenNES on real hardware yet.** Current development is keeping this functionality intact while preparing the NES-only conversion.
 
-Still inherited: shared internal package names, required emulator infrastructure, some legacy resources, and portions of Android TV/platform code. **Non-NES Libretro binaries are excluded from the APK.** Obsolete mobile console, BIOS and core-selection screens and their unused UI widgets have been removed. The remaining TV/build dependencies are recorded in the [NES-only audit](docs/NES_ONLY_AUDIT.md); license notices and compatibility identifiers remain until their consumers are mapped.
+Still inherited: shared internal package names, required emulator infrastructure and some legacy resource/API compatibility identifiers. **Non-NES Libretro binaries are excluded from the APK.** Obsolete mobile multi-console screens and the now-unregistered Android TV implementation have been removed from source, along with TV-exclusive assets. The shared storage API still requires Leanback Preferences; [NES-only audit](docs/NES_ONLY_AUDIT.md) tracks retained dependencies and migration concerns. License notices and shortcut/save compatibility identifiers are preserved.
 
 ## Download the latest OpenNES APK
 

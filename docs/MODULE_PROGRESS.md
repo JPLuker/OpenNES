@@ -10,7 +10,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | --- | --- | --- |
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
-| **M2 — UI completion and cleanup** | **Active — legacy source pruning**: NES interface and ROM recovery implemented; Android TV entry points and preview-channel integration removed in source | Remove stranded TV UI/assets safely and finish accessibility review; device acceptance postponed |
+| **M2 — UI completion and cleanup** | **Active — final accessibility review**: NES interface, ROM recovery, responsive layout, source-only cutout safeguards and Android TV source/assets removal implemented | Finish keyboard/TalkBack and layout edge cases; device acceptance postponed |
 | M3 — Portrait NES controller | Partially implemented: NES visual skin, independent settings, drag/slider customization | Polish D-pad/A/B ergonomics and verify input interactions |
 | M4 — Landscape NES controller | Partially implemented: dedicated orientation settings and placements | Design-specific responsive layout and cutout review |
 | M5 — Gameplay reliability | Partially implemented: audio/input fixes, save infrastructure and virtual input release handling | Comprehensive save/audio/suspend/regression verification |
@@ -36,7 +36,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Replace remaining user-visible English references to Lemuroid in loading, save-state, reset and crash messages
 - [x] Remove Android TV launcher/activity registrations, channel update worker, channel provider and TV EPG permission; preserve the native mobile shortcut deep-link scheme and shared emulation infrastructure
 - [x] Remove inherited post-game store-review prompt from the active game-finish handler while preserving playtime updates, save-sync rescheduling and error handling
-- [ ] Audit and retire remaining now-dormant Android TV source/UI resources and inherited internal identifiers without breaking runtime dependencies or license notices
+- [x] Remove 36 now-dormant Android TV Kotlin files and 8 exclusive TV UI assets, disconnect TV-only settings providers and mobile launcher selection, prune direct Leanback and Leanback Paging app dependencies
+- [ ] Audit remaining shared LeanbackPreferenceFragment API compatibility, inherited internal identifiers and third-party licensing without breaking saves, shortcuts or migrations
 - [x] Propagate failed ROM scans instead of reporting success, preflight selected-folder read grants, preserve indexed games on failure, and show recovery actions even when earlier games remain visible (device acceptance still paused)
 - [x] Improve narrow-phone and large-text layouts for game-details actions, featured cover and ROM folder recovery buttons; add explicit screen-reader labels for shelf taps and long-press actions (device acceptance paused)
 - [x] Apply safe-drawing insets to main navigation, non-home top bars and the pause-menu side panel; label search actions and add Help dialog dismissal (source-only)
@@ -81,6 +82,14 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - Preserved session duration accounting, last-played timestamps, save-sync/cache scheduling and crash handling.
 - Updated every currently known call site (mobile, pinned shortcuts and dormant TV source). Existing ext modules remain until separately audited for shared uses.
 - **Source-only:** no build or runtime testing was performed.
+
+## Latest M2 source batch — dormant Android TV implementation removed
+
+- Reviewed all 130 non-TV Kotlin files in the Android app against TV class and Leanback references. Only the application module's TV settings providers and the shared game activity's TV launcher selection needed changes.
+- Deleted 36 inactive Android TV classes and 8 TV-specific UI resources (navigation graph, layout, settings XML, Leanback color/theme overrides, channel icon).
+- Deleted the now-unused TV-specific Dagger settings providers and eliminated the TV launch class reference. Android game launches now always select the mobile NES GameActivity; stored launch flags remain compatible.
+- Removed direct Leanback and Leanback Paging app dependencies; retained Leanback Preferences because the shared StorageProvider interface still exposes LeanbackPreferenceFragment. Retained source/package IDs, ROM/saves, shortcut deep-link URI scheme and license files.
+- **Not tested:** app compilation, Android lifecycle behavior, device insets, gamepad interactions, saved games and APK packaging are all pending verification after the testing pause.
 
 ## Development rules
 
