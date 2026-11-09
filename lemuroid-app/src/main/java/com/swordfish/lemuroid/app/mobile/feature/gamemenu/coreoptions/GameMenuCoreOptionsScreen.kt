@@ -2,13 +2,14 @@ package com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions
 
 import android.content.Context
 import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuActivity
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
@@ -20,7 +21,6 @@ import com.swordfish.lemuroid.app.shared.settings.ControllerConfigsManager
 import com.swordfish.lemuroid.app.utils.android.settings.booleanPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.indexPreferenceState
 import com.swordfish.lemuroid.lib.core.CoreVariablesManager
-import com.swordfish.lemuroid.R
 
 /**
  * OpenNES game-specific options. Uses the same stored core variables and
