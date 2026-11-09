@@ -52,6 +52,7 @@ fun SettingsScreen(
             onChangeFolder = { viewModel.changeLocalStorageFolder() },
             indexingInProgress = indexingInProgress,
             scanInProgress = scanInProgress,
+            onLibraryMaintenance = { navController.navigateToRoute(MainRoute.SETTINGS_LIBRARY) },
         )
         GeneralSettings()
         InputSettings(navController = navController)
@@ -181,6 +182,7 @@ private fun RomsSettings(
     onChangeFolder: () -> Unit,
     indexingInProgress: Boolean,
     scanInProgress: Boolean,
+    onLibraryMaintenance: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -200,6 +202,11 @@ private fun RomsSettings(
             subtitle = { Text(text = currentDirectoryName) },
             onClick = { onChangeFolder() },
             enabled = !indexingInProgress,
+        )
+        LemuroidSettingsMenuLink(
+            title = { Text(text = stringResource(R.string.opennes_library_maintenance)) },
+            subtitle = { Text(text = stringResource(R.string.opennes_library_maintenance_description)) },
+            onClick = onLibraryMaintenance,
         )
         if (scanInProgress) {
             LemuroidSettingsMenuLink(
