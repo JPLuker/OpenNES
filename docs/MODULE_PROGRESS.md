@@ -10,7 +10,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | --- | --- | --- |
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
-| **M2 — UI completion and cleanup** | **Active — legacy audit**: NES library/menus, ROM recovery, responsive layouts, search accessibility and safe drawing insets implemented in source | Audit remaining TV/resources and screen-reader/inset edge cases; device acceptance postponed |
+| **M2 — UI completion and cleanup** | **Active — legacy source pruning**: NES interface and ROM recovery implemented; Android TV entry points and preview-channel integration removed in source | Remove stranded TV UI/assets safely and finish accessibility review; device acceptance postponed |
 | M3 — Portrait NES controller | Partially implemented: NES visual skin, independent settings, drag/slider customization | Polish D-pad/A/B ergonomics and verify input interactions |
 | M4 — Landscape NES controller | Partially implemented: dedicated orientation settings and placements | Design-specific responsive layout and cutout review |
 | M5 — Gameplay reliability | Partially implemented: audio/input fixes, save infrastructure and virtual input release handling | Comprehensive save/audio/suspend/regression verification |
@@ -34,7 +34,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Remove unused inherited multi-console card/list/image/empty-view Compose components (7 files)
 - [x] Restyle game-actions sheet with native OpenNES typography and NES box art; remove its last inherited text component
 - [x] Replace remaining user-visible English references to Lemuroid in loading, save-state, reset and crash messages
-- [ ] Audit remaining legacy resources, TV code and internal identifiers without breaking runtime dependencies or license notices
+- [x] Remove Android TV launcher/activity registrations, channel update worker, channel provider and TV EPG permission; preserve the native mobile shortcut deep-link scheme and shared emulation infrastructure
+- [ ] Audit and retire remaining now-dormant Android TV source/UI resources and inherited internal identifiers without breaking runtime dependencies or license notices
 - [x] Propagate failed ROM scans instead of reporting success, preflight selected-folder read grants, preserve indexed games on failure, and show recovery actions even when earlier games remain visible (device acceptance still paused)
 - [x] Improve narrow-phone and large-text layouts for game-details actions, featured cover and ROM folder recovery buttons; add explicit screen-reader labels for shelf taps and long-press actions (device acceptance paused)
 - [x] Apply safe-drawing insets to main navigation, non-home top bars and the pause-menu side panel; label search actions and add Help dialog dismissal (source-only)
@@ -65,6 +66,13 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - Settings Help now has an explicit labeled Close button, and inherited store-review initialization no longer runs on app startup.
 - **Legacy audit findings:** the manifest still registers Android TV activities/Leanback launcher and TV EPG permission; Gradle retains open-source/Play and bundled/dynamic build flavors and Leanback dependencies. Internal `lemuroid` identifiers still support app resources, navigation, saved data, and compatibility paths. Removing these requires a separate reference/dependency audit; none were deleted in this batch.
 - **Not tested:** TalkBack focus order, large-font clipping, cutout placements, keyboard/resume behavior, emulator/gameplay UI, and APK compatibility remain for later device verification.
+
+## Latest M2 source batch — Android TV entry points and channel cleanup
+
+- TV launcher/manifest activity registrations and Dagger entry module removed, preventing dead TV screens from appearing as a supported OpenNES interface.
+- TV preview channel publisher and worker removed, together with TV EPG permission and tvProvider dependency.
+- Regular Play/Continue, saves, native controller and ROM import are unchanged. Pinned shortcut deep links remain compatible and route into the mobile game screen.
+- **Still pending:** deleting dormant TV classes, unused Leanback dependencies/resources, and optional legacy internal names after reference audit. No build or device testing was performed.
 
 ## Development rules
 

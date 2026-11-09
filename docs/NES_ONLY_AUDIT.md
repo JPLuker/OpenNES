@@ -52,6 +52,15 @@ The M2 source review found the following live links, so deletion is **deferred**
 
 M2 also added safe-drawing insets to the main navigation, top bars and pause menu. These are **source changes, not real-device acceptance**, and they must still be checked with gesture navigation, cutouts, rotations, large text and TalkBack after the testing pause ends.
 
+## Android TV first-stage removal (2026-11-09)
+
+- Removed the Android TV Leanback launcher and all TV-specific activity registrations from the mobile manifest. Normal Android launcher and pinned NES-game shortcut entries remain.
+- Removed the TV-only Dagger activity module, channel update worker registration and injected channel handler.
+- Removed TV preview-channel code, EPG write permission, and TV Provider Gradle dependency. No gameplay or ROM-index worker was modified.
+- External game shortcuts now open the native Android game activity even on devices reporting TV mode. The legacy `lemuroid://` game shortcut URI scheme is unchanged, preserving existing pinned shortcuts.
+- The TV source files still exist for a later reference-by-reference pruning pass. Leanback dependencies and shared identities cannot yet be removed safely because some legacy source classes still import them.
+- **Source-only implementation:** no build, device, emulator or migration testing was run. Restore the TV launcher only as part of an explicitly planned platform effort, not by re-enabling orphaned screens.
+
 ## Build and functional gates
 
 - [x] Clean checkout with recursive submodules builds a debug APK.

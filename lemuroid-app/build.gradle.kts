@@ -176,7 +176,6 @@ dependencies {
     implementation(deps.libs.flowPreferences)
     implementation(deps.libs.guava)
     implementation(deps.libs.androidx.documentfile)
-    implementation(deps.libs.androidx.leanback.tvProvider)
     implementation(deps.libs.harmony)
     implementation(deps.libs.startup)
     implementation(deps.libs.kotlin.serialization)

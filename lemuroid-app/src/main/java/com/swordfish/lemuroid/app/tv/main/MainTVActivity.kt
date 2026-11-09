@@ -18,7 +18,6 @@ import com.swordfish.lemuroid.app.shared.game.BaseGameActivity
 import com.swordfish.lemuroid.app.shared.game.GameLauncher
 import com.swordfish.lemuroid.app.shared.main.BusyActivity
 import com.swordfish.lemuroid.app.shared.main.GameLaunchTaskHandler
-import com.swordfish.lemuroid.app.tv.channel.ChannelUpdateWork
 import com.swordfish.lemuroid.app.tv.favorites.TVFavoritesFragment
 import com.swordfish.lemuroid.app.tv.games.TVGamesFragment
 import com.swordfish.lemuroid.app.tv.home.TVHomeFragment
@@ -76,7 +75,6 @@ class MainTVActivity : BaseTVActivity(), BusyActivity {
             BaseGameActivity.REQUEST_PLAY_GAME -> {
                 GlobalScope.safeLaunch {
                     gameLaunchTaskHandler.handleGameFinish(false, this@MainTVActivity, resultCode, data)
-                    ChannelUpdateWork.enqueue(applicationContext)
                 }
             }
         }
