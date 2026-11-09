@@ -83,7 +83,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Preserve rolling development debug APK distribution without bundling commercial ROMs
 - [x] Remove inherited hardcoded release keystore alias/passwords and require explicit OpenNES environment-provided secrets
 - [x] Ignore new keystore material and document the unsigned-release default
-- [ ] Audit GitHub Actions permissions, pinned dependencies, third-party license notices and reproducibility
+- [x] Review workflow's least-privilege release permission and artifact publishing dependency on compile/lint; publish a SHA-256 checksum alongside the rolling APK
+- [ ] Pin GitHub Actions dependencies to audited immutable revisions and complete third-party license and binary provenance review
 - [ ] Inspect signing certificates, APK contents and native binaries against release requirements (testing paused)
 - [ ] **M7 acceptance deferred:** verified install/upgrade path, input, audio, saves, crash reporting and RetroAchievements claims
 
@@ -284,6 +285,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Removed upstream hardcoded release key alias/password and inherited release-signing fallback. Production credentials are passed only through `OPENNES_RELEASE_*` environment variables. All four are required to activate the optional `openNesRelease` signing configuration; otherwise the release artifact is unsigned.
 - `.gitignore` now ignores newly created JKS/keystore files. Existing tracked developer/debug signing material remains unaffected.
 - Updated build instructions to distinguish code-complete UI source from unverified APKs, and to document production signing and publication blockers. No build or signing test was run.
+
+## M7 source batch — development APK checksum and CI policy
+
+- Audited the existing Android workflow: build/lint jobs use read-only repository permission, while only the publish job requests write permission and it runs after successful build and lint.
+- The workflow now produces `OpenNES-debug.apk.sha256`, verifies it before release publication and uploads both APK and checksum to the rolling development prerelease.
+- The old wording `tested APK` was corrected: CI compilation and lint alone are not emulator or device acceptance. Workflow action pinning and signing/production review are still open.
+- This was source review only; no workflow run was triggered manually or inspected.
 
 ## Development rules
 

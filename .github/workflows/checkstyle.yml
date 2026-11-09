@@ -47,12 +47,15 @@ jobs:
           test -n "$APK"
           cp "$APK" dist/OpenNES-debug.apk
           python3 scripts/inspect-apk.py --nes-only dist/OpenNES-debug.apk
+          (cd dist && sha256sum OpenNES-debug.apk > OpenNES-debug.apk.sha256)
 
-      - name: Upload test APK as workflow artifact
+      - name: Upload debug APK and checksum as workflow artifacts
         uses: actions/upload-artifact@v4
         with:
           name: OpenNES-debug-apk
-          path: dist/OpenNES-debug.apk
+          path: |
+            dist/OpenNES-debug.apk
+            dist/OpenNES-debug.apk.sha256
           if-no-files-found: error
 
   lint:
@@ -96,7 +99,7 @@ jobs:
       contents: write
 
     steps:
-      - name: Download tested APK
+      - name: Download assembled debug APK and checksum
         uses: actions/download-artifact@v4
         with:
           name: OpenNES-debug-apk
@@ -108,6 +111,8 @@ jobs:
         run: |
           set -euo pipefail
           test -s dist/OpenNES-debug.apk
+          test -s dist/OpenNES-debug.apk.sha256
+          (cd dist && sha256sum -c OpenNES-debug.apk.sha256)
 
           SHA_SHORT="${GITHUB_SHA:0:12}"
           NOTES="Automated OpenNES **debug/test build** from master.
@@ -119,14 +124,14 @@ jobs:
           Existing installations from this same debug-signing identity can be updated in place. Official release signing is deferred. The latest successful build replaces the APK on this page."
 
           if gh release view dev-latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload dev-latest dist/OpenNES-debug.apk --clobber --repo "$GITHUB_REPOSITORY"
+            gh release upload dev-latest dist/OpenNES-debug.apk dist/OpenNES-debug.apk.sha256 --clobber --repo "$GITHUB_REPOSITORY"
             gh release edit dev-latest \
               --title "OpenNES Development APK" \
               --notes "$NOTES" \
               --prerelease \
               --repo "$GITHUB_REPOSITORY"
           else
-            gh release create dev-latest dist/OpenNES-debug.apk \
+            gh release create dev-latest dist/OpenNES-debug.apk dist/OpenNES-debug.apk.sha256 \
               --target "$GITHUB_SHA" \
               --title "OpenNES Development APK" \
               --notes "$NOTES" \
@@ -137,3 +142,4 @@ jobs:
           echo "### OpenNES APK published" >> "$GITHUB_STEP_SUMMARY"
           echo "Commit: \`$SHA_SHORT\`" >> "$GITHUB_STEP_SUMMARY"
           echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/dev-latest/OpenNES-debug.apk" >> "$GITHUB_STEP_SUMMARY"
+          echo "SHA-256: https://github.com/$GITHUB_REPOSITORY/releases/download/dev-latest/OpenNES-debug.apk.sha256" >> "$GITHUB_STEP_SUMMARY"

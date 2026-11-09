@@ -68,7 +68,7 @@ The [OpenNES Android CI workflow](https://github.com/JPLuker/OpenNES/actions) ru
 - **Lint:** validate Kotlin formatting.
 - **Publish development:** only after build and lint succeed, publish/replace the `OpenNES-debug.apk` asset in a rolling [development prerelease](https://github.com/JPLuker/OpenNES/releases/tag/dev-latest).
 
-The download URL does not change after successful builds, and no ZIP extraction is needed. GitHub Release assets are public for a public repository. Failing builds do not overwrite the last successful APK. The workflow uses the built-in GitHub token for upload; **no keystore secrets or production signing are involved**.
+The download URL does not change after successful builds, and no ZIP extraction is needed. Each successful development upload includes a [SHA-256 checksum](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk.sha256) alongside the APK (newer source commits require the next successful workflow before that checksum asset exists). GitHub Release assets are public for a public repository. Failing builds do not overwrite the last successful APK. The workflow uses the built-in GitHub token for upload; **no keystore secrets or production signing are involved**.
 
 The download uses package ID `com.jpluker.opennes.debug`, signed with the repository's existing development keystore. Do not expect it to update a future production build with application ID `com.jpluker.opennes` directly.
 

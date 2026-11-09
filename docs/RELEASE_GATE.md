@@ -9,7 +9,8 @@
 - [ ] Verify all release environment variables come from protected CI secrets or a private interactive shell; avoid logging them.
 - [ ] Pin all native, Gradle and automation dependencies at trusted revisions and review provenance for imported code.
 - [ ] Review GitHub Actions least-privilege permissions and prevent untrusted release publishing.
-- [ ] Generate and verify reproducible signed artifacts and archived manifest/SHA-256/checksums.
+- [x] Add a verified SHA-256 sidecar to rolling debug release assets (workflow source; not manually run).
+- [ ] Generate and verify reproducible signed production artifacts and archived manifest/SHA-256/checksums.
 
 ## Package & source compliance
 
