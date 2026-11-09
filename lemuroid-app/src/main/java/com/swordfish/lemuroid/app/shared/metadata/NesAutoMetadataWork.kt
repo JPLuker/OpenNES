@@ -74,13 +74,7 @@ class NesAutoMetadataWork(context: Context, params: WorkerParameters) :
             if (current != null && current.systemId == "nes") {
                 when (result) {
                     is WikidataNesMetadataSource.Result.Match -> {
-                        val canFill =
-                            (current.genre.isNullOrBlank() && !result.genre.isNullOrBlank()) ||
-                                (current.releaseYear == null && result.releaseYear != null) ||
-                                (current.description.isNullOrBlank() && !result.description.isNullOrBlank()) ||
-                                (current.wikidataEntityId != null &&
-                                    current.wikipediaArticleTitle == null &&
-                                    result.wikipediaArticleTitle != null)
+                        val canFill = current.needsOnlineMetadata(result)
                         if (canFill) {
                             dao.fillMissingOnlineGameInfo(
                                 gameId = game.id,
