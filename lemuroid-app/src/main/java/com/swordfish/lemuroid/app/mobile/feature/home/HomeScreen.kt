@@ -963,22 +963,22 @@ private fun WikidataLookupSection(
                 Button(
                     onClick = {
                         applying = true
-                    statusMessage = null
-                    onApply(match) { updated ->
-                        applying = false
-                        if (updated == null) {
-                            statusMessage = R.string.opennes_online_apply_failed
-                        } else {
-                            candidate = null
-                            onGameUpdated(updated)
+                        statusMessage = null
+                        onApply(match) { updated ->
+                            applying = false
+                            if (updated == null) {
+                                statusMessage = R.string.opennes_online_apply_failed
+                            } else {
+                                candidate = null
+                                onGameUpdated(updated)
+                            }
                         }
-                    }
-                },
-                enabled = !searching && !applying,
-                colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
-            ) {
-                Text(stringResource(R.string.opennes_online_apply))
-            }
+                    },
+                    enabled = !searching && !applying,
+                    colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                ) {
+                    Text(stringResource(R.string.opennes_online_apply))
+                }
             }
             if (!canFill) {
                 Text(
