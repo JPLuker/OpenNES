@@ -300,6 +300,9 @@
     <string name="opennes_online_apply_failed">Could not update this record. Existing details were left unchanged.</string>
     <string name="opennes_online_source">Source: Wikidata (CC0) · View record</string>
     <string name="opennes_wikipedia_source">Description: Wikipedia (CC BY-SA) · View article</string>
+    <string name="opennes_sources_label">Sources:</string>
+    <string name="opennes_wikipedia_credit">Wikipedia (CC BY-SA)</string>
+    <string name="opennes_wikidata_credit">Wikidata (CC0)</string>
     <string name="opennes_auto_metadata_title">Automatic game information</string>
     <string name="opennes_auto_metadata_description">After scanning NES ROMs, automatically find verified titles, descriptions, genres and release years online. Only game titles are sent. Works in the background.</string>
     <string name="opennes_library_maintenance">Library maintenance</string>
