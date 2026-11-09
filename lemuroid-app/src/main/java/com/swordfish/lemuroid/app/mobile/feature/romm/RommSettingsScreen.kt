@@ -3,6 +3,7 @@ package com.swordfish.lemuroid.app.mobile.feature.romm
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
+import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,6 +48,14 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     val store = remember(context) { RommConnectionStore(context) }
     val client = remember { RommApiClient() }
     val scope = rememberCoroutineScope()
+    @Suppress("DEPRECATION")
+    val legacyFolderPrefs = remember(context) {
+        SharedPreferencesHelper.getLegacySharedPreferences(context)
+    }
+    val folderKey = remember(context) {
+        context.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
+    }
+    val hasRomFolder = !legacyFolderPrefs.getString(folderKey, null).isNullOrBlank()
 
     var serverUrl by remember { mutableStateOf(store.configuredServer().orEmpty()) }
     var tokenInput by remember { mutableStateOf("") }
@@ -213,55 +224,36 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(stringResource(R.string.opennes_romm_import_note))
+                        if (!hasRomFolder) {
+                            Text(stringResource(R.string.opennes_romm_no_folder))
+                        }
                         if (loaded.items.isEmpty()) {
                             Text(stringResource(R.string.opennes_romm_no_roms))
                         }
                         loaded.items.forEach { rom ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(rom.name)
-                                    Text(rom.fileName)
-                                }
-                                TextButton(
-                                    enabled = !busy,
-                                    onClick = {
-                                        perform("Viewing save backups") {
-                                            val connection = withContext(Dispatchers.IO) {
-                                                store.load() ?: error("Reconnect to RomM")
-                                            }
-                                            remoteSaves = client.listRemoteSaves(connection, rom.id)
-                                            selectedSaveGame = rom
+                            RommGameRow(
+                                game = rom,
+                                busy = busy,
+                                importAvailable = hasRomFolder,
+                                onSaves = {
+                                    perform("Viewing save backups") {
+                                        val connection = withContext(Dispatchers.IO) {
+                                            store.load() ?: error("Reconnect to RomM")
                                         }
-                                    },
-                                ) {
-                                    Text(stringResource(R.string.opennes_romm_view_saves))
-                                }
-                                TextButton(
-                                    enabled = !busy,
-                                    onClick = {
-                                        perform("Importing " + rom.name) {
-                                            val connection = withContext(Dispatchers.IO) {
-                                                store.load() ?: error("Reconnect to RomM")
-                                            }
-                                            client.importIntoSelectedNesFolder(
-                                                context,
-                                                connection,
-                                                rom,
-                                            )
-                                            status = context.getString(
-                                                R.string.opennes_romm_imported,
-                                                rom.name,
-                                            )
+                                        remoteSaves = client.listRemoteSaves(connection, rom.id)
+                                        selectedSaveGame = rom
+                                    }
+                                },
+                                onImport = {
+                                    perform("Importing " + rom.name) {
+                                        val connection = withContext(Dispatchers.IO) {
+                                            store.load() ?: error("Reconnect to RomM")
                                         }
-                                    },
-                                ) {
-                                    Text(stringResource(R.string.opennes_romm_import))
-                                }
-                            }
+                                        client.importIntoSelectedNesFolder(context, connection, rom)
+                                        status = context.getString(R.string.opennes_romm_imported, rom.name)
+                                    }
+                                },
+                            )
                         }
                         if (loaded.offset + loaded.limit < loaded.total) {
                             Button(enabled = !busy, onClick = { browse(loaded.offset + loaded.limit) }) {
@@ -308,6 +300,61 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                     }
                 }
             }
+        }
+    }
+}
+
+/** Keep game titles and action buttons usable on narrow/large-text phones. */
+@Composable
+private fun RommGameRow(
+    game: RommApiClient.Rom,
+    busy: Boolean,
+    importAvailable: Boolean,
+    onSaves: () -> Unit,
+    onImport: () -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val compact = maxWidth < 380.dp || LocalDensity.current.fontScale > 1.2f
+        if (compact) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                RommGameName(game)
+                RommGameActions(busy, importAvailable, onSaves, onImport)
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) { RommGameName(game) }
+                RommGameActions(busy, importAvailable, onSaves, onImport)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RommGameName(game: RommApiClient.Rom) {
+    Text(game.name)
+    Text(game.fileName)
+}
+
+@Composable
+private fun RommGameActions(
+    busy: Boolean,
+    importAvailable: Boolean,
+    onSaves: () -> Unit,
+    onImport: () -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TextButton(enabled = !busy, onClick = onSaves) {
+            Text(stringResource(R.string.opennes_romm_view_saves))
+        }
+        TextButton(enabled = !busy && importAvailable, onClick = onImport) {
+            Text(stringResource(R.string.opennes_romm_import))
         }
     }
 }
