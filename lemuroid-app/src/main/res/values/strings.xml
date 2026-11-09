@@ -212,10 +212,12 @@
     <string name="mobile_settings_help">Help</string>
     <string name="mobile_settings_support">Support</string>
     <string name="lemuroid_help_content"><![CDATA[
-        <b>&#8226;How do I use Lemuroid?</b><br/>
-        Copy all your ROMs files into a directory on your device and select it within Lemuroid. This directory is allowed to have subdirectories. After the scan completes you should see your games.<br/><br/>
-        <b>&#8226;Why aren\'t my games detected?</b><br/>
-        If your games are compressed, try uncompressing them. If this doesn\'t work try putting ROMs into separate directories, one for each system with the following names: $SYSTEMS.
+        <b>Adding NES games</b><br/>
+        Open Settings, select your ROM directory, then run a library rescan. OpenNES discovers .nes ROM files and compatible archives in subfolders.<br/><br/>
+        <b>Missing games or artwork</b><br/>
+        Check the ROM filename and file format. Use Library maintenance to refresh missing details, or set a custom cover from a game\'s detail sheet.<br/><br/>
+        <b>Controls and saves</b><br/>
+        Customize touch controls while playing. External gamepad bindings are in Settings. Save states are available from the pause menu; in-game saves remain separate.
     ]]></string>
 
     <string name="lemuroid_crash_disclamer">It looks like the Libretro core has experienced an unexpected issue. If it\'s persistent please try the following:\n
@@ -257,6 +259,9 @@
     <string name="opennes_no_gamepads">No gamepad detected. Connect a Bluetooth or USB controller to configure its buttons.</string>
     <string name="opennes_reset_bindings_title">Reset controller bindings?</string>
     <string name="opennes_reset_bindings_description">This restores all custom controller button mappings to their defaults.</string>
+    <string name="opennes_binding_label">CONTROLLER SETUP</string>
+    <string name="opennes_binding_waiting">Waiting for a button press…</string>
+    <string name="opennes_binding_first_captured">First button: %1$s · Press a second button</string>
     <string name="opennes_pause_audio_on">On</string>
     <string name="opennes_pause_audio_off">Off</string>
     <string name="opennes_pause_fast_on">On</string>
