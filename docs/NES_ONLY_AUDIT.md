@@ -69,6 +69,10 @@ M2 also added safe-drawing insets to the main navigation, top bars and pause men
 - Shared platform packages, preferences/migrations, ROM scanning, FCEUmm, saves, controllers, and the legacy external-game deep-link scheme remain untouched. The game activity now always opens the mobile NES interface; the old launch flag remains in the intent for compatibility.
 - Removed TV support is intentional. This is **source-only**; no build, CI, APK inspection, or on-device testing was performed.
 
+## M2 closure handoff (2026-11-09)
+
+M2's source-only UI cleanup is marked code-complete. The remaining dependency/source debloat, including the shared `LeanbackPreferenceFragment` storage-provider interface and compatibility identifiers, stays in **M1**, while licensing/release acceptance stays in **M7**. The remaining empty shared `styles_leanback.xml` resource was removed without altering retained dependency/API types. No build or runtime verification has been performed during the final M2 pass.
+
 ## Build and functional gates
 
 - [x] Clean checkout with recursive submodules builds a debug APK.

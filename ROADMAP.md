@@ -1,6 +1,6 @@
 # OpenNES — Development Roadmap
 
-**Status (2026-11-09):** M0 foundation implemented, M1 NES debloat mostly implemented, **M2 UI completion/cleanup active**; controller milestones M3/M4 and gameplay reliability M5 are partly implemented. M6 RetroAchievements and M8 RomM remain planned. Device testing and deliberate build verification are paused at the user's request. See [per-module progress](docs/MODULE_PROGRESS.md) for the current checklist.  
+**Status (2026-11-09):** M0 foundation implemented, M1 NES debloat mostly implemented, **M2 UI source implementation code-complete (device acceptance deferred)**, and **M3 portrait NES controller next active**. Controller milestone M4 and gameplay reliability M5 are partly implemented. M6 RetroAchievements and M8 RomM remain planned. Device testing and deliberate build verification are paused at the user's request. See [per-module progress](docs/MODULE_PROGRESS.md) for the current checklist.  
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
