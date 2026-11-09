@@ -109,16 +109,16 @@
     <string name="game_context_menu_custom_name_dialog_title">Set custom name</string>
 
     <string name="home_notification_title">Enable notifications</string>
-    <string name="home_notification_message">Lemuroid uses notifications to let you know when a game or operation is running in background.</string>
+    <string name="home_notification_message">OpenNES can notify you when a background library operation finishes.</string>
     <string name="home_notification_action">Enable</string>
 
     <string name="home_microphone_title">Enable microphone</string>
     <string name="home_microphone_message">Nintendo DS games can use the microphone to provide some functionalities.</string>
     <string name="home_microphone_action">Enable</string>
 
-    <string name="home_empty_title">Select ROMs directory</string>
-    <string name="home_empty_message">Lemuroid needs to scan a directory containing ROM files.\nThis might take up to a few minutes.</string>
-    <string name="home_empty_action">Select Directory</string>
+    <string name="home_empty_title">Add NES games</string>
+    <string name="home_empty_message">Choose a folder containing your own NES ROMs to build your library.</string>
+    <string name="home_empty_action">Choose folder</string>
 
     <string name="home_notification_desmume_deprecated_title">DeSmuME is being retired</string>
     <string name="home_notification_desmume_deprecated_message">Save in-game, then switch to melonDS to keep your progress. Save states won\’t transfer and will remain usable only in DeSmuME.</string>
@@ -253,6 +253,16 @@
 
     <!-- OpenNES shelf / library, original UI (M2) -->
     <string name="opennes_library_title">Your NES library</string>
+    <string name="opennes_setup_choose_title">Start your NES collection</string>
+    <string name="opennes_setup_choose_description">Choose a folder containing your NES game files. OpenNES will discover compatible ROMs and add available box art and game details automatically. Your ROM files stay on your device.</string>
+    <string name="opennes_setup_choose_action">Choose NES folder</string>
+    <string name="opennes_setup_scanning_title">Finding your NES games</string>
+    <string name="opennes_setup_scanning_description">Scanning the selected folder and its subfolders for compatible NES games. Games will appear as soon as they are discovered.</string>
+    <string name="opennes_setup_scanning_progress">Scanning your library…</string>
+    <string name="opennes_setup_no_games_title">No NES games found</string>
+    <string name="opennes_setup_no_games_description">The scan finished without finding compatible NES games. Check for .nes files in your selected folder, then rescan, or choose a different folder.</string>
+    <string name="opennes_setup_rescan_action">Rescan</string>
+    <string name="opennes_setup_change_action">Change folder</string>
     <string name="opennes_library_subtitle">An entire era, one shelf at a time.</string>
     <string name="opennes_continue">CONTINUE PLAYING</string>
     <string name="opennes_pause_label">PAUSED</string>
