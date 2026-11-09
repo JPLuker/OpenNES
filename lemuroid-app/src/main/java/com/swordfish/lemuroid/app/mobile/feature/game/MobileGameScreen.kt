@@ -68,7 +68,6 @@ import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
-import com.swordfish.touchinput.radial.ui.GlassSurface
 import com.swordfish.touchinput.radial.ui.LemuroidButtonPressFeedback
 import gg.padkit.PadKit
 import gg.padkit.config.HapticFeedbackType
