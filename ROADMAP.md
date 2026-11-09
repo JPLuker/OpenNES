@@ -1,6 +1,6 @@
 # OpenNES — Development Roadmap
 
-**Status:** M0/M1 buildable; M1 NES-only cleanup merged; M2 library redesign in progress (PR #7). Audio stutter remains open (#3).  
+**Status (2026-11-09):** M0 foundation implemented, M1 NES debloat mostly implemented, **M2 UI completion/cleanup active**; controller milestones M3/M4 and gameplay reliability M5 are partly implemented. M6 RetroAchievements and M8 RomM remain planned. Device testing and deliberate build verification are paused at the user's request. See [per-module progress](docs/MODULE_PROGRESS.md) for the current checklist.  
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -18,7 +18,7 @@
 - **No commercial ROMs bundled.** Users import their own compatible game files. Respect licenses and upstream attribution.
 - **Small, maintainable, tested builds.** Strip unnecessary components after confirming they are not shared prerequisites.
 
-## Verified starting state (2026-11-06)
+## Historical starting state (2026-11-06)
 
 - OpenNES is a direct fork of Lemuroid at its `master` branch, initially unchanged.
 - Android app: `lemuroid-app`, Kotlin and Jetpack Compose.
@@ -28,6 +28,8 @@
 - Emulator cores: `lemuroid-cores` git submodule. FCEUmm is the intended sole retained system core.
 - Existing Android package ID and GitHub release workflows still use Lemuroid names and release assumptions.
 - Initial repository inspection showed no open GitHub issues. No APK build or real-device validation has been performed yet.
+
+> **Progress tracking:** The checklists below are the original acceptance gates. Unchecked items must not be treated as proof that a feature has never been implemented. See the [current implementation tracker](docs/MODULE_PROGRESS.md). No new verification is being claimed while testing is paused.
 
 ## M0 — Baseline, build and branding
 
