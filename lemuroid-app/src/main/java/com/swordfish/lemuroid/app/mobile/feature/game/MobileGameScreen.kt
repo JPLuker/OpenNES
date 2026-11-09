@@ -615,7 +615,7 @@ private fun MenuEditTouchControls(
                 }
                 2 -> {
                     Text(
-                        text = stringResource(R.string.opennes_editor_secondary_controls),
+                        text = stringResource(com.swordfish.lemuroid.R.string.opennes_editor_secondary_controls),
                         fontWeight = FontWeight.Bold,
                     )
                     Row(
@@ -845,7 +845,7 @@ private fun MenuEditSecondaryButton(
     onCommit: (TouchControllerSettingsManager.ButtonGeometry) -> Unit,
     onReset: () -> Unit,
 ) {
-    MenuEditTouchControlRow(label = stringResource(R.string.opennes_controls_size)) {
+    MenuEditTouchControlRow(label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_size)) {
         TouchControlEditorSlider(
             value = geometry.size,
             valueRange =
@@ -857,7 +857,7 @@ private fun MenuEditSecondaryButton(
     }
     MenuEditTouchControlRow(
         label =
-            stringResource(R.string.opennes_controls_horizontal) +
+            stringResource(com.swordfish.lemuroid.R.string.opennes_controls_horizontal) +
                 " (${(geometry.offsetX * TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X).roundToInt()} dp)",
     ) {
         TouchControlEditorSlider(
@@ -869,7 +869,7 @@ private fun MenuEditSecondaryButton(
     }
     MenuEditTouchControlRow(
         label =
-            stringResource(R.string.opennes_controls_vertical) +
+            stringResource(com.swordfish.lemuroid.R.string.opennes_controls_vertical) +
                 " (${(geometry.offsetY * TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y).roundToInt()} dp)",
     ) {
         TouchControlEditorSlider(
@@ -880,7 +880,7 @@ private fun MenuEditSecondaryButton(
         )
     }
     TextButton(onClick = onReset) {
-        Text(stringResource(R.string.opennes_editor_reset_secondary))
+        Text(stringResource(com.swordfish.lemuroid.R.string.opennes_editor_reset_secondary))
     }
 }
 
