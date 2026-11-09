@@ -151,6 +151,7 @@ abstract class LemuroidApplicationModule {
                     Migrations.VERSION_12_13,
                     Migrations.VERSION_13_14,
                     Migrations.VERSION_14_15,
+                    Migrations.VERSION_15_16,
                 )
                 .fallbackToDestructiveMigration()
                 .build()
