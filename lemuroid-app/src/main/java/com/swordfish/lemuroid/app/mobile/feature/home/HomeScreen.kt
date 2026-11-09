@@ -723,7 +723,10 @@ private fun GameDetailsSheet(
                                     },
                                     enabled = !applying,
                                     border = BorderStroke(1.dp, LibraryColors.border),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                                    colors =
+                                        ButtonDefaults.outlinedButtonColors(
+                                            contentColor = LibraryColors.foreground,
+                                        ),
                                 ) {
                                     Text(stringResource(R.string.opennes_use_catalog_match))
                                 }
@@ -737,7 +740,6 @@ private fun GameDetailsSheet(
                     color = LibraryColors.muted,
                     fontSize = 12.sp,
                 )
-
             }
 
             Spacer(
