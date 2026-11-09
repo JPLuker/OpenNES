@@ -118,8 +118,7 @@ class ShortcutsGenerator(
     private fun retrieveFallbackBitmap(
         game: Game,
         iconSize: Int,
-    ): Bitmap =
-        CoverUtils.getFallbackDrawable(game).toBitmap(iconSize, iconSize)
+    ): Bitmap = CoverUtils.getFallbackDrawable(game).toBitmap(iconSize, iconSize)
 
     private fun getDesiredIconSize(): Int {
         val manager = appContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?
