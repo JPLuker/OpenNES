@@ -68,6 +68,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -574,6 +575,109 @@ private fun GameDetailsSheet(
     var applying by remember(game.id) { mutableStateOf(false) }
     var matchFailed by remember(game.id) { mutableStateOf(false) }
     val detailsScroll = rememberScrollState()
+    val compactGameDetails =
+        LocalConfiguration.current.screenWidthDp < 380 || LocalDensity.current.fontScale > 1.2f
+
+    // Keep both actions near the box art on normal phones, but move them
+    // underneath the header when narrow screens or large text require space.
+    val gameActions: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(
+                onClick = onPlay,
+                modifier = Modifier.weight(1f),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = LibraryColors.red,
+                        contentColor = LibraryColors.foreground,
+                    ),
+            ) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                Text(stringResource(R.string.opennes_play))
+            }
+            Box {
+                OutlinedIconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.size(48.dp),
+                    border = BorderStroke(1.dp, LibraryColors.border),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = stringResource(R.string.opennes_game_more),
+                        tint = LibraryColors.foreground,
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                    containerColor = LibraryColors.surface,
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.opennes_profile_edit)) },
+                        onClick = {
+                            menuExpanded = false
+                            editingProfile = true
+                            onlineExpanded = false
+                            searchExpanded = false
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.opennes_online_lookup)) },
+                        onClick = {
+                            menuExpanded = false
+                            onlineExpanded = true
+                            editingProfile = false
+                            searchExpanded = false
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.opennes_find_game_info)) },
+                        onClick = {
+                            menuExpanded = false
+                            searchExpanded = true
+                            editingProfile = false
+                            onlineExpanded = false
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(
+                                    if (game.isFavorite) {
+                                        R.string.game_context_menu_remove_from_favorites
+                                    } else {
+                                        R.string.game_context_menu_add_to_favorites
+                                    },
+                                ),
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onFavoriteToggle(!game.isFavorite)
+                        },
+                    )
+                    if (pinShortcutSupported) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.game_context_menu_create_shortcut)) },
+                            onClick = {
+                                menuExpanded = false
+                                onPinShortcut()
+                            },
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.opennes_other_game_actions)) },
+                        onClick = {
+                            menuExpanded = false
+                            onMore()
+                        },
+                    )
+                }
+            }
+    }
 
     LaunchedEffect(editingProfile, onlineExpanded, searchExpanded) {
         if (editingProfile || onlineExpanded || searchExpanded) detailsScroll.scrollTo(0)
@@ -605,7 +709,7 @@ private fun GameDetailsSheet(
                     horizontalArrangement = Arrangement.spacedBy(18.dp),
                     verticalAlignment = Alignment.Top,
                 ) {
-                    NesBoxArtwork(game, Modifier.width(110.dp))
+                    NesBoxArtwork(game, Modifier.width(if (compactGameDetails) 90.dp else 110.dp))
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -630,104 +734,15 @@ private fun GameDetailsSheet(
                             color = LibraryColors.muted,
                             fontSize = 13.sp,
                         )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Button(
-                                onClick = onPlay,
-                                modifier = Modifier.weight(1f),
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor = LibraryColors.red,
-                                        contentColor = LibraryColors.foreground,
-                                    ),
-                            ) {
-                                Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                                Text(stringResource(R.string.opennes_play))
-                            }
-                            Box {
-                                OutlinedIconButton(
-                                    onClick = { menuExpanded = true },
-                                    modifier = Modifier.size(48.dp),
-                                    border = BorderStroke(1.dp, LibraryColors.border),
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Menu,
-                                        contentDescription = stringResource(R.string.opennes_game_more),
-                                        tint = LibraryColors.foreground,
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = menuExpanded,
-                                    onDismissRequest = { menuExpanded = false },
-                                    containerColor = LibraryColors.surface,
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.opennes_profile_edit)) },
-                                        onClick = {
-                                            menuExpanded = false
-                                            editingProfile = true
-                                            onlineExpanded = false
-                                            searchExpanded = false
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.opennes_online_lookup)) },
-                                        onClick = {
-                                            menuExpanded = false
-                                            onlineExpanded = true
-                                            editingProfile = false
-                                            searchExpanded = false
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.opennes_find_game_info)) },
-                                        onClick = {
-                                            menuExpanded = false
-                                            searchExpanded = true
-                                            editingProfile = false
-                                            onlineExpanded = false
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                stringResource(
-                                                    if (game.isFavorite) {
-                                                        R.string.game_context_menu_remove_from_favorites
-                                                    } else {
-                                                        R.string.game_context_menu_add_to_favorites
-                                                    },
-                                                ),
-                                            )
-                                        },
-                                        onClick = {
-                                            menuExpanded = false
-                                            onFavoriteToggle(!game.isFavorite)
-                                        },
-                                    )
-                                    if (pinShortcutSupported) {
-                                        DropdownMenuItem(
-                                            text = { Text(stringResource(R.string.game_context_menu_create_shortcut)) },
-                                            onClick = {
-                                                menuExpanded = false
-                                                onPinShortcut()
-                                            },
-                                        )
-                                    }
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.opennes_other_game_actions)) },
-                                        onClick = {
-                                            menuExpanded = false
-                                            onMore()
-                                        },
-                                    )
-                                }
-                            }
+                        if (!compactGameDetails) {
+                            gameActions()
+                        }
                         }
                     }
+                }
+
+                if (compactGameDetails) {
+                    gameActions()
                 }
 
                 if (onlineExpanded) {
