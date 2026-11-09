@@ -60,6 +60,9 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Existing NES refresh-rate preference and virtual-input release handling
 - [x] Correct false-positive quick-save/load feedback, report missing quick saves and failed save/load slots without claiming success
 - [x] Always reset the emulator loading flag after failed or cancelled operations; report a missing save snapshot instead of getting stuck
+- [x] Keep menu save/load/reset coroutines scoped to the game Activity rather than global process work
+- [x] Prevent duplicate Quit/Back finish requests from racing save writes; restore retry ability after a save failure
+- [x] Preserve foreground playtime across redundant resume callbacks and ignore missing menu tilt settings safely
 - [ ] Review save/resume and foreground-session lifecycle ownership for interrupted games
 - [ ] Guard native video/input operations against late or stale events when possible
 - [ ] **M5 acceptance deferred:** on-device audio/frame pacing, save SRAM and slot versions, pause/resume, gamepad disconnect and process lifecycle
@@ -248,6 +251,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Save-slot screenshot-preview failures are nonfatal if the state itself was written, and their errors are logged. Coroutine cancellation is not swallowed by slot loading or autosave restoration.
 - The ViewModel's `withLoading` uses `finally` so exceptions, early returns and cancellations restore its loading indicator. A missing exit snapshot reports a retryable save failure instead of leaving the UI blocked.
 - No compile, automated or device tests performed.
+
+## M5 source batch — lifecycle-scoped menu operations and safe exit
+
+- Menu-driven slot loads/saves and reset now use the Activity's lifecycle scope, so stale callbacks stop when their GameActivity is destroyed. The delayed game-process termination remains separately scoped, preserving the existing process exit design.
+- A single-flight guard prevents repeated Back/Quit requests from starting overlapping save snapshots and repeated finish results. A missing or failed snapshot shows an error and allows a retry; successful finish stays single-flight.
+- Redundant resume callbacks no longer overwrite an ongoing playtime interval. Reset rethrows cancellation and missing menu tilt configuration no longer triggers a non-null assertion crash.
+- Device suspend/resume, saves and process lifetime remain untested.
 
 ## Development rules
 

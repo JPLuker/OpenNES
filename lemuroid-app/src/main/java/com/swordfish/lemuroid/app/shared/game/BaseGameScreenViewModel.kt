@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.view.KeyEvent
 import android.view.MotionEvent
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.unit.Density
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -143,6 +145,7 @@ class BaseGameScreenViewModel(
         )
 
     val loadingState = MutableStateFlow(false)
+    private val finishRequestPending = AtomicBoolean(false)
 
     private inline fun withLoading(block: () -> Unit) {
         loadingState.value = true
@@ -296,22 +299,38 @@ class BaseGameScreenViewModel(
             try {
                 delay(appContext.longAnimationDuration().toLong())
                 retroGameView.retroGameViewFlow().reset()
-            } catch (e: Throwable) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
                 Timber.e(e, "Error in reset")
             }
         }
 
     fun requestFinish() {
-        if (loadingState.value) return
+        // Multiple Back/Quit events must not race two native SRAM writes
+        // or dispatch more than one activity finish result.
+        if (loadingState.value || !finishRequestPending.compareAndSet(false, true)) return
         viewModelScope.launch {
-            withLoading {
-                val snapshot = saves.captureSaveSnapshot(true)
-                if (snapshot == null) {
-                    sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
-                    return@launch
+            var completed = false
+            try {
+                withLoading {
+                    val snapshot = saves.captureSaveSnapshot(true)
+                    if (snapshot == null) {
+                        sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
+                        return@withLoading
+                    }
+                    saves.writeSaveSnapshot(snapshot)
+                    completed = true
+                    sideEffects.requestSuccessfulFinish()
                 }
-                saves.writeSaveSnapshot(snapshot)
-                sideEffects.requestSuccessfulFinish()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Unable to persist NES game progress before exit")
+                sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
+            } finally {
+                // Allow a second Quit attempt only if saving did not finish.
+                if (!completed) finishRequestPending.set(false)
             }
         }
     }

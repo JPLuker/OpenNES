@@ -348,7 +348,9 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     override fun onResume() {
         super.onResume()
-        foregroundStartMillis = SystemClock.elapsedRealtime()
+        if (foregroundStartMillis == null) {
+            foregroundStartMillis = SystemClock.elapsedRealtime()
+        }
     }
 
     override fun onPause() {
@@ -392,17 +394,17 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         if (requestCode == DIALOG_REQUEST) {
             Timber.i("Game menu dialog response: ${data?.extras.dump()}")
             if (data?.getBooleanExtra(GameMenuContract.RESULT_RESET, false) == true) {
-                GlobalScope.launch {
+                lifecycleScope.launch {
                     baseGameScreenViewModel.reset()
                 }
             }
             if (data?.hasExtra(GameMenuContract.RESULT_SAVE) == true) {
-                GlobalScope.launch {
+                lifecycleScope.launch {
                     baseGameScreenViewModel.saveSlot(data.getIntExtra(GameMenuContract.RESULT_SAVE, 0))
                 }
             }
             if (data?.hasExtra(GameMenuContract.RESULT_LOAD) == true) {
-                GlobalScope.launch {
+                lifecycleScope.launch {
                     baseGameScreenViewModel.loadSlot(data.getIntExtra(GameMenuContract.RESULT_LOAD, 0))
                 }
             }
@@ -437,7 +439,11 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             }
             if (data?.hasExtra(GameMenuContract.RESULT_CHANGE_TILT_CONFIG) == true) {
                 val tiltConfig = data.serializable<TiltConfiguration>(GameMenuContract.RESULT_CHANGE_TILT_CONFIG)
-                baseGameScreenViewModel.changeTiltConfiguration(tiltConfig!!)
+                if (tiltConfig != null) {
+                    baseGameScreenViewModel.changeTiltConfiguration(tiltConfig)
+                } else {
+                    Timber.w("Ignoring missing tilt configuration from game menu")
+                }
             }
         }
     }
