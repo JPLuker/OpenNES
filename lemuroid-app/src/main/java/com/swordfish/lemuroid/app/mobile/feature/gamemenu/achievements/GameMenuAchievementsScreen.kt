@@ -170,7 +170,17 @@ fun GameMenuAchievementsScreen(
             }
         }
 
-        activeSession?.let { VerifiedAchievementList(it) }
+        activeSession?.let { sessionData ->
+            VerifiedAchievementList(
+                username = sessionData.username,
+                romMd5 = sessionData.romMd5,
+                achievements = sessionData.achievements,
+            )
+        }
+
+        RetroAchievementsWebSection(
+            romMd5 = (identification as? LocalIdentification.Identified)?.identity?.md5,
+        )
 
         Text(
             text = stringResource(R.string.opennes_ra_rom_identification),

@@ -480,4 +480,20 @@
     <string name="opennes_ra_filter_locked">Locked</string>
     <string name="opennes_ra_no_results">No achievements in this category.</string>
     <string name="opennes_ra_partial_progress">Progress: %1$d%%</string>
+    <string name="opennes_ra_web_heading">Website progress (view-only)</string>
+    <string name="opennes_ra_web_explanation">Optional: enter your RetroAchievements username and personal web API key to view achievements already earned on the website. This does not sign in the emulator or enable earning achievements. Get your key from your RetroAchievements Control Panel under Keys. The key is stored encrypted on this device.</string>
+    <string name="opennes_ra_web_username">Username or ULID</string>
+    <string name="opennes_ra_web_key">Personal web API key</string>
+    <string name="opennes_ra_web_connect">Save web account</string>
+    <string name="opennes_ra_web_refresh">View web progress</string>
+    <string name="opennes_ra_web_disconnect">Disconnect</string>
+    <string name="opennes_ra_web_loading">Checking RetroAchievements website…</string>
+    <string name="opennes_ra_web_error">Could not load website progress. Check your account, API key and connection.</string>
+    <string name="opennes_ra_web_saved">Web account saved. Select View web progress for this game.</string>
+    <string name="opennes_ra_web_disconnected">Web account removed from OpenNES.</string>
+    <string name="opennes_ra_web_no_match">No supported RetroAchievements game matches this exact ROM fingerprint.</string>
+    <string name="opennes_ra_web_loaded">Website progress loaded. These are existing awards, not OpenNES unlocks.</string>
+    <string name="opennes_ra_web_need_hash">This ROM must be identified locally before web progress can be loaded.</string>
+    <string name="opennes_ra_web_progress_list_title">Website achievement history</string>
+    <string name="opennes_ra_web_progress_account">Viewing website progress for %1$s</string>
 </resources>

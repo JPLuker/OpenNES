@@ -122,6 +122,8 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [x] Document native LibretroDroid dependency boundary, exact emulated-frame hook and secure account/session requirements
 - [ ] Expose NES emulated memory and per-frame callbacks from the native frontend with Android/JNI-safe ownership
 - [ ] Integrate pinned stable rcheevos/rc_client and authenticated transport
+- [x] Add optional encrypted web API credentials, an explicit user-initiated read-only website progress lookup using exact cached NES hashes, and a separate in-game web-progress section. This does not permit new unlocks or replace native authentication.
+- [ ] Verify real website API responses and account behavior on a physical device (including rate limits and cache).
 - [ ] Login/token security, game association, unlock events, achievement lists, progress, rich presence and leaderboard UI
 - [x] Add a Steam-inspired **Achievements** entry directly to the in-game pause menu, linking to an OpenNES-native current-game screen with honest runtime status and local ROM identification.
 - [x] Implement source-level verified-achievement list rendering, All/Unlocked/Locked filters and progress UI, with strict local ROM hash association and honest disconnected/no-match states. This is dormant until native data exists.

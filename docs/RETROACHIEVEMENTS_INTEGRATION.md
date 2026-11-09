@@ -1,6 +1,6 @@
 # OpenNES — RetroAchievements native integration boundary
 
-**Status (2026-11-09): M6 user-facing menu shell implemented, native runtime not implemented.** A local NES/FDS ROM identification helper and a dedicated in-game Achievements page are committed. The page computes and displays a local fingerprint and clearly reports that there are no verified unlocks or account connection. The app cannot earn or report achievements yet.
+**Status (2026-11-09): M6 in-game achievements shell and optional read-only website lookup implemented, native runtime not implemented.** The page hashes the current ROM locally and supports manually fetching real, existing website awards using the user's own web API key. OpenNES still cannot generate or submit new achievement unlocks.
 
 ## Grounded architecture
 
@@ -18,6 +18,15 @@
 - The new `RetroAchievementsDisplayState` contract and verified-achievement list support authenticated/connecting/no-match states, per-game hash confirmation, filtering, real unlock totals, descriptions and points when native data becomes available. **The Active state is not emitted by current OpenNES code.** A local hash alone is insufficient.
 - A supplied Active session is shown only if its ROM hash matches the currently identified local ROM, preventing an old game session from showing unrelated awards. Until the native runtime exists, this is a diagnostic foundation, not functional RetroAchievements.
 - Follow-up acceptance: verify opening/closing this page in portrait and landscape, ROM URI access, ZIP/FDS variants, and error states on a physical device.
+
+## Optional read-only website progress (source implemented, device testing pending)
+
+- This is **not an emulator login** and must never submit unlocks. The official RetroAchievements website API is used only for user-initiated inspection of existing site awards, in a separate screen section clearly marked **view-only**.
+- A personal web API key and username are encrypted via Android Keystore AES-GCM and stored as an AtomicFile inside `noBackupFilesDir`; keys are never logged or placed in ordinary settings or source control. Disconnect deletes the file. Website keys are **not** rc_client credentials.
+- The app checks the supplied user profile via `API_GetUserProfile.php`, resolves the exact ROM hash through console 7's `API_GetGameList.php` with hashes enabled, then reads `API_GetGameInfoAndUserProgress.php`. It does **not** associate games by their names.
+- The public NES game/hash index is cached for seven days, as recommended by the API maintainers. Responses and cache writes are byte-bounded and requests do not follow redirects. The personal API key is sent through the API's documented HTTPS query parameter, never written in the public hash cache. No website progress is persisted.
+- This is an **explicitly initiated** network request: opening the pause menu or loading a ROM does not contact the website. The account and a successful hash match do not enable live awards.
+- Acceptance: verify valid/invalid personal keys, matching and mismatching NES/FDS ROMs, cache expiry/offline errors, disconnect, progress filtering, screen rotation, process recreation and a second Android device. Confirm that web progress remains clearly distinguished from local emulator unlocks.
 
 ## Implementation safety
 
