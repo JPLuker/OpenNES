@@ -53,6 +53,7 @@ fun LemuroidControlFaceButtons(
     modifier: Modifier = Modifier,
     primaryAnchors: PersistentList<Anchor<Id.Key>>,
     background: @Composable () -> Unit = { LemuroidControlBackground() },
+    showCompositeForeground: Boolean = true,
     applyPadding: Boolean = true,
     trackPointers: Boolean = true,
     idsForegrounds: PersistentMap<Id.Key, @Composable (State<Boolean>) -> Unit>,
