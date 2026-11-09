@@ -645,6 +645,9 @@ private fun MenuEditTouchControls(
                         }
                     }
                     if (isLandscape) {
+                        val sidePanelsEnabled =
+                            touchControllerSettings.landscapeOverlay?.not()
+                                ?: !controllerConfig.allowTouchOverlay
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -654,9 +657,7 @@ private fun MenuEditTouchControls(
                                 modifier = Modifier.weight(1f),
                             )
                             Switch(
-                                checked =
-                                    !(touchControllerSettings.landscapeOverlay
-                                        ?: controllerConfig.allowTouchOverlay),
+                                checked = sidePanelsEnabled,
                                 onCheckedChange = {
                                     viewModel.updateTouchControllerSettings(
                                         touchControllerSettings.copy(landscapeOverlay = !it),
