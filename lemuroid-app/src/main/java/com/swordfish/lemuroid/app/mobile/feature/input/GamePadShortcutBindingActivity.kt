@@ -53,8 +53,10 @@ class GamePadShortcutBindingActivity : RetrogradeActivity() {
         // The first half of a combination is intentionally not a completed
         // binding. Consume its key-up so it cannot trigger dialog navigation.
         return handled ||
-            (event.device?.name == shortcutBindingUpdater.extras.device.name &&
-                event.action == KeyEvent.ACTION_UP)
+            (
+                event.device?.name == shortcutBindingUpdater.extras.device.name &&
+                    event.action == KeyEvent.ACTION_UP
+            )
     }
 
     @dagger.Module
