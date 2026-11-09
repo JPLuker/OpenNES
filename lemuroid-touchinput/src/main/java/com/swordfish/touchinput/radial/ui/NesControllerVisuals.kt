@@ -88,7 +88,10 @@ fun NesCrossForeground(directionState: State<Offset>) {
                 cornerRadius = CornerRadius(2.dp.toPx()),
             )
         }
-        if (active.y < -0.25f) {
+        // PadKit's direction state uses positive Y for UP, unlike
+        // Canvas coordinates (positive Y draws downward). Invert only the
+        // visual pressed highlight; never change gameplay input mapping.
+        if (active.y > 0.25f) {
             drawRoundRect(
                 color = activeColor,
                 topLeft = Offset(cx - inside, cy - reach + strokeWidth),
@@ -96,7 +99,7 @@ fun NesCrossForeground(directionState: State<Offset>) {
                 cornerRadius = CornerRadius(2.dp.toPx()),
             )
         }
-        if (active.y > 0.25f) {
+        if (active.y < -0.25f) {
             drawRoundRect(
                 color = activeColor,
                 topLeft = Offset(cx - inside, cy + arm + strokeWidth),
