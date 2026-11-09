@@ -148,7 +148,12 @@ private fun SearchGameRow(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .combinedClickable(onClick = onPlay, onLongClick = onMore)
+                    .combinedClickable(
+                        onClickLabel = stringResource(R.string.opennes_play_game_for, game.displayName()),
+                        onLongClickLabel = stringResource(R.string.opennes_game_actions_for, game.displayName()),
+                        onClick = onPlay,
+                        onLongClick = onMore,
+                    )
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -188,10 +193,11 @@ private fun SearchGameRow(
                     contentDescription =
                         stringResource(
                             if (game.isFavorite) {
-                                R.string.game_context_menu_remove_from_favorites
+                                R.string.opennes_remove_favorite_for
                             } else {
-                                R.string.game_context_menu_add_to_favorites
+                                R.string.opennes_add_favorite_for
                             },
+                            game.displayName(),
                         ),
                     tint = if (game.isFavorite) SearchColors.red else SearchColors.muted,
                 )
