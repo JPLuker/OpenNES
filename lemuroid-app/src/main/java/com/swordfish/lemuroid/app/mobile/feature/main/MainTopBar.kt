@@ -18,8 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +40,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.savesync.SaveSyncWork
@@ -56,7 +53,7 @@ fun MainTopBar(
     mainUIState: MainViewModel.UiState,
 ) {
     Column {
-        LemuroidTopAppBar(
+        OpenNesTopAppBar(
             route = currentRoute,
             navController = navController,
             mainUIState = mainUIState,
@@ -72,15 +69,15 @@ fun MainTopBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LemuroidTopAppBar(
+fun OpenNesTopAppBar(
     route: MainRoute,
-    navController: NavController,
+    navController: NavHostController,
     mainUIState: MainViewModel.UiState,
     onHelpPressed: () -> Unit,
     onUpdateQueryString: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val topBarColor = if (route == MainRoute.SEARCH) Color(0xFF111317) else BottomAppBarDefaults.containerColor
+    val topBarColor = Color(0xFF111317)
 
     TopAppBar(
         title = {
@@ -90,7 +87,7 @@ fun LemuroidTopAppBar(
                     onUpdateQueryString = onUpdateQueryString,
                 )
             } else {
-                Text(text = stringResource(route.titleId))
+                Text(text = stringResource(route.titleId), color = Color(0xFFF2EDE6))
             }
         },
         colors =
@@ -108,14 +105,14 @@ fun LemuroidTopAppBar(
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         stringResource(id = R.string.back),
+                        tint = Color(0xFFF2EDE6),
                     )
                 }
             }
         },
         actions = {
-            LemuroidTopBarActions(
+            OpenNesTopBarActions(
                 route = route,
-                navController = navController,
                 context = context,
                 saveSyncEnabled = mainUIState.saveSyncEnabled,
                 onHelpPressed = onHelpPressed,
@@ -126,16 +123,15 @@ fun LemuroidTopAppBar(
 }
 
 @Composable
-fun LemuroidTopBarActions(
+fun OpenNesTopBarActions(
     route: MainRoute,
-    navController: NavController,
     context: Context,
     saveSyncEnabled: Boolean,
     operationsInProgress: Boolean,
     onHelpPressed: () -> Unit,
 ) {
     Row {
-        if (route != MainRoute.SEARCH) {
+        if (route == MainRoute.SETTINGS) {
             IconButton(onClick = onHelpPressed) {
                 Icon(
                     Icons.Outlined.Info,
@@ -143,7 +139,7 @@ fun LemuroidTopBarActions(
                 )
             }
         }
-        if (saveSyncEnabled) {
+        if (route == MainRoute.SETTINGS && saveSyncEnabled) {
             IconButton(
                 onClick = { SaveSyncWork.enqueueManualWork(context.applicationContext) },
                 enabled = !operationsInProgress,
@@ -151,16 +147,6 @@ fun LemuroidTopBarActions(
                 Icon(
                     Icons.Outlined.CloudSync,
                     stringResource(R.string.save_sync),
-                )
-            }
-        }
-        if (route.showBottomNavigation && route != MainRoute.SEARCH) {
-            IconButton(
-                onClick = { navController.navigate(MainRoute.SETTINGS.route) },
-            ) {
-                Icon(
-                    Icons.Outlined.Settings,
-                    stringResource(R.string.settings),
                 )
             }
         }
