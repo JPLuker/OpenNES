@@ -201,7 +201,13 @@ private fun searchPlayTime(game: Game): String {
     val minutes = game.totalPlayTimeMillis / 60_000L
     return when {
         game.totalPlayTimeMillis <= 0L ->
-            stringResource(if (game.lastPlayedAt == null) R.string.opennes_not_played else R.string.opennes_playtime_not_recorded)
+            stringResource(
+                if (game.lastPlayedAt == null) {
+                    R.string.opennes_not_played
+                } else {
+                    R.string.opennes_playtime_not_recorded
+                },
+            )
         minutes == 0L -> stringResource(R.string.opennes_playtime_under_minute)
         minutes < 60L -> stringResource(R.string.opennes_playtime_minutes, minutes.toInt())
         else -> stringResource(R.string.opennes_playtime_hours, (minutes / 60L).toInt(), (minutes % 60L).toInt())
