@@ -1,6 +1,5 @@
 package com.swordfish.lemuroid.app.mobile.shared.compose.controller
 
-import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,6 +50,7 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sin
+import android.graphics.Color as AndroidColor
 
 private data class HsvSelection(
     val hue: Float,

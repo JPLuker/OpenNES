@@ -14,12 +14,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -27,6 +32,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
+import com.swordfish.lemuroid.app.mobile.shared.compose.controller.NesColorWheelDialog
+import com.swordfish.touchinput.radial.NesColorPart
 import com.swordfish.touchinput.radial.NesControllerPalette
 import com.swordfish.touchinput.radial.NesControllerPresets
 
@@ -63,10 +70,13 @@ internal fun NesControllerSetupSheet(
     currentPresetId: String,
     currentPalette: NesControllerPalette,
     onChoosePreset: (String) -> Unit,
+    onChooseColor: (NesColorPart, String) -> Unit,
     onCustomizeLayout: () -> Unit,
     onUseDefaults: () -> Unit,
 ) {
     val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.65f).dp
+    var colorsExpanded by remember { mutableStateOf(false) }
+    var selectedColorPart by remember { mutableStateOf<NesColorPart?>(null) }
     ModalBottomSheet(onDismissRequest = onUseDefaults) {
         Column(
             modifier =
@@ -120,6 +130,36 @@ internal fun NesControllerSetupSheet(
                     }
                 }
             }
+            OutlinedButton(
+                onClick = { colorsExpanded = !colorsExpanded },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.opennes_setup_custom_colors))
+            }
+            if (colorsExpanded) {
+                Text(stringResource(R.string.opennes_setup_color_hint))
+                NesColorPart.values().forEach { part ->
+                    TextButton(
+                        onClick = { selectedColorPart = part },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .size(22.dp)
+                                        .background(currentPalette.color(part), CircleShape),
+                            )
+                            Text(part.label)
+                        }
+                    }
+                }
+            }
+            HorizontalDivider()
             Button(onClick = onCustomizeLayout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.opennes_setup_customize))
             }
@@ -127,5 +167,16 @@ internal fun NesControllerSetupSheet(
                 Text(stringResource(R.string.opennes_setup_use_defaults))
             }
         }
+    }
+    selectedColorPart?.let { part ->
+        NesColorWheelDialog(
+            part = part,
+            initialColor = currentPalette.color(part),
+            onDismiss = { selectedColorPart = null },
+            onApply = { hex ->
+                onChooseColor(part, hex)
+                selectedColorPart = null
+            },
+        )
     }
 }

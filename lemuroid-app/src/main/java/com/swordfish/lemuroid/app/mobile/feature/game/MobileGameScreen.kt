@@ -355,6 +355,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 currentPresetId = controllerAppearance.preset.id,
                 currentPalette = controllerAppearance.palette,
                 onChoosePreset = { appearanceStore.selectPreset(it) },
+                onChooseColor = { part, hex -> appearanceStore.setColor(part, hex) },
                 onCustomizeLayout = {
                     onboardingStore.complete()
                     onboardingVisible.value = false

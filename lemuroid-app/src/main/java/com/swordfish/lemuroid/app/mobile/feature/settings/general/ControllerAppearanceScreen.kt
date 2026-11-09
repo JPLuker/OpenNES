@@ -1,6 +1,8 @@
 package com.swordfish.lemuroid.app.mobile.feature.settings.general
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.game.NesControllerOnboardingStore
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
+import com.swordfish.lemuroid.app.mobile.shared.compose.controller.NesColorWheelDialog
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsColors
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
@@ -45,6 +50,7 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
     val appearance = rememberNesControllerAppearance()
     val setupStore = remember(context) { NesControllerOnboardingStore(context) }
     var setupRequested by remember { mutableStateOf(false) }
+    var colorWheelPart by remember { mutableStateOf<NesColorPart?>(null) }
 
     OpenNesSettingsPage(modifier = modifier) {
         OpenNesSettingsGroup(
@@ -123,7 +129,7 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.opennes_controller_colors_hint),
+                    text = stringResource(R.string.opennes_controller_colors_wheel_hint),
                     color = OpenNesSettingsColors.muted,
                 )
                 NesColorPart.values().forEach { part ->
@@ -131,6 +137,7 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
                         part = part,
                         color = appearance.palette.color(part),
                         onChange = { store.setColor(part, it) },
+                        onPick = { colorWheelPart = part },
                     )
                 }
                 OutlinedButton(
@@ -142,6 +149,18 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
             }
         }
     }
+
+    colorWheelPart?.let { part ->
+        NesColorWheelDialog(
+            part = part,
+            initialColor = appearance.palette.color(part),
+            onDismiss = { colorWheelPart = null },
+            onApply = { hex ->
+                store.setColor(part, hex)
+                colorWheelPart = null
+            },
+        )
+    }
 }
 
 @Composable
@@ -149,6 +168,7 @@ private fun ColorPartEditor(
     part: NesColorPart,
     color: Color,
     onChange: (String) -> Unit,
+    onPick: () -> Unit,
 ) {
     var value by remember(part, color) {
         mutableStateOf(NesControllerAppearanceStore.toHex(color))
@@ -159,7 +179,16 @@ private fun ColorPartEditor(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(modifier = Modifier.size(28.dp).background(color, CircleShape))
+        val swatchDescription = stringResource(R.string.opennes_controller_color_wheel_accessibility)
+        Box(
+            modifier =
+                Modifier
+                    .size(36.dp)
+                    .background(color, CircleShape)
+                    .border(1.dp, Color.Gray, CircleShape)
+                    .clickable(onClick = onPick)
+                    .semantics { contentDescription = "$swatchDescription: ${part.label}" },
+        )
         OutlinedTextField(
             value = value,
             onValueChange = { text ->
