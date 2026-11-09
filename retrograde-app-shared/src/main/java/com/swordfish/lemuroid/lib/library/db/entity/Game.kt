@@ -63,6 +63,8 @@ data class Game(
     val description: String? = null,
     // Provenance for optional Wikidata details, not for user-supplied overrides.
     val wikidataEntityId: String? = null,
+    // Attribution for verified Wikipedia article summaries.
+    val wikipediaArticleTitle: String? = null,
     @ColumnInfo(defaultValue = "0")
     val lastOnlineMetadataCheckedAt: Long = 0L,
 ) : Serializable {
