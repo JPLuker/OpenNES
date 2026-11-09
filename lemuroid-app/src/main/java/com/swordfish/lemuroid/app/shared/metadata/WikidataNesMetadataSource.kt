@@ -14,7 +14,7 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
- * Key-free, user-requested, read-only lookup against Wikidata's CC0 catalogue.
+ * Key-free read-only lookup against Wikidata (CC0) and verified Wikipedia summaries.
  *
  * Never guess between entities. A match must have the exact normalized title,
  * be an instance of video game (Q7889), explicitly list NES (Q172742) as a
@@ -22,15 +22,22 @@ import java.util.concurrent.TimeUnit
  *
  * Only the game title appears in the query, not ROM bytes or local paths.
  * Like any remote HTTP service, Wikidata can observe the request's IP address
- * and user agent. The lookup runs only after the user presses the online button.
+ * and user agent. Automatic lookups are controlled from Library maintenance.
  */
 class WikidataNesMetadataSource {
+    companion object {
+        private const val MAX_SUMMARY_LENGTH = 1050
+        private const val USER_AGENT =
+            "OpenNES/0.2 (https://github.com/JPLuker/OpenNES; Android NES metadata)"
+    }
+
     sealed interface Result {
         data class Match(
             val entityId: String,
             val genre: String?,
             val releaseYear: Int?,
             val description: String?,
+            val wikipediaArticleTitle: String? = null,
         ) : Result
 
         data object NoMatch : Result
@@ -87,7 +94,7 @@ class WikidataNesMetadataSource {
                 mapOf(
                     "action" to "wbgetentities",
                     "ids" to matchingIds.joinToString("|"),
-                    "props" to "claims|descriptions",
+                    "props" to "claims|descriptions|sitelinks",
                     "languages" to "en",
                     "format" to "json",
                     "maxlag" to "5",
@@ -129,12 +136,60 @@ class WikidataNesMetadataSource {
                 ?.trim()
                 ?.takeIf { it.isNotBlank() && it.length <= 300 }
 
+        // The sitelink belongs to the uniquely verified NES game item,
+        // avoiding unrelated Wikipedia pages with similar names.
+        val articleTitle =
+            entity.optJSONObject("sitelinks")
+                ?.optJSONObject("enwiki")
+                ?.optString("title")
+                ?.trim()
+                ?.takeIf { it.isNotBlank() && it.length <= 160 }
+        val summary = articleTitle?.let { wikipediaSummary(it) }
+
         return Result.Match(
             entityId = id,
             genre = genre,
             releaseYear = years.minOrNull(),
-            description = description,
+            description = summary ?: description,
+            wikipediaArticleTitle = if (summary != null) articleTitle else null,
         )
+    }
+
+    /**
+     * Wikipedia lead extracts are CC BY-SA content, not Wikidata CC0 values.
+     * Store the exact article title so game details can link to the source.
+     * A 404 means no summary; transient network or rate-limit failures retry.
+     */
+    private fun wikipediaSummary(articleTitle: String): String? {
+        val url =
+            "https://en.wikipedia.org/api/rest_v1/page/summary/" +
+                Uri.encode(articleTitle.replace(' ', '_'))
+        val request =
+            Request.Builder()
+                .url(url)
+                .header("User-Agent", USER_AGENT)
+                .header("Accept", "application/json")
+                .build()
+
+        val body =
+            http.newCall(request).execute().use { response ->
+                if (response.code == 404) return null
+                if (!response.isSuccessful) {
+                    throw IOException("Wikipedia summary HTTP status: " + response.code)
+                }
+                response.body?.string() ?: throw IOException("Empty Wikipedia summary response")
+            }
+        val data = JSONObject(body)
+        if (data.optString("type") == "disambiguation") return null
+
+        val extract =
+            data.optString("extract").replace(Regex("""\s+"""), " ").trim()
+                .takeIf { it.length in 55..10_000 } ?: return null
+        if (extract.length <= MAX_SUMMARY_LENGTH) return extract
+
+        val shortened = extract.take(MAX_SUMMARY_LENGTH)
+        val sentence = shortened.substringBeforeLast('.')
+        return if (sentence.length >= 300) "$sentence." else shortened.trimEnd() + "…"
     }
 
     private fun genreLabels(ids: List<String>): String? {
@@ -193,7 +248,7 @@ class WikidataNesMetadataSource {
         val request =
             Request.Builder()
                 .url(uri.toString())
-                .header("User-Agent", "OpenNES/0.1 (https://github.com/JPLuker/OpenNES; Android NES metadata)")
+                .header("User-Agent", USER_AGENT)
                 .header("Accept", "application/json")
                 .build()
 
