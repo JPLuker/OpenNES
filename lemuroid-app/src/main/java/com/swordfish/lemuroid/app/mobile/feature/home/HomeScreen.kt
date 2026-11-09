@@ -68,6 +68,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
+import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -827,13 +828,7 @@ private fun WikidataLookupSection(
                     fontSize = 12.sp,
                 )
             }
-            val canFill =
-                (game.genre.isNullOrBlank() && !match.genre.isNullOrBlank()) ||
-                    (game.releaseYear == null && match.releaseYear != null) ||
-                    (game.description.isNullOrBlank() && !match.description.isNullOrBlank()) ||
-                    (game.wikidataEntityId != null &&
-                        game.wikipediaArticleTitle == null &&
-                        match.wikipediaArticleTitle != null)
+            val canFill = game.needsOnlineMetadata(match)
             Button(
                 onClick = {
                     applying = true
