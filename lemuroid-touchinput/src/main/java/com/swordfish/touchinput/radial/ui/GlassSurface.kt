@@ -19,9 +19,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.ceil
 
+/**
+ * Controller dimensions change continuously while the player drags the size
+ * sliders. A bounded LRU prevents every intermediate shadow bitmap from
+ * remaining in memory for the entire game session.
+ */
 private object ShadowCache {
-    private val bitmapCache = mutableMapOf<String, ImageBitmap>()
+    private const val MAX_ENTRIES = 40
+    private const val MAX_PIXELS = 2_000_000L
 
+    private data class CachedBitmap(val image: ImageBitmap, val pixels: Long)
+
+    private val bitmapCache = LinkedHashMap<String, CachedBitmap>(48, 0.75f, true)
+    private var cachedPixels = 0L
+
+    @Synchronized
     fun getOrCreate(
         width: Int,
         height: Int,
@@ -31,31 +43,40 @@ private object ShadowCache {
         padding: Int,
     ): ImageBitmap {
         val key = "$width-$height-$cornerRadius-${shadowColor.toArgb()}-$blurRadius-$padding"
-        return bitmapCache.getOrPut(key) {
-            val bitmapWidth = width + padding * 2
-            val bitmapHeight = height + padding * 2
-            val bitmap = ImageBitmap(bitmapWidth, bitmapHeight)
-            val canvas = Canvas(bitmap)
+        bitmapCache[key]?.let { return it.image }
 
-            val frameworkPaint =
-                android.graphics.Paint().apply {
-                    isAntiAlias = true
-                    color = shadowColor.toArgb()
-                    maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
-                }
+        val bitmapWidth = width + padding * 2
+        val bitmapHeight = height + padding * 2
+        val bitmap = ImageBitmap(bitmapWidth, bitmapHeight)
+        val canvas = Canvas(bitmap)
 
-            canvas.nativeCanvas.drawRoundRect(
-                padding.toFloat(),
-                padding.toFloat(),
-                padding.toFloat() + width.toFloat(),
-                padding.toFloat() + height.toFloat(),
-                cornerRadius,
-                cornerRadius,
-                frameworkPaint,
-            )
+        val frameworkPaint =
+            android.graphics.Paint().apply {
+                isAntiAlias = true
+                color = shadowColor.toArgb()
+                maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
+            }
+        canvas.nativeCanvas.drawRoundRect(
+            padding.toFloat(),
+            padding.toFloat(),
+            padding.toFloat() + width.toFloat(),
+            padding.toFloat() + height.toFloat(),
+            cornerRadius,
+            cornerRadius,
+            frameworkPaint,
+        )
 
-            bitmap
+        val pixels = bitmapWidth.toLong() * bitmapHeight
+        if (pixels <= MAX_PIXELS) {
+            bitmapCache[key] = CachedBitmap(bitmap, pixels)
+            cachedPixels += pixels
+            val iterator = bitmapCache.entries.iterator()
+            while ((cachedPixels > MAX_PIXELS || bitmapCache.size > MAX_ENTRIES) && iterator.hasNext()) {
+                cachedPixels -= iterator.next().value.pixels
+                iterator.remove()
+            }
         }
+        return bitmap
     }
 }
 
