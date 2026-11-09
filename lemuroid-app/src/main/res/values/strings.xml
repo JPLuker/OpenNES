@@ -269,6 +269,9 @@
     <string name="opennes_setup_change_action">Change folder</string>
     <string name="opennes_open_game_details">View details for %1$s</string>
     <string name="opennes_game_actions_for">More actions for %1$s</string>
+    <string name="opennes_play_game_for">Play %1$s</string>
+    <string name="opennes_add_favorite_for">Add %1$s to favorites</string>
+    <string name="opennes_remove_favorite_for">Remove %1$s from favorites</string>
     <string name="opennes_setup_folder_setting">NES game folder</string>
     <string name="opennes_setup_no_folder_selected">No folder selected</string>
     <string name="opennes_setup_rescan_description">Look again for NES game files in the selected folder</string>
