@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -59,6 +60,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -550,14 +552,23 @@ private fun GameDetailsSheet(
         containerColor = LibraryColors.panel,
         contentColor = LibraryColors.foreground,
     ) {
+        // Metadata can be long, but Play must never disappear below the fold.
+        // Constrain the sheet and scroll its details independently of the actions.
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, bottom = 30.dp)
-                    .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                    .heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.90f),
         ) {
+            Column(
+                modifier =
+                    Modifier
+                        .weight(1f, fill = false)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
                 verticalAlignment = Alignment.Top,
@@ -727,27 +738,45 @@ private fun GameDetailsSheet(
                 fontSize = 12.sp,
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(
-                    onClick = onPlay,
-                    modifier = Modifier.weight(1f),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = LibraryColors.red,
-                            contentColor = LibraryColors.foreground,
-                        ),
-                ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Text(stringResource(R.string.opennes_play))
-                }
-                OutlinedButton(
-                    onClick = onMore,
-                    border = BorderStroke(1.dp, LibraryColors.border),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-                ) {
-                    Text(stringResource(R.string.opennes_game_more))
-                }
+        }
+
+        Spacer(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(LibraryColors.border),
+        )
+
+        // Persistent actions: still visible when the game has a long summary.
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(
+                onClick = onPlay,
+                modifier = Modifier.weight(1f),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = LibraryColors.red,
+                        contentColor = LibraryColors.foreground,
+                    ),
+            ) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                Text(stringResource(R.string.opennes_play))
             }
+            OutlinedButton(
+                onClick = onMore,
+                border = BorderStroke(1.dp, LibraryColors.border),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+            ) {
+                Text(stringResource(R.string.opennes_game_more))
+            }
+        }
         }
     }
 }
