@@ -93,7 +93,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         val title = file.extensionlessName
         val cleaned = NesGameTitle.clean(title)
         val prefix =
-            cleaned.replace(Regex("""^(?:The|An|A)\\s+""", RegexOption.IGNORE_CASE), "")
+            cleaned.replace(Regex("""^(?:The|An|A)\s+""", RegexOption.IGNORE_CASE), "")
                 .substringBefore('(')
                 .substringBefore('[')
                 .trim()
@@ -116,12 +116,9 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         return uniqueMatch?.let { convertToGameMetadata(it) }
     }
 
-    private fun canonicalNesTitle(raw: String): String {
-        val noExtension = raw.replace(Regex("\\.(nes|zip|7z)$", RegexOption.IGNORE_CASE), "")
-        val noTags = noExtension.replace(Regex("\\([^)]*\\)|\\[[^]]*\\]"), " ")
-        return noTags.lowercase(Locale.ROOT)
+    private fun canonicalNesTitle(raw: String): String =
+        NesGameTitle.clean(raw).lowercase(Locale.ROOT)
             .replace(Regex("[^a-z0-9]"), "")
-    }
 
     private suspend fun findByPathAndFilename(
         db: LibretroDatabase,
