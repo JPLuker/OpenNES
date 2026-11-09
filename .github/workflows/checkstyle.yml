@@ -2,10 +2,10 @@ name: OpenNES Android CI
 
 on:
   push:
-    branches: [master]
+    branches: [release/m5-candidate]
   workflow_dispatch:
 
-# Only the newest master build needs to publish a rolling development APK.
+# Only the newest M5 candidate build publishes a rolling preview APK.
 concurrency:
   group: opennes-development-${{ github.ref }}
   cancel-in-progress: true
@@ -45,14 +45,14 @@ jobs:
           mkdir -p dist
           APK="$(find lemuroid-app/build/outputs/apk/freeBundle/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
           test -n "$APK"
-          cp "$APK" dist/OpenNES-debug.apk
-          python3 scripts/inspect-apk.py --nes-only dist/OpenNES-debug.apk
+          cp "$APK" dist/OpenNES-M5-debug.apk
+          python3 scripts/inspect-apk.py --nes-only dist/OpenNES-M5-debug.apk
 
       - name: Upload test APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OpenNES-debug-apk
-          path: dist/OpenNES-debug.apk
+          name: OpenNES-M5-debug-apk
+          path: dist/OpenNES-M5-debug.apk
           if-no-files-found: error
 
   lint:
@@ -90,7 +90,7 @@ jobs:
   publish-development:
     name: Publish direct-download development APK
     needs: [build, lint]
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/release/m5-candidate'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -107,26 +107,26 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          test -s dist/OpenNES-debug.apk
+          test -s dist/OpenNES-M5-debug.apk
 
           SHA_SHORT="${GITHUB_SHA:0:12}"
-          NOTES="Automated OpenNES **debug/test build** from master.
+          NOTES="Automated OpenNES **M0–M5 debug preview** from the release candidate branch.
 
           Source commit: https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}
 
           This release contains an installable APK only; it is not signed with the OpenNES production release key. Android package ID: \`com.jpluker.opennes.debug\`.
 
-          Existing installations from this same debug-signing identity can be updated in place. Official release signing is deferred. The latest successful build replaces the APK on this page."
+          Existing installations from this same debug-signing identity can be updated in place. Official release signing is deferred. M6–M8 features are not included. This is not a production-signed or device-certified build. The latest successful candidate replaces the APK on this preview."
 
-          if gh release view dev-latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload dev-latest dist/OpenNES-debug.apk --clobber --repo "$GITHUB_REPOSITORY"
-            gh release edit dev-latest \
-              --title "OpenNES Development APK" \
+          if gh release view m5-preview --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload m5-preview dist/OpenNES-M5-debug.apk --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit m5-preview \
+              --title "OpenNES M5 Preview APK" \
               --notes "$NOTES" \
               --prerelease \
               --repo "$GITHUB_REPOSITORY"
           else
-            gh release create dev-latest dist/OpenNES-debug.apk \
+            gh release create m5-preview dist/OpenNES-M5-debug.apk \
               --target "$GITHUB_SHA" \
               --title "OpenNES Development APK" \
               --notes "$NOTES" \
@@ -136,4 +136,4 @@ jobs:
 
           echo "### OpenNES APK published" >> "$GITHUB_STEP_SUMMARY"
           echo "Commit: \`$SHA_SHORT\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/dev-latest/OpenNES-debug.apk" >> "$GITHUB_STEP_SUMMARY"
+          echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/m5-preview/OpenNES-M5-debug.apk" >> "$GITHUB_STEP_SUMMARY"

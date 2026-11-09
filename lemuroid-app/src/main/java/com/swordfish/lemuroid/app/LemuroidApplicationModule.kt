@@ -334,8 +334,7 @@ abstract class LemuroidApplicationModule {
         @Provides
         @PerApp
         @JvmStatic
-        fun postGameHandler(retrogradeDatabase: RetrogradeDatabase) =
-            GameLaunchTaskHandler(retrogradeDatabase)
+        fun postGameHandler(retrogradeDatabase: RetrogradeDatabase) = GameLaunchTaskHandler(retrogradeDatabase)
 
         @Provides
         @PerApp

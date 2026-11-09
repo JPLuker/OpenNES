@@ -18,9 +18,9 @@ import dagger.android.AndroidInjector
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class LibraryIndexWork(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {

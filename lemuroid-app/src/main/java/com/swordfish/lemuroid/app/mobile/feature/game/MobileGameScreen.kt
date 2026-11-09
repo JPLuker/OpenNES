@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -47,7 +48,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -61,8 +61,8 @@ import com.swordfish.lemuroid.lib.controller.ControllerConfig
 import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
-import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
+import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import com.swordfish.touchinput.radial.ui.GlassSurface
@@ -246,8 +246,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             .layoutId(GameScreenLayout.CONSTRAINTS_GAME_VIEW)
                             .windowInsetsPadding(
                                 WindowInsets.displayCutout.only(
-                                    if (isLandscape) WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-                                    else WindowInsetsSides.Top,
+                                    if (isLandscape) {
+                                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                                    } else {
+                                        WindowInsetsSides.Top
+                                    },
                                 ),
                             )
                             .onGloballyPositioned { viewportPosition.value = it.boundsInRoot() },
@@ -493,7 +496,10 @@ private fun MenuEditTouchControls(
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_side_panels_description),
+                                text =
+                                    stringResource(
+                                        com.swordfish.lemuroid.R.string.opennes_landscape_side_panels_description,
+                                    ),
                                 fontSize = 12.sp,
                             )
                         }
@@ -517,7 +523,10 @@ private fun MenuEditTouchControls(
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal_description),
+                                text =
+                                    stringResource(
+                                        com.swordfish.lemuroid.R.string.opennes_landscape_minimal_description,
+                                    ),
                                 fontSize = 12.sp,
                             )
                         }
@@ -532,7 +541,10 @@ private fun MenuEditTouchControls(
                     }
                     if (compactLandscape && touchControllerSettings.landscapeOverlay == false) {
                         Text(
-                            text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback),
+                            text =
+                                    stringResource(
+                                        com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback,
+                                    ),
                             modifier = Modifier.padding(horizontal = 8.dp),
                             fontSize = 12.sp,
                         )

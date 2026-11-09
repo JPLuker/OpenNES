@@ -7,6 +7,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import com.swordfish.lemuroid.app.mobile.shared.NotificationsManager
 import dagger.android.DaggerService
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -99,8 +100,15 @@ class GameService : DaggerService() {
 
         private suspend fun awaitTermination() {
             for (task in tasks) {
-                runCatching { task.task() }
-                    .onFailure { Timber.e(it, "GameService task failed") }
+                try {
+                    task.task()
+                } catch (e: CancellationException) {
+                    // Service teardown should cancel in-flight work rather
+                    // than continue draining stale save requests.
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "GameService task failed")
+                }
 
                 if (task.terminate) {
                     return
