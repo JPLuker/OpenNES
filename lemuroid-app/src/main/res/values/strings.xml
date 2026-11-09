@@ -143,6 +143,8 @@
     <string name="game_toast_load_state_failed">Cannot load this state</string>
     <string name="game_toast_quick_save_loaded">Quick loaded</string>
     <string name="game_toast_quick_save_saved">Quick saved</string>
+    <string name="opennes_save_state_failed">Could not save game progress. Try again.</string>
+    <string name="opennes_quick_save_missing">No quick save available for this session.</string>
 
     <string name="empty_view_default">No Items</string>
 

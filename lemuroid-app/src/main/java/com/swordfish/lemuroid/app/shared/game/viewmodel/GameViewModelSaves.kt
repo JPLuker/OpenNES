@@ -14,6 +14,7 @@ import com.swordfish.lemuroid.lib.saves.SavesManager
 import com.swordfish.lemuroid.lib.saves.StatesManager
 import com.swordfish.lemuroid.lib.saves.StatesPreviewManager
 import com.swordfish.libretrodroid.GLRetroView
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -40,27 +41,42 @@ class GameViewModelSaves(
     )
 
     suspend fun saveSlot(index: Int) {
-        getCurrentSaveState()?.let {
-            statesManager.setSlotSave(game, it, systemCoreConfig.coreID, index)
-            runCatching {
-                takeScreenshotPreview(index)
+        try {
+            val state = getCurrentSaveState()
+            if (state == null) {
+                sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
+                return
             }
+            statesManager.setSlotSave(game, state, systemCoreConfig.coreID, index)
+            // A preview failure should not invalidate a successfully
+            // written state. But do report the preview failure in logs.
+            runCatching { takeScreenshotPreview(index) }
+                .onFailure { Timber.w(it, "Could not save state screenshot preview") }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to save NES state slot %s", index)
+            sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
         }
     }
 
     suspend fun loadSlot(index: Int) {
         try {
-            statesManager.getSlotSave(game, systemCoreConfig.coreID, index)?.let {
-                val loaded =
-                    withContext(Dispatchers.IO) {
-                        loadSaveState(it)
-                    }
-
-                if (!loaded) {
-                    sideEffects.showToast(appContext.getString(R.string.game_toast_load_state_failed))
-                }
+            val state = statesManager.getSlotSave(game, systemCoreConfig.coreID, index)
+            if (state == null) {
+                sideEffects.showToast(appContext.getString(R.string.game_toast_load_state_failed))
+                return
             }
-        } catch (e: Throwable) {
+            val loaded =
+                withContext(Dispatchers.IO) {
+                    loadSaveState(state)
+                }
+            if (!loaded) {
+                sideEffects.showToast(appContext.getString(R.string.game_toast_load_state_failed))
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             val errorMessageId =
                 when (e) {
                     is IncompatibleStateException -> R.string.error_message_incompatible_state
@@ -99,7 +115,9 @@ class GameViewModelSaves(
         try {
             retroGameView.waitGLEvent<GLRetroView.GLRetroEvents.FrameRendered>()
             restoreQuickSave(saveState)
-        } catch (e: Throwable) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             Timber.e(e, "Error while loading auto-save")
         }
     }
@@ -159,12 +177,35 @@ class GameViewModelSaves(
     }
 
     fun saveQuickSave() {
-        currentQuickSave = getCurrentSaveState()
-        sideEffects.showToast(appContext.getString(R.string.game_toast_quick_save_saved))
+        try {
+            val state = getCurrentSaveState()
+            if (state == null) {
+                sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
+                return
+            }
+            currentQuickSave = state
+            sideEffects.showToast(appContext.getString(R.string.game_toast_quick_save_saved))
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to create NES quick save")
+            sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
+        }
     }
 
     fun loadQuickSave() {
-        loadSaveState(currentQuickSave ?: return)
-        sideEffects.showToast(appContext.getString(R.string.game_toast_quick_save_loaded))
+        val state = currentQuickSave
+        if (state == null) {
+            sideEffects.showToast(appContext.getString(R.string.opennes_quick_save_missing))
+            return
+        }
+        try {
+            if (loadSaveState(state)) {
+                sideEffects.showToast(appContext.getString(R.string.game_toast_quick_save_loaded))
+            } else {
+                sideEffects.showToast(appContext.getString(R.string.game_toast_load_state_failed))
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load NES quick save")
+            sideEffects.showToast(appContext.getString(R.string.game_toast_load_state_failed))
+        }
     }
 }

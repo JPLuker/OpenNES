@@ -58,7 +58,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 ## M5 active source checklist
 
 - [x] Existing NES refresh-rate preference and virtual-input release handling
-- [ ] Correct false-positive quick-save/load feedback and surface slot I/O failures
+- [x] Correct false-positive quick-save/load feedback, report missing quick saves and failed save/load slots without claiming success
+- [x] Always reset the emulator loading flag after failed or cancelled operations; report a missing save snapshot instead of getting stuck
 - [ ] Review save/resume and foreground-session lifecycle ownership for interrupted games
 - [ ] Guard native video/input operations against late or stale events when possible
 - [ ] **M5 acceptance deferred:** on-device audio/frame pacing, save SRAM and slot versions, pause/resume, gamepad disconnect and process lifecycle
@@ -240,6 +241,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - A unified NES D-pad, A/B, Select, Start and Menu vocabulary is used, with landscape-specific radial sizes, cutout treatment and video framing. Narrow/short screens adapt generated defaults and fall back to overlay display when necessary. Saved custom layouts remain authoritative.
 - Existing external gamepad takeover continues hiding virtual controls. Device tests for real touches, physical gamepads, edge cases and visual acceptance are **not performed**. The module is **code-complete only**; no claim of reliable runtime behavior.
 - M4 now closes as a source milestone. Future discovered issues belong to regression acceptance rather than indefinite cosmetic passes.
+
+## M5 source batch — truthful save feedback and loading recovery
+
+- Quick-save only announces success after a real snapshot is captured; quick-load only announces success after native unserialization confirms it. A missing quick save and slot save/load failures now produce specific user feedback.
+- Save-slot screenshot-preview failures are nonfatal if the state itself was written, and their errors are logged. Coroutine cancellation is not swallowed by slot loading or autosave restoration.
+- The ViewModel's `withLoading` uses `finally` so exceptions, early returns and cancellations restore its loading indicator. A missing exit snapshot reports a retryable save failure instead of leaving the UI blocked.
+- No compile, automated or device tests performed.
 
 ## Development rules
 

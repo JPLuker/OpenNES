@@ -146,8 +146,13 @@ class BaseGameScreenViewModel(
 
     private inline fun withLoading(block: () -> Unit) {
         loadingState.value = true
-        block()
-        loadingState.value = false
+        try {
+            block()
+        } finally {
+            // A failed or cancelled native operation must not leave
+            // the emulator permanently stuck behind a loading spinner.
+            loadingState.value = false
+        }
     }
 
     fun getGameState(): Flow<GameViewModelRetroGameView.GameState> {
@@ -300,7 +305,11 @@ class BaseGameScreenViewModel(
         if (loadingState.value) return
         viewModelScope.launch {
             withLoading {
-                val snapshot = saves.captureSaveSnapshot(true) ?: return@launch
+                val snapshot = saves.captureSaveSnapshot(true)
+                if (snapshot == null) {
+                    sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
+                    return@launch
+                }
                 saves.writeSaveSnapshot(snapshot)
                 sideEffects.requestSuccessfulFinish()
             }
