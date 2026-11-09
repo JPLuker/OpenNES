@@ -44,9 +44,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
-import com.swordfish.touchinput.controller.R as TouchInputR
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import kotlin.math.roundToInt
+import com.swordfish.touchinput.controller.R as TouchInputR
 
 /**
  * Editing-only touch layer positioned over the existing, real PadKit clusters.
