@@ -12,6 +12,7 @@ include(
     ":retrograde-app-shared",
     ":lemuroid-touchinput",
     ":lemuroid-app",
+    ":opennes-libretrodroid",
     ":lemuroid-metadata-libretro-db",
     ":lemuroid-app-ext-free",
     ":lemuroid-app-ext-play",
