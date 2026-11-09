@@ -300,7 +300,8 @@ class GameViewModelTouchControls(
                     gameView?.sendMotionEvent(MOTION_SOURCE_ANALOG_LEFT, 0f, 0f)
                 }
                 ComposeTouchLayouts.MOTION_SOURCE_RIGHT_STICK,
-                ComposeTouchLayouts.MOTION_SOURCE_RIGHT_DPAD -> {
+                ComposeTouchLayouts.MOTION_SOURCE_RIGHT_DPAD,
+                -> {
                     gameView?.sendMotionEvent(MOTION_SOURCE_ANALOG_RIGHT, 0f, 0f)
                 }
                 ComposeTouchLayouts.MOTION_SOURCE_DPAD_AND_LEFT_STICK -> {
