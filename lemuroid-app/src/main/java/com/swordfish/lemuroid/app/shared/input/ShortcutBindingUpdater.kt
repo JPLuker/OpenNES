@@ -23,6 +23,8 @@ class ShortcutBindingUpdater(private val inputDeviceManager: InputDeviceManager,
         return context.getString(R.string.shortcut_binding_update_description, extras.device.name)
     }
 
+    fun firstButtonLabel(): String? = firstKeyCodeInCombo?.let { InputKey(it).displayName() }
+
     fun handleKeyEvent(event: KeyEvent): Boolean {
         return when (event.action) {
             KeyEvent.ACTION_DOWN -> onKeyDown(event)
