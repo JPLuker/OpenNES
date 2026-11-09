@@ -76,6 +76,7 @@ import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
+import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
@@ -1155,23 +1156,7 @@ fun GameCover(
     // artwork and existing successful catalogue covers as first priority.
     val romArtwork =
         remember(game.fileName, game.systemId, game.customCoverUri) {
-            if (game.systemId != "nes" || !game.customCoverUri.isNullOrBlank()) {
-                null
-            } else {
-                val fileTitle =
-                    game.fileName.substringAfterLast('/')
-                        .replace(Regex("""\.(?:nes|zip|7z)$""", RegexOption.IGNORE_CASE), "")
-                if (fileTitle.contains(
-                        Regex("""\((?:USA|Europe|Japan|World)(?:[,)]|\s)""", RegexOption.IGNORE_CASE),
-                    )
-                ) {
-                    "https://thumbnails.libretro.com/" +
-                        "Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/" +
-                        Uri.encode(fileTitle) + ".png"
-                } else {
-                    null
-                }
-            }
+            NesBoxArtUrls.romFilenameFallback(game)
         }
     var usingRomArtwork by remember(game.id, primaryArtwork, romArtwork) { mutableStateOf(false) }
     val artworkUrl =
