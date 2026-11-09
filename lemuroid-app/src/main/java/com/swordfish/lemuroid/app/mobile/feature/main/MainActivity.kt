@@ -218,6 +218,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                 ),
                             onGameClick = onGameClick,
                             onGameLongClick = onGameLongClick,
+                            onPinShortcut = { gameInteractor.onCreateShortcut(it) },
+                            pinShortcutSupported = gameInteractor.supportShortcuts(),
+                            onFavoriteToggle = onGameFavoriteToggle,
                             onSearchClick = { navController.navigateToRoute(MainRoute.SEARCH) },
                             onSettingsClick = { navController.navigateToRoute(MainRoute.SETTINGS) },
                         )
