@@ -36,10 +36,6 @@ import com.swordfish.lemuroid.app.mobile.feature.search.SearchScreen
 import com.swordfish.lemuroid.app.mobile.feature.search.SearchViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.advanced.AdvancedSettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.advanced.AdvancedSettingsViewModel
-import com.swordfish.lemuroid.app.mobile.feature.settings.bios.BiosScreen
-import com.swordfish.lemuroid.app.mobile.feature.settings.bios.BiosSettingsViewModel
-import com.swordfish.lemuroid.app.mobile.feature.settings.coreselection.CoresSelectionScreen
-import com.swordfish.lemuroid.app.mobile.feature.settings.coreselection.CoresSelectionViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.LibraryMaintenanceScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsViewModel
@@ -61,11 +57,8 @@ import com.swordfish.lemuroid.app.shared.settings.SettingsInteractor
 import com.swordfish.lemuroid.common.coroutines.safeLaunch
 import com.swordfish.lemuroid.ext.feature.review.ReviewManager
 import com.swordfish.lemuroid.lib.android.RetrogradeComponentActivity
-import com.swordfish.lemuroid.lib.bios.BiosManager
-import com.swordfish.lemuroid.lib.core.CoresSelection
 import com.swordfish.lemuroid.lib.injection.PerActivity
 import com.swordfish.lemuroid.lib.library.MetaSystemID
-import com.swordfish.lemuroid.lib.library.SystemID
 import com.swordfish.lemuroid.lib.library.covers.CustomCoverManager
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -95,12 +88,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
     @Inject
     lateinit var gameInteractor: GameInteractor
-
-    @Inject
-    lateinit var biosManager: BiosManager
-
-    @Inject
-    lateinit var coresSelection: CoresSelection
 
     @Inject
     lateinit var settingsInteractor: SettingsInteractor
@@ -339,28 +326,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             navController = navController,
                         )
                     }
-                    composable(MainRoute.SETTINGS_BIOS) {
-                        BiosScreen(
-                            modifier = Modifier.padding(padding),
-                            viewModel =
-                                viewModel(
-                                    factory = BiosSettingsViewModel.Factory(biosManager),
-                                ),
-                        )
-                    }
-                    composable(MainRoute.SETTINGS_CORES_SELECTION) {
-                        CoresSelectionScreen(
-                            modifier = Modifier.padding(padding),
-                            viewModel =
-                                viewModel(
-                                    factory =
-                                        CoresSelectionViewModel.Factory(
-                                            applicationContext,
-                                            coresSelection,
-                                        ),
-                                ),
-                        )
-                    }
                     composable(MainRoute.SETTINGS_INPUT_DEVICES) {
                         InputDevicesSettingsScreen(
                             modifier = Modifier.padding(padding),
@@ -406,15 +371,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             )
 
             if (infoDialogDisplayed.value) {
-                val message =
-                    remember {
-                        val systemFolders =
-                            SystemID.values()
-                                .joinToString(", ") { "<i>${it.dbname}</i>" }
-
-                        getString(R.string.lemuroid_help_content)
-                            .replace("\$SYSTEMS", systemFolders)
-                    }
+                val message = remember { getString(R.string.lemuroid_help_content) }
 
                 AlertDialog(
                     text = { HtmlText(text = message) },
