@@ -363,9 +363,9 @@
     <string name="opennes_playtime_hours">%1$dh %2$dm played</string>
     <string name="opennes_portrait_controls">NES portrait controls · saved separately from landscape</string>
     <string name="opennes_landscape_controls">NES landscape controls · saved separately from portrait</string>
-    <string name="opennes_controls_editor_hint">Adjust the D-pad and A/B separately. Positive X moves right; positive Y moves down. Changes only affect this screen orientation.</string>
+    <string name="opennes_controls_editor_hint">Adjust the D-pad/Select and A/B/Start/Menu groups separately. Positive X moves right; positive Y moves down. Changes affect this screen orientation only.</string>
     <string name="opennes_controls_left_group">D-pad and Select</string>
-    <string name="opennes_controls_right_group">A/B and Start</string>
+    <string name="opennes_controls_right_group">A/B, Start and Menu</string>
     <string name="opennes_controls_shared_group">Shared appearance</string>
     <string name="opennes_controls_size">Size</string>
     <string name="opennes_controls_horizontal">Horizontal position</string>
@@ -377,4 +377,6 @@
     <string name="opennes_controls_drag_start">Drag controls on screen</string>
     <string name="opennes_controls_drag_hint">Drag the outlined D-pad or A/B group to reposition it</string>
     <string name="opennes_controls_drag_sliders">Fine-tune</string>
+    <string name="opennes_controls_reset_confirm_title">Reset this controller layout?</string>
+    <string name="opennes_controls_reset_confirm_description">This resets sizes, positions, opacity and rotation for the current orientation. Your other orientation and saved games are not affected.</string>
 </resources>

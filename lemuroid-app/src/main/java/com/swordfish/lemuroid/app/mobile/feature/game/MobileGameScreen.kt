@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
@@ -55,6 +56,7 @@ import com.swordfish.lemuroid.lib.controller.ControllerConfig
 import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
+import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import com.swordfish.touchinput.radial.ui.GlassSurface
@@ -186,6 +188,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 if (showTouchPads && touchControllerSettings != null && currentControllerConfig != null) {
                     CompositionLocalProvider(
                         LocalLemuroidPadTheme provides LemuroidPadTheme(touchControllerSettings.opacity),
+                        LocalNesPortraitLayout provides !isLandscape,
                     ) {
                         if (!isLandscape) {
                             PadContainer(
@@ -300,6 +303,7 @@ private fun MenuEditTouchControls(
     isLandscape: Boolean,
 ) {
     val showEditControls = viewModel.isEditControlShown().collectAsState(false)
+    val confirmReset = remember { mutableStateOf(false) }
     if (!showEditControls.value) return
 
     Dialog(onDismissRequest = { viewModel.showEditControls(false) }) {
@@ -434,7 +438,7 @@ private fun MenuEditTouchControls(
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     TextButton(
-                        onClick = { viewModel.resetTouchControls() },
+                        onClick = { confirmReset.value = true },
                         modifier = Modifier.padding(8.dp),
                     ) {
                         Text(text = stringResource(R.string.touch_customize_button_reset))
@@ -448,6 +452,33 @@ private fun MenuEditTouchControls(
                 }
             }
         }
+    }
+
+    if (confirmReset.value) {
+        AlertDialog(
+            onDismissRequest = { confirmReset.value = false },
+            title = {
+                Text(stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_confirm_title))
+            },
+            text = {
+                Text(stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_confirm_description))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmReset.value = false
+                        viewModel.resetTouchControls()
+                    },
+                ) {
+                    Text(stringResource(R.string.touch_customize_button_reset))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmReset.value = false }) {
+                    Text(stringResource(com.swordfish.lemuroid.R.string.cancel))
+                }
+            },
+        )
     }
 }
 

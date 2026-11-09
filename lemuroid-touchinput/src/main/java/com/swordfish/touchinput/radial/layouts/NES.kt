@@ -3,6 +3,7 @@ package com.swordfish.touchinput.radial.layouts
 import android.view.KeyEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import com.swordfish.touchinput.radial.controls.LemuroidControlCross
 import com.swordfish.touchinput.radial.controls.LemuroidControlFaceButtons
@@ -19,6 +20,12 @@ import gg.padkit.ids.Id
 import gg.padkit.layouts.radial.secondarydials.LayoutRadialSecondaryDialsScope
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+
+/**
+ * Only the portrait secondary controls receive the enlarged touch targets.
+ * Landscape retains its existing arrangement until M4.
+ */
+val LocalNesPortraitLayout = compositionLocalOf { false }
 
 /** NES-only touch presentation. Keep the existing PadKit input event IDs. */
 @Composable
@@ -77,7 +84,11 @@ fun PadKitScope.NESRight(
         },
         secondaryDials = {
             NesSecondaryStart()
-            SecondaryButtonMenu(settings)
+            if (LocalNesPortraitLayout.current) {
+                NesSecondaryMenu(settings)
+            } else {
+                SecondaryButtonMenu(settings)
+            }
         },
     )
 }
@@ -85,8 +96,9 @@ fun PadKitScope.NESRight(
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondarySelect() {
+    val scale = if (LocalNesPortraitLayout.current) 1.15f else 1f
     ControlButton(
-        modifier = Modifier.radialPosition(120f),
+        modifier = Modifier.radialPosition(120f).radialScale(scale),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_SELECT),
         foreground = { NesPillButtonForeground(pressed = it, label = "SELECT") },
         background = {},
@@ -96,10 +108,28 @@ private fun NesSecondarySelect() {
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondaryStart() {
+    val scale = if (LocalNesPortraitLayout.current) 1.15f else 1f
     ControlButton(
-        modifier = Modifier.radialPosition(60f),
+        modifier = Modifier.radialPosition(60f).radialScale(scale),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_START),
         foreground = { NesPillButtonForeground(pressed = it, label = "START") },
+        background = {},
+    )
+}
+
+/** Portrait-only pause/menu button; the 500ms hold behavior is unchanged. */
+context(PadKitScope, LayoutRadialSecondaryDialsScope)
+@Composable
+private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) {
+    ControlButton(
+        modifier =
+            Modifier
+                .radialPosition(
+                    -60f + 2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
+                )
+                .radialScale(1.15f),
+        id = Id.Key(KeyEvent.KEYCODE_BUTTON_MODE),
+        foreground = { NesPillButtonForeground(pressed = it, label = "MENU") },
         background = {},
     )
 }

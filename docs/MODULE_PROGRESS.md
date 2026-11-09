@@ -28,7 +28,9 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Use an unconstrained full-screen game viewport when no virtual pads exist (physical controller or disabled overlay)
 - [x] Derive compact portrait default dial sizes from available screen width; never rewrite persisted portrait/landscape layouts or older saved shared scale values
 - [x] Prevent no-op editor slider release from persisting stale preview settings
-- [ ] Review Start/Select/menu ergonomics and editing affordances
+- [x] Enlarge portrait Start/Select touch targets and provide a matching NES-style Menu pill; preserve existing landscape secondary controls and menu-hold behavior
+- [x] Confirm before resetting the current orientation's controller layout; clarify that the editor moves Start/Select/Menu with their assigned clusters
+- [ ] Refine portrait control positioning and visual balance after on-device acceptance resumes
 - [ ] Physically verify multi-touch, diagonals, touch cancellation, save/resume and portrait orientation (testing paused)
 
 ## M2 active checklist
@@ -136,6 +138,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Compose remembers the touch-settings flow for the current screen dimensions to avoid unnecessarily restarting collection on unrelated UI recompositions.
 - The controller editor now persists a slider value only after a real change, not on a no-op finish after a reset or layout change.
 - **Source-only changes**. No build, unit tests, real-device assessment, or controller input acceptance executed during the testing pause.
+
+## Latest M3 source batch — portrait secondary controls and safe reset
+
+- Portrait-only Start and Select secondary PadKit targets now use a 15% radial enlargement for easier thumbs; landscape retains existing sizes and menu styling.
+- A portrait-only NES-style Menu pill replaces the generic menu icon while retaining `KEYCODE_BUTTON_MODE`, its angular position and the established hold-to-open behavior.
+- The controller editor explains the D-pad/Select and A/B/Start/Menu grouping and now asks for confirmation before resetting current-orientation size, position, opacity and rotation. Saved layout for the other orientation and saved games are unaffected.
+- Changes are source-only; builds, device touch hit region checks and controller acceptance are still paused.
 
 ## Development rules
 
