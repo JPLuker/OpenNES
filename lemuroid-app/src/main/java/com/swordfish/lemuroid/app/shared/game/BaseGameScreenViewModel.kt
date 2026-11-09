@@ -339,6 +339,10 @@ class BaseGameScreenViewModel(
         if (loadingState.value) return
         GameService.schedule {
             val snapshot = saves.captureSaveSnapshot(false)
+            if (snapshot == null) {
+                Timber.w("Could not capture NES save while moving to background")
+                return@schedule
+            }
             saves.writeSaveSnapshot(snapshot)
         }
     }

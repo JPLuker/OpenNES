@@ -133,8 +133,13 @@ class GameViewModelSaves(
             } else {
                 0
             }
+        val serializedState = retroGameView.serializeState(useEmulationThread)
+        if (serializedState.isEmpty()) {
+            Timber.w("NES core returned an empty serialized save state")
+            return null
+        }
         return SaveState(
-            retroGameView.serializeState(useEmulationThread),
+            serializedState,
             SaveState.Metadata(currentDisk, systemCoreConfig.statesVersion),
         )
     }

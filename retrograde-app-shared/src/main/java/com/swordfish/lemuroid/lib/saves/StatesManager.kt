@@ -20,7 +20,7 @@ class StatesManager(private val directoriesManager: DirectoriesManager) {
         index: Int,
     ): SaveState? =
         withContext(Dispatchers.IO) {
-            assert(index in 0 until MAX_STATES)
+            require(index in 0 until MAX_STATES) { "Invalid NES state slot" }
             getSaveState(getSlotSaveFileName(game, index), coreID.coreName)
         }
 
@@ -30,7 +30,7 @@ class StatesManager(private val directoriesManager: DirectoriesManager) {
         coreID: CoreID,
         index: Int,
     ) = withContext(Dispatchers.IO) {
-        assert(index in 0 until MAX_STATES)
+        require(index in 0 until MAX_STATES) { "Invalid NES state slot" }
         setSaveState(getSlotSaveFileName(game, index), coreID.coreName, saveState)
     }
 
@@ -66,7 +66,7 @@ class StatesManager(private val directoriesManager: DirectoriesManager) {
         withContext(Dispatchers.IO) {
             (0 until MAX_STATES)
                 .map { getStateFile(getSlotSaveFileName(game, it), coreID.coreName) }
-                .map { SaveInfo(it.exists(), it.lastModified()) }
+                .map { SaveInfo(it.exists() && it.length() > 0L, it.lastModified()) }
                 .toList()
         }
 
@@ -86,7 +86,11 @@ class StatesManager(private val directoriesManager: DirectoriesManager) {
                             metadataFile.readTextAtomic(),
                         )
                     }
-                SaveState(byteArray, stateMetadata.getOrNull() ?: SaveState.Metadata())
+                if (byteArray.isEmpty()) {
+                    null
+                } else {
+                    SaveState(byteArray, stateMetadata.getOrNull() ?: SaveState.Metadata())
+                }
             } else {
                 null
             }
@@ -98,10 +102,11 @@ class StatesManager(private val directoriesManager: DirectoriesManager) {
         coreName: String,
         saveState: SaveState,
     ) {
+        require(saveState.state.isNotEmpty()) { "Refusing to persist an empty NES save state" }
         runCatchingWithRetry(FILE_ACCESS_RETRIES) {
             writeStateToDisk(fileName, coreName, saveState.state)
             writeMetadataToDisk(fileName, coreName, saveState.metadata)
-        }
+        }.getOrThrow()
     }
 
     private fun writeMetadataToDisk(

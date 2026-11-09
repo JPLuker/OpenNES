@@ -1,5 +1,7 @@
 package com.swordfish.lemuroid.common.kotlin
 
+import kotlinx.coroutines.CancellationException
+
 data class NTuple2<T1, T2>(val t1: T1, val t2: T2) {
     operator fun <T3, T4, T5> plus(other: NTuple3<T3, T4, T5>): NTuple5<T1, T2, T3, T4, T5> {
         return NTuple5(this.t1, this.t2, other.t1, other.t2, other.t3)
@@ -22,6 +24,12 @@ tailrec suspend fun <T> runCatchingWithRetry(
 ): Result<T> {
     require(retries >= 1)
     val result = runCatching { block() }
+    // Neither cancellation nor fatal errors are transient I/O failures.
+    // Retrying them can keep a stopped game or service alive unexpectedly.
+    when (val failure = result.exceptionOrNull()) {
+        is CancellationException -> throw failure
+        is Error -> throw failure
+    }
     return when {
         retries == 1 -> result
         result.isSuccess -> result

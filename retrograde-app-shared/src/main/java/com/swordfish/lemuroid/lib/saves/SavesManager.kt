@@ -44,7 +44,9 @@ class SavesManager(private val directoriesManager: DirectoriesManager) {
                     val saveFile = getSaveFile(getSaveRAMFileName(game))
                     saveFile.writeBytesAtomic(data)
                 }
-            result.getOrNull()
+            // A failed SRAM write must propagate to the quit flow. Otherwise
+            // the app can report a successful exit even when progress was lost.
+            result.getOrThrow()
         }
     }
 
