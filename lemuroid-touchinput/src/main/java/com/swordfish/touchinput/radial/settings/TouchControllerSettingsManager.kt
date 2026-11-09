@@ -61,6 +61,7 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         orientation: Orientation,
         density: Density,
         insets: WindowInsets,
+        portraitWidthDp: Float? = null,
     ): Flow<Settings> {
         val paddings = computeInsetsPaddings(density, insets)
         val horizontalPadding =
@@ -69,11 +70,24 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
                 paddings.calculateRightPadding(LayoutDirection.Ltr),
             )
         val verticalPadding = paddings.calculateBottomPadding()
+        // This width is used ONLY to construct defaults. The saved settings
+        // flow remains authoritative, including legacy shared scale values.
+        val safePortraitWidthDp =
+            portraitWidthDp?.minus(horizontalPadding.value * 2f)
+        val portraitScale =
+            safePortraitWidthDp
+                ?.takeIf { it.isFinite() && it > 0f }
+                ?.let { availableWidthDp ->
+                    val dialWidthDp = (availableWidthDp - PORTRAIT_HORIZONTAL_RESERVE_DP) / 2f
+                    val rawScale =
+                        (dialWidthDp / BASE_DIAL_SIZE_DP - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)
+                    rawScale.coerceIn(0f, DEFAULT_PORTRAIT_SCALE)
+                } ?: DEFAULT_PORTRAIT_SCALE
         val defaultSettings =
             Settings(
                 scale =
                     if (orientation == Orientation.PORTRAIT) {
-                        DEFAULT_PORTRAIT_SCALE
+                        portraitScale
                     } else {
                         DEFAULT_LANDSCAPE_SCALE
                     },
@@ -158,6 +172,11 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         const val DEFAULT_OPACITY = 1.0f
         const val DEFAULT_PORTRAIT_SCALE = 0.57f
         const val DEFAULT_LANDSCAPE_SCALE = 0.42f
+
+        // A pair of 160dp PadKit primary dials needs breathing room on
+        // compact screens. This controls only generated portrait defaults.
+        const val BASE_DIAL_SIZE_DP = 160f
+        const val PORTRAIT_HORIZONTAL_RESERVE_DP = 32f
 
         const val MAX_ROTATION = 45f
         const val MIN_SCALE = 0.75f

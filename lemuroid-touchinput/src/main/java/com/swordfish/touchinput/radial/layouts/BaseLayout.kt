@@ -49,7 +49,7 @@ fun BaseLayoutLeft(
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
         secondaryDials = secondaryDials,
-        primaryDialMaxSize = 160.dp * interpolatedDialSize,
+        primaryDialMaxSize = TouchControllerSettingsManager.BASE_DIAL_SIZE_DP.dp * interpolatedDialSize,
         secondaryDialsBaseRotationInDegrees = settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
 }
@@ -81,7 +81,7 @@ fun BaseLayoutRight(
         primaryDial = primaryDial,
         secondaryDials = secondaryDials,
         primaryDialMaxSize =
-            160.dp *
+            TouchControllerSettingsManager.BASE_DIAL_SIZE_DP.dp *
                 lerp(
                     TouchControllerSettingsManager.MIN_SCALE,
                     TouchControllerSettingsManager.MAX_SCALE,

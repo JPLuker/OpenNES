@@ -81,13 +81,20 @@ class GameViewModelTouchControls(
     fun getTouchControlsSettings(
         density: Density,
         insets: WindowInsets,
+        portraitWidthDp: Float? = null,
     ): Flow<TouchControllerSettingsManager.Settings?> {
         return combine(
             touchControlId,
             screenOrientation,
         ) { touchControlId, orientation -> touchControlId to orientation }
             .flatMapLatest { (touchControlId, orientation) ->
-                touchControllerSettingsManager.observeSettings(touchControlId, orientation, density, insets)
+                touchControllerSettingsManager.observeSettings(
+                    touchControlId,
+                    orientation,
+                    density,
+                    insets,
+                    portraitWidthDp,
+                )
             }
     }
 

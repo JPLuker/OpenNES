@@ -26,7 +26,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Give NES D-pad a textured, recessed cross without modern arrow icons
 - [x] Expand NES D-pad and face-button interactive regions without remapping input
 - [x] Use an unconstrained full-screen game viewport when no virtual pads exist (physical controller or disabled overlay)
-- [ ] Constrain default portrait controller layout for narrow phones without discarding user-set sizes/positions
+- [x] Derive compact portrait default dial sizes from available screen width; never rewrite persisted portrait/landscape layouts or older saved shared scale values
+- [x] Prevent no-op editor slider release from persisting stale preview settings
 - [ ] Review Start/Select/menu ergonomics and editing affordances
 - [ ] Physically verify multi-touch, diagonals, touch cancellation, save/resume and portrait orientation (testing paused)
 
@@ -128,6 +129,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Reduced control padding **only for NES** to increase D-pad reach; face-button controls no longer consume an unnecessary inner inset. A/B pointer tracking and combination behavior are explicitly retained.
 - The viewport no longer links to nonexistent virtual-pad constraints when touch controls disappear after a hardware controller takes over. A full-screen constraint set is used until touch pads return.
 - The changes are source-only. No build, automated test, emulator test, APK inspection or real-device touch acceptance was performed.
+
+## Latest M3 source batch — compact default sizing and editor protection
+
+- Default portrait dial scale now respects the available screen width (including lateral cutout insets) using the same primary dial dimensions as the actual PadKit layout. The adjustment only applies when no stored layout exists; portrait and landscape preferences, saved left/right sizes and positions, and legacy shared-scale values are not overwritten.
+- Compose remembers the touch-settings flow for the current screen dimensions to avoid unnecessarily restarting collection on unrelated UI recompositions.
+- The controller editor now persists a slider value only after a real change, not on a no-op finish after a reset or layout change.
+- **Source-only changes**. No build, unit tests, real-device assessment, or controller input acceptance executed during the testing pause.
 
 ## Development rules
 

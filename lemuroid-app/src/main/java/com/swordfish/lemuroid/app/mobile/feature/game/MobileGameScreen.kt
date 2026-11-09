@@ -86,10 +86,16 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         BackHandler(enabled = dragEditMode) {
             viewModel.setDragEditMode(false)
         }
-        val touchControllerSettingsState =
-            viewModel
-                .getTouchControlsSettings(LocalDensity.current, WindowInsets.displayCutout)
-                .collectAsState(null)
+        // A compact screen changes only the generated default layout.
+        // Existing saved per-orientation settings remain untouched.
+        val density = LocalDensity.current
+        val cutoutInsets = WindowInsets.displayCutout
+        val portraitWidthDp = if (isLandscape) null else maxWidth.value
+        val touchSettingsFlow =
+            remember(viewModel, density, cutoutInsets, portraitWidthDp) {
+                viewModel.getTouchControlsSettings(density, cutoutInsets, portraitWidthDp)
+            }
+        val touchControllerSettingsState = touchSettingsFlow.collectAsState(null)
 
         val touchControllerSettings = touchControllerSettingsState.value
         val currentControllerConfig = controllerConfigState.value
@@ -511,14 +517,23 @@ private fun TouchControlEditorSlider(
     onCommit: (Float) -> Unit,
 ) {
     val lastPreview = remember { mutableFloatStateOf(value) }
+    val hasEdited = remember { mutableStateOf(false) }
     Slider(
         value = value.coerceIn(valueRange.start, valueRange.endInclusive),
         valueRange = valueRange,
         onValueChange = {
+            hasEdited.value = true
             lastPreview.floatValue = it
             onPreview(it)
         },
-        onValueChangeFinished = { onCommit(lastPreview.floatValue) },
+        onValueChangeFinished = {
+            // Android can finish a gesture after an editor reset or layout
+            // change. Do not persist the initial/stale value on a no-op.
+            if (hasEdited.value) {
+                hasEdited.value = false
+                onCommit(lastPreview.floatValue)
+            }
+        },
     )
 }
 
