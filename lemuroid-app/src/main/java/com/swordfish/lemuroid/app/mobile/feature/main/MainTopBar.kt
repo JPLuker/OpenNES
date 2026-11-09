@@ -80,12 +80,12 @@ fun LemuroidTopAppBar(
     onUpdateQueryString: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val topBarColor = BottomAppBarDefaults.containerColor
+    val topBarColor = if (route == MainRoute.SEARCH) Color(0xFF111317) else BottomAppBarDefaults.containerColor
 
     TopAppBar(
         title = {
             if (route == MainRoute.SEARCH) {
-                LemuroidSearchView(
+                OpenNesSearchView(
                     mainUIState = mainUIState,
                     onUpdateQueryString = onUpdateQueryString,
                 )
@@ -135,13 +135,13 @@ fun LemuroidTopBarActions(
     onHelpPressed: () -> Unit,
 ) {
     Row {
-        IconButton(
-            onClick = { onHelpPressed() },
-        ) {
-            Icon(
-                Icons.Outlined.Info,
-                stringResource(R.string.mobile_settings_help),
-            )
+        if (route != MainRoute.SEARCH) {
+            IconButton(onClick = onHelpPressed) {
+                Icon(
+                    Icons.Outlined.Info,
+                    stringResource(R.string.mobile_settings_help),
+                )
+            }
         }
         if (saveSyncEnabled) {
             IconButton(
@@ -154,7 +154,7 @@ fun LemuroidTopBarActions(
                 )
             }
         }
-        if (route.showBottomNavigation) {
+        if (route.showBottomNavigation && route != MainRoute.SEARCH) {
             IconButton(
                 onClick = { navController.navigate(MainRoute.SETTINGS.route) },
             ) {
@@ -168,7 +168,7 @@ fun LemuroidTopBarActions(
 }
 
 @Composable
-private fun LemuroidSearchView(
+private fun OpenNesSearchView(
     mainUIState: MainViewModel.UiState,
     onUpdateQueryString: (String) -> Unit,
 ) {
@@ -190,8 +190,8 @@ private fun LemuroidSearchView(
                 Modifier
                     .fillMaxSize()
                     .padding(top = 8.dp, bottom = 8.dp, end = 8.dp),
-            shape = RoundedCornerShape(100),
-            tonalElevation = 16.dp,
+            shape = RoundedCornerShape(20.dp),
+            color = Color(0xFF272B33),
         ) { }
 
         TextField(
@@ -200,8 +200,11 @@ private fun LemuroidSearchView(
                 Modifier
                     .fillMaxSize()
                     .focusRequester(focusRequester),
-            textStyle = MaterialTheme.typography.bodyMedium,
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFFF2EDE6)),
+            placeholder = { Text("Search NES games", color = Color(0xFFB2B2B4)) },
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFB2B2B4))
+            }
             onValueChange = { onUpdateQueryString(it) },
             singleLine = true,
             keyboardActions =
@@ -210,8 +213,14 @@ private fun LemuroidSearchView(
                 ),
             colors =
                 TextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFFF2EDE6),
+                    unfocusedTextColor = Color(0xFFF2EDE6),
+                    cursorColor = Color(0xFFB73439),
                     focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
+                    unfocusedTextColor = Color(0xFFF2EDE6),
+                    unfocusedTextColor = Color(0xFFF2EDE6),
+                    cursorColor = Color(0xFFB73439),
+                    focusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                 ),
