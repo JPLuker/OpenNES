@@ -15,12 +15,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -311,9 +314,14 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 val message = remember { getString(R.string.lemuroid_help_content) }
 
                 AlertDialog(
+                    title = { Text(stringResource(R.string.mobile_settings_help)) },
                     text = { HtmlText(text = message) },
                     onDismissRequest = { infoDialogDisplayed.value = false },
-                    confirmButton = { },
+                    confirmButton = {
+                        TextButton(onClick = { infoDialogDisplayed.value = false }) {
+                            Text(stringResource(R.string.close))
+                        }
+                    },
                 )
             }
         }
