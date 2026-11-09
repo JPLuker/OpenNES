@@ -19,3 +19,8 @@ Branch: `release/m5-candidate` created from the M5 gameplay reliability mileston
 - Removed inherited square backplates from NES cross and face buttons.
 - A+B composite input remains, with the redundant overlapping composite artwork hidden.
 - Layout and input IDs remain unchanged. Build/device visual verification pending.
+
+## Controller appearance editor
+- Settings → Touch controller appearance now offers six original theme presets and ten individually editable #RRGGBB colors with live preview.
+- The existing in-game editor still owns positional changes. Settings explains where to find it.
+- The preference store shares one appearance across portrait and landscape; geometric layouts remain independent.

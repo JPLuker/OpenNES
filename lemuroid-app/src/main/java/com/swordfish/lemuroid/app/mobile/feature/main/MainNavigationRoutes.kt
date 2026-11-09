@@ -54,6 +54,11 @@ enum class MainRoute(
         titleId = R.string.settings_title_gamepad_settings,
         parent = SETTINGS,
     ),
+    SETTINGS_CONTROLLER_APPEARANCE(
+        route = "settings/controller-appearance",
+        titleId = R.string.opennes_controller_appearance_title,
+        parent = SETTINGS,
+    ),
     SETTINGS_SAVE_SYNC(
         route = "settings/savesync",
         titleId = R.string.settings_title_save_sync,
