@@ -86,7 +86,8 @@ interface GameDao {
         SELECT * FROM games
         WHERE systemId = 'nes'
           AND (genre IS NULL OR TRIM(genre) = '' OR releaseYear IS NULL
-               OR description IS NULL OR TRIM(description) = '')
+               OR description IS NULL OR TRIM(description) = ''
+               OR (wikidataEntityId IS NOT NULL AND wikipediaArticleTitle IS NULL))
           AND lastOnlineMetadataCheckedAt <= :retryBefore
         ORDER BY lastOnlineMetadataCheckedAt ASC, id ASC
         LIMIT :limit
@@ -122,7 +123,7 @@ interface GameDao {
         """
         UPDATE games
         SET genre = :genre, releaseYear = :releaseYear, description = :description,
-            wikidataEntityId = NULL, lastOnlineMetadataCheckedAt = 0
+            wikidataEntityId = NULL, wikipediaArticleTitle = NULL, lastOnlineMetadataCheckedAt = 0
         WHERE id = :gameId
         """,
     )
@@ -142,7 +143,16 @@ interface GameDao {
         UPDATE games
         SET genre = CASE WHEN genre IS NULL OR TRIM(genre) = '' THEN :genre ELSE genre END,
             releaseYear = COALESCE(releaseYear, :releaseYear),
-            description = CASE WHEN description IS NULL OR TRIM(description) = '' THEN :description ELSE description END,
+            description = CASE
+                WHEN description IS NULL OR TRIM(description) = '' THEN :description
+                WHEN wikidataEntityId IS NOT NULL AND wikipediaArticleTitle IS NULL
+                     AND :wikipediaTitle IS NOT NULL THEN :description
+                ELSE description END,
+            wikipediaArticleTitle = CASE
+                WHEN :wikipediaTitle IS NOT NULL AND
+                     (description IS NULL OR TRIM(description) = ''
+                      OR (wikidataEntityId IS NOT NULL AND wikipediaArticleTitle IS NULL))
+                THEN :wikipediaTitle ELSE wikipediaArticleTitle END,
             wikidataEntityId = :sourceId,
             lastOnlineMetadataCheckedAt = :checkedAt
         WHERE id = :gameId AND systemId = 'nes'
@@ -154,6 +164,7 @@ interface GameDao {
         releaseYear: Int?,
         description: String?,
         sourceId: String,
+        wikipediaTitle: String?,
         checkedAt: Long,
     ): Int
 
@@ -162,7 +173,7 @@ interface GameDao {
         UPDATE games
         SET title = :title, developer = :developer,
             coverFrontUrl = :coverFrontUrl, lastMetadataCheckedAt = :lastChecked,
-            wikidataEntityId = NULL, lastOnlineMetadataCheckedAt = 0
+            wikidataEntityId = NULL, wikipediaArticleTitle = NULL, lastOnlineMetadataCheckedAt = 0
         WHERE id = :gameId
         """,
     )
