@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +40,8 @@ internal fun OpenNesBindingCapture(
     title: String,
     instructions: String,
     progress: String?,
+    isError: Boolean = false,
+    onRestart: (() -> Unit)? = null,
     onCancel: () -> Unit,
     onInput: (KeyEvent) -> Boolean,
 ) {
@@ -83,7 +86,12 @@ internal fun OpenNesBindingCapture(
                 )
                 Text(
                     text = progress ?: stringResource(R.string.opennes_binding_waiting),
-                    color = if (progress == null) OpenNesSettingsColors.red else OpenNesSettingsColors.foreground,
+                    color =
+                        if (isError || progress == null) {
+                            OpenNesSettingsColors.red
+                        } else {
+                            OpenNesSettingsColors.foreground
+                        },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -92,6 +100,14 @@ internal fun OpenNesBindingCapture(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    onRestart?.let { restart ->
+                        TextButton(onClick = restart) {
+                            Text(
+                                text = stringResource(R.string.opennes_binding_restart),
+                                color = OpenNesSettingsColors.muted,
+                            )
+                        }
+                    }
                     OutlinedButton(
                         onClick = onCancel,
                         colors =
