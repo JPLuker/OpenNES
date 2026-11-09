@@ -44,13 +44,13 @@ def main() -> int:
     files[javautils] = replace_once(
         files[javautils],
         '#include "unordered_map"',
-        '#include <functional>\\n#include "unordered_map"',
+        '#include <functional>\n#include "unordered_map"',
         "javautils.h include",
     )
     files[rumble] = replace_once(
         files[rumble],
         "#include <array>",
-        "#include <array>\\n#include <functional>",
+        "#include <array>\n#include <functional>",
         "rumble.h include",
     )
     h = files[header]
