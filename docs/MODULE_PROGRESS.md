@@ -47,6 +47,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Add opposing charcoal/red inner trim to non-overlay left/right landscape controller panels
 - [x] Add a persisted landscape-only choice between framed side panels and overlay controls, retaining legacy controller defaults until explicitly changed
 - [x] Force overlay display on landscape screens narrower than 640dp while keeping the user's saved side-panel choice for wider screens
+- [x] Replace the generic landscape menu button with matching NES Start/Select/Menu pills, keeping PadKit hold and mappings
+- [x] Add a landscape-only minimal-overlaid-controls option, eliminating the extra A/B backplate and softening directional/button shadows without changing hit targets
 - [ ] Tune landscape A/B and D-pad placement around the visible game, with separate secondary-button arrangement
 - [ ] Review extreme aspect ratios, safe touch zones, immersive mode and external gamepad transitions
 - [ ] **M4 acceptance deferred:** rotate and play NES titles with touch/hardware controllers on real devices
@@ -209,6 +211,12 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - The in-game landscape editor now switches between full-width overlay controls and a gameplay viewport framed by NES-style side panels, without affecting portrait settings.
 - Narrow landscape widths below 640dp render the full-width overlay to preserve a usable video area. If the user has selected side panels, the editor explains that the preference will be used on a wider screen.
 - No build, tests or device validation were run.
+
+## M4 source batch — minimal overlay and landscape control style
+
+- Landscape now uses a unified NES Start/Select/Menu pill vocabulary rather than the inherited generic menu icon; no key IDs or 500ms menu-hold behavior changed.
+- `landscapeMinimal` is a backward-compatible, landscape-only saved setting exposed in the controller editor. In overlay mode, it reduces D-pad and A/B backplates/shadows while retaining legible active controls, original input regions and existing opacity control. Side panels continue using the full controller skin.
+- No deliberate compilation or device testing was performed.
 
 ## Development rules
 

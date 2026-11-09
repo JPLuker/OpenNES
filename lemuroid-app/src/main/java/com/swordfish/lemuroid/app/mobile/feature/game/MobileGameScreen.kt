@@ -62,6 +62,7 @@ import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
+import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import com.swordfish.touchinput.radial.ui.GlassSurface
@@ -232,6 +233,9 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     CompositionLocalProvider(
                         LocalLemuroidPadTheme provides LemuroidPadTheme(touchControllerSettings.opacity),
                         LocalNesPortraitLayout provides !isLandscape,
+                        LocalNesLandscapeMinimal provides (
+                            isLandscape && allowTouchOverlay && touchControllerSettings.landscapeMinimal
+                        ),
                     ) {
                         if (!isLandscape) {
                             PadContainer(
@@ -474,6 +478,30 @@ private fun MenuEditTouchControls(
                             onCheckedChange = { checked ->
                                 viewModel.updateTouchControllerSettings(
                                     touchControllerSettings.copy(landscapeOverlay = !checked),
+                                )
+                            },
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal),
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal_description),
+                                fontSize = 12.sp,
+                            )
+                        }
+                        Switch(
+                            checked = touchControllerSettings.landscapeMinimal,
+                            onCheckedChange = { checked ->
+                                viewModel.updateTouchControllerSettings(
+                                    touchControllerSettings.copy(landscapeMinimal = checked),
                                 )
                             },
                         )

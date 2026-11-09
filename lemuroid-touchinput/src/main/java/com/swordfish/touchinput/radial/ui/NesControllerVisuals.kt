@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
+import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import gg.padkit.ui.DefaultCrossForeground
 
 /**
@@ -51,14 +52,15 @@ private fun NesDPadDirection(
     gripAxis: NesGripAxis,
 ) {
     val opacity = LocalLemuroidPadTheme.current.opacity
+    val minimal = LocalNesLandscapeMinimal.current
     GlassSurface(
         modifier = Modifier.fillMaxSize().padding(1.dp),
         cornerRadius = 3.dp,
         fillColor =
             (if (pressed.value) Color(0xFF111319) else Color(0xFF292B30))
-                .copy(alpha = opacity),
-        shadowColor = Color.Black.copy(alpha = 0.32f * opacity),
-        shadowWidth = 2.dp,
+                .copy(alpha = opacity * if (minimal) 0.58f else 1f),
+        shadowColor = Color.Black.copy(alpha = 0.32f * opacity * if (minimal) 0.2f else 1f),
+        shadowWidth = if (minimal) 0.dp else 2.dp,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val halfLength = size.minDimension * 0.22f
@@ -97,14 +99,15 @@ private fun NesDPadDirection(
 @Composable
 private fun NesDPadCenter(pressed: State<Boolean>) {
     val opacity = LocalLemuroidPadTheme.current.opacity
+    val minimal = LocalNesLandscapeMinimal.current
     GlassSurface(
         modifier = Modifier.fillMaxSize().padding(1.dp),
         cornerRadius = 3.dp,
         fillColor =
             (if (pressed.value) Color(0xFF16181C) else Color(0xFF25272C))
-                .copy(alpha = opacity),
-        shadowColor = Color.Black.copy(alpha = 0.16f * opacity),
-        shadowWidth = 1.dp,
+                .copy(alpha = opacity * if (minimal) 0.58f else 1f),
+        shadowColor = Color.Black.copy(alpha = 0.16f * opacity * if (minimal) 0.2f else 1f),
+        shadowWidth = if (minimal) 0.dp else 1.dp,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val radius = size.minDimension * 0.23f
@@ -127,23 +130,26 @@ fun NesFaceButtonForeground(
     label: String,
 ) {
     val opacity = LocalLemuroidPadTheme.current.opacity
+    val minimal = LocalNesLandscapeMinimal.current
     Box(
         modifier = Modifier.fillMaxSize().padding(3.dp),
         contentAlignment = Alignment.Center,
     ) {
+        if (!minimal) {
+            GlassSurface(
+                modifier = Modifier.fillMaxSize(),
+                fillColor = Color(0xFF181A1F).copy(alpha = 0.93f * opacity),
+                shadowColor = Color.Black.copy(alpha = 0.35f * opacity),
+                shadowWidth = 3.dp,
+            )
+        }
         GlassSurface(
-            modifier = Modifier.fillMaxSize(),
-            fillColor = Color(0xFF181A1F).copy(alpha = 0.93f * opacity),
-            shadowColor = Color.Black.copy(alpha = 0.35f * opacity),
-            shadowWidth = 3.dp,
-        )
-        GlassSurface(
-            modifier = Modifier.fillMaxSize().padding(5.dp),
+            modifier = Modifier.fillMaxSize().padding(if (minimal) 2.dp else 5.dp),
             fillColor =
                 (if (pressed.value) Color(0xFF842437) else Color(0xFFB52E43))
-                    .copy(alpha = opacity),
-            shadowColor = Color.Black.copy(alpha = 0.27f * opacity),
-            shadowWidth = 2.dp,
+                    .copy(alpha = opacity * if (minimal) 0.83f else 1f),
+            shadowColor = Color.Black.copy(alpha = 0.27f * opacity * if (minimal) 0.25f else 1f),
+            shadowWidth = if (minimal) 0.dp else 2.dp,
         ) {
             Text(
                 text = label,

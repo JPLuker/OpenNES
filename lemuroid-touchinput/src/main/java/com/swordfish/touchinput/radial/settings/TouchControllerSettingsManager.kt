@@ -33,6 +33,8 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         // Null retains the inherited controller's overlay decision for
         // existing installs; a selection in the landscape editor overrides it.
         val landscapeOverlay: Boolean? = null,
+        // Visual-only minimal mode for overlaid landscape controls.
+        val landscapeMinimal: Boolean = false,
         // Null per-side scale preserves existing saved shared scale on upgrade.
         val leftScale: Float? = null,
         val rightScale: Float? = null,
