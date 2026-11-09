@@ -115,7 +115,7 @@ class HomeViewModel(
                         // ("Legend of Zelda, The") and extra ROM revision tags.
                         val withoutArticle =
                             query.trim().replace(
-                                Regex("""^(?:The|An|A)\\s+""", RegexOption.IGNORE_CASE),
+                                Regex("""^(?:The|An|A)\s+""", RegexOption.IGNORE_CASE),
                                 "",
                             )
                         if (withoutArticle.length >= 3 && withoutArticle != query.trim()) {
