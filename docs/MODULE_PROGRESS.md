@@ -11,12 +11,22 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
 | **M2 — UI completion and cleanup** | **CODE-COMPLETE (source scope; not device accepted)**: NES library, navigation, detail sheets, menus, settings, ROM recovery, compact layouts and accessibility pass implemented; obsolete TV UI removed | Device and build acceptance remain paused; regressions will be assessed when testing resumes |
-| M3 — Portrait NES controller | **CODE-COMPLETE (source scope; unverified)**: NES D-pad/A/B/Start/Select/Menu, responsive defaults, saved orientation-specific editing, touch hit-region refinements and portrait housing | Build/device acceptance deferred: real NES input, gestures, cutouts, large text, pause and save/resume |
-| M4 — Landscape NES controller | **CODE-COMPLETE (source scope; unverified)**: framed and overlay modes, minimal overlaid controls, NES secondary buttons, independent layout settings, cutout padding and adaptive defaults | Hardware acceptance deferred: gameplay framing, touch boundaries, landscape rotations and external devices |
+| **M3 — Portrait NES controller** | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: unified non-overlapping D-pad artwork, circular A/B, themed housing, six style presets and 10 editable color roles in Settings; layout editing still accessible in-game | Recheck visual proportions, overlapping layers, touch hitboxes, editing, contrast and portraits on actual phones |
+| M4 — Landscape NES controller | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: inherits new palette and single-piece controls; separate framed/overlay layouts and geometry settings retained | Verify safe layout, touch boundaries and theme visibility on compact/wide landscape screens |
 | **M5 — Gameplay reliability** | **ACTIVE**: existing audio/input fixes and save infrastructure; now auditing state operation results, lifecycle ownership and errors | Improve save/resume feedback and cancellation handling; audio and device acceptance deferred |
 | **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
 | **M7 — Public release** | **ACTIVE — release-hardening source**: rolling debug APK workflow remains; inherited release-signing credentials removed and production signing is optional/secret-provided | Verify production key custody, reproducible builds, licensing, CI permissions, APK contents and device acceptance |
 | **M8 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
+
+## Latest controller visual overhaul — following M5 hardware feedback
+
+- [x] Remove the inherited D-pad and face-button rectangular group backgrounds and suppress the rendered A+B composite without removing its actual input event.
+- [x] Repaint the D-pad as one continuous outline and A/B as circles; draw Start/Select/Menu as clean one-piece capsules.
+- [x] Use a single rounded portrait/landscape controller faceplate instead of stacked translucent square layers.
+- [x] Add Settings → Touch controller appearance, live preview, six original preset palettes and ten per-element colors with persistent hex editing.
+- [x] Keep existing portrait and landscape positional settings and preserve the in-game editor.
+- [ ] Compile and lint the updated branch and verify the new APK with real NES gameplay and both orientations.
+- [ ] Longer-term: independent per-button position/hitbox control and deeper material styling.
 
 ## M3 source completion checklist
 

@@ -38,6 +38,7 @@ import com.swordfish.lemuroid.app.mobile.feature.search.SearchScreen
 import com.swordfish.lemuroid.app.mobile.feature.search.SearchViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.advanced.AdvancedSettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.advanced.AdvancedSettingsViewModel
+import com.swordfish.lemuroid.app.mobile.feature.settings.general.ControllerAppearanceScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.LibraryMaintenanceScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsViewModel
@@ -259,6 +260,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                 ),
                             navController = navController,
                         )
+                    }
+                    composable(MainRoute.SETTINGS_CONTROLLER_APPEARANCE) {
+                        ControllerAppearanceScreen(modifier = Modifier.padding(padding))
                     }
                     composable(MainRoute.SETTINGS_INPUT_DEVICES) {
                         InputDevicesSettingsScreen(

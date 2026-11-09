@@ -25,6 +25,7 @@ fun LemuroidControlFaceButtons(
     applyPadding: Boolean = true,
     trackPointers: Boolean = true,
     background: @Composable () -> Unit = { LemuroidControlBackground() },
+    showCompositeForeground: Boolean = true,
     idsForegrounds: PersistentMap<Id.Key, @Composable (State<Boolean>) -> Unit>,
 ) {
     val theme = LocalLemuroidPadTheme.current
@@ -38,7 +39,11 @@ fun LemuroidControlFaceButtons(
         rotationInDegrees = rotationInDegrees,
         foreground = { id, pressed -> (idsForegrounds[id]!!)(pressed) },
         background = background,
-        foregroundComposite = { LemuroidCompositeForeground(it) },
+        foregroundComposite = {
+            if (showCompositeForeground) {
+                LemuroidCompositeForeground(it)
+            }
+        },
     )
 }
 
@@ -48,6 +53,7 @@ fun LemuroidControlFaceButtons(
     modifier: Modifier = Modifier,
     primaryAnchors: PersistentList<Anchor<Id.Key>>,
     background: @Composable () -> Unit = { LemuroidControlBackground() },
+    showCompositeForeground: Boolean = true,
     applyPadding: Boolean = true,
     trackPointers: Boolean = true,
     idsForegrounds: PersistentMap<Id.Key, @Composable (State<Boolean>) -> Unit>,
@@ -62,6 +68,10 @@ fun LemuroidControlFaceButtons(
         trackPointers = trackPointers,
         foreground = { id, pressed -> (idsForegrounds[id]!!)(pressed) },
         background = background,
-        foregroundComposite = { LemuroidCompositeForeground(it) },
+        foregroundComposite = {
+            if (showCompositeForeground) {
+                LemuroidCompositeForeground(it)
+            }
+        },
     )
 }

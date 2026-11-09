@@ -37,9 +37,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -47,7 +49,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -61,11 +62,12 @@ import com.swordfish.lemuroid.lib.controller.ControllerConfig
 import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
-import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
+import com.swordfish.touchinput.radial.LocalNesControllerPalette
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
+import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
+import com.swordfish.touchinput.radial.rememberNesControllerAppearance
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
-import com.swordfish.touchinput.radial.ui.GlassSurface
 import com.swordfish.touchinput.radial.ui.LemuroidButtonPressFeedback
 import gg.padkit.PadKit
 import gg.padkit.config.HapticFeedbackType
@@ -76,6 +78,8 @@ import kotlin.math.roundToInt
 fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isLandscape = constraints.maxWidth > constraints.maxHeight
+        // Appearance is global; geometry is still stored per orientation.
+        val controllerAppearance = rememberNesControllerAppearance()
 
         LaunchedEffect(isLandscape) {
             val orientation =
@@ -246,8 +250,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             .layoutId(GameScreenLayout.CONSTRAINTS_GAME_VIEW)
                             .windowInsetsPadding(
                                 WindowInsets.displayCutout.only(
-                                    if (isLandscape) WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-                                    else WindowInsetsSides.Top,
+                                    if (isLandscape) {
+                                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                                    } else {
+                                        WindowInsetsSides.Top
+                                    },
                                 ),
                             )
                             .onGloballyPositioned { viewportPosition.value = it.boundsInRoot() },
@@ -256,6 +263,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 if (showTouchPads && touchControllerSettings != null && currentControllerConfig != null) {
                     CompositionLocalProvider(
                         LocalLemuroidPadTheme provides LemuroidPadTheme(touchControllerSettings.opacity),
+                        LocalNesControllerPalette provides controllerAppearance.palette,
                         LocalNesPortraitLayout provides !isLandscape,
                         LocalNesLandscapeMinimal provides (
                             isLandscape && allowTouchOverlay && touchControllerSettings.landscapeMinimal
@@ -348,63 +356,55 @@ private fun PadContainer(
     innerEdge: LandscapePanelInnerEdge? = null,
 ) {
     val theme = LocalLemuroidPadTheme.current
-    Box(modifier = modifier) {
-        GlassSurface(
-            modifier = Modifier.fillMaxSize(),
-            cornerRadius = theme.level0CornerRadius,
-            fillColor = theme.level0Fill,
-            shadowColor = theme.level0Shadow,
-            shadowWidth = theme.level0ShadowWidth,
+    val palette = LocalNesControllerPalette.current
+    // One housing surface replaces overlapping inherited glass rectangles.
+    // Decorative only: all NES input events remain handled by PadKit.
+    Canvas(modifier = modifier.fillMaxSize()) {
+        val inset = if (portrait) 6.dp.toPx() else 3.dp.toPx()
+        val panelSize =
+            Size(
+                (size.width - 2f * inset).coerceAtLeast(0f),
+                (size.height - 2f * inset).coerceAtLeast(0f),
+            )
+        if (panelSize.width <= 0f || panelSize.height <= 0f) return@Canvas
+        val corner = 18.dp.toPx()
+        val origin = Offset(inset, inset)
+        drawRoundRect(
+            color = palette.panel.copy(alpha = 0.90f * theme.opacity),
+            topLeft = origin,
+            size = panelSize,
+            cornerRadius = CornerRadius(corner, corner),
+        )
+        drawRoundRect(
+            color = palette.outline.copy(alpha = 0.48f * theme.opacity),
+            topLeft = origin,
+            size = panelSize,
+            cornerRadius = CornerRadius(corner, corner),
+            style = Stroke(width = 1.5.dp.toPx()),
         )
 
-        if (portrait) {
-            // Faceplate trim is decoration only; the interactive PadKit
-            // controls are rendered above this layer in ConstraintLayout.
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val topRailHeight = 4.dp.toPx()
-                val accentHeight = 3.dp.toPx()
-                val lowerSeamHeight = 2.dp.toPx()
-                val opacity = theme.opacity
-                drawRect(
-                    color = Color(0xFF292C32).copy(alpha = 0.74f * opacity),
-                    size = Size(size.width, topRailHeight),
-                )
-                drawRect(
-                    color = Color(0xFF9C2D3D).copy(alpha = 0.76f * opacity),
-                    topLeft = Offset(0f, topRailHeight),
-                    size = Size(size.width, accentHeight),
-                )
-                if (size.height > 28.dp.toPx()) {
-                    drawRect(
-                        color = Color(0xFF383B40).copy(alpha = 0.28f * opacity),
-                        topLeft = Offset(0f, size.height - 12.dp.toPx()),
-                        size = Size(size.width, lowerSeamHeight),
-                    )
+        if (portrait && panelSize.width > 56.dp.toPx()) {
+            val y = origin.y + 10.dp.toPx()
+            drawLine(
+                color = palette.accent.copy(alpha = 0.88f * theme.opacity),
+                start = Offset(origin.x + 28.dp.toPx(), y),
+                end = Offset(origin.x + panelSize.width - 28.dp.toPx(), y),
+                strokeWidth = 3.dp.toPx(),
+            )
+        } else if (innerEdge != null && panelSize.height > 56.dp.toPx()) {
+            val isLeftEdge = innerEdge == LandscapePanelInnerEdge.LEFT
+            val x =
+                if (isLeftEdge) {
+                    origin.x + 9.dp.toPx()
+                } else {
+                    origin.x + panelSize.width - 9.dp.toPx()
                 }
-            }
-        } else if (innerEdge != null) {
-            // Landscape side panels frame the video instead of covering it.
-            // Visual trim only: PadKit owns every touch target above this layer.
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val rail = 4.dp.toPx()
-                val accent = 2.dp.toPx()
-                val opacity = theme.opacity
-                val innerIsLeft = innerEdge == LandscapePanelInnerEdge.LEFT
-                val railX = if (innerIsLeft) 0f else (size.width - rail).coerceAtLeast(0f)
-                val accentX = if (innerIsLeft) rail else (size.width - rail - accent).coerceAtLeast(0f)
-                drawRect(
-                    color = Color(0xFF292C32).copy(alpha = 0.74f * opacity),
-                    topLeft = Offset(railX, 0f),
-                    size = Size(rail.coerceAtMost(size.width), size.height),
-                )
-                if (size.width > rail + accent) {
-                    drawRect(
-                        color = Color(0xFF9C2D3D).copy(alpha = 0.76f * opacity),
-                        topLeft = Offset(accentX, 0f),
-                        size = Size(accent, size.height),
-                    )
-                }
-            }
+            drawLine(
+                color = palette.accent.copy(alpha = 0.82f * theme.opacity),
+                start = Offset(x, origin.y + 24.dp.toPx()),
+                end = Offset(x, origin.y + panelSize.height - 24.dp.toPx()),
+                strokeWidth = 3.dp.toPx(),
+            )
         }
     }
 }
@@ -493,7 +493,10 @@ private fun MenuEditTouchControls(
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_side_panels_description),
+                                text =
+                                    stringResource(
+                                        com.swordfish.lemuroid.R.string.opennes_landscape_side_panels_description,
+                                    ),
                                 fontSize = 12.sp,
                             )
                         }
@@ -517,7 +520,10 @@ private fun MenuEditTouchControls(
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal_description),
+                                text =
+                                    stringResource(
+                                        com.swordfish.lemuroid.R.string.opennes_landscape_minimal_description,
+                                    ),
                                 fontSize = 12.sp,
                             )
                         }
@@ -532,7 +538,10 @@ private fun MenuEditTouchControls(
                     }
                     if (compactLandscape && touchControllerSettings.landscapeOverlay == false) {
                         Text(
-                            text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback),
+                            text =
+                                stringResource(
+                                    com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback,
+                                ),
                             modifier = Modifier.padding(horizontal = 8.dp),
                             fontSize = 12.sp,
                         )
