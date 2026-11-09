@@ -79,8 +79,8 @@ import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
-import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
+import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
@@ -854,18 +854,6 @@ private fun GameDetailsSheet(
                 )
 
                 GameArtworkGallery(game)
-
-                OutlinedButton(
-                    onClick = { searchExpanded = !searchExpanded },
-                    border = BorderStroke(1.dp, LibraryColors.border),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-                ) {
-                    Text(stringResource(R.string.opennes_find_game_info))
-                }
-
-
-
-
             }
         }
     }
