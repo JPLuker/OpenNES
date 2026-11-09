@@ -15,12 +15,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidCardSettingsGroup
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsList
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsMenuLink
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsPage
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsSlider
-import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsSwitch
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsLink
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSlider
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSwitch
 import com.swordfish.lemuroid.app.utils.android.settings.booleanPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.indexPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.intPreferenceState
@@ -36,11 +36,11 @@ fun AdvancedSettingsScreen(
             .collectAsState()
             .value
 
-    LemuroidSettingsPage(
+    OpenNesSettingsPage(
         modifier = modifier.fillMaxSize(),
     ) {
         if (uiState?.cache == null) {
-            return@LemuroidSettingsPage
+            return@OpenNesSettingsPage
         }
 
         InputSettings()
@@ -50,22 +50,22 @@ fun AdvancedSettingsScreen(
 
 @Composable
 private fun InputSettings() {
-    LemuroidCardSettingsGroup(
+    OpenNesSettingsGroup(
         title = { Text(text = stringResource(id = R.string.settings_category_input)) },
     ) {
         val rumbleEnabled = booleanPreferenceState(R.string.pref_key_enable_rumble, false)
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             state = rumbleEnabled,
             title = { Text(text = stringResource(id = R.string.settings_title_enable_rumble)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_enable_rumble)) },
         )
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             enabled = rumbleEnabled.value,
             state = booleanPreferenceState(R.string.pref_key_enable_device_rumble, false),
             title = { Text(text = stringResource(id = R.string.settings_title_enable_device_rumble)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_enable_device_rumble)) },
         )
-        LemuroidSettingsSlider(
+        OpenNesSettingsSlider(
             state =
                 intPreferenceState(
                     key = stringResource(id = R.string.pref_key_tilt_sensitivity_index),
@@ -87,20 +87,20 @@ private fun GeneralSettings(
 ) {
     val factoryResetDialogState = remember { mutableStateOf(false) }
 
-    LemuroidCardSettingsGroup(
+    OpenNesSettingsGroup(
         title = { Text(text = stringResource(id = R.string.settings_category_general)) },
     ) {
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             state = booleanPreferenceState(R.string.pref_key_low_latency_audio, false),
             title = { Text(text = stringResource(id = R.string.settings_title_low_latency_audio)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_low_latency_audio)) },
         )
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             state = booleanPreferenceState(R.string.pref_key_nes_stable_audio, true),
             title = { Text(text = stringResource(id = R.string.settings_title_nes_stable_audio)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_nes_stable_audio)) },
         )
-        LemuroidSettingsList(
+        OpenNesSettingsChoice(
             title = { Text(text = stringResource(R.string.settings_title_maximum_cache_usage)) },
             items = cacheState.displayNames,
             state =
@@ -110,12 +110,12 @@ private fun GeneralSettings(
                     cacheState.values,
                 ),
         )
-        LemuroidSettingsSwitch(
+        OpenNesSettingsSwitch(
             state = booleanPreferenceState(R.string.pref_key_allow_direct_game_load, true),
             title = { Text(text = stringResource(id = R.string.settings_title_direct_game_load)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_direct_game_load)) },
         )
-        LemuroidSettingsMenuLink(
+        OpenNesSettingsLink(
             title = { Text(text = stringResource(id = R.string.settings_title_reset_settings)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_reset_settings)) },
             onClick = { factoryResetDialogState.value = true },
