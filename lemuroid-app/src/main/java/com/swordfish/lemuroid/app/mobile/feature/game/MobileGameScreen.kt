@@ -542,9 +542,9 @@ private fun MenuEditTouchControls(
                     if (compactLandscape && touchControllerSettings.landscapeOverlay == false) {
                         Text(
                             text =
-                                    stringResource(
-                                        com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback,
-                                    ),
+                                stringResource(
+                                    com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback,
+                                ),
                             modifier = Modifier.padding(horizontal = 8.dp),
                             fontSize = 12.sp,
                         )

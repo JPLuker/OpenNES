@@ -73,7 +73,12 @@ class LibraryIndexWork(context: Context, workerParams: WorkerParameters) :
     private fun selectedRomFolderIsReadable(): Boolean {
         val selectedFolder =
             SharedPreferencesHelper.getLegacySharedPreferences(applicationContext)
-                .getString(applicationContext.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder), null)
+                .getString(
+                    applicationContext.getString(
+                        com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder,
+                    ),
+                    null,
+                )
                 ?.takeIf { it.isNotBlank() }
                 ?: return true
 
