@@ -133,8 +133,10 @@ fun GameMenuAchievementsScreen(
                     val statusTitle =
                         when {
                             activeSession != null -> R.string.opennes_ra_runtime_ready
-                            session is RetroAchievementsDisplayState.Connecting -> R.string.opennes_ra_runtime_connecting
-                            session is RetroAchievementsDisplayState.NoMatchingGame -> R.string.opennes_ra_runtime_no_match
+                            session is RetroAchievementsDisplayState.Connecting ->
+                                R.string.opennes_ra_runtime_connecting
+                            session is RetroAchievementsDisplayState.NoMatchingGame ->
+                                R.string.opennes_ra_runtime_no_match
                             session is RetroAchievementsDisplayState.Active -> R.string.opennes_ra_runtime_hash_mismatch
                             else -> R.string.opennes_ra_runtime_unavailable
                         }

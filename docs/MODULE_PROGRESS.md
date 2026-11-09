@@ -118,7 +118,7 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 ## M6 active source checklist
 
 - [x] Verify FCEUmm is an achievement-compatible Libretro core and identify the official rc_client/native memory requirements
-- [x] Implement bounded, local header-aware NES/FDS/ZIP hashing without uploading ROM bytes
+- [x] Implement bounded, local header-aware NES/FDS/ZIP hashing without uploading ROM bytes; cap aggregate ZIP decompression (including ignored entries) and guard provider zero-read loops
 - [x] Document native LibretroDroid dependency boundary, exact emulated-frame hook and secure account/session requirements
 - [ ] Expose NES emulated memory and per-frame callbacks from the native frontend with Android/JNI-safe ownership
 - [ ] Integrate pinned stable rcheevos/rc_client and authenticated transport

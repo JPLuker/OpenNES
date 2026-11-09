@@ -103,6 +103,7 @@ object NesRetroAchievementsHash {
                     while (true) {
                         val read = bounded.read(scratch)
                         if (read < 0) break
+                        if (read == 0 && bounded.read() < 0) break
                     }
                 }
                 remainingBudget -= bounded.bytesRead

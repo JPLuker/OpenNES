@@ -24,6 +24,8 @@ Mark each row **Pass / Fail / Blocked / Not tested** and include evidence for fa
 | F-01 | Fresh install, choose NES ROM directory, scan and launch | OpenNES opens, only eligible NES files appear and game starts offline |
 | F-02 | Upgrade from an existing debug APK without wiping data | Game library, custom artwork, settings, favorites, layouts and existing saves survive |
 | UI-01 | Open game details, Play, search, recent, conditional Favorites, hamburger actions | Navigation remains usable; no duplicate actions, blank blocking screens or incorrect bottom navigation |
+| UI-02 | From an active NES game, open Pause → Achievements; inspect local fingerprint, return to pause and resume play | Screen opens without leaving the game; hash status is accurate and no fake unlock progress appears; gameplay resumes normally |
+| UI-03 | Repeat Pause → Achievements with an unreadable ROM and a ZIP with multiple games, then rapidly close the page | Unavailable state is shown safely, ROM identification stops on cancellation, and malformed archives do not block navigation |
 | P-01 | Portrait: D-pad directions/diagonals, hold direction while pressing A and B, Start/Select/Menu | Inputs register correctly and release when fingers lift; no stuck or accidental presses |
 | P-02 | Portrait: onboarding, theme selection and editing controls | First-run guide appears once for visible touch controls; theme persists and setup can be rerun |
 | P-03 | Portrait: independently adjust Start/Select/Menu and drag control clusters | Edits persist across game launch and do not make the game viewport unusable |

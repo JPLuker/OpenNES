@@ -19,6 +19,12 @@
 - A supplied Active session is shown only if its ROM hash matches the currently identified local ROM, preventing an old game session from showing unrelated awards. Until the native runtime exists, this is a diagnostic foundation, not functional RetroAchievements.
 - Follow-up acceptance: verify opening/closing this page in portrait and landscape, ROM URI access, ZIP/FDS variants, and error states on a physical device.
 
+## Implementation safety
+
+- The current `NesRetroAchievementsHash` also caps **aggregate ZIP uncompressed entry data**, including non-ROM entries, and prevents zero-length stream reads from spinning forever.
+- The Android dependency is pinned to **LibretroDroid 0.14.0** in `buildSrc/src/main/java/deps.kt`. This version lacks the required Java-exposed per-frame and emulated-memory hooks; replacing or source-building that dependency is a prerequisite to functional rc_client awards. Do not layer fake HTTP achievements on top of the existing binary.
+- Follow the official runtime contract: `rc_client_do_frame` once per **emulated** frame, not screen draw; `rc_client_idle` while paused. Verify on FCEUmm and hardware before enabling live awards.
+
 ## Next source implementation gates
 
 1. Vendor or fork LibretroDroid under source control and expose a compatible emulation-thread memory bridge and per-emulated-frame callback. Inspect the exact *pinned dependency version* before changing the renderer. Make sure the bridge never reads destroyed/changed cores. Do not mix prebuilt native libraries and incompatible Java interfaces.
