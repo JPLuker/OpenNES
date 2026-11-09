@@ -7,7 +7,8 @@
 - [ ] Create a unique OpenNES release keystore off-repository, secure a backup and record certificate fingerprints privately.
 - [x] Remove Lemuroid's inherited hardcoded release credentials. Without all four `OPENNES_RELEASE_*` environment variables, release signing is not configured.
 - [ ] Verify all release environment variables come from protected CI secrets or a private interactive shell; avoid logging them.
-- [ ] Pin all native, Gradle and automation dependencies at trusted revisions and review provenance for imported code.
+- [x] Pin the four GitHub Actions families in the development APK workflow to their verified tag commits.
+- [ ] Pin all native and Gradle dependencies to reviewed versions and verify full imported-code provenance.
 - [ ] Review GitHub Actions least-privilege permissions and prevent untrusted release publishing.
 - [x] Add a verified SHA-256 sidecar to rolling debug release assets (workflow source; not manually run).
 - [ ] Generate and verify reproducible signed production artifacts and archived manifest/SHA-256/checksums.

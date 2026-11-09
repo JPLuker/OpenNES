@@ -84,7 +84,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Remove inherited hardcoded release keystore alias/passwords and require explicit OpenNES environment-provided secrets
 - [x] Ignore new keystore material and document the unsigned-release default
 - [x] Review workflow's least-privilege release permission and artifact publishing dependency on compile/lint; publish a SHA-256 checksum alongside the rolling APK
-- [ ] Pin GitHub Actions dependencies to audited immutable revisions and complete third-party license and binary provenance review
+- [x] Pin GitHub Actions checkout, Java setup, artifact upload and download to verified immutable v4 commit IDs
+- [ ] Finish third-party library license audit, native dependency provenance and release-binary inspection
 - [ ] Inspect signing certificates, APK contents and native binaries against release requirements (testing paused)
 - [ ] **M7 acceptance deferred:** verified install/upgrade path, input, audio, saves, crash reporting and RetroAchievements claims
 
@@ -303,6 +304,12 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - The workflow now produces `OpenNES-debug.apk.sha256`, verifies it before release publication and uploads both APK and checksum to the rolling development prerelease.
 - The old wording `tested APK` was corrected: CI compilation and lint alone are not emulator or device acceptance. Workflow action pinning and signing/production review are still open.
 - This was source review only; no workflow run was triggered manually or inspected.
+
+## M7 source batch — immutable workflow actions
+
+- Pinned `actions/checkout`, `actions/setup-java`, `actions/upload-artifact` and `actions/download-artifact` to the exact commit IDs resolved from their official v4 tag refs. A moving tag can no longer silently change the build/upload action code.
+- Existing least-privilege workflow permissions, build-then-lint-then-publish sequence and rolling debug APK distribution are unchanged.
+- This is a source-level supply-chain hardening step, not a run or verification of the modified workflow.
 
 ## Development rules
 
