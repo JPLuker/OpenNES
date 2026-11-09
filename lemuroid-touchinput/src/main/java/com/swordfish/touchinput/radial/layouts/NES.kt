@@ -2,11 +2,11 @@ package com.swordfish.touchinput.radial.layouts
 
 import android.view.KeyEvent
 import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.swordfish.touchinput.radial.controls.LemuroidControlCross
 import com.swordfish.touchinput.radial.controls.LemuroidControlFaceButtons
 import com.swordfish.touchinput.radial.layouts.shared.ComposeTouchLayouts
@@ -100,11 +100,16 @@ context(PadKitScope, LayoutRadialSecondaryDialsScope)
 private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings) {
     val scale = if (LocalNesPortraitLayout.current) 1.15f else 1.05f
     val geometry = settings.selectButton
+    val buttonScale =
+        geometry.size.coerceIn(
+            TouchControllerSettingsManager.MIN_BUTTON_SIZE,
+            TouchControllerSettingsManager.MAX_BUTTON_SIZE,
+        )
     ControlButton(
         modifier =
             Modifier
                 .radialPosition(120f)
-                .radialScale(scale * geometry.size.coerceIn(TouchControllerSettingsManager.MIN_BUTTON_SIZE, TouchControllerSettingsManager.MAX_BUTTON_SIZE))
+                .radialScale(scale * buttonScale)
                 .offset(
                     x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
                     y = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f)).dp,
@@ -120,11 +125,16 @@ context(PadKitScope, LayoutRadialSecondaryDialsScope)
 private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings) {
     val scale = if (LocalNesPortraitLayout.current) 1.15f else 1.05f
     val geometry = settings.startButton
+    val buttonScale =
+        geometry.size.coerceIn(
+            TouchControllerSettingsManager.MIN_BUTTON_SIZE,
+            TouchControllerSettingsManager.MAX_BUTTON_SIZE,
+        )
     ControlButton(
         modifier =
             Modifier
                 .radialPosition(60f)
-                .radialScale(scale * geometry.size.coerceIn(TouchControllerSettingsManager.MIN_BUTTON_SIZE, TouchControllerSettingsManager.MAX_BUTTON_SIZE))
+                .radialScale(scale * buttonScale)
                 .offset(
                     x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
                     y = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f)).dp,
@@ -140,6 +150,11 @@ context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) {
     val geometry = settings.menuButton
+    val buttonScale =
+        geometry.size.coerceIn(
+            TouchControllerSettingsManager.MIN_BUTTON_SIZE,
+            TouchControllerSettingsManager.MAX_BUTTON_SIZE,
+        )
     ControlButton(
         modifier =
             Modifier
@@ -148,7 +163,7 @@ private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) 
                 )
                 .radialScale(
                     (if (LocalNesPortraitLayout.current) 1.15f else 1.05f) *
-                        geometry.size.coerceIn(TouchControllerSettingsManager.MIN_BUTTON_SIZE, TouchControllerSettingsManager.MAX_BUTTON_SIZE),
+                        buttonScale,
                 )
                 .offset(
                     x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
