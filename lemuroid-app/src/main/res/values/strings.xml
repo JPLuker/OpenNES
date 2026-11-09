@@ -261,6 +261,10 @@
     <string name="opennes_setup_scanning_progress">Scanning your library…</string>
     <string name="opennes_setup_no_games_title">No NES games found</string>
     <string name="opennes_setup_no_games_description">The scan finished without finding compatible NES games. Check for .nes files in your selected folder, then rescan, or choose a different folder.</string>
+    <string name="opennes_setup_folder_error_title">NES folder unavailable</string>
+    <string name="opennes_setup_folder_error_description">Android cannot read your selected NES folder. The folder may have moved, or access may have been revoked. Choose the folder again to restore access. Previously indexed games have been preserved.</string>
+    <string name="opennes_setup_scan_error_title">NES library scan failed</string>
+    <string name="opennes_setup_scan_error_description">OpenNES could not finish scanning your NES folder. Existing games have been preserved. Try rescanning or select a different folder.</string>
     <string name="opennes_setup_rescan_action">Rescan</string>
     <string name="opennes_setup_change_action">Change folder</string>
     <string name="opennes_setup_folder_setting">NES game folder</string>
