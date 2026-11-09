@@ -13,8 +13,10 @@ import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 UPSTREAM = ROOT / "vendor" / "LibretroDroid"
+RA_UPSTREAM = ROOT / "vendor" / "rcheevos"
 SRC = UPSTREAM / "libretrodroid" / "src" / "main"
 EXPECTED_COMMIT = "8835c3098514390a271e36983957f7bb5f40abf1"
+EXPECTED_RA_COMMIT = "1433173220a7eaede6a9ed7a18e94117be1821e0"
 
 
 def replace_once(source: str, old: str, new: str, file_name: str) -> str:
@@ -31,13 +33,21 @@ def main() -> int:
     actual = subprocess.check_output(["git", "-C", str(UPSTREAM), "rev-parse", "HEAD"], text=True).strip()
     if actual != EXPECTED_COMMIT:
         raise RuntimeError(f"Refusing to patch unreviewed LibretroDroid revision {actual}")
+    if not (RA_UPSTREAM / ".git").exists():
+        raise RuntimeError("rcheevos submodule missing: git submodule update --init --recursive")
+    ra_actual = subprocess.check_output(
+        ["git", "-C", str(RA_UPSTREAM), "rev-parse", "HEAD"], text=True,
+    ).strip()
+    if ra_actual != EXPECTED_RA_COMMIT:
+        raise RuntimeError(f"Refusing to link unreviewed rcheevos revision {ra_actual}")
     cpp = SRC / "cpp" / "libretrodroid.cpp"
     header = SRC / "cpp" / "libretrodroid.h"
     jni = SRC / "cpp" / "libretrodroidjni.cpp"
     java = SRC / "java" / "com" / "swordfish" / "libretrodroid" / "LibretroDroid.java"
     javautils = SRC / "cpp" / "utils" / "javautils.h"
     rumble = SRC / "cpp" / "rumble.h"
-    files = {path: path.read_text() for path in (cpp, header, jni, java, javautils, rumble)}
+    cmake = SRC / "cpp" / "CMakeLists.txt"
+    files = {path: path.read_text() for path in (cpp, header, jni, java, javautils, rumble, cmake)}
 
     # The pinned v0.14.0 library relied on transitive C++ includes, which
     # modern Android NDK Clang correctly rejects when building from source.
@@ -52,6 +62,41 @@ def main() -> int:
         "#include <array>",
         "#include <array>\n#include <functional>",
         "rumble.h include",
+    )
+
+    # Include the official pinned MIT C runtime rather than a home-grown
+    # achievement evaluator or HTTP-only pseudo-unlock mechanism.
+    cmake_addition = """# OpenNES: official rcheevos v12.5.0 (MIT), pinned.
+set(OPENNES_RA_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../../../../vendor/rcheevos")
+file(GLOB OPENNES_RA_RUNTIME_SOURCES
+    "${OPENNES_RA_ROOT}/src/rapi/*.c"
+    "${OPENNES_RA_ROOT}/src/rcheevos/*.c"
+    "${OPENNES_RA_ROOT}/src/rhash/*.c"
+)
+target_sources(libretrodroid PRIVATE
+    "${OPENNES_RA_ROOT}/src/rc_client.c"
+    "${OPENNES_RA_ROOT}/src/rc_client_external.c"
+    "${OPENNES_RA_ROOT}/src/rc_compat.c"
+    "${OPENNES_RA_ROOT}/src/rc_libretro.c"
+    "${OPENNES_RA_ROOT}/src/rc_util.c"
+    "${OPENNES_RA_ROOT}/src/rc_version.c"
+    ${OPENNES_RA_RUNTIME_SOURCES}
+    "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/ra_preflight.cpp"
+)
+target_include_directories(libretrodroid PRIVATE
+    "${OPENNES_RA_ROOT}/include"
+    "${OPENNES_RA_ROOT}/src"
+)
+target_link_libraries(libretrodroid z)
+
+# add lib dependencies
+target_link_libraries(libretrodroid
+"""
+    files[cmake] = replace_once(
+        files[cmake],
+        "# add lib dependencies\ntarget_link_libraries(libretrodroid\n",
+        cmake_addition,
+        "CMakeLists.txt rc_client linking",
     )
     h = files[header]
     h = replace_once(

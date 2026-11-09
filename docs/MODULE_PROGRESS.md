@@ -120,7 +120,9 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [x] Pin upstream LibretroDroid v0.14.0 with its recursive source dependencies; avoid mixing its AAR with the native fork.
 - [x] Implement an idempotent, fail-closed native patch preparation script exposing guarded memory copies, emulated frame count and an internal frame observer slot.
 - [ ] Confirm source-built NDK APK succeeds on all required ABIs and memory/frame bridge does not regress NES playback.
-- [ ] Link official, pinned rcheevos client and route genuine memory/frame callbacks from the native core rather than render events.
+- [x] Pin official rcheevos v12.5.0 MIT sources and link the C client, API and rc_libretro memory modules into source-built LibretroDroid.
+- [ ] Verify JNI preflight and source-linked rcheevos across Android ABIs; genuine game activation and verified per-frame awards remain separate work.
+- [ ] Connect rc_client to FCEUmm memory/frame callbacks and authenticated network transport without relying on render events.
 
 ## M6 active source checklist
 

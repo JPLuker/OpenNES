@@ -14,6 +14,11 @@ def main() -> int:
         action="store_true",
         help="Require FCEUmm to be the sole packaged libretro core (M1 acceptance gate).",
     )
+    parser.add_argument(
+        "--native-bridge",
+        action="store_true",
+        help="Require the native OpenNES memory/frame and rcheevos JNI exports in every ABI.",
+    )
     args = parser.parse_args()
 
     if not args.apk.is_file():
@@ -49,6 +54,24 @@ def main() -> int:
     if args.nes_only and other_cores:
         print("ERROR: Non-NES libretro cores are still included.", file=sys.stderr)
         return 1
+    if args.native_bridge:
+        libs = [info for info in native if info.filename.endswith("/liblibretrodroid.so")]
+        if not libs:
+            print("ERROR: Missing source-built libretrodroid.so", file=sys.stderr)
+            return 1
+        symbols = (
+            b"Java_com_swordfish_libretrodroid_LibretroDroid_copyCoreMemory",
+            b"Java_com_swordfish_libretrodroid_LibretroDroid_emulatedFrameCount",
+            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_preflight",
+        )
+        with zipfile.ZipFile(args.apk) as archive:
+            for lib in libs:
+                blob = archive.read(lib.filename)
+                for symbol in symbols:
+                    if symbol not in blob:
+                        print(f"ERROR: {lib.filename} lacks {symbol.decode()}", file=sys.stderr)
+                        return 1
+        print(f"Verified native achievement bridge exports in {len(libs)} ABI libraries")
     return 0
 
 

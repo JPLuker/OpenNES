@@ -58,7 +58,7 @@ jobs:
           APK="$(find lemuroid-app/build/outputs/apk/freeBundle/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
           test -n "$APK"
           cp "$APK" dist/OpenNES-debug.apk
-          python3 scripts/inspect-apk.py --nes-only dist/OpenNES-debug.apk
+          python3 scripts/inspect-apk.py --nes-only --native-bridge dist/OpenNES-debug.apk
           (cd dist && sha256sum OpenNES-debug.apk > OpenNES-debug.apk.sha256)
 
       - name: Publish rolling OpenNES development release

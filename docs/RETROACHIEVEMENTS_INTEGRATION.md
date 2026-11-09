@@ -42,6 +42,13 @@
 - The bridge exposes a lock-protected **copy** of supported core RAM regions and emulated frame count to Java, and installs a native after-`retro_run` observer hook for the future `rc_client_do_frame` call. The observer must run on the native core thread under the lock; it must **not** recursively call the memory-copy JNI method.
 - **This is plumbing, not a working achievement runtime.** There are no native unlock or leaderboard events until the pinned rcheevos runtime is linked and authenticated, then tested on real hardware.
 
+## Official rcheevos source linking (pending ABI acceptance)
+
+- OpenNES pins official [rcheevos v12.5.0](https://github.com/RetroAchievements/rcheevos/releases/tag/v12.5.0) at commit `1433173220a7eaede6a9ed7a18e94117be1821e0` as a source submodule. The upstream `vendor/rcheevos/LICENSE` MIT notice is retained.
+- The native preparation script links the official C client, API parser, hash support and `rc_libretro` memory mapper into the **same source-built** LibretroDroid library. A dormant JNI `preflight` creates and destroys an unattached `rc_client` (no login or network).
+- CI verifies explicit JNI exports for core memory snapshots, emulated frame count and rcheevos preflight in every packaged ABI.
+- **Not yet implemented:** real emulator user login/token, rc_client memory mapping callbacks, HTTPS server transport, native game activation, unlock events, hardcore restrictions and live overlays. Linking the library is not proof of accurate achievements.
+
 ## Next source implementation gates
 
 1. Vendor or fork LibretroDroid under source control and expose a compatible emulation-thread memory bridge and per-emulated-frame callback. Inspect the exact *pinned dependency version* before changing the renderer. Make sure the bridge never reads destroyed/changed cores. Do not mix prebuilt native libraries and incompatible Java interfaces.

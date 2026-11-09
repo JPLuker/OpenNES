@@ -6,3 +6,7 @@
 [submodule "vendor/LibretroDroid"]
 	path = vendor/LibretroDroid
 	url = https://github.com/Swordfish90/LibretroDroid
+
+[submodule "vendor/rcheevos"]
+	path = vendor/rcheevos
+	url = https://github.com/RetroAchievements/rcheevos
