@@ -5,6 +5,7 @@ import com.swordfish.lemuroid.lib.library.GameSystem
 import com.swordfish.lemuroid.lib.library.SystemID
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
+import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
 import com.swordfish.lemuroid.lib.storage.StorageFile
 import com.swordfish.lemuroid.metadata.libretrodb.db.LibretroDBManager
 import com.swordfish.lemuroid.metadata.libretrodb.db.LibretroDatabase
@@ -90,8 +91,10 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         file: StorageFile,
     ): GameMetadata? {
         val title = file.extensionlessName
+        val cleaned = NesGameTitle.clean(title)
         val prefix =
-            title.substringBefore('(')
+            cleaned.replace(Regex("""^(?:The|An|A)\\s+""", RegexOption.IGNORE_CASE), "")
+                .substringBefore('(')
                 .substringBefore('[')
                 .trim()
 
