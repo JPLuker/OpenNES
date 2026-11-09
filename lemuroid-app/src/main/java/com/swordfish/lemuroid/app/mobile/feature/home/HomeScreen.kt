@@ -75,6 +75,8 @@ import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 
 /** Original OpenNES home palette. The rest of the application will adopt these in M2. */
+private const val NES_BOX_ART_ASPECT_RATIO = 5f / 7.125f
+
 private object LibraryColors {
     val background = Color(0xFF111317)
     val panel = Color(0xFF1C2027)
@@ -212,12 +214,14 @@ private fun OpenNesLibrary(
             onGameClick = onGameDetailsClick,
             onGameLongClick = onGameLongClick,
         )
-        GameShelf(
-            title = stringResource(R.string.opennes_favorites_shelf),
-            games = state.favoritesGames,
-            onGameClick = onGameDetailsClick,
-            onGameLongClick = onGameLongClick,
-        )
+        if (state.favoritesGames.isNotEmpty()) {
+            GameShelf(
+                title = stringResource(R.string.opennes_favorites_shelf),
+                games = state.favoritesGames,
+                onGameClick = onGameDetailsClick,
+                onGameLongClick = onGameLongClick,
+            )
+        }
         GameShelf(
             title = stringResource(R.string.opennes_discover_shelf),
             games = state.discoveryGames,
@@ -349,11 +353,6 @@ private fun LibraryHeader(
                 color = LibraryColors.foreground,
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-            )
-            Text(
-                text = stringResource(R.string.opennes_library_subtitle),
-                color = LibraryColors.muted,
-                fontSize = 12.sp,
             )
         }
         IconButton(onClick = onSearchClick) {
@@ -1139,8 +1138,10 @@ fun GameCover(
                 )
                 .build(),
         contentDescription = game.displayName(),
-        modifier = modifier.aspectRatio(0.78f),
-        contentScale = ContentScale.Crop,
+        // Original NES retail boxes measure approximately 5 by 7.125 inches.
+        // Preserve the full printed artwork instead of cropping its edges.
+        modifier = modifier.aspectRatio(NES_BOX_ART_ASPECT_RATIO),
+        contentScale = ContentScale.Fit,
         fallback = fallbackPainter,
         error = fallbackPainter,
     )
