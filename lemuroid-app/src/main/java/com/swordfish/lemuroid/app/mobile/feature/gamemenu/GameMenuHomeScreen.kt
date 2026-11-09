@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -370,6 +371,14 @@ private fun GameMenuSwitchAction(
             Switch(
                 checked = checked,
                 onCheckedChange = null,
+                colors =
+                    SwitchDefaults.colors(
+                        checkedThumbColor = GameMenuStyle.foreground,
+                        checkedTrackColor = GameMenuStyle.red,
+                        uncheckedThumbColor = GameMenuStyle.muted,
+                        uncheckedTrackColor = GameMenuStyle.surfaceRaised,
+                        uncheckedBorderColor = GameMenuStyle.border,
+                    ),
             )
         }
     }
