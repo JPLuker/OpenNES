@@ -416,12 +416,15 @@ private fun FeaturedGame(
                     color = LibraryColors.muted,
                     fontSize = 12.sp,
                 )
-                Text(
-                    text = stringResource(R.string.opennes_achievements_future),
-                    color = LibraryColors.muted,
-                    fontSize = 11.sp,
-                    maxLines = 2,
-                )
+                game.description?.takeIf { it.isNotBlank() }?.let { description ->
+                    Text(
+                        text = description,
+                        color = LibraryColors.muted,
+                        fontSize = 12.sp,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 Button(
                     onClick = { onGameClick(game) },
                     colors =
@@ -827,7 +830,10 @@ private fun WikidataLookupSection(
             val canFill =
                 (game.genre.isNullOrBlank() && !match.genre.isNullOrBlank()) ||
                     (game.releaseYear == null && match.releaseYear != null) ||
-                    (game.description.isNullOrBlank() && !match.description.isNullOrBlank())
+                    (game.description.isNullOrBlank() && !match.description.isNullOrBlank()) ||
+                    (game.wikidataEntityId != null &&
+                        game.wikipediaArticleTitle == null &&
+                        match.wikipediaArticleTitle != null)
             Button(
                 onClick = {
                     applying = true
@@ -882,6 +888,16 @@ private fun GameProfileSection(
         }
         game.description?.takeIf { it.isNotBlank() }?.let {
             GameDetailField(stringResource(R.string.opennes_game_description), it)
+        }
+        game.wikipediaArticleTitle?.takeIf { it.isNotBlank() }?.let { article ->
+            TextButton(
+                onClick = {
+                    val url = "https://en.wikipedia.org/wiki/" + Uri.encode(article.replace(' ', '_'))
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                },
+            ) {
+                Text(stringResource(R.string.opennes_wikipedia_source))
+            }
         }
         game.wikidataEntityId?.takeIf { it.matches(Regex("Q[1-9][0-9]*")) }?.let { entityId ->
             TextButton(
