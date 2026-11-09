@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.swordfish.lemuroid.app.mobile.shared.NotificationsManager
+import com.swordfish.lemuroid.app.shared.metadata.NesAutoMetadataScheduler
 import com.swordfish.lemuroid.app.utils.android.createSyncForegroundInfo
 import com.swordfish.lemuroid.lib.injection.AndroidWorkerInjection
 import com.swordfish.lemuroid.lib.injection.WorkerKey
@@ -46,6 +47,11 @@ class LibraryIndexWork(context: Context, workerParams: WorkerParameters) :
             Timber.e("Library indexing work terminated with an exception:", it)
         }
 
+        // The game library is usable immediately. Metadata is enriched later
+        // by a separate WorkManager job with an online constraint.
+        if (result.isSuccess) {
+            NesAutoMetadataScheduler.schedule(applicationContext)
+        }
         LibraryIndexScheduler.scheduleCoreUpdate(applicationContext)
 
         return Result.success()
