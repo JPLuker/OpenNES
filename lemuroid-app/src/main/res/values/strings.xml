@@ -100,7 +100,7 @@
     <string name="game_context_menu_remove_from_favorites">Remove from favorites</string>
     <string name="game_context_menu_resume">Resume</string>
     <string name="game_context_menu_restart">Restart</string>
-    <string name="game_context_menu_create_shortcut">Pin to launcher</string>
+    <string name="game_context_menu_create_shortcut">Add to home screen</string>
 
     <string name="game_context_menu_add_custom_name">Add custom name</string>
     <string name="game_context_menu_remove_custom_name">Remove custom name</string>
@@ -288,6 +288,9 @@
     <string name="opennes_profile_invalid_year">Enter a year between 1950 and 2100, or leave it blank.</string>
     <string name="opennes_profile_failed">Could not save game details.</string>
     <string name="opennes_online_lookup">Find details online</string>
+    <string name="opennes_online_searching">Checking verified NES information…</string>
+    <string name="opennes_online_retry">Check again</string>
+    <string name="opennes_other_game_actions">Artwork, name and other actions</string>
     <string name="opennes_online_verified_match">Verified NES game · Wikidata (CC0)</string>
     <string name="opennes_online_no_match">No unambiguous NES game match found online. Existing details were not changed.</string>
     <string name="opennes_online_unavailable">Online catalogue unavailable. Check your connection and try again.</string>
