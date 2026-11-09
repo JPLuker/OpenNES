@@ -204,7 +204,7 @@ private fun OpenNesSearchView(
             placeholder = { Text("Search NES games", color = Color(0xFFB2B2B4)) },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFB2B2B4))
-            }
+            },
             onValueChange = { onUpdateQueryString(it) },
             singleLine = true,
             keyboardActions =
@@ -217,10 +217,7 @@ private fun OpenNesSearchView(
                     unfocusedTextColor = Color(0xFFF2EDE6),
                     cursorColor = Color(0xFFB73439),
                     focusedContainerColor = Color.Transparent,
-                    unfocusedTextColor = Color(0xFFF2EDE6),
-                    unfocusedTextColor = Color(0xFFF2EDE6),
-                    cursorColor = Color(0xFFB73439),
-                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                 ),
