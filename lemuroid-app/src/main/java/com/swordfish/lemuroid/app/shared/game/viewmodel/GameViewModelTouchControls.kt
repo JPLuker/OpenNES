@@ -69,6 +69,13 @@ class GameViewModelTouchControls(
                 hapticFeedbackMode.value = HapticFeedbackMode.parse(settingsManager.hapticFeedbackMode())
             }
         }
+        owner.launchOnState(Lifecycle.State.CREATED) {
+            inputs.getEnabledInputDevices().safeCollect { devices ->
+                // External-controller takeover hides the virtual pad. Release
+                // touches that were already down before its disappearance.
+                if (devices.isNotEmpty()) releaseVirtualInputs()
+            }
+        }
     }
 
     fun getTouchControlsSettings(
@@ -293,8 +300,7 @@ class GameViewModelTouchControls(
                     gameView?.sendMotionEvent(MOTION_SOURCE_ANALOG_LEFT, 0f, 0f)
                 }
                 ComposeTouchLayouts.MOTION_SOURCE_RIGHT_STICK,
-                ComposeTouchLayouts.MOTION_SOURCE_RIGHT_DPAD,
-                -> {
+                ComposeTouchLayouts.MOTION_SOURCE_RIGHT_DPAD -> {
                     gameView?.sendMotionEvent(MOTION_SOURCE_ANALOG_RIGHT, 0f, 0f)
                 }
                 ComposeTouchLayouts.MOTION_SOURCE_DPAD_AND_LEFT_STICK -> {
