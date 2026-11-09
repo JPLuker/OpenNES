@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — Automatic NES library enrichment
+
+- Automatically enqueue rate-limited, network-constrained metadata jobs after ROM discovery without blocking the emulator or the ROM import process.
+- Look up one verified NES Wikidata entry, then use that exact entity's English Wikipedia sitelink to retrieve an attributed article summary.
+- Persist description/genre/year and Wikipedia article attribution in Room schema 16; migrate existing games without losing saves, favorites, custom art or edited text.
+- Restore eligibility for previously unmatched or short-description games when upgrading so cached negative results do not prevent new enrichment.
+- Process at most eight games per background worker, queue additional batches for larger libraries, and retry transient service failures with backoff.
+- Add a default-on automatic lookup switch under Settings → Library maintenance; manual refresh remains available and the Home screen has no maintenance panel.
+- Display descriptions on Continue Playing and show clickable Wikimedia source attribution in game details.
+
+
 ## Unreleased — Direct on-screen controller dragging
 
 - Add a drag-edit mode launched from the existing controller editor. The D-pad and A/B clusters receive visible outlines and can be moved by touch.
