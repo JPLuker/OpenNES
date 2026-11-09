@@ -27,9 +27,13 @@ Mark each row **Pass / Fail / Blocked / Not tested** and include evidence for fa
 | P-01 | Portrait: D-pad directions/diagonals, hold direction while pressing A and B, Start/Select/Menu | Inputs register correctly and release when fingers lift; no stuck or accidental presses |
 | P-02 | Portrait: onboarding, theme selection and editing controls | First-run guide appears once for visible touch controls; theme persists and setup can be rerun |
 | P-03 | Portrait: independently adjust Start/Select/Menu and drag control clusters | Edits persist across game launch and do not make the game viewport unusable |
+| P-04 | In-game Themes: switch presets, view the live controller preview, open HEX color picker, adjust and apply a custom color | Actual controller changes immediately and persists across reopening; canceled picker changes do not persist |
+| P-05 | Independently resize and reposition A and B; press each at its new location, then test two-finger A+B and the combined A+B region | The real button hit targets follow the rendered circles, remain independently responsive, and preserve the A+B gesture |
 | L-01 | Landscape: framed/overlay modes, compact fallback, minimal controls | Gameplay is legible; controls remain within insets/cutouts and do not overlap each other |
 | L-02 | Rotate portrait ↔ landscape repeatedly during gameplay and after customization | No crashes, stuck inputs or deleted per-orientation settings |
+| L-03 | Customize A/B separately in landscape, rotate to portrait and back | Each orientation retains its own A/B geometry and visible touch zones; no clipping or ghost buttons |
 | C-01 | Pair or connect external controller before launch and during play; unplug it | Controller buttons map correctly and touch controls recover appropriately after disconnect |
+| C-02 | Rapid joystick and button input, then disconnect/reconnect; try unrelated mouse/scroll events | No stale/recycled motion readings, stuck button or crash; non-joystick generic input is not swallowed by the gamepad pipeline |
 | A-01 | Play music and sound effects for ten minutes, with fast-forward toggled on/off | Audio remains audible without sustained crackles, drift or repeated stalls; game speed returns to normal |
 | S-01 | Save to each manual slot, load each, then select an empty slot | Saved progress restores; empty slot reports failure, never success |
 | S-02 | Quick-load before any quick-save; quick-save then quick-load | Missing quick-save reports correctly; later quick-load restores captured progress |

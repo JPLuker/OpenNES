@@ -110,7 +110,9 @@
 - [x] Add a clear palette-icon affordance on the tappable swatch; tapping the swatch opens the wheel, and the adjacent HEX field remains editable.
 - [x] Correct vertical D-pad pressed highlights without altering already-correct gameplay input mapping.
 - [x] Independently adjust Start, Select and Menu geometry, while preserving orientation-specific layouts and saved themes.
-- [ ] Individual A/B button and D-pad segment geometry/touch-hitbox controls; these still use shared clusters.
+- [x] Independent A/B button size/position uses corresponding PadKit touch anchors (with A+B combination retained); layouts remain separated by orientation.
+- [x] Reuse the full controller preview and color wheel directly in the in-game editor.
+- [ ] Independent D-pad segment geometry/touch-hitbox controls; the D-pad remains a shared cluster.
 - [ ] Complete real-device acceptance of onboarding previews, color persistence, all D-pad directions, multitouch, landscape/portrait layouts and controller ergonomics.
 
 ## M5 — Gameplay, saves, and quality
@@ -123,6 +125,11 @@
 - [ ] Test battery drain, suspend/resume, calls, audio focus, background/foreground, and configuration changes.
 
 **Exit criteria:** NES gameplay is stable across representative titles and Android device configurations. The [M0–M5 real-device test matrix](docs/M5_FINAL_TESTING.md) must pass; CI alone is insufficient.
+
+### Additional M5 hardware input stabilization
+
+- [x] Capture immutable gamepad key/motion data before asynchronous processing, avoiding recycled Android event objects and ignoring unsupported generic input.
+- [ ] Validate hardware controller reconnects, held buttons, joystick motion and virtual A/B combinations on a real phone.
 
 ## M6 — RetroAchievements integration
 

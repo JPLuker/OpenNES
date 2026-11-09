@@ -13,9 +13,9 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and one CI-verified rolling debug APK/checksum workflow | Real-device regression and production signing still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
 | **M2 — UI completion and cleanup** | **SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: library, menus, settings, ROM recovery, theme/onboarding previews and color-picker UI | CI passed; verify previews, colors and navigation on phones |
-| **M3 — Portrait NES controller** | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: six palettes, shared live preview, built-in HSV/HEX editor, palette-badge swatches, fixed Up/Down visual highlights and separate Start/Select/Menu geometry | Verify touch feedback, multitouch, color persistence, hit zones and layout on device; independent A/B geometry not implemented |
-| M4 — Landscape NES controller | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: inherits new palette and single-piece controls; separate framed/overlay layouts and geometry settings retained | Verify safe layout, touch boundaries and theme visibility on compact/wide landscape screens |
-| **M5 — Gameplay reliability** | **FINAL-TEST CANDIDATE**: save-write failures now propagate, empty states are rejected, cancellation and quit races improved; final candidate passed CI | Execute M5 device matrix for saves, audio, touch, input, rotation and resume; resolve critical findings |
+| **M3 — Portrait NES controller** | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: live theme preview and HEX wheel available in-game; separate A/B and Start/Select/Menu anchor geometry is persisted per orientation | Verify actual A/B hit targets, one- and two-finger combined input, D-pad directions, wheel persistence and layout on device; D-pad segment geometry still outstanding |
+| M4 — Landscape NES controller | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: inherits independent A/B touch anchors plus landscape-specific framed/overlay layouts, themes and geometry settings | Verify A/B hitbox alignment, screen-safe layout and transitions on compact/wide landscape screens |
+| **M5 — Gameplay reliability** | **FINAL-TEST CANDIDATE**: save failures, cancellation and quit races improved; hardware key/motion events now use immutable snapshots before async processing; latest candidate passed CI | Execute the expanded M5 device matrix for saves, audio, A/B hitboxes, controller reconnects, rotation and resume |
 | **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
@@ -32,7 +32,9 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [x] Correct inverted visual Up/Down D-pad pressed highlights without changing gameplay input.
 - [x] Reuse the Settings NES controller preview in onboarding, with live theme selection.
 - [x] Add native HSV wheel, brightness and saturation sliders, manual HEX editing and color swatch palette icons in Settings/onboarding.
-- [ ] Longer-term: independent A/B and D-pad position/hitbox control and deeper material styling.
+- [x] Add in-game live controller preview, full 10-color HEX wheel and selectable preset themes without navigating to Settings.
+- [x] Implement independent A/B size and position using real PadKit input anchors, retaining the legacy A+B combined input regions.
+- [ ] Longer-term: independent D-pad segment position/hitbox control and deeper material styling.
 
 ## Single test APK distribution
 
@@ -48,7 +50,8 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [x] Replace the overlong controller dialog with a compact bottom sheet: drag first, D-pad/A-B/More/Themes tabs, one cluster's compact sliders at a time, preserved reset confirmation and per-orientation persistence.
 - [ ] Confirm onboarding, sheet sizing, drag handoff, theme persistence, external-controller takeover and game-save behavior on a real phone.
 - [x] Allow independent Start, Select and Menu position and size edits under More, saved per orientation; existing layout data remains backward compatible.
-- [ ] Independent A/B and D-pad geometry/hitbox editing remains future work; main control groups still move as clusters.
+- [x] Each A/B button can be individually sized and repositioned in the in-game editor; its touch region follows the visible anchored button.
+- [ ] Individual D-pad segment hitbox editing remains future work; the D-pad group still moves as one cluster.
 
 ## M3 source completion checklist
 
@@ -98,6 +101,8 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 
 ## M5 active source checklist
 
+- [x] Snapshot physical controller KeyEvent/MotionEvent values before asynchronous flow emission; ignore missing devices and pass unrelated generic pointer/scroll input to Android.
+- [ ] Confirm gamepad disconnect/reconnect, fast simultaneous A/B and controller axis neutrality on real hardware.
 - [x] Existing NES refresh-rate preference and virtual-input release handling
 - [x] Correct false-positive quick-save/load feedback, report missing quick saves and failed save/load slots without claiming success
 - [x] Always reset the emulator loading flag after failed or cancelled operations; report a missing save snapshot instead of getting stuck
