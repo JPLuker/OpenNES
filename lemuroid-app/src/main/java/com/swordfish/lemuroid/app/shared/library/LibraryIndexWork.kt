@@ -1,6 +1,8 @@
 package com.swordfish.lemuroid.app.shared.library
 
 import android.content.Context
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
 import androidx.work.CoroutineWorker
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
@@ -10,11 +12,13 @@ import com.swordfish.lemuroid.app.utils.android.createSyncForegroundInfo
 import com.swordfish.lemuroid.lib.injection.AndroidWorkerInjection
 import com.swordfish.lemuroid.lib.injection.WorkerKey
 import com.swordfish.lemuroid.lib.library.LemuroidLibrary
+import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import dagger.Binds
 import dagger.android.AndroidInjector
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -36,25 +40,55 @@ class LibraryIndexWork(context: Context, workerParams: WorkerParameters) :
 
         setForegroundAsync(foregroundInfo)
 
-        val result =
-            withContext(Dispatchers.IO) {
-                kotlin.runCatching {
-                    lemuroidLibrary.indexLibrary()
-                }
-            }
-
-        result.exceptionOrNull()?.let {
-            Timber.e("Library indexing work terminated with an exception:", it)
+        // A revoked document-tree grant must not be interpreted as an empty
+        // NES folder: the indexer's cleanup could otherwise remove saved games.
+        if (!selectedRomFolderIsReadable()) {
+            Timber.w("Selected NES folder is no longer accessible")
+            LibraryScanStatus.setError(applicationContext, LibraryScanStatus.FOLDER_UNAVAILABLE)
+            return Result.failure()
         }
+
+        try {
+            withContext(Dispatchers.IO) {
+                lemuroidLibrary.indexLibrary()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "NES library indexing failed; existing library retained")
+            LibraryScanStatus.setError(applicationContext, LibraryScanStatus.SCAN_FAILED)
+            return Result.failure()
+        }
+
+        LibraryScanStatus.setError(applicationContext, null)
 
         // The game library is usable immediately. Metadata is enriched later
         // by a separate WorkManager job with an online constraint.
-        if (result.isSuccess) {
-            NesAutoMetadataScheduler.schedule(applicationContext)
-        }
+        NesAutoMetadataScheduler.schedule(applicationContext)
         LibraryIndexScheduler.scheduleCoreUpdate(applicationContext)
 
         return Result.success()
+    }
+
+    private fun selectedRomFolderIsReadable(): Boolean {
+        val selectedFolder =
+            SharedPreferencesHelper.getLegacySharedPreferences(applicationContext)
+                .getString(applicationContext.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder), null)
+                ?.takeIf { it.isNotBlank() }
+                ?: return true
+
+        return try {
+            val uri = Uri.parse(selectedFolder)
+            val hasGrant =
+                applicationContext.contentResolver.persistedUriPermissions.any {
+                    it.uri == uri && it.isReadPermission
+                }
+            val folder = DocumentFile.fromTreeUri(applicationContext, uri)
+            hasGrant && folder != null && folder.exists() && folder.isDirectory && folder.canRead()
+        } catch (e: Exception) {
+            Timber.w(e, "Cannot read selected NES document folder")
+            false
+        }
     }
 
     @dagger.Module(subcomponents = [Subcomponent::class])
