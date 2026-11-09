@@ -38,6 +38,20 @@
 6. **Build simplification:** consolidate unnecessary product flavors and dependencies only after NES works.
 7. **Final size inspection:** enumerate all APK native libraries and compare actual size to baseline.
 
+## Follow-up source audit (2026-11-09)
+
+The M2 source review found the following live links, so deletion is **deferred** rather than treated as completed:
+
+| Legacy surface | Evidence | Next safe action |
+|---|---|---|
+| Android TV entry points | `lemuroid-app/src/main/AndroidManifest.xml` still registers `MainTVActivity`, TV settings, picker, game/menu, and input activities with a Leanback launcher | Map the remaining TV consumers/DI registrations before removing TV components; desktop/mobile ROM and save services must not regress |
+| TV-specific platform dependencies | The app Gradle file still includes Leanback, Leanback Paging, Leanback Preferences and TV Provider; the manifest requests TV EPG access | Remove only after surviving source and manifest references are accounted for |
+| APK variants | `lemuroid-app/build.gradle.kts` retains free/play and bundle/dynamic variants; `settings.gradle.kts` supports the FCEUmm dynamic module | Preserve existing debug APK publishing until a single NES-only replacement build is designed and verified |
+| Internal resource/package identities | Manifest/app namespace and themes use old `lemuroid` identifiers; a `lemuroid_help_content` key now contains OpenNES-specific help, and launch intents still use a legacy scheme | Preserve identifiers until saved preferences, shortcut intents, manifest references, and app migration behavior are fully mapped |
+| Store review hook | `MainActivity` previously initialized the upstream review manager at startup | Initialization removed; separately determine if its ext-module dependency can be dropped safely |
+
+M2 also added safe-drawing insets to the main navigation, top bars and pause menu. These are **source changes, not real-device acceptance**, and they must still be checked with gesture navigation, cutouts, rotations, large text and TalkBack after the testing pause ends.
+
 ## Build and functional gates
 
 - [x] Clean checkout with recursive submodules builds a debug APK.
