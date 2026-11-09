@@ -1,6 +1,6 @@
 # Building and testing OpenNES
 
-OpenNES is an early-stage fork of Lemuroid. These instructions build its development APK. The current NES-only source paths package FCEUmm, and the M2–M4 interface/controller source milestones are code-complete. **None of the latest development has undergone deliberate compilation or device acceptance while testing is paused.**
+OpenNES is an early-stage fork of Lemuroid. These instructions build its development APK. The current NES-only source paths package FCEUmm. The consolidated `master` workflow passed lint, build, NES-only inspection and publication on [commit `5dd2fac`](https://github.com/JPLuker/OpenNES/commit/5dd2fac586863858b6b1d1f71fa44a387bf10007); **full device acceptance remains open**.
 
 ## Requirements
 
@@ -73,7 +73,7 @@ Use only the direct `dev-latest` APK link above for normal testing. Its filename
 The download uses package ID `com.jpluker.opennes.debug`, signed with the repository's existing development keystore. Do not expect it to update a future production build with application ID `com.jpluker.opennes` directly.
 
 
-## Optional production release signing (M7 — not yet accepted)
+## Optional production release signing (M8 — not yet accepted)
 
 The `release` variant has **no default signing key**. Configure it only for a real production release; never commit a keystore, passwords, exported private key, or credentials. These variables must all be present:
 
@@ -108,7 +108,7 @@ The CI-packaged database has 29,246 NES records (3,706,880 bytes), down from 104
 
 ## Troubleshooting
 
-**The GitHub workflow is red but there's an APK artifact.** Check **Kotlin lint** separately. The first CI run on 2026-11-06 compiled an APK and uploaded the artifact but failed because pre-existing code in `retrograde-app-shared` had style violations; those reported violations are being corrected.
+**The rolling APK did not update.** The consolidated job must pass lint, compilation and APK inspection before updating `dev-latest`. Check [GitHub Actions](https://github.com/JPLuker/OpenNES/actions); the last successful APK remains available.
 
 **The Gradle task can't find core libraries.** Run `git submodule update --init --recursive` and confirm `lemuroid-cores/bundled-cores` exists.
 

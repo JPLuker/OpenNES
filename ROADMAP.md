@@ -1,6 +1,6 @@
 # OpenNES — Development Roadmap
 
-**Status (2026-11-09):** M0 foundation implemented, M1 NES debloat mostly implemented, **M2 UI source implementation code-complete (device acceptance deferred)**, and **M3 portrait NES controller source code-complete (hardware acceptance deferred)**. **M4 landscape NES controller source implementation is code-complete (device acceptance deferred)**; **M5 gameplay reliability is active**. M6 RetroAchievements native integration is in progress, beginning with ROM identification and native bridge analysis; **M7 RomM integration precedes M8 public release**, with implementation underway and real-server/device acceptance still pending. Device testing and deliberate build verification are paused at the user's request. See [per-module progress](docs/MODULE_PROGRESS.md) for the current checklist.  
+**Status (2026-11-09):** M0 and the single rolling NES-only APK pipeline are CI-verified; M1 NES-only cleanup is mostly complete; M2 UI, M3 portrait and M4 landscape controller source implementations are substantially complete but still require on-device acceptance. The onboarding preview, six themes, per-part HSV wheel and HEX picker, swatch palette icons, and Up/Down pressed-effect correction are implemented. **M5 is the current final-testing gate** for saves, audio, touch, rotation and resume. M6 native RetroAchievements is not yet functional; **M7 RomM integration must pass acceptance before M8 public release**. The [current implementation tracker](docs/MODULE_PROGRESS.md) distinguishes source work, successful CI and outstanding device tests.
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -17,6 +17,7 @@
 - **RetroAchievements is a first-class feature.** Account, game identification, achievements and progress, rich presence/leaderboards where applicable, and tasteful in-game notifications.
 - **No commercial ROMs bundled.** Users import their own compatible game files. Respect licenses and upstream attribution.
 - **Small, maintainable, tested builds.** Strip unnecessary components after confirming they are not shared prerequisites.
+- **One normal APK download.** Publish the newest successful, linted and inspected `master` build only as `dev-latest/OpenNES-debug.apk` plus checksum; public stable builds remain a separate M8 concern.
 
 ## Historical starting state (2026-11-06)
 
@@ -29,7 +30,7 @@
 - Existing Android package ID and GitHub release workflows still use Lemuroid names and release assumptions.
 - Initial repository inspection showed no open GitHub issues. No APK build or real-device validation has been performed yet.
 
-> **Progress tracking:** The checklists below are the original acceptance gates. Unchecked items must not be treated as proof that a feature has never been implemented. See the [current implementation tracker](docs/MODULE_PROGRESS.md). No new verification is being claimed while testing is paused.
+> **Progress tracking:** The checklists below preserve original acceptance gates. Unchecked items do not imply missing source implementation. See the [current implementation tracker](docs/MODULE_PROGRESS.md). The latest CI passed; final device gameplay acceptance is still open.
 
 ## M0 — Baseline, build and branding
 
@@ -102,6 +103,16 @@
 
 **Exit criteria:** Portrait/landscape transitions are safe; both have individually polished composition on several aspect ratios.
 
+## Latest M2–M4 controller customization implementation
+
+- [x] Six original preset palettes and a shared, live controller preview in Settings and first-game onboarding; themes persist and onboarding can be rerun.
+- [x] Ten configurable color roles with persistent six-digit HEX input, plus a hue/saturation wheel and brightness/saturation sliders.
+- [x] Add a clear palette-icon affordance on the tappable swatch; tapping the swatch opens the wheel, and the adjacent HEX field remains editable.
+- [x] Correct vertical D-pad pressed highlights without altering already-correct gameplay input mapping.
+- [x] Independently adjust Start, Select and Menu geometry, while preserving orientation-specific layouts and saved themes.
+- [ ] Individual A/B button and D-pad segment geometry/touch-hitbox controls; these still use shared clusters.
+- [ ] Complete real-device acceptance of onboarding previews, color persistence, all D-pad directions, multitouch, landscape/portrait layouts and controller ergonomics.
+
 ## M5 — Gameplay, saves, and quality
 
 - [ ] Maintain accurate audio/video synchronization and stable frame pacing.
@@ -111,7 +122,7 @@
 - [ ] Add in-app diagnostics for crashes/loading failures, with privacy-preserving logs.
 - [ ] Test battery drain, suspend/resume, calls, audio focus, background/foreground, and configuration changes.
 
-**Exit criteria:** NES gameplay is stable across representative titles and Android device configurations.
+**Exit criteria:** NES gameplay is stable across representative titles and Android device configurations. The [M0–M5 real-device test matrix](docs/M5_FINAL_TESTING.md) must pass; CI alone is insufficient.
 
 ## M6 — RetroAchievements integration
 
@@ -121,7 +132,7 @@
 - [ ] Select compatible `rcheevos` / `rc_client` integration approach; provide memory-read bridge from FCEUmm/LibretroDroid as needed.
 - [ ] Implement secure login/logout and credential/session storage; never log tokens.
 - [ ] Implement official ROM hashing/game identification and supported game lookup.
-- [ ] Surface per-game achievement lists, locked/unlocked progress and earned points.
+- [ ] Show per-game achievement lists, locked/unlocked state, completion progress and points in a **Steam-inspired Achievements view directly inside the in-game pause menu**, without leaving gameplay.
 - [ ] Add small in-game achievement popups with optional sound/haptics and accessibility support.
 - [ ] Implement game rich presence and leaderboards where supported.
 - [ ] Carefully manage network outages, retries, and session state; do not falsely display unearned or unverified unlocks.
@@ -145,7 +156,8 @@
 ## M8 — Release, maintenance and open source
 
 - [ ] Complete GPL/source attributions, third-party license audit, acknowledgements, and privacy documentation.
-- [ ] Create deterministic GitHub Actions CI for lint, tests, debug artifacts, and tagged releases.
+- [x] Consolidate `master` Kotlin lint, NES-only APK build, APK inspection, SHA-256 creation, and rolling `dev-latest` publication into one GitHub Actions job.
+- [ ] Add production-grade test/release checks and signed tagged releases after M7 RomM acceptance.
 - [ ] Configure **OpenNES-specific** release signing securely. Never commit signing keys or secrets.
 - [ ] Publish GitHub release APKs and changelog; document minimum Android version and supported formats.
 - [ ] Add bug-report templates, reproducible test cases, and NES-only regression checks.
@@ -171,9 +183,15 @@
 - Hardcore-compliant claim or competitive Hardcore awards without RetroAchievements approval.
 - Android TV-specific experience unless needed for a future, separately approved scope.
 
-## Current baseline evidence (2026-11-06)
+## Latest verified CI evidence (2026-11-09)
+
+- [CI run 42703489576](https://github.com/JPLuker/OpenNES/actions/runs/42703489576) passed lint, compilation, NES-only APK inspection and publishing for [commit `5dd2fac`](https://github.com/JPLuker/OpenNES/commit/5dd2fac586863858b6b1d1f71fa44a387bf10007).
+- One rolling [test APK](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk) and [SHA-256 file](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk.sha256) serve normal testing. The current build contains the D-pad visual fix, onboarding preview, color wheel and palette icon.
+- Real-device feedback has been received, but the full M5 acceptance matrix is **not complete**; there is no verified production release.
+
+## Historical baseline evidence (2026-11-06)
 
 - The first GitHub Actions run successfully compiled `:lemuroid-app:assembleFreeBundleDebug` and uploaded `OpenNES-debug-apk`; its overall status was **failure due to Kotlin lint**, not failure to assemble the APK.
-- Lint violations from inherited Lemuroid files are being corrected; separate APK and lint jobs now make failures unambiguous.
+- Initial lint failures were resolved in later development; the consolidated lint/build/publish workflow passed on 2026-11-09.
 - No mobile gameplay or NES-only APK acceptance test has yet been completed.
 - APK inspection and debloat work remain subject to the M0 baseline verification gate.

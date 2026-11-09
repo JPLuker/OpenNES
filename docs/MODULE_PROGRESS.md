@@ -2,7 +2,7 @@
 
 Updated: 2026-11-09
 
-This tracker records **implementation**, not test acceptance. M0–M5 are being prepared for final device testing; source stabilization changes are not hardware-accepted until the exact candidate passes CI and the manual test matrix in [M5 final-testing handoff](M5_FINAL_TESTING.md). M6–M8 remain unaccepted. Pushing to `master` can still trigger GitHub Actions automatically; a source commit is not proof of a working APK.
+This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. [Commit `5dd2fac`](https://github.com/JPLuker/OpenNES/commit/5dd2fac586863858b6b1d1f71fa44a387bf10007) passed Kotlin lint, NES-only APK build/inspection and publication in [CI run 42703489576](https://github.com/JPLuker/OpenNES/actions/runs/42703489576). The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) remains unaccepted; M6–M8 are not complete.
 
 ## Milestones
 
@@ -10,15 +10,15 @@ This tracker records **implementation**, not test acceptance. M0–M5 are being 
 
 | Module | Implementation status | Next acceptance/development gate |
 | --- | --- | --- |
-| M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
+| M0 — Foundation and OpenNES branding | Implemented: dedicated package and one CI-verified rolling debug APK/checksum workflow | Real-device regression and production signing still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
-| **M2 — UI completion and cleanup** | **CODE-COMPLETE (source scope; not device accepted)**: NES library, navigation, detail sheets, menus, settings, ROM recovery, compact layouts and accessibility pass implemented; obsolete TV UI removed | Device and build acceptance remain paused; regressions will be assessed when testing resumes |
-| **M3 — Portrait NES controller** | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: unified non-overlapping D-pad artwork, circular A/B, themed housing, six style presets and 10 editable color roles in Settings; layout editing still accessible in-game | Recheck visual proportions, overlapping layers, touch hitboxes, editing, contrast and portraits on actual phones |
+| **M2 — UI completion and cleanup** | **SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: library, menus, settings, ROM recovery, theme/onboarding previews and color-picker UI | CI passed; verify previews, colors and navigation on phones |
+| **M3 — Portrait NES controller** | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: six palettes, shared live preview, built-in HSV/HEX editor, palette-badge swatches, fixed Up/Down visual highlights and separate Start/Select/Menu geometry | Verify touch feedback, multitouch, color persistence, hit zones and layout on device; independent A/B geometry not implemented |
 | M4 — Landscape NES controller | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: inherits new palette and single-piece controls; separate framed/overlay layouts and geometry settings retained | Verify safe layout, touch boundaries and theme visibility on compact/wide landscape screens |
-| **M5 — Gameplay reliability** | **ACTIVE**: existing audio/input fixes and save infrastructure; now auditing state operation results, lifecycle ownership and errors | Improve save/resume feedback and cancellation handling; audio and device acceptance deferred |
+| **M5 — Gameplay reliability** | **FINAL-TEST CANDIDATE**: save-write failures now propagate, empty states are rejected, cancellation and quit races improved; final candidate passed CI | Execute M5 device matrix for saves, audio, touch, input, rotation and resume; resolve critical findings |
 | **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
-| **M8 — Public release** | **ACTIVE — release-hardening source**: rolling debug APK workflow remains; inherited release-signing credentials removed and production signing is optional/secret-provided | After M7 RomM acceptance, verify production key custody, reproducible builds, licensing, CI permissions, APK contents and device acceptance |
+| **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
 
 ## Latest controller visual overhaul — following M5 hardware feedback
 
@@ -27,8 +27,19 @@ This tracker records **implementation**, not test acceptance. M0–M5 are being 
 - [x] Use a single rounded portrait/landscape controller faceplate instead of stacked translucent square layers.
 - [x] Add Settings → Touch controller appearance, live preview, six original preset palettes and ten per-element colors with persistent hex editing.
 - [x] Keep existing portrait and landscape positional settings and preserve the in-game editor.
-- [ ] Compile and lint the updated branch and verify the new APK with real NES gameplay and both orientations.
-- [ ] Longer-term: independent per-button position/hitbox control and deeper material styling.
+- [x] Compile, lint, inspect and publish the combined controller/color-picker APK from `master` (CI run 42703489576).
+- [ ] Validate the APK's gameplay, input and both orientations on a real phone.
+- [x] Correct inverted visual Up/Down D-pad pressed highlights without changing gameplay input.
+- [x] Reuse the Settings NES controller preview in onboarding, with live theme selection.
+- [x] Add native HSV wheel, brightness and saturation sliders, manual HEX editing and color swatch palette icons in Settings/onboarding.
+- [ ] Longer-term: independent A/B and D-pad position/hitbox control and deeper material styling.
+
+## Single test APK distribution
+
+- [x] Use one `master` job for lint → NES-only APK build → APK inspection/checksum → rolling release publication.
+- [x] One permanent [test APK download](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk) with [matching checksum](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk.sha256); no separate APK artifact channel.
+- [x] Verified the consolidated workflow with [successful run 42703489576](https://github.com/JPLuker/OpenNES/actions/runs/42703489576).
+- [ ] Production signing, licenses and stable release remain M8 tasks after RomM acceptance.
 
 ## First-game controller onboarding and compact editor
 
@@ -81,7 +92,7 @@ This tracker records **implementation**, not test acceptance. M0–M5 are being 
 - [x] Propagate save RAM and state-write failures rather than suppressing unsuccessful disk writes.
 - [x] Reject empty serialized state data and preserve coroutine cancellation through retry helpers.
 - [x] Log absent background capture instead of silently returning.
-- [ ] Confirm **build, Kotlin lint and NES-only APK inspection** for the final candidate commit.
+- [x] Confirm **build, Kotlin lint and NES-only APK inspection** for CI commit `5dd2fac` (not the same as device acceptance).
 - [ ] Execute and accept the manual [M0–M5 final-testing matrix](M5_FINAL_TESTING.md) on a real phone.
 - [ ] Resolve P0/P1 issues identified by acceptance before calling M5 complete.
 
@@ -129,7 +140,7 @@ This tracker records **implementation**, not test acceptance. M0–M5 are being 
 - [x] Preserve rolling development debug APK distribution without bundling commercial ROMs
 - [x] Remove inherited hardcoded release keystore alias/passwords and require explicit OpenNES environment-provided secrets
 - [x] Ignore new keystore material and document the unsigned-release default
-- [x] Review workflow's least-privilege release permission and artifact publishing dependency on compile/lint; publish a SHA-256 checksum alongside the rolling APK
+- [x] Consolidate least-privilege lint/build/checksum/publish into one job and remove the duplicate APK artifact delivery channel
 - [x] Pin GitHub Actions checkout, Java setup, artifact upload and download to verified immutable v4 commit IDs
 - [ ] Finish third-party library license audit, native dependency provenance and release-binary inspection
 - [ ] Inspect signing certificates, APK contents and native binaries against release requirements (testing paused)

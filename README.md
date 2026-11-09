@@ -8,7 +8,7 @@ One normal testing download: `master` → validated build → rolling `dev-lates
 
 [Development roadmap](ROADMAP.md) · [Module progress](docs/MODULE_PROGRESS.md) · [M5 final-testing checklist](docs/M5_FINAL_TESTING.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
 
-> **Early development:** The last verified development APK was approximately **32.7 MB**, down from a 222 MB multi-console baseline. It packages the FCEUmm NES core, and the home shelf, game details, search, pause and major settings screens now use OpenNES-specific UI. Portrait and landscape controller layouts exist but still need substantial polish. RetroAchievements is not implemented. **Device testing and deliberate build verification are currently paused**; new source commits must not be mistaken for verified releases.
+> **Early development:** The [current test APK](https://github.com/JPLuker/OpenNES/actions/runs/42703489576) successfully passed CI build, lint, NES-only package inspection and publication. The controller UI now includes live preset previews, a HEX/HSV color picker, visible palette icons and the Up/Down feedback correction. **Full M0–M5 on-device acceptance is not finished**. Native RetroAchievements and RomM acceptance remain pending.
 
 ## What OpenNES is meant to be
 
@@ -37,9 +37,9 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | M0 — Own Android package/name and reproducible APK workflow | CI complete; device testing pending |
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
 | M2 — Replace the complete Lemuroid user interface | **Code-complete (source scope)**: NES library, details, menus, settings, import recovery, accessible layouts and Android TV UI removal; build and on-device acceptance deferred |
-| M3 — Premium NES portrait controller skin | **Code-complete (source scope)**: NES housing, D-pad/A/B/Start/Select/Menu, responsive defaults and saved portrait-specific editor; device acceptance deferred |
+| M3 — Premium NES portrait controller skin | Source implementation with six themes, onboarding preview, HSV/HEX wheel, swatch palette icons, fixed D-pad visuals and independently sized/placed Start/Select/Menu; device acceptance and individual A/B geometry pending |
 | M4 — Dedicated landscape controller skin | **Code-complete (source scope)**: selectable framed/overlay gameplay, minimal appearance, dedicated secondary controls, adaptive sizing, cutout handling and separate settings; on-device acceptance deferred |
-| M5 — Gameplay, saves, input and performance polish | Partly implemented: audio, controller persistence and stuck-input fixes; regression testing pending |
+| M5 — Gameplay, saves, input and performance polish | CI-verified final-test source candidate; complete manual save/audio/controller/suspend-resume regression suite still pending |
 | M6 — RetroAchievements integration | Native integration started: local NES ROM hashing and LibretroDroid/rc_client technical handoff; sign-in, runtime and unlocks not implemented |
 | M7 — RomM integration (pre-release requirement) | Source implementation underway: secure read-only connection and local NES import screen; untested against a server, save sync/conflicts not implemented |
 | M8 — Production releases and maintenance | Source hardening underway: inherited release credentials removed, secret-provided optional production signing configured; debug APK/checksum distribution retained; production audits/QA and M7 RomM acceptance pending |
@@ -64,7 +64,7 @@ Each successful push to `master` builds and publishes a new APK at this same add
 
 This is a **debug/test APK**, not a production-signed release. Package ID: `com.jpluker.opennes.debug`. The project will add separately signed production releases later. No commercial ROMs are provided. Android will reject an in-place update if a build uses a different signing certificate.
 
-For diagnostics, the [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) page still provides test results and build artifacts.
+For diagnostics, the [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) page provides build, lint and APK-inspection logs. The APK itself has one normal location: `dev-latest`.
 
 ## Build from source
 
