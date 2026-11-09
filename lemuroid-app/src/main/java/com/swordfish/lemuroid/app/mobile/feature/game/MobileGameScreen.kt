@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -335,12 +336,21 @@ private fun MenuEditTouchControls(
                     offsetX = touchControllerSettings.leftOffsetX,
                     offsetY = touchControllerSettings.leftOffsetY,
                     onSizeChange = {
+                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftScale = it))
+                    },
+                    onSizeCommit = {
                         viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftScale = it))
                     },
                     onXChange = {
+                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftOffsetX = it))
+                    },
+                    onXCommit = {
                         viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetX = it))
                     },
                     onYChange = {
+                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftOffsetY = it))
+                    },
+                    onYCommit = {
                         viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetY = it))
                     },
                     onReset = {
@@ -356,12 +366,21 @@ private fun MenuEditTouchControls(
                     offsetX = touchControllerSettings.rightOffsetX,
                     offsetY = touchControllerSettings.rightOffsetY,
                     onSizeChange = {
+                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightScale = it))
+                    },
+                    onSizeCommit = {
                         viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightScale = it))
                     },
                     onXChange = {
+                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightOffsetX = it))
+                    },
+                    onXCommit = {
                         viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetX = it))
                     },
                     onYChange = {
+                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightOffsetY = it))
+                    },
+                    onYCommit = {
                         viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetY = it))
                     },
                     onReset = {
@@ -377,10 +396,13 @@ private fun MenuEditTouchControls(
                 MenuEditTouchControlRow(
                     label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_opacity),
                 ) {
-                    Slider(
-                        value = touchControllerSettings.opacity.coerceIn(0.35f, 1f),
+                    TouchControlEditorSlider(
+                        value = touchControllerSettings.opacity,
                         valueRange = 0.35f..1f,
-                        onValueChange = {
+                        onPreview = {
+                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(opacity = it))
+                        },
+                        onCommit = {
                             viewModel.updateTouchControllerSettings(touchControllerSettings.copy(opacity = it))
                         },
                     )
@@ -389,9 +411,12 @@ private fun MenuEditTouchControls(
                     MenuEditTouchControlRow(
                         label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_rotation),
                     ) {
-                        Slider(
-                            value = touchControllerSettings.rotation.coerceIn(0f, 1f),
-                            onValueChange = {
+                        TouchControlEditorSlider(
+                            value = touchControllerSettings.rotation,
+                            onPreview = {
+                                viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rotation = it))
+                            },
+                            onCommit = {
                                 viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rotation = it))
                             },
                         )
@@ -427,17 +452,21 @@ private fun MenuEditControllerCluster(
     offsetX: Float,
     offsetY: Float,
     onSizeChange: (Float) -> Unit,
+    onSizeCommit: (Float) -> Unit,
     onXChange: (Float) -> Unit,
+    onXCommit: (Float) -> Unit,
     onYChange: (Float) -> Unit,
+    onYCommit: (Float) -> Unit,
     onReset: () -> Unit,
 ) {
     Text(text = label, fontWeight = FontWeight.Bold)
     MenuEditTouchControlRow(
         label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_size),
     ) {
-        Slider(
-            value = size.coerceIn(0f, 1f),
-            onValueChange = onSizeChange,
+        TouchControlEditorSlider(
+            value = size,
+            onPreview = onSizeChange,
+            onCommit = onSizeCommit,
         )
     }
     MenuEditTouchControlRow(
@@ -445,10 +474,11 @@ private fun MenuEditControllerCluster(
             stringResource(com.swordfish.lemuroid.R.string.opennes_controls_horizontal) +
                 " (${(offsetX * TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X).roundToInt()} dp)",
     ) {
-        Slider(
-            value = offsetX.coerceIn(-1f, 1f),
+        TouchControlEditorSlider(
+            value = offsetX,
             valueRange = -1f..1f,
-            onValueChange = onXChange,
+            onPreview = onXChange,
+            onCommit = onXCommit,
         )
     }
     MenuEditTouchControlRow(
@@ -456,15 +486,39 @@ private fun MenuEditControllerCluster(
             stringResource(com.swordfish.lemuroid.R.string.opennes_controls_vertical) +
                 " (${(offsetY * TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y).roundToInt()} dp)",
     ) {
-        Slider(
-            value = offsetY.coerceIn(-1f, 1f),
+        TouchControlEditorSlider(
+            value = offsetY,
             valueRange = -1f..1f,
-            onValueChange = onYChange,
+            onPreview = onYChange,
+            onCommit = onYCommit,
         )
     }
     TextButton(onClick = onReset) {
         Text(text = resetLabel)
     }
+}
+
+/**
+ * Preview slider changes immediately, then persist the final value only once
+ * after release. Avoids launching a disk write for every pointer movement.
+ */
+@Composable
+private fun TouchControlEditorSlider(
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    onPreview: (Float) -> Unit,
+    onCommit: (Float) -> Unit,
+) {
+    val lastPreview = remember { mutableFloatStateOf(value) }
+    Slider(
+        value = value.coerceIn(valueRange.start, valueRange.endInclusive),
+        valueRange = valueRange,
+        onValueChange = {
+            lastPreview.floatValue = it
+            onPreview(it)
+        },
+        onValueChangeFinished = { onCommit(lastPreview.floatValue) },
+    )
 }
 
 @Composable
