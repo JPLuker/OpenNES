@@ -46,8 +46,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -209,7 +209,12 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     modifier =
                         Modifier
                             .layoutId(GameScreenLayout.CONSTRAINTS_GAME_VIEW)
-                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
+                            .windowInsetsPadding(
+                                WindowInsets.displayCutout.only(
+                                    if (isLandscape) WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                                    else WindowInsetsSides.Top,
+                                ),
+                            )
                             .onGloballyPositioned { viewportPosition.value = it.boundsInRoot() },
                 )
 
@@ -226,9 +231,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         } else if (!currentControllerConfig.allowTouchOverlay) {
                             PadContainer(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_LEFT_CONTAINER),
+                                innerEdge = LandscapePanelInnerEdge.RIGHT,
                             )
                             PadContainer(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_CONTAINER),
+                                innerEdge = LandscapePanelInnerEdge.LEFT,
                             )
                         }
 
@@ -290,10 +297,16 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
     }
 }
 
+private enum class LandscapePanelInnerEdge {
+    LEFT,
+    RIGHT,
+}
+
 @Composable
 private fun PadContainer(
     modifier: Modifier = Modifier,
     portrait: Boolean = false,
+    innerEdge: LandscapePanelInnerEdge? = null,
 ) {
     val theme = LocalLemuroidPadTheme.current
     Box(modifier = modifier) {
@@ -327,6 +340,29 @@ private fun PadContainer(
                         color = Color(0xFF383B40).copy(alpha = 0.28f * opacity),
                         topLeft = Offset(0f, size.height - 12.dp.toPx()),
                         size = Size(size.width, lowerSeamHeight),
+                    )
+                }
+            }
+        } else if (innerEdge != null) {
+            // Landscape side panels frame the video instead of covering it.
+            // Visual trim only: PadKit owns every touch target above this layer.
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val rail = 4.dp.toPx()
+                val accent = 2.dp.toPx()
+                val opacity = theme.opacity
+                val innerIsLeft = innerEdge == LandscapePanelInnerEdge.LEFT
+                val railX = if (innerIsLeft) 0f else (size.width - rail).coerceAtLeast(0f)
+                val accentX = if (innerIsLeft) rail else (size.width - rail - accent).coerceAtLeast(0f)
+                drawRect(
+                    color = Color(0xFF292C32).copy(alpha = 0.74f * opacity),
+                    topLeft = Offset(railX, 0f),
+                    size = Size(rail.coerceAtMost(size.width), size.height),
+                )
+                if (size.width > rail + accent) {
+                    drawRect(
+                        color = Color(0xFF9C2D3D).copy(alpha = 0.76f * opacity),
+                        topLeft = Offset(accentX, 0f),
+                        size = Size(accent, size.height),
                     )
                 }
             }

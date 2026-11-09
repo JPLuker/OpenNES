@@ -11,14 +11,14 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
 | **M2 — UI completion and cleanup** | **CODE-COMPLETE (source scope; not device accepted)**: NES library, navigation, detail sheets, menus, settings, ROM recovery, compact layouts and accessibility pass implemented; obsolete TV UI removed | Device and build acceptance remain paused; regressions will be assessed when testing resumes |
-| **M3 — Portrait NES controller** | **ACTIVE**: original NES controls, portrait-specific sizing and editing already present; first ergonomics pass adds D-pad ridges, enlarged NES touch bounds and full-screen viewport with hardware gamepads | Finish safe small-phone positioning, Start/Select/menu reachability and controller editor usability; device acceptance paused |
-| M4 — Landscape NES controller | Partially implemented: dedicated orientation settings and placements | Design-specific responsive layout and cutout review |
+| M3 — Portrait NES controller | **CODE-COMPLETE (source scope; unverified)**: NES D-pad/A/B/Start/Select/Menu, responsive defaults, saved orientation-specific editing, touch hit-region refinements and portrait housing | Build/device acceptance deferred: real NES input, gestures, cutouts, large text, pause and save/resume |
+| **M4 — Landscape NES controller** | **ACTIVE**: independent landscape settings and overlay/side-panel layout paths exist; NES side-panel trim and landscape video side-cutout padding started | Finish deliberate horizontal composition, secondary controls, wide/narrow displays and device acceptance |
 | M5 — Gameplay reliability | Partially implemented: audio/input fixes, save infrastructure and virtual input release handling | Comprehensive save/audio/suspend/regression verification |
 | M6 — RetroAchievements | Not implemented | Official integration feasibility, hashing, accounts, runtime and progress |
 | M7 — Public release | Development distribution in place | Testing, security/license audit, signing and release docs |
 | M8 — RomM integration (additional planned workstream) | Not implemented | Server authentication, game sync, offline save/conflict design |
 
-## M3 active source checklist
+## M3 source completion checklist
 
 - [x] Keep portrait and landscape controller settings independently persisted
 - [x] NES-only D-pad, A/B, Start and Select foregrounds and button IDs
@@ -36,8 +36,18 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Keep drag editor targets within the visible editor bounds when the target can fit; freeze bounds for each gesture to avoid moving clamps
 - [x] Add portrait-only charcoal/red faceplate trim and recessed legible Start/Select/Menu pills without modifying PadKit hit zones or landscape controls
 - [x] Stack drag-toolbar Fine-tune/Done and editor Reset/Done buttons on narrow screens or enlarged text; respect top and horizontal system-safe areas
-- [ ] Review final portrait visual balance and custom-offset edge cases on device (testing paused)
-- [ ] Physically verify multi-touch, diagonals, touch cancellation, save/resume and portrait orientation (testing paused)
+- [ ] **M3 acceptance deferred:** assess final portrait balance, custom-offset edge cases, cutouts and large text on hardware
+- [ ] **M3 acceptance deferred:** verify multitouch, diagonals, A+B, touch cancellation, external-gamepad takeover, menu hold, rotation, saves and resume on device
+
+## M4 active source checklist
+
+- [x] Retain independent stored landscape control sizes, positions, opacity and rotation
+- [x] Keep existing overlaid-controls and side-panel layout paths separate from portrait housing
+- [x] Apply landscape side-cutout padding to the game viewport, without altering portrait layout
+- [x] Add opposing charcoal/red inner trim to non-overlay left/right landscape controller panels
+- [ ] Tune landscape A/B and D-pad placement around the visible game, with separate secondary-button arrangement
+- [ ] Review extreme aspect ratios, safe touch zones, immersive mode and external gamepad transitions
+- [ ] **M4 acceptance deferred:** rotate and play NES titles with touch/hardware controllers on real devices
 
 ## M2 active checklist
 
@@ -177,6 +187,19 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - The drag-editor toolbar stacks Fine-tune and Done vertically when the available width is below 360dp or the system font scale is large. It also respects top and horizontal safe-drawing insets instead of only the display cutout.
 - The slider editor stacks Reset and Done on a cramped dialog width (below 300dp) or large fonts. Neither branch changes any input bindings, settings keys or storage behavior.
 - Device visual/touch checks and deliberate builds remain paused.
+
+## M3 closure — source code complete; hardware acceptance deferred
+
+- **Disposition:** M3's planned source-only portrait presentation and customization work is code-complete, not build- or device-accepted. A compile, install, visual review or reliable gameplay claim would be premature while testing is paused.
+- The final lifecycle fix exits drag editing if physical-controller takeover hides the touchscreen pad, gates the overlay on actual visible pads and clears obsolete pad measurements while controls are absent. It leaves newly measured targets intact when pads return.
+- **Device acceptance list:** first-run and restored portrait defaults on narrow/large displays; authentic D-pad visual proportions; diagonal and simultaneous A+B; separate Start/Select/Menu; long-press menu; drag previews, abort and persistence; reset and orientation isolation; video aspect/faceplate proportions; rotation/cutouts; gamepad takeover; suspend/resume; save games. Reopen M3 only for a concrete regression, not another indefinite visual audit.
+- M3 source completion does **not** supersede M1/M5 dependencies or M7 release checks.
+
+## First M4 source batch — landscape side-panel framing
+
+- In landscape, the game viewport's existing display-cutout padding now protects the left/right edges as well as the top. Portrait keeps its original top-only behavior.
+- When the controller config uses side panels instead of overlaying controls on the video, each panel gains mirrored charcoal/red NES-style trim along its **inner** edge. The decoration stays behind PadKit's input targets and follows visual opacity. Existing overlaid-controls behavior and all saved controller mappings are untouched.
+- **Pending:** actual device measurements, controller ergonomics and horizontal mode acceptance. No deliberate build or tests have been performed.
 
 ## Development rules
 
