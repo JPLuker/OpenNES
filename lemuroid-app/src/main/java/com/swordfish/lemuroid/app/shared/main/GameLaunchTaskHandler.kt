@@ -8,28 +8,22 @@ import com.swordfish.lemuroid.app.shared.game.BaseGameActivity
 import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
 import com.swordfish.lemuroid.app.shared.savesync.SaveSyncWork
 import com.swordfish.lemuroid.app.shared.storage.cache.CacheCleanerWork
-import com.swordfish.lemuroid.ext.feature.review.ReviewManager
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
-import kotlinx.coroutines.delay
 
-class GameLaunchTaskHandler(
-    private val reviewManager: ReviewManager,
-    private val retrogradeDb: RetrogradeDatabase,
-) {
+class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
     fun handleGameStart(context: Context) {
         cancelBackgroundWork(context)
     }
 
     suspend fun handleGameFinish(
-        enableRatingFlow: Boolean,
         activity: Activity,
         resultCode: Int,
         data: Intent?,
     ) {
         rescheduleBackgroundWork(activity.applicationContext)
         when (resultCode) {
-            Activity.RESULT_OK -> handleSuccessfulGameFinish(activity, enableRatingFlow, data)
+            Activity.RESULT_OK -> handleSuccessfulGameFinish(data)
             BaseGameActivity.RESULT_ERROR ->
                 handleUnsuccessfulGameFinish(
                     activity,
@@ -65,28 +59,13 @@ class GameLaunchTaskHandler(
         GameCrashActivity.launch(activity, message, messageDetail)
     }
 
-    private suspend fun handleSuccessfulGameFinish(
-        activity: Activity,
-        enableRatingFlow: Boolean,
-        data: Intent?,
-    ) {
+    private suspend fun handleSuccessfulGameFinish(data: Intent?) {
         val duration =
             data?.extras?.getLong(BaseGameActivity.PLAY_GAME_RESULT_SESSION_DURATION)
                 ?: 0L
         val game = data?.extras?.getSerializable(BaseGameActivity.PLAY_GAME_RESULT_GAME) as Game
 
         updateGamePlayedTimestamp(game, duration)
-        if (enableRatingFlow) {
-            displayReviewRequest(activity, duration)
-        }
-    }
-
-    private suspend fun displayReviewRequest(
-        activity: Activity,
-        durationMillis: Long,
-    ) {
-        delay(500)
-        reviewManager.launchReviewFlow(activity, durationMillis)
     }
 
     private suspend fun updateGamePlayedTimestamp(

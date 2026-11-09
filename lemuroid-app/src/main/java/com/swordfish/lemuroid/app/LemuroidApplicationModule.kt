@@ -40,7 +40,6 @@ import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.app.tv.settings.BiosPreferences
 import com.swordfish.lemuroid.app.tv.settings.CoresSelectionPreferences
 import com.swordfish.lemuroid.ext.feature.core.CoreUpdaterImpl
-import com.swordfish.lemuroid.ext.feature.review.ReviewManager
 import com.swordfish.lemuroid.ext.feature.savesync.SaveSyncManagerImpl
 import com.swordfish.lemuroid.lib.bios.BiosManager
 import com.swordfish.lemuroid.lib.core.CoreUpdater
@@ -348,7 +347,7 @@ abstract class LemuroidApplicationModule {
         @PerApp
         @JvmStatic
         fun postGameHandler(retrogradeDatabase: RetrogradeDatabase) =
-            GameLaunchTaskHandler(ReviewManager(), retrogradeDatabase)
+            GameLaunchTaskHandler(retrogradeDatabase)
 
         @Provides
         @PerApp

@@ -35,6 +35,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Restyle game-actions sheet with native OpenNES typography and NES box art; remove its last inherited text component
 - [x] Replace remaining user-visible English references to Lemuroid in loading, save-state, reset and crash messages
 - [x] Remove Android TV launcher/activity registrations, channel update worker, channel provider and TV EPG permission; preserve the native mobile shortcut deep-link scheme and shared emulation infrastructure
+- [x] Remove inherited post-game store-review prompt from the active game-finish handler while preserving playtime updates, save-sync rescheduling and error handling
 - [ ] Audit and retire remaining now-dormant Android TV source/UI resources and inherited internal identifiers without breaking runtime dependencies or license notices
 - [x] Propagate failed ROM scans instead of reporting success, preflight selected-folder read grants, preserve indexed games on failure, and show recovery actions even when earlier games remain visible (device acceptance still paused)
 - [x] Improve narrow-phone and large-text layouts for game-details actions, featured cover and ROM folder recovery buttons; add explicit screen-reader labels for shelf taps and long-press actions (device acceptance paused)
@@ -73,6 +74,13 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - TV preview channel publisher and worker removed, together with TV EPG permission and tvProvider dependency.
 - Regular Play/Continue, saves, native controller and ROM import are unchanged. Pinned shortcut deep links remain compatible and route into the mobile game screen.
 - **Still pending:** deleting dormant TV classes, unused Leanback dependencies/resources, and optional legacy internal names after reference audit. No build or device testing was performed.
+
+## Latest M2 source batch — post-game flow cleanup
+
+- Removed the inherited in-app review prompt from game-finish processing, including the old rating flag and review-manager dependency.
+- Preserved session duration accounting, last-played timestamps, save-sync/cache scheduling and crash handling.
+- Updated every currently known call site (mobile, pinned shortcuts and dormant TV source). Existing ext modules remain until separately audited for shared uses.
+- **Source-only:** no build or runtime testing was performed.
 
 ## Development rules
 

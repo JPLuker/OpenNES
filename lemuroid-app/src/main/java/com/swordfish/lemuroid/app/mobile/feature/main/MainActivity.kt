@@ -335,7 +335,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             BaseGameActivity.REQUEST_PLAY_GAME -> {
                 GlobalScope.safeLaunch {
                     gameLaunchTaskHandler.handleGameFinish(
-                        true,
                         this@MainActivity,
                         resultCode,
                         data,

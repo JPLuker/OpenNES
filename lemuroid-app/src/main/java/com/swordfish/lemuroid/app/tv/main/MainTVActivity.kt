@@ -74,7 +74,7 @@ class MainTVActivity : BaseTVActivity(), BusyActivity {
         when (requestCode) {
             BaseGameActivity.REQUEST_PLAY_GAME -> {
                 GlobalScope.safeLaunch {
-                    gameLaunchTaskHandler.handleGameFinish(false, this@MainTVActivity, resultCode, data)
+                    gameLaunchTaskHandler.handleGameFinish(this@MainTVActivity, resultCode, data)
                 }
             }
         }

@@ -126,7 +126,7 @@ class ExternalGameLauncherActivity : ImmersiveActivity() {
         when (requestCode) {
             BaseGameActivity.REQUEST_PLAY_GAME -> {
                 GlobalScope.safeLaunch {
-                    gameLaunchTaskHandler.handleGameFinish(false, this@ExternalGameLauncherActivity, resultCode, data)
+                    gameLaunchTaskHandler.handleGameFinish(this@ExternalGameLauncherActivity, resultCode, data)
                     finish()
                 }
             }
