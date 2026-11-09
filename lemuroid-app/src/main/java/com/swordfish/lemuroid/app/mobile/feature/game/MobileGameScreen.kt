@@ -154,11 +154,14 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
             val leftPadBounds = remember { mutableStateOf<Rect?>(null) }
             val rightPadBounds = remember { mutableStateOf<Rect?>(null) }
 
-            // Do not reuse hit-region measurements after the controls hide
-            // or the screen changes orientation. Wait for fresh PadKit bounds.
-            LaunchedEffect(showTouchPads, isLandscape) {
-                leftPadBounds.value = null
-                rightPadBounds.value = null
+            // Clear bounds only when PadKit controls disappear. On rotation,
+            // onGloballyPositioned supplies the new sizes; clearing them after
+            // that layout pass could erase the newly measured drag targets.
+            LaunchedEffect(showTouchPads) {
+                if (!showTouchPads) {
+                    leftPadBounds.value = null
+                    rightPadBounds.value = null
+                }
             }
 
             AndroidView(
