@@ -262,6 +262,9 @@
     <string name="opennes_binding_label">CONTROLLER SETUP</string>
     <string name="opennes_binding_waiting">Waiting for a button press…</string>
     <string name="opennes_binding_first_captured">First button: %1$s · Press a second button</string>
+    <string name="opennes_binding_saving">Saving controller mapping…</string>
+    <string name="opennes_binding_save_failed">Could not save the mapping. Press the button again or cancel.</string>
+    <string name="opennes_binding_restart">Start over</string>
     <string name="opennes_pause_audio_on">On</string>
     <string name="opennes_pause_audio_off">Off</string>
     <string name="opennes_pause_fast_on">On</string>
