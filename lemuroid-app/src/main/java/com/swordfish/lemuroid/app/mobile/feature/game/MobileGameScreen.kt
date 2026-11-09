@@ -131,6 +131,14 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 currentControllerConfig != null &&
                 touchControlsVisibleState.value
 
+        // The editing overlay must never outlive the virtual controls.
+        // A physical gamepad can become active mid-drag and hide PadKit.
+        LaunchedEffect(dragEditMode, showTouchPads) {
+            if (dragEditMode && !showTouchPads) {
+                viewModel.setDragEditMode(false)
+            }
+        }
+
         PadKit(
             modifier = Modifier.fillMaxSize(),
             onInputEvents = { viewModel.handleVirtualInputEvent(it) },
@@ -145,6 +153,13 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
             val viewportPosition = remember { mutableStateOf<Rect?>(null) }
             val leftPadBounds = remember { mutableStateOf<Rect?>(null) }
             val rightPadBounds = remember { mutableStateOf<Rect?>(null) }
+
+            // Do not reuse hit-region measurements after the controls hide
+            // or the screen changes orientation. Wait for fresh PadKit bounds.
+            LaunchedEffect(showTouchPads, isLandscape) {
+                leftPadBounds.value = null
+                rightPadBounds.value = null
+            }
 
             AndroidView(
                 modifier =
@@ -240,7 +255,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 }
             }
 
-            if (dragEditMode && touchControllerSettings != null) {
+            if (dragEditMode && showTouchPads && touchControllerSettings != null) {
                 NesControllerDragOverlay(
                     leftBounds = leftPadBounds.value,
                     rightBounds = rightPadBounds.value,
