@@ -26,8 +26,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import com.swordfish.lemuroid.R
-import com.swordfish.lemuroid.app.mobile.feature.games.GamesScreen
-import com.swordfish.lemuroid.app.mobile.feature.games.GamesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeScreen
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeViewModel
 import com.swordfish.lemuroid.app.mobile.feature.search.SearchScreen
@@ -42,8 +40,6 @@ import com.swordfish.lemuroid.app.mobile.feature.settings.inputdevices.InputDevi
 import com.swordfish.lemuroid.app.mobile.feature.settings.savesync.SaveSyncSettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.savesync.SaveSyncSettingsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.shortcuts.ShortcutsGenerator
-import com.swordfish.lemuroid.app.mobile.feature.systems.MetaSystemsScreen
-import com.swordfish.lemuroid.app.mobile.feature.systems.MetaSystemsViewModel
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.AppTheme
 import com.swordfish.lemuroid.app.shared.GameInteractor
 import com.swordfish.lemuroid.app.shared.game.BaseGameActivity
@@ -56,7 +52,6 @@ import com.swordfish.lemuroid.common.coroutines.safeLaunch
 import com.swordfish.lemuroid.ext.feature.review.ReviewManager
 import com.swordfish.lemuroid.lib.android.RetrogradeComponentActivity
 import com.swordfish.lemuroid.lib.injection.PerActivity
-import com.swordfish.lemuroid.lib.library.MetaSystemID
 import com.swordfish.lemuroid.lib.library.covers.CustomCoverManager
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -213,37 +208,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             onGameLongClick = onGameLongClick,
                             onGameFavoriteToggle = onGameFavoriteToggle,
                             onResetSearchQuery = { mainViewModel.changeQueryString("") },
-                        )
-                    }
-                    composable(MainRoute.SYSTEMS) {
-                        MetaSystemsScreen(
-                            modifier = Modifier.padding(padding),
-                            navController = navController,
-                            viewModel =
-                                viewModel(
-                                    factory =
-                                        MetaSystemsViewModel.Factory(
-                                            retrogradeDb,
-                                            applicationContext,
-                                        ),
-                                ),
-                        )
-                    }
-                    composable(MainRoute.SYSTEM_GAMES) { entry ->
-                        val metaSystemId = entry.arguments?.getString("metaSystemId")
-                        GamesScreen(
-                            modifier = Modifier.padding(padding),
-                            viewModel =
-                                viewModel(
-                                    factory =
-                                        GamesViewModel.Factory(
-                                            retrogradeDb,
-                                            MetaSystemID.valueOf(metaSystemId!!),
-                                        ),
-                                ),
-                            onGameClick = onGameClick,
-                            onGameLongClick = onGameLongClick,
-                            onGameFavoriteToggle = onGameFavoriteToggle,
                         )
                     }
                     composable(MainRoute.SETTINGS) {
