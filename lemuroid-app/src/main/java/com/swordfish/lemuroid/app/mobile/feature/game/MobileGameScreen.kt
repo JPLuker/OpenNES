@@ -353,6 +353,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         if (onboardingVisible.value && showTouchPads && !isLoading) {
             NesControllerSetupSheet(
                 currentPresetId = controllerAppearance.preset.id,
+                currentPalette = controllerAppearance.palette,
                 onChoosePreset = { appearanceStore.selectPreset(it) },
                 onCustomizeLayout = {
                     onboardingStore.complete()

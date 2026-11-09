@@ -26,6 +26,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
+import com.swordfish.touchinput.radial.NesControllerPalette
 import com.swordfish.touchinput.radial.NesControllerPresets
 
 /**
@@ -59,6 +61,7 @@ internal class NesControllerOnboardingStore(context: Context) {
 @Composable
 internal fun NesControllerSetupSheet(
     currentPresetId: String,
+    currentPalette: NesControllerPalette,
     onChoosePreset: (String) -> Unit,
     onCustomizeLayout: () -> Unit,
     onUseDefaults: () -> Unit,
@@ -76,8 +79,11 @@ internal fun NesControllerSetupSheet(
         ) {
             Text(stringResource(R.string.opennes_setup_title))
             Text(stringResource(R.string.opennes_setup_explanation))
+            Text(stringResource(R.string.opennes_setup_preview))
+            ControllerAppearancePreview(currentPalette)
 
-            // Original palettes: two concise options per row, no Nintendo marks.
+            // Each choice immediately updates the shared live controller preview.
+            // Show housing, D-pad and A/B swatches, not just an action-button dot.
             NesControllerPresets.all.chunked(2).forEach { pair ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -93,12 +99,18 @@ internal fun NesControllerSetupSheet(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .size(12.dp)
-                                            .background(preset.palette.action, CircleShape),
-                                )
+                                listOf(
+                                    preset.palette.panel,
+                                    preset.palette.dpad,
+                                    preset.palette.action,
+                                ).forEach { swatch ->
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .size(12.dp)
+                                                .background(swatch, CircleShape),
+                                    )
+                                }
                                 Text(
                                     text = if (selected) "✓ " + preset.title else preset.title,
                                     maxLines = 2,
