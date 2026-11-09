@@ -290,6 +290,10 @@
     <string name="opennes_artwork_title_screen">Title screen</string>
     <string name="opennes_artwork_gameplay">Gameplay screenshot</string>
     <string name="opennes_find_game_info">Search local NES catalogue</string>
+    <string name="opennes_search_heading">NES COLLECTION</string>
+    <string name="opennes_search_hint">Search for a game by name.</string>
+    <string name="opennes_search_no_results">No games match that search.</string>
+    <string name="opennes_search_error">Could not search the library.</string>
     <string name="opennes_search_game_hint">Search NES title</string>
     <string name="opennes_search_catalogue">Search catalogue</string>
     <string name="opennes_no_catalog_matches">No matches found in the offline NES catalogue.</string>
