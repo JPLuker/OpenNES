@@ -3,6 +3,7 @@ package com.swordfish.lemuroid.app.mobile.feature.game
 import android.graphics.RectF
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -13,15 +14,19 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -45,6 +50,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -52,7 +58,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.swordfish.lemuroid.app.shared.game.BaseGameScreenViewModel
@@ -64,6 +69,7 @@ import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalNesControllerPalette
 import com.swordfish.touchinput.radial.NesControllerAppearanceStore
+import com.swordfish.touchinput.radial.NesControllerPresets
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
@@ -472,244 +478,232 @@ private fun MenuEditTouchControls(
     isLandscape: Boolean,
     compactLandscape: Boolean,
 ) {
-    val showEditControls = viewModel.isEditControlShown().collectAsState(false)
+    val visible = viewModel.isEditControlShown().collectAsState(false)
     val confirmReset = remember { mutableStateOf(false) }
-    if (!showEditControls.value) return
+    val selectedTab = remember { mutableStateOf(0) }
+    val context = LocalContext.current.applicationContext
+    val appearanceStore = remember(context) { NesControllerAppearanceStore(context) }
+    val appearance = rememberNesControllerAppearance()
+    if (!visible.value) return
 
-    Dialog(onDismissRequest = { viewModel.showEditControls(false) }) {
-        Card(
+    ModalBottomSheet(
+        onDismissRequest = { viewModel.showEditControls(false) },
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.62f).dp
+        Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight(),
+                    .heightIn(max = maxHeight)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .verticalScroll(rememberScrollState())
-                        .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text =
                         stringResource(
                             if (isLandscape) {
-                                com.swordfish.lemuroid.R.string.opennes_landscape_controls
+                                com.swordfish.lemuroid.R.string.opennes_editor_landscape_title
                             } else {
-                                com.swordfish.lemuroid.R.string.opennes_portrait_controls
+                                com.swordfish.lemuroid.R.string.opennes_editor_portrait_title
                             },
                         ),
-                    fontSize = 14.sp,
-                )
-                Text(
-                    text = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_editor_hint),
-                    fontSize = 12.sp,
-                )
-                if (isLandscape) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_side_panels),
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text =
-                                    stringResource(
-                                        com.swordfish.lemuroid.R.string.opennes_landscape_side_panels_description,
-                                    ),
-                                fontSize = 12.sp,
-                            )
-                        }
-                        Switch(
-                            checked = !(touchControllerSettings.landscapeOverlay ?: controllerConfig.allowTouchOverlay),
-                            onCheckedChange = { checked ->
-                                viewModel.updateTouchControllerSettings(
-                                    touchControllerSettings.copy(landscapeOverlay = !checked),
-                                )
-                            },
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal),
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text =
-                                    stringResource(
-                                        com.swordfish.lemuroid.R.string.opennes_landscape_minimal_description,
-                                    ),
-                                fontSize = 12.sp,
-                            )
-                        }
-                        Switch(
-                            checked = touchControllerSettings.landscapeMinimal,
-                            onCheckedChange = { checked ->
-                                viewModel.updateTouchControllerSettings(
-                                    touchControllerSettings.copy(landscapeMinimal = checked),
-                                )
-                            },
-                        )
-                    }
-                    if (compactLandscape && touchControllerSettings.landscapeOverlay == false) {
-                        Text(
-                            text =
-                                stringResource(
-                                    com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback,
-                                ),
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            fontSize = 12.sp,
-                        )
-                    }
-                }
-                TextButton(onClick = { viewModel.setDragEditMode(true) }) {
-                    Text(stringResource(com.swordfish.lemuroid.R.string.opennes_controls_drag_start))
-                }
-                MenuEditControllerCluster(
-                    label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_left_group),
-                    resetLabel = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_left),
-                    size = touchControllerSettings.leftScale ?: touchControllerSettings.scale,
-                    offsetX = touchControllerSettings.leftOffsetX,
-                    offsetY = touchControllerSettings.leftOffsetY,
-                    onSizeChange = {
-                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftScale = it))
-                    },
-                    onSizeCommit = {
-                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftScale = it))
-                    },
-                    onXChange = {
-                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftOffsetX = it))
-                    },
-                    onXCommit = {
-                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetX = it))
-                    },
-                    onYChange = {
-                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftOffsetY = it))
-                    },
-                    onYCommit = {
-                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetY = it))
-                    },
-                    onReset = {
-                        viewModel.updateTouchControllerSettings(
-                            touchControllerSettings.copy(leftScale = null, leftOffsetX = 0f, leftOffsetY = 0f),
-                        )
-                    },
-                )
-                MenuEditControllerCluster(
-                    label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_right_group),
-                    resetLabel = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_right),
-                    size = touchControllerSettings.rightScale ?: touchControllerSettings.scale,
-                    offsetX = touchControllerSettings.rightOffsetX,
-                    offsetY = touchControllerSettings.rightOffsetY,
-                    onSizeChange = {
-                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightScale = it))
-                    },
-                    onSizeCommit = {
-                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightScale = it))
-                    },
-                    onXChange = {
-                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightOffsetX = it))
-                    },
-                    onXCommit = {
-                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetX = it))
-                    },
-                    onYChange = {
-                        viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightOffsetY = it))
-                    },
-                    onYCommit = {
-                        viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetY = it))
-                    },
-                    onReset = {
-                        viewModel.updateTouchControllerSettings(
-                            touchControllerSettings.copy(rightScale = null, rightOffsetX = 0f, rightOffsetY = 0f),
-                        )
-                    },
-                )
-                Text(
-                    text = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_shared_group),
                     fontWeight = FontWeight.Bold,
                 )
-                MenuEditTouchControlRow(
-                    label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_opacity),
-                ) {
-                    TouchControlEditorSlider(
-                        value = touchControllerSettings.opacity,
-                        valueRange = 0.35f..1f,
-                        onPreview = {
-                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(opacity = it))
+                TextButton(onClick = { viewModel.showEditControls(false) }) {
+                    Text(stringResource(R.string.touch_customize_button_done))
+                }
+            }
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { viewModel.setDragEditMode(true) },
+            ) {
+                Text(stringResource(com.swordfish.lemuroid.R.string.opennes_editor_move))
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val tabs =
+                    listOf(
+                        com.swordfish.lemuroid.R.string.opennes_editor_dpad,
+                        com.swordfish.lemuroid.R.string.opennes_editor_buttons,
+                        com.swordfish.lemuroid.R.string.opennes_editor_more,
+                        com.swordfish.lemuroid.R.string.opennes_editor_themes,
+                    )
+                tabs.forEachIndexed { index, label ->
+                    FilterChip(
+                        selected = selectedTab.value == index,
+                        onClick = { selectedTab.value = index },
+                        label = { Text(stringResource(label)) },
+                    )
+                }
+            }
+            when (selectedTab.value) {
+                0 -> {
+                    MenuEditControllerCluster(
+                        label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_left_group),
+                        resetLabel = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_left),
+                        size = touchControllerSettings.leftScale ?: touchControllerSettings.scale,
+                        offsetX = touchControllerSettings.leftOffsetX,
+                        offsetY = touchControllerSettings.leftOffsetY,
+                        onSizeChange = {
+                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftScale = it))
                         },
-                        onCommit = {
-                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(opacity = it))
+                        onSizeCommit = {
+                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftScale = it))
+                        },
+                        onXChange = {
+                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftOffsetX = it))
+                        },
+                        onXCommit = {
+                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetX = it))
+                        },
+                        onYChange = {
+                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(leftOffsetY = it))
+                        },
+                        onYCommit = {
+                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(leftOffsetY = it))
+                        },
+                        onReset = {
+                            viewModel.updateTouchControllerSettings(
+                                touchControllerSettings.copy(leftScale = null, leftOffsetX = 0f, leftOffsetY = 0f),
+                            )
                         },
                     )
                 }
-                if (controllerConfig.allowTouchRotation) {
+                1 -> {
+                    MenuEditControllerCluster(
+                        label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_right_group),
+                        resetLabel = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_reset_right),
+                        size = touchControllerSettings.rightScale ?: touchControllerSettings.scale,
+                        offsetX = touchControllerSettings.rightOffsetX,
+                        offsetY = touchControllerSettings.rightOffsetY,
+                        onSizeChange = {
+                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightScale = it))
+                        },
+                        onSizeCommit = {
+                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightScale = it))
+                        },
+                        onXChange = {
+                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightOffsetX = it))
+                        },
+                        onXCommit = {
+                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetX = it))
+                        },
+                        onYChange = {
+                            viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rightOffsetY = it))
+                        },
+                        onYCommit = {
+                            viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rightOffsetY = it))
+                        },
+                        onReset = {
+                            viewModel.updateTouchControllerSettings(
+                                touchControllerSettings.copy(rightScale = null, rightOffsetX = 0f, rightOffsetY = 0f),
+                            )
+                        },
+                    )
+                }
+                2 -> {
                     MenuEditTouchControlRow(
-                        label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_rotation),
+                        label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_opacity),
                     ) {
                         TouchControlEditorSlider(
-                            value = touchControllerSettings.rotation,
+                            value = touchControllerSettings.opacity,
+                            valueRange = 0.35f..1f,
                             onPreview = {
-                                viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rotation = it))
+                                viewModel.previewTouchControllerSettings(touchControllerSettings.copy(opacity = it))
                             },
                             onCommit = {
-                                viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rotation = it))
+                                viewModel.updateTouchControllerSettings(touchControllerSettings.copy(opacity = it))
                             },
                         )
                     }
-                }
-                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                    val compactFooter = maxWidth < 300.dp || LocalDensity.current.fontScale > 1.2f
-                    if (compactFooter) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                    if (controllerConfig.allowTouchRotation) {
+                        MenuEditTouchControlRow(
+                            label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_rotation),
                         ) {
-                            TextButton(
-                                onClick = { confirmReset.value = true },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(text = stringResource(R.string.touch_customize_button_reset))
-                            }
-                            TextButton(
-                                onClick = { viewModel.showEditControls(false) },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(text = stringResource(R.string.touch_customize_button_done))
-                            }
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            TextButton(
-                                onClick = { confirmReset.value = true },
-                                modifier = Modifier.padding(8.dp),
-                            ) {
-                                Text(text = stringResource(R.string.touch_customize_button_reset))
-                            }
-                            TextButton(
-                                onClick = { viewModel.showEditControls(false) },
-                                modifier = Modifier.padding(8.dp),
-                            ) {
-                                Text(text = stringResource(R.string.touch_customize_button_done))
-                            }
+                            TouchControlEditorSlider(
+                                value = touchControllerSettings.rotation,
+                                onPreview = {
+                                    viewModel.previewTouchControllerSettings(touchControllerSettings.copy(rotation = it))
+                                },
+                                onCommit = {
+                                    viewModel.updateTouchControllerSettings(touchControllerSettings.copy(rotation = it))
+                                },
+                            )
                         }
                     }
+                    if (isLandscape) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_side_panels),
+                                modifier = Modifier.weight(1f),
+                            )
+                            Switch(
+                                checked = !(touchControllerSettings.landscapeOverlay ?: controllerConfig.allowTouchOverlay),
+                                onCheckedChange = {
+                                    viewModel.updateTouchControllerSettings(
+                                        touchControllerSettings.copy(landscapeOverlay = !it),
+                                    )
+                                },
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal),
+                                modifier = Modifier.weight(1f),
+                            )
+                            Switch(
+                                checked = touchControllerSettings.landscapeMinimal,
+                                onCheckedChange = {
+                                    viewModel.updateTouchControllerSettings(
+                                        touchControllerSettings.copy(landscapeMinimal = it),
+                                    )
+                                },
+                            )
+                        }
+                        if (compactLandscape && touchControllerSettings.landscapeOverlay == false) {
+                            Text(
+                                stringResource(com.swordfish.lemuroid.R.string.opennes_editor_compact_hint),
+                                fontSize = 12.sp,
+                            )
+                        }
+                    }
+                    TextButton(onClick = { confirmReset.value = true }) {
+                        Text(stringResource(R.string.touch_customize_button_reset))
+                    }
+                }
+                else -> {
+                    NesControllerPresets.all.forEach { preset ->
+                        FilterChip(
+                            selected = appearance.preset.id == preset.id,
+                            onClick = { appearanceStore.selectPreset(preset.id) },
+                            label = { Text(preset.title) },
+                        )
+                    }
+                    Text(
+                        stringResource(com.swordfish.lemuroid.R.string.opennes_editor_more_colors_hint),
+                        fontSize = 12.sp,
+                    )
                 }
             }
+            Text(
+                text = stringResource(com.swordfish.lemuroid.R.string.opennes_editor_orientation_hint),
+                fontSize = 11.sp,
+            )
         }
     }
 
@@ -832,11 +826,19 @@ private fun MenuEditTouchControlRow(
     label: String,
     slider: @Composable () -> Unit,
 ) {
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(text = label, fontSize = 12.sp)
-        slider()
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            maxLines = 2,
+            modifier = Modifier.width(112.dp),
+        )
+        Box(modifier = Modifier.weight(1f)) {
+            slider()
+        }
     }
 }
