@@ -6,158 +6,202 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
+import com.swordfish.touchinput.radial.LocalNesControllerPalette
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
-import gg.padkit.ui.DefaultCrossForeground
 
 /**
- * NES-style cross with recessed horizontal/vertical ridges in place of the
- * modern arrow icons. PadKit still owns directional and diagonal hit testing.
+ * A single, continuous twelve-corner D-pad silhouette replaces five
+ * independent rectangular GlassSurfaces. PadKit still owns the input,
+ * diagonals and the actual tap region. This canvas never accepts taps.
  */
-private enum class NesGripAxis {
-    HORIZONTAL,
-    VERTICAL,
-}
-
 @Composable
 fun NesCrossForeground(directionState: State<Offset>) {
-    DefaultCrossForeground(
-        modifier = Modifier.fillMaxSize(),
-        directionState = directionState,
-        allowDiagonals = true,
-        leftDial = { NesDPadDirection(it, NesGripAxis.VERTICAL) },
-        rightDial = { NesDPadDirection(it, NesGripAxis.VERTICAL) },
-        topDial = { NesDPadDirection(it, NesGripAxis.HORIZONTAL) },
-        bottomDial = { NesDPadDirection(it, NesGripAxis.HORIZONTAL) },
-        foregroundComposite = { NesDPadCenter(it) },
-    )
-}
-
-@Composable
-private fun NesDPadDirection(
-    pressed: State<Boolean>,
-    gripAxis: NesGripAxis,
-) {
+    val palette = LocalNesControllerPalette.current
     val opacity = LocalLemuroidPadTheme.current.opacity
     val minimal = LocalNesLandscapeMinimal.current
-    GlassSurface(
-        modifier = Modifier.fillMaxSize().padding(1.dp),
-        cornerRadius = 3.dp,
-        fillColor =
-            (if (pressed.value) Color(0xFF111319) else Color(0xFF292B30))
-                .copy(alpha = opacity * if (minimal) 0.58f else 1f),
-        shadowColor = Color.Black.copy(alpha = 0.32f * opacity * if (minimal) 0.2f else 1f),
-        shadowWidth = if (minimal) 0.dp else 2.dp,
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val halfLength = size.minDimension * 0.22f
-            val gap = size.minDimension * 0.16f
-            val center = Offset(size.width / 2f, size.height / 2f)
-            val gripColor =
-                (if (pressed.value) Color(0xFF5D6067) else Color(0xFF666970))
-                    .copy(alpha = 0.85f * opacity)
 
-            for (line in -1..1) {
-                val shift = gap * line
-                val start =
-                    if (gripAxis == NesGripAxis.HORIZONTAL) {
-                        Offset(center.x - halfLength, center.y + shift)
-                    } else {
-                        Offset(center.x + shift, center.y - halfLength)
-                    }
-                val end =
-                    if (gripAxis == NesGripAxis.HORIZONTAL) {
-                        Offset(center.x + halfLength, center.y + shift)
-                    } else {
-                        Offset(center.x + shift, center.y + halfLength)
-                    }
-                drawLine(
-                    color = gripColor,
-                    start = start,
-                    end = end,
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
+    Canvas(modifier = Modifier.fillMaxSize().padding(2.dp)) {
+        val cx = size.width * 0.5f
+        val cy = size.height * 0.5f
+        val arm = size.minDimension * 0.165f
+        val reach = size.minDimension * 0.455f
+        val strokeWidth = 2.dp.toPx()
+        val path =
+            Path().apply {
+                moveTo(cx - arm, cy - reach)
+                lineTo(cx + arm, cy - reach)
+                lineTo(cx + arm, cy - arm)
+                lineTo(cx + reach, cy - arm)
+                lineTo(cx + reach, cy + arm)
+                lineTo(cx + arm, cy + arm)
+                lineTo(cx + arm, cy + reach)
+                lineTo(cx - arm, cy + reach)
+                lineTo(cx - arm, cy + arm)
+                lineTo(cx - reach, cy + arm)
+                lineTo(cx - reach, cy - arm)
+                lineTo(cx - arm, cy - arm)
+                close()
             }
+
+        drawPath(
+            path = path,
+            color = palette.dpad.copy(alpha = opacity * if (minimal) 0.70f else 1f),
+        )
+        drawPath(
+            path = path,
+            color = palette.outline.copy(alpha = 0.85f * opacity),
+            style = Stroke(width = strokeWidth),
+        )
+
+        val active = directionState.value
+        val activeColor = palette.dpadPressed.copy(alpha = 0.82f * opacity)
+        val inside = arm * 0.87f
+        val length = reach - arm - 2.dp.toPx()
+        if (active.x < -0.25f) {
+            drawRoundRect(
+                color = activeColor,
+                topLeft = Offset(cx - reach + strokeWidth, cy - inside),
+                size = Size(length, inside * 2f),
+                cornerRadius = CornerRadius(2.dp.toPx()),
+            )
         }
+        if (active.x > 0.25f) {
+            drawRoundRect(
+                color = activeColor,
+                topLeft = Offset(cx + arm + strokeWidth, cy - inside),
+                size = Size(length, inside * 2f),
+                cornerRadius = CornerRadius(2.dp.toPx()),
+            )
+        }
+        if (active.y < -0.25f) {
+            drawRoundRect(
+                color = activeColor,
+                topLeft = Offset(cx - inside, cy - reach + strokeWidth),
+                size = Size(inside * 2f, length),
+                cornerRadius = CornerRadius(2.dp.toPx()),
+            )
+        }
+        if (active.y > 0.25f) {
+            drawRoundRect(
+                color = activeColor,
+                topLeft = Offset(cx - inside, cy + arm + strokeWidth),
+                size = Size(inside * 2f, length),
+                cornerRadius = CornerRadius(2.dp.toPx()),
+            )
+        }
+
+        // Restrained molded grooves, not overlapping raised squares.
+        val grooveColor = palette.outline.copy(alpha = 0.42f * opacity)
+        val groove = reach * 0.74f
+        for (line in -1..1) {
+            val shift = line * 3.dp.toPx()
+            drawLine(
+                color = grooveColor,
+                start = Offset(cx - arm * 0.43f, cy - groove + shift),
+                end = Offset(cx + arm * 0.43f, cy - groove + shift),
+                strokeWidth = 1.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            drawLine(
+                color = grooveColor,
+                start = Offset(cx - arm * 0.43f, cy + groove + shift),
+                end = Offset(cx + arm * 0.43f, cy + groove + shift),
+                strokeWidth = 1.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            drawLine(
+                color = grooveColor,
+                start = Offset(cx - groove + shift, cy - arm * 0.43f),
+                end = Offset(cx - groove + shift, cy + arm * 0.43f),
+                strokeWidth = 1.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            drawLine(
+                color = grooveColor,
+                start = Offset(cx + groove + shift, cy - arm * 0.43f),
+                end = Offset(cx + groove + shift, cy + arm * 0.43f),
+                strokeWidth = 1.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+        }
+
+        drawCircle(
+            color = palette.dpadPressed.copy(alpha = 0.88f * opacity),
+            radius = arm * 0.76f,
+            center = Offset(cx, cy),
+        )
+        drawCircle(
+            color = palette.outline.copy(alpha = 0.68f * opacity),
+            radius = arm * 0.76f,
+            center = Offset(cx, cy),
+            style = Stroke(width = 1.dp.toPx()),
+        )
     }
 }
 
-@Composable
-private fun NesDPadCenter(pressed: State<Boolean>) {
-    val opacity = LocalLemuroidPadTheme.current.opacity
-    val minimal = LocalNesLandscapeMinimal.current
-    GlassSurface(
-        modifier = Modifier.fillMaxSize().padding(1.dp),
-        cornerRadius = 3.dp,
-        fillColor =
-            (if (pressed.value) Color(0xFF16181C) else Color(0xFF25272C))
-                .copy(alpha = opacity * if (minimal) 0.58f else 1f),
-        shadowColor = Color.Black.copy(alpha = 0.16f * opacity * if (minimal) 0.2f else 1f),
-        shadowWidth = if (minimal) 0.dp else 1.dp,
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val radius = size.minDimension * 0.23f
-            drawCircle(
-                color = Color(0xFF15171B).copy(alpha = opacity),
-                radius = radius,
-            )
-            drawCircle(
-                color = Color(0xFF5D6065).copy(alpha = 0.62f * opacity),
-                radius = radius,
-                style = Stroke(width = 1.dp.toPx()),
-            )
-        }
-    }
-}
-
+/**
+ * One outlined action disc per button. No square button backplates,
+ * composite foreground or nested glass shadows.
+ */
 @Composable
 fun NesFaceButtonForeground(
     pressed: State<Boolean>,
     label: String,
 ) {
+    val palette = LocalNesControllerPalette.current
     val opacity = LocalLemuroidPadTheme.current.opacity
     val minimal = LocalNesLandscapeMinimal.current
-    Box(
-        modifier = Modifier.fillMaxSize().padding(3.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (!minimal) {
-            GlassSurface(
-                modifier = Modifier.fillMaxSize(),
-                fillColor = Color(0xFF181A1F).copy(alpha = 0.93f * opacity),
-                shadowColor = Color.Black.copy(alpha = 0.35f * opacity),
-                shadowWidth = 3.dp,
+
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize().padding(4.dp)) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val radius = (size.minDimension * 0.44f).coerceAtLeast(0f)
+            drawCircle(
+                color = palette.outline.copy(alpha = if (minimal) 0.42f * opacity else opacity),
+                radius = radius,
+                center = center,
             )
-        }
-        GlassSurface(
-            modifier = Modifier.fillMaxSize().padding(if (minimal) 2.dp else 5.dp),
-            fillColor =
-                (if (pressed.value) Color(0xFF842437) else Color(0xFFB52E43))
-                    .copy(alpha = opacity * if (minimal) 0.83f else 1f),
-            shadowColor = Color.Black.copy(alpha = 0.27f * opacity * if (minimal) 0.25f else 1f),
-            shadowWidth = if (minimal) 0.dp else 2.dp,
-        ) {
-            Text(
-                text = label,
-                color = Color(0xFFF5F0E9).copy(alpha = opacity),
-                fontWeight = FontWeight.Black,
-                fontSize = 18.sp,
+            drawCircle(
+                color =
+                    (if (pressed.value) palette.actionPressed else palette.action)
+                        .copy(alpha = opacity),
+                radius = (radius - 2.dp.toPx()).coerceAtLeast(0f),
+                center = center,
             )
+            if (!pressed.value && !minimal) {
+                drawArc(
+                    color = palette.label.copy(alpha = 0.14f * opacity),
+                    startAngle = 195f,
+                    sweepAngle = 105f,
+                    useCenter = false,
+                    topLeft = Offset(center.x - radius * 0.76f, center.y - radius * 0.76f),
+                    size = Size(radius * 1.52f, radius * 1.52f),
+                    style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round),
+                )
+            }
         }
+        Text(
+            text = label,
+            color = palette.label.copy(alpha = opacity),
+            fontWeight = FontWeight.Black,
+            fontSize = 18.sp,
+            maxLines = 1,
+        )
     }
 }
 
@@ -167,59 +211,38 @@ fun NesPillButtonForeground(
     label: String,
     expanded: Boolean = false,
 ) {
+    val palette = LocalNesControllerPalette.current
     val opacity = LocalLemuroidPadTheme.current.opacity
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (expanded) {
-            // The shallow outer recess makes the portrait controls read
-            // like physical NES Start/Select keys without changing hit bounds.
-            Box(
-                modifier = Modifier.fillMaxWidth(0.98f).height(28.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                GlassSurface(
-                    modifier = Modifier.fillMaxSize(),
-                    cornerRadius = 14.dp,
-                    fillColor = Color(0xFF191B20).copy(alpha = opacity),
-                    shadowColor = Color.Black.copy(alpha = 0.30f * opacity),
-                    shadowWidth = 2.dp,
-                )
-                GlassSurface(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 3.dp, vertical = 3.dp),
-                    cornerRadius = 12.dp,
-                    fillColor =
-                        (if (pressed.value) Color(0xFF24262D) else Color(0xFF52545B))
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth(if (expanded) 0.94f else 0.90f)
+                    .height(if (expanded) 26.dp else 22.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val radius = size.height * 0.5f
+                drawRoundRect(
+                    color =
+                        (if (pressed.value) palette.secondaryPressed else palette.secondary)
                             .copy(alpha = opacity),
-                    shadowColor = Color.Black.copy(alpha = 0.18f * opacity),
-                    shadowWidth = 1.dp,
-                ) {
-                    Text(
-                        text = label,
-                        color = Color(0xFFF5F0E9).copy(alpha = opacity),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 9.sp,
-                        letterSpacing = 0.3.sp,
-                        maxLines = 1,
-                    )
-                }
-            }
-        } else {
-            GlassSurface(
-                modifier = Modifier.fillMaxWidth(0.92f).height(23.dp),
-                cornerRadius = 12.dp,
-                fillColor =
-                    (if (pressed.value) Color(0xFF202228) else Color(0xFF41434A))
-                        .copy(alpha = opacity),
-                shadowColor = Color.Black.copy(alpha = 0.32f * opacity),
-                shadowWidth = 2.dp,
-            ) {
-                Text(
-                    text = label,
-                    color = Color(0xFFF3EEE7).copy(alpha = opacity),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 8.sp,
-                    maxLines = 1,
+                    cornerRadius = CornerRadius(radius, radius),
+                )
+                drawRoundRect(
+                    color = palette.outline.copy(alpha = 0.85f * opacity),
+                    cornerRadius = CornerRadius(radius, radius),
+                    style = Stroke(width = 1.5.dp.toPx()),
                 )
             }
+            Text(
+                text = label,
+                color = palette.label.copy(alpha = opacity),
+                fontWeight = FontWeight.Bold,
+                fontSize = if (expanded) 9.sp else 8.sp,
+                letterSpacing = 0.25.sp,
+                maxLines = 1,
+            )
         }
     }
 }
