@@ -263,6 +263,9 @@
     <string name="opennes_setup_no_games_description">The scan finished without finding compatible NES games. Check for .nes files in your selected folder, then rescan, or choose a different folder.</string>
     <string name="opennes_setup_rescan_action">Rescan</string>
     <string name="opennes_setup_change_action">Change folder</string>
+    <string name="opennes_setup_folder_setting">NES game folder</string>
+    <string name="opennes_setup_no_folder_selected">No folder selected</string>
+    <string name="opennes_setup_rescan_description">Look again for NES game files in the selected folder</string>
     <string name="opennes_library_subtitle">An entire era, one shelf at a time.</string>
     <string name="opennes_continue">CONTINUE PLAYING</string>
     <string name="opennes_pause_label">PAUSED</string>
