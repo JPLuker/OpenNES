@@ -2,6 +2,7 @@ package com.swordfish.lemuroid.app.mobile.feature.game
 
 import android.graphics.RectF
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,7 +36,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -44,6 +47,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -199,6 +203,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         if (!isLandscape) {
                             PadContainer(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_BOTTOM_CONTAINER),
+                                portrait = true,
                             )
                         } else if (!currentControllerConfig.allowTouchOverlay) {
                             PadContainer(
@@ -268,15 +273,47 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
 }
 
 @Composable
-private fun PadContainer(modifier: Modifier = Modifier) {
+private fun PadContainer(
+    modifier: Modifier = Modifier,
+    portrait: Boolean = false,
+) {
     val theme = LocalLemuroidPadTheme.current
-    GlassSurface(
-        modifier = modifier,
-        cornerRadius = theme.level0CornerRadius,
-        fillColor = theme.level0Fill,
-        shadowColor = theme.level0Shadow,
-        shadowWidth = theme.level0ShadowWidth,
-    )
+    Box(modifier = modifier) {
+        GlassSurface(
+            modifier = Modifier.fillMaxSize(),
+            cornerRadius = theme.level0CornerRadius,
+            fillColor = theme.level0Fill,
+            shadowColor = theme.level0Shadow,
+            shadowWidth = theme.level0ShadowWidth,
+        )
+
+        if (portrait) {
+            // Faceplate trim is decoration only; the interactive PadKit
+            // controls are rendered above this layer in ConstraintLayout.
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val topRailHeight = 4.dp.toPx()
+                val accentHeight = 3.dp.toPx()
+                val lowerSeamHeight = 2.dp.toPx()
+                val opacity = theme.opacity
+                drawRect(
+                    color = Color(0xFF292C32).copy(alpha = 0.74f * opacity),
+                    size = Size(size.width, topRailHeight),
+                )
+                drawRect(
+                    color = Color(0xFF9C2D3D).copy(alpha = 0.76f * opacity),
+                    topLeft = Offset(0f, topRailHeight),
+                    size = Size(size.width, accentHeight),
+                )
+                if (size.height > 28.dp.toPx()) {
+                    drawRect(
+                        color = Color(0xFF383B40).copy(alpha = 0.28f * opacity),
+                        topLeft = Offset(0f, size.height - 12.dp.toPx()),
+                        size = Size(size.width, lowerSeamHeight),
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

@@ -159,25 +159,61 @@ fun NesFaceButtonForeground(
 fun NesPillButtonForeground(
     pressed: State<Boolean>,
     label: String,
+    expanded: Boolean = false,
 ) {
     val opacity = LocalLemuroidPadTheme.current.opacity
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        GlassSurface(
-            modifier = Modifier.fillMaxWidth(0.92f).height(23.dp),
-            cornerRadius = 12.dp,
-            fillColor =
-                (if (pressed.value) Color(0xFF202228) else Color(0xFF41434A))
-                    .copy(alpha = opacity),
-            shadowColor = Color.Black.copy(alpha = 0.32f * opacity),
-            shadowWidth = 2.dp,
-        ) {
-            Text(
-                text = label,
-                color = Color(0xFFF3EEE7).copy(alpha = opacity),
-                fontWeight = FontWeight.Bold,
-                fontSize = 8.sp,
-                maxLines = 1,
-            )
+        if (expanded) {
+            // The shallow outer recess makes the portrait controls read
+            // like physical NES Start/Select keys without changing hit bounds.
+            Box(
+                modifier = Modifier.fillMaxWidth(0.98f).height(28.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                GlassSurface(
+                    modifier = Modifier.fillMaxSize(),
+                    cornerRadius = 14.dp,
+                    fillColor = Color(0xFF191B20).copy(alpha = opacity),
+                    shadowColor = Color.Black.copy(alpha = 0.30f * opacity),
+                    shadowWidth = 2.dp,
+                )
+                GlassSurface(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 3.dp, vertical = 3.dp),
+                    cornerRadius = 12.dp,
+                    fillColor =
+                        (if (pressed.value) Color(0xFF24262D) else Color(0xFF52545B))
+                            .copy(alpha = opacity),
+                    shadowColor = Color.Black.copy(alpha = 0.18f * opacity),
+                    shadowWidth = 1.dp,
+                ) {
+                    Text(
+                        text = label,
+                        color = Color(0xFFF5F0E9).copy(alpha = opacity),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 9.sp,
+                        letterSpacing = 0.3.sp,
+                        maxLines = 1,
+                    )
+                }
+            }
+        } else {
+            GlassSurface(
+                modifier = Modifier.fillMaxWidth(0.92f).height(23.dp),
+                cornerRadius = 12.dp,
+                fillColor =
+                    (if (pressed.value) Color(0xFF202228) else Color(0xFF41434A))
+                        .copy(alpha = opacity),
+                shadowColor = Color.Black.copy(alpha = 0.32f * opacity),
+                shadowWidth = 2.dp,
+            ) {
+                Text(
+                    text = label,
+                    color = Color(0xFFF3EEE7).copy(alpha = opacity),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 8.sp,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }

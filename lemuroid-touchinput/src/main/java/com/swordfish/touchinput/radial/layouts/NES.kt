@@ -100,7 +100,7 @@ private fun NesSecondarySelect() {
     ControlButton(
         modifier = Modifier.radialPosition(120f).radialScale(scale),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_SELECT),
-        foreground = { NesPillButtonForeground(pressed = it, label = "SELECT") },
+        foreground = { NesPillButtonForeground(pressed = it, label = "SELECT", expanded = LocalNesPortraitLayout.current) },
         background = {},
     )
 }
@@ -112,7 +112,7 @@ private fun NesSecondaryStart() {
     ControlButton(
         modifier = Modifier.radialPosition(60f).radialScale(scale),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_START),
-        foreground = { NesPillButtonForeground(pressed = it, label = "START") },
+        foreground = { NesPillButtonForeground(pressed = it, label = "START", expanded = LocalNesPortraitLayout.current) },
         background = {},
     )
 }
@@ -129,7 +129,7 @@ private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) 
                 )
                 .radialScale(1.15f),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_MODE),
-        foreground = { NesPillButtonForeground(pressed = it, label = "MENU") },
+        foreground = { NesPillButtonForeground(pressed = it, label = "MENU", expanded = true) },
         background = {},
     )
 }

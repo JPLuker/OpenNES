@@ -34,6 +34,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Add a compact-phone side gutter to generated portrait defaults, accounting for the gutter in default dial sizing; saved layouts remain authoritative
 - [x] Skip zero-size viewport calculations during initial layout or rotation
 - [x] Keep drag editor targets within the visible editor bounds when the target can fit; freeze bounds for each gesture to avoid moving clamps
+- [x] Add portrait-only charcoal/red faceplate trim and recessed legible Start/Select/Menu pills without modifying PadKit hit zones or landscape controls
 - [ ] Review final portrait visual balance and custom-offset edge cases on device (testing paused)
 - [ ] Physically verify multi-touch, diagonals, touch cancellation, save/resume and portrait orientation (testing paused)
 
@@ -163,6 +164,12 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - The editor captures starting bounds at gesture start, avoiding a feedback loop where the clamp shifts as the control is dragged. Existing saved layouts are neither modified nor forcibly brought onscreen until the user deliberately drags the controls.
 - Oversized custom controls fall back to the existing normalized offset range instead of applying invalid clamps. Editor group labels may wrap to two lines rather than disappearing behind ellipsis.
 - Source-only, untested while deliberate compilation and device testing remain paused.
+
+## Latest M3 source batch — NES portrait faceplate polish
+
+- The portrait controller housing has a restrained charcoal/red top trim and lower seam behind the actual PadKit control layers; it is decorative, does not intercept touches, and honors controller opacity.
+- Portrait Start, Select and Menu pills now have a recessed outer channel, brighter lettering and larger fixed visual labels. Their existing PadKit radial hit regions and button IDs are preserved. The landscape capsule appearance remains unchanged.
+- This visual pass is source-only. Device visual acceptance, font scaling and gameplay touch behavior remain unverified while testing is paused.
 
 ## Development rules
 
