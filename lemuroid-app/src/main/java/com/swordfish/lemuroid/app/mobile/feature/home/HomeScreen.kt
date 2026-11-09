@@ -677,6 +677,7 @@ private fun GameDetailsSheet(
                     )
                 }
             }
+        }
     }
 
     LaunchedEffect(editingProfile, onlineExpanded, searchExpanded) {
@@ -736,7 +737,6 @@ private fun GameDetailsSheet(
                         )
                         if (!compactGameDetails) {
                             gameActions()
-                        }
                         }
                     }
                 }
