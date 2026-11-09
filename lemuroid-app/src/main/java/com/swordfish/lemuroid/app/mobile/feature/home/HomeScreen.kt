@@ -109,15 +109,11 @@ fun HomeScreen(
         }
 
     val state = viewModel.getViewStates().collectAsState(HomeViewModel.UIState()).value
-    val batchState = viewModel.onlineBatchState.collectAsState(HomeViewModel.OnlineBatchState()).value
     var selectedGame by remember { mutableStateOf<Game?>(null) }
 
     OpenNesLibrary(
         modifier = modifier,
         state = state,
-        batchState = batchState,
-        onStartOnlineBatch = viewModel::startOnlineBatch,
-        onStopOnlineBatch = viewModel::stopOnlineBatch,
         onGameClick = onGameClick,
         onGameLongClick = onGameLongClick,
         onGameDetailsClick = { selectedGame = it },
@@ -167,9 +163,6 @@ fun HomeScreen(
 private fun OpenNesLibrary(
     modifier: Modifier,
     state: HomeViewModel.UIState,
-    batchState: HomeViewModel.OnlineBatchState,
-    onStartOnlineBatch: () -> Unit,
-    onStopOnlineBatch: () -> Unit,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
     onGameDetailsClick: (Game) -> Unit,
@@ -207,15 +200,6 @@ private fun OpenNesLibrary(
             )
         }
 
-        if (!state.showNoGamesCard) {
-            LibraryOnlineRefresh(
-                batchState = batchState,
-                indexed = !state.indexInProgress,
-                onStart = onStartOnlineBatch,
-                onStop = onStopOnlineBatch,
-            )
-        }
-
         // A real, previously played game is the only eligible "Continue" item.
         state.recentGames.firstOrNull()?.let { game ->
             FeaturedGame(game, onGameClick)
@@ -244,7 +228,7 @@ private fun OpenNesLibrary(
 }
 
 @Composable
-private fun LibraryOnlineRefresh(
+internal fun LibraryOnlineRefresh(
     batchState: HomeViewModel.OnlineBatchState,
     indexed: Boolean,
     onStart: () -> Unit,
