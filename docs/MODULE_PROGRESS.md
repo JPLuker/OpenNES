@@ -124,7 +124,8 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [ ] Integrate pinned stable rcheevos/rc_client and authenticated transport
 - [ ] Login/token security, game association, unlock events, achievement lists, progress, rich presence and leaderboard UI
 - [x] Add a Steam-inspired **Achievements** entry directly to the in-game pause menu, linking to an OpenNES-native current-game screen with honest runtime status and local ROM identification.
-- [ ] Once native rc_client integration exists, populate verified achievement descriptions, locked/unlocked state, completion progress and points. Distinguish unavailable/no-match/signed-in statuses; never fabricate unlocks or points.
+- [x] Implement source-level verified-achievement list rendering, All/Unlocked/Locked filters and progress UI, with strict local ROM hash association and honest disconnected/no-match states. This is dormant until native data exists.
+- [ ] Once native rc_client integration exists, actually supply authenticated achievement descriptions, locked/unlocked state, completion progress and points. Never fabricate unlocks or points.
 - [ ] Implement hardcore pause/savestate/cheat constraints and network failure handling
 - [ ] **M6 acceptance deferred:** verify actual RA account logins, supported NES game hashes and real unlocks on approved device/core
 

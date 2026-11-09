@@ -14,7 +14,9 @@
 
 - A dedicated Achievements entry opens from the current game's pause menu without exiting gameplay, with a current-game header and a scrollable status page.
 - An Android IO coroutine computes the local ROM fingerprint on demand; the page distinguishes checking, identified and unavailable outcomes and allows the user to select/copy the hash.
-- The status intentionally says **Not connected**. There are **no fabricated earned points, unlock timestamps, achievements, progress bars or supported-game matches**. Until a real native account/session exists, this is a diagnostic foundation, not functional RetroAchievements.
+- The default status intentionally says **Not connected**. There are **no fabricated earned points, unlock timestamps, achievements, progress bars or supported-game matches**.
+- The new `RetroAchievementsDisplayState` contract and verified-achievement list support authenticated/connecting/no-match states, per-game hash confirmation, filtering, real unlock totals, descriptions and points when native data becomes available. **The Active state is not emitted by current OpenNES code.** A local hash alone is insufficient.
+- A supplied Active session is shown only if its ROM hash matches the currently identified local ROM, preventing an old game session from showing unrelated awards. Until the native runtime exists, this is a diagnostic foundation, not functional RetroAchievements.
 - Follow-up acceptance: verify opening/closing this page in portrait and landscape, ROM URI access, ZIP/FDS variants, and error states on a physical device.
 
 ## Next source implementation gates

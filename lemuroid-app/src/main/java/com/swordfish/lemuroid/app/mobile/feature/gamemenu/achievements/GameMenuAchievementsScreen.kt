@@ -38,6 +38,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.achievements.NesRetroAchievementsHash
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsDisplayState
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
@@ -49,7 +50,10 @@ import timber.log.Timber
  * substitutes dummy game achievements or falsely marks the player signed in.
  */
 @Composable
-fun GameMenuAchievementsScreen(game: Game) {
+fun GameMenuAchievementsScreen(
+    game: Game,
+    session: RetroAchievementsDisplayState = RetroAchievementsDisplayState.NotConnected,
+) {
     var identification by remember(game.id, game.fileUri) {
         mutableStateOf<LocalIdentification>(LocalIdentification.Checking)
     }
@@ -67,6 +71,14 @@ fun GameMenuAchievementsScreen(game: Game) {
                 LocalIdentification.Unavailable
             }
     }
+
+    // Never show data from a different ROM or a merely local (unmatched)
+    // identity. Only the native session provider may ever supply Active.
+    val activeSession =
+        (session as? RetroAchievementsDisplayState.Active)?.takeIf { active ->
+            val hash = (identification as? LocalIdentification.Identified)?.identity?.md5
+            hash != null && active.romMd5.equals(hash, ignoreCase = true)
+        }
 
     Column(
         modifier =
@@ -118,26 +130,45 @@ fun GameMenuAchievementsScreen(game: Game) {
                         contentDescription = null,
                         tint = GameMenuStyle.red,
                     )
+                    val statusTitle =
+                        when {
+                            activeSession != null -> R.string.opennes_ra_runtime_ready
+                            session is RetroAchievementsDisplayState.Connecting -> R.string.opennes_ra_runtime_connecting
+                            session is RetroAchievementsDisplayState.NoMatchingGame -> R.string.opennes_ra_runtime_no_match
+                            session is RetroAchievementsDisplayState.Active -> R.string.opennes_ra_runtime_hash_mismatch
+                            else -> R.string.opennes_ra_runtime_unavailable
+                        }
                     Text(
-                        text = stringResource(R.string.opennes_ra_runtime_unavailable),
+                        text = stringResource(statusTitle),
                         color = GameMenuStyle.foreground,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
                     )
                 }
-                Text(
-                    text = stringResource(R.string.opennes_ra_runtime_explanation),
-                    color = GameMenuStyle.muted,
-                    fontSize = 13.sp,
-                )
-                HorizontalDivider(color = GameMenuStyle.border)
-                Text(
-                    text = stringResource(R.string.opennes_ra_no_progress),
-                    color = GameMenuStyle.muted,
-                    fontSize = 12.sp,
-                )
+                if (activeSession == null) {
+                    Text(
+                        text =
+                            stringResource(
+                                if (session is RetroAchievementsDisplayState.NoMatchingGame) {
+                                    R.string.opennes_ra_no_match_explanation
+                                } else {
+                                    R.string.opennes_ra_runtime_explanation
+                                },
+                            ),
+                        color = GameMenuStyle.muted,
+                        fontSize = 13.sp,
+                    )
+                    HorizontalDivider(color = GameMenuStyle.border)
+                    Text(
+                        text = stringResource(R.string.opennes_ra_no_progress),
+                        color = GameMenuStyle.muted,
+                        fontSize = 12.sp,
+                    )
+                }
             }
         }
+
+        activeSession?.let { VerifiedAchievementList(it) }
 
         Text(
             text = stringResource(R.string.opennes_ra_rom_identification),

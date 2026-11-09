@@ -466,4 +466,18 @@
     <string name="opennes_ra_identified">%1$s ROM fingerprint ready</string>
     <string name="opennes_ra_md5_label">Local MD5 fingerprint (long-press to copy)</string>
     <string name="opennes_ra_local_hash_notice">Calculated on your device. No ROM bytes, accounts or achievements are uploaded by this screen. A fingerprint alone does not confirm RetroAchievements support.</string>
+    <string name="opennes_ra_runtime_ready">Achievements connected</string>
+    <string name="opennes_ra_runtime_connecting">Connecting to RetroAchievements</string>
+    <string name="opennes_ra_runtime_no_match">Game not recognized</string>
+    <string name="opennes_ra_runtime_hash_mismatch">Game identification mismatch</string>
+    <string name="opennes_ra_no_match_explanation">The signed-in RetroAchievements session did not match this game. No awards or progress will be displayed.</string>
+    <string name="opennes_ra_verified_list_title">Game achievements</string>
+    <string name="opennes_ra_signed_in_as">Signed in as %1$s</string>
+    <string name="opennes_ra_completion">%1$d / %2$d unlocked</string>
+    <string name="opennes_ra_points">%1$d pts</string>
+    <string name="opennes_ra_filter_all">All</string>
+    <string name="opennes_ra_filter_unlocked">Unlocked</string>
+    <string name="opennes_ra_filter_locked">Locked</string>
+    <string name="opennes_ra_no_results">No achievements in this category.</string>
+    <string name="opennes_ra_partial_progress">Progress: %1$d%%</string>
 </resources>
