@@ -568,6 +568,11 @@ private fun GameDetailsSheet(
     var searching by remember(game.id) { mutableStateOf(false) }
     var applying by remember(game.id) { mutableStateOf(false) }
     var matchFailed by remember(game.id) { mutableStateOf(false) }
+    val detailsScroll = rememberScrollState()
+
+    LaunchedEffect(editingProfile, onlineExpanded, searchExpanded) {
+        if (editingProfile || onlineExpanded || searchExpanded) detailsScroll.scrollTo(0)
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -587,7 +592,7 @@ private fun GameDetailsSheet(
                     Modifier
                         .weight(1f, fill = false)
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(detailsScroll)
                         .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
@@ -720,52 +725,13 @@ private fun GameDetailsSheet(
                     }
                 }
 
-                game.developer?.takeIf { it.isNotBlank() }?.let {
-                    GameDetailField(
-                        label = stringResource(R.string.opennes_game_developer),
-                        value = it,
+                if (onlineExpanded) {
+                    WikidataLookupSection(
+                        game = game,
+                        onLookup = onLookupOnline,
+                        onApply = onApplyOnline,
+                        onGameUpdated = onGameUpdated,
                     )
-                }
-
-                GameProfileSection(
-                    game = game,
-                    onSave = onSaveProfile,
-                    onGameUpdated = onGameUpdated,
-                )
-
-                WikidataLookupSection(
-                    game = game,
-                    onLookup = onLookupOnline,
-                    onApply = onApplyOnline,
-                    onGameUpdated = onGameUpdated,
-                )
-
-                game.lastPlayedAt?.let { lastPlayed ->
-                    val date =
-                        DateUtils.getRelativeTimeSpanString(
-                            lastPlayed,
-                            System.currentTimeMillis(),
-                            DateUtils.MINUTE_IN_MILLIS,
-                        ).toString()
-                    GameDetailField(
-                        label = stringResource(R.string.opennes_game_last_played),
-                        value = date,
-                    )
-                }
-
-                GameDetailField(
-                    label = stringResource(R.string.opennes_game_rom_file),
-                    value = game.fileName,
-                )
-
-                GameArtworkGallery(game)
-
-                OutlinedButton(
-                    onClick = { searchExpanded = !searchExpanded },
-                    border = BorderStroke(1.dp, LibraryColors.border),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-                ) {
-                    Text(stringResource(R.string.opennes_find_game_info))
                 }
 
                 if (searchExpanded) {
@@ -854,11 +820,52 @@ private fun GameDetailsSheet(
                     }
                 }
 
-                Text(
-                    text = stringResource(R.string.opennes_achievements_future),
-                    color = LibraryColors.muted,
-                    fontSize = 12.sp,
+                game.developer?.takeIf { it.isNotBlank() }?.let {
+                    GameDetailField(
+                        label = stringResource(R.string.opennes_game_developer),
+                        value = it,
+                    )
+                }
+
+                GameProfileSection(
+                    game = game,
+                    editing = editingProfile,
+                    onEditingChange = { editingProfile = it },
+                    onSave = onSaveProfile,
+                    onGameUpdated = onGameUpdated,
                 )
+
+                game.lastPlayedAt?.let { lastPlayed ->
+                    val date =
+                        DateUtils.getRelativeTimeSpanString(
+                            lastPlayed,
+                            System.currentTimeMillis(),
+                            DateUtils.MINUTE_IN_MILLIS,
+                        ).toString()
+                    GameDetailField(
+                        label = stringResource(R.string.opennes_game_last_played),
+                        value = date,
+                    )
+                }
+
+                GameDetailField(
+                    label = stringResource(R.string.opennes_game_rom_file),
+                    value = game.fileName,
+                )
+
+                GameArtworkGallery(game)
+
+                OutlinedButton(
+                    onClick = { searchExpanded = !searchExpanded },
+                    border = BorderStroke(1.dp, LibraryColors.border),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                ) {
+                    Text(stringResource(R.string.opennes_find_game_info))
+                }
+
+
+
+
             }
         }
     }
