@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -141,20 +144,12 @@ fun GameMenuHomeScreen(
             )
         }
 
-        GameMenuAction(
-            title = stringResource(R.string.game_menu_mute_audio),
-            detail =
-                stringResource(
-                    if (gameMenuRequest.audioEnabled) {
-                        R.string.opennes_pause_audio_on
-                    } else {
-                        R.string.opennes_pause_audio_off
-                    },
-                ),
-            icon = R.drawable.ic_menu_mute,
-            onClick = {
+        GameMenuSwitchAction(
+            title = stringResource(R.string.opennes_pause_game_audio),
+            checked = gameMenuRequest.audioEnabled,
+            onCheckedChange = { enabled ->
                 onResult {
-                    putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, !gameMenuRequest.audioEnabled)
+                    putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, enabled)
                 }
             },
         )
@@ -334,6 +329,50 @@ private fun GameMenuAction(
             detail?.let {
                 Text(text = it, fontSize = 12.sp, color = GameMenuStyle.muted)
             }
+        }
+    }
+}
+
+/**
+ * The full row owns the accessibility toggle action. The Switch itself has
+ * no separate click handler, avoiding duplicate switches and conflicting taps.
+ * Changing audio uses the same game-menu result contract as before.
+ */
+@Composable
+private fun GameMenuSwitchAction(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .toggleable(
+                    value = checked,
+                    role = Role.Switch,
+                    onValueChange = onCheckedChange,
+                ),
+        color = GameMenuStyle.surface,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, GameMenuStyle.border),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = title,
+                color = GameMenuStyle.foreground,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+                fontSize = 14.sp,
+            )
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+            )
         }
     }
 }
