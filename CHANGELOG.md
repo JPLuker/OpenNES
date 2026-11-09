@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Library box art and conditional Favorites
+
+- Standardize box art at the original NES retail package proportions (5 × 7.125 inches) across the featured game, library shelves, search, and details.
+- Fit the full cover in its frame rather than cropping the printed art.
+- Remove the redundant tagline beneath Your NES Library.
+- Show the Favorites shelf and bottom navigation destination only when at least one NES game is favorited.
+- Update Favorites navigation reactively when favorites are added or removed; return to Home if the last favorite is removed while that destination is open.
+
+
 ## Unreleased — Automatic NES library enrichment
 
 - Automatically enqueue rate-limited, network-constrained metadata jobs after ROM discovery without blocking the emulator or the ROM import process.
