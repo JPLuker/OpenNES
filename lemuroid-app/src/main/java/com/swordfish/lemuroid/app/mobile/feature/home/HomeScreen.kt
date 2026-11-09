@@ -998,34 +998,34 @@ private fun GameProfileSection(
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (!editing) {
             game.genre?.takeIf { it.isNotBlank() }?.let {
-            GameDetailField(stringResource(R.string.opennes_game_genre), it)
-        }
-        game.releaseYear?.let {
-            GameDetailField(stringResource(R.string.opennes_game_release_year), it.toString())
-        }
-        game.description?.takeIf { it.isNotBlank() }?.let {
-            GameDetailField(stringResource(R.string.opennes_game_description), it)
-        }
-        game.wikipediaArticleTitle?.takeIf { it.isNotBlank() }?.let { article ->
-            TextButton(
-                onClick = {
-                    val url = "https://en.wikipedia.org/wiki/" + Uri.encode(article.replace(' ', '_'))
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                },
-            ) {
-                Text(stringResource(R.string.opennes_wikipedia_source))
+                GameDetailField(stringResource(R.string.opennes_game_genre), it)
             }
-        }
-        game.wikidataEntityId?.takeIf { it.matches(Regex("Q[1-9][0-9]*")) }?.let { entityId ->
-            TextButton(
-                onClick = {
-                    val uri = Uri.parse("https://www.wikidata.org/wiki/" + entityId)
-                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
-                },
-            ) {
-                Text(stringResource(R.string.opennes_online_source))
+            game.releaseYear?.let {
+                GameDetailField(stringResource(R.string.opennes_game_release_year), it.toString())
             }
-        }
+            game.description?.takeIf { it.isNotBlank() }?.let {
+                GameDetailField(stringResource(R.string.opennes_game_description), it)
+            }
+            game.wikipediaArticleTitle?.takeIf { it.isNotBlank() }?.let { article ->
+                TextButton(
+                    onClick = {
+                        val url = "https://en.wikipedia.org/wiki/" + Uri.encode(article.replace(' ', '_'))
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    },
+                ) {
+                    Text(stringResource(R.string.opennes_wikipedia_source))
+                }
+            }
+            game.wikidataEntityId?.takeIf { it.matches(Regex("Q[1-9][0-9]*")) }?.let { entityId ->
+                TextButton(
+                    onClick = {
+                        val uri = Uri.parse("https://www.wikidata.org/wiki/" + entityId)
+                        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    },
+                ) {
+                    Text(stringResource(R.string.opennes_online_source))
+                }
+            }
 
             if (game.genre.isNullOrBlank() && game.releaseYear == null && game.description.isNullOrBlank()) {
                 Text(
