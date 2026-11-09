@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
-import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsDisplayState
+import com.swordfish.lemuroid.app.shared.achievements.VerifiedAchievement
 
 private enum class AchievementFilter {
     ALL,
@@ -44,23 +44,40 @@ private enum class AchievementFilter {
  * No sample entries are supplied, so there is no fake award or progress state.
  */
 @Composable
-internal fun VerifiedAchievementList(session: RetroAchievementsDisplayState.Active) {
-    var filter by remember(session.romMd5) { mutableStateOf(AchievementFilter.ALL) }
-    val total = session.achievements.size
-    val unlocked = session.achievements.count { it.unlocked }
-    val unlockedPoints = session.achievements.filter { it.unlocked }.sumOf { it.points.coerceAtLeast(0) }
+internal fun VerifiedAchievementList(
+    username: String,
+    romMd5: String,
+    achievements: List<VerifiedAchievement>,
+    readOnlyWeb: Boolean = false,
+) {
+    var filter by remember(romMd5, username) { mutableStateOf(AchievementFilter.ALL) }
+    val total = achievements.size
+    val unlocked = achievements.count { it.unlocked }
+    val unlockedPoints = achievements.filter { it.unlocked }.sumOf { it.points.coerceAtLeast(0) }
     val completion = if (total == 0) 0f else unlocked.toFloat() / total
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = stringResource(R.string.opennes_ra_verified_list_title),
+            text =
+                stringResource(
+                    if (readOnlyWeb) {
+                        R.string.opennes_ra_web_progress_list_title
+                    } else {
+                        R.string.opennes_ra_verified_list_title
+                    },
+                ),
             color = GameMenuStyle.foreground,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
         )
         Text(
-            text = stringResource(R.string.opennes_ra_signed_in_as, session.username),
+            text =
+                if (readOnlyWeb) {
+                    stringResource(R.string.opennes_ra_web_progress_account, username)
+                } else {
+                    stringResource(R.string.opennes_ra_signed_in_as, username)
+                },
             color = GameMenuStyle.muted,
             fontSize = 12.sp,
         )
@@ -110,7 +127,7 @@ internal fun VerifiedAchievementList(session: RetroAchievementsDisplayState.Acti
             }
         }
         val filtered =
-            session.achievements.filter { achievement ->
+            achievements.filter { achievement ->
                 when (filter) {
                     AchievementFilter.ALL -> true
                     AchievementFilter.UNLOCKED -> achievement.unlocked
