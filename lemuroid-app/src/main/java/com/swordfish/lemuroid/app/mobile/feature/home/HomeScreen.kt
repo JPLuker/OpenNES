@@ -410,13 +410,16 @@ private fun FeaturedGame(
     game: Game,
     onGameClick: (Game) -> Unit,
 ) {
+    val compactLayout =
+        LocalConfiguration.current.screenWidthDp < 360 || LocalDensity.current.fontScale > 1.2f
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            NesBoxArtwork(game = game, modifier = Modifier.width(124.dp))
+            NesBoxArtwork(game = game, modifier = Modifier.width(if (compactLayout) 96.dp else 124.dp))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(7.dp),
@@ -534,13 +537,15 @@ private fun ShelfGame(
     onLongClick: () -> Unit,
 ) {
     // Box art is the game card. A tap opens the profile; a long press shows
-    // actions. Titles and playtime remain available in the game detail sheet.
+    // actions. Explicit TalkBack labels make both gestures discoverable.
     NesBoxArtwork(
         game = game,
         modifier =
             Modifier
                 .width(128.dp)
                 .combinedClickable(
+                    onClickLabel = stringResource(R.string.opennes_open_game_details, game.displayName()),
+                    onLongClickLabel = stringResource(R.string.opennes_game_actions_for, game.displayName()),
                     onClick = onClick,
                     onLongClick = onLongClick,
                 ),
@@ -606,7 +611,7 @@ private fun GameDetailsSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
-                        contentDescription = stringResource(R.string.opennes_game_more),
+                        contentDescription = stringResource(R.string.opennes_game_actions_for, game.displayName()),
                         tint = LibraryColors.foreground,
                     )
                 }
