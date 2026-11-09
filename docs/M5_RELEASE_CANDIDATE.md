@@ -24,3 +24,9 @@ Branch: `release/m5-candidate` created from the M5 gameplay reliability mileston
 - Settings → Touch controller appearance now offers six original theme presets and ten individually editable #RRGGBB colors with live preview.
 - The existing in-game editor still owns positional changes. Settings explains where to find it.
 - The preference store shares one appearance across portrait and landscape; geometric layouts remain independent.
+
+## First-game controller onboarding
+- A small guided setup sheet appears once when the first NES game reaches visible touch controls, not while loading or when a physical controller is active.
+- Players pick any original theme and proceed directly to drag editing, or keep the default and continue playing.
+- The completion flag prevents repeated interruptions; Settings → Touch controller appearance can request setup again for the next game.
+- Geometry remains independently saved by orientation; onboarding never resets the player's custom layout.

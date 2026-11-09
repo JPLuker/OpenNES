@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.game.NesControllerOnboardingStore
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsColors
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
@@ -49,6 +50,8 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current.applicationContext
     val store = remember(context) { NesControllerAppearanceStore(context) }
     val appearance = rememberNesControllerAppearance()
+    val setupStore = remember(context) { NesControllerOnboardingStore(context) }
+    var setupRequested by remember { mutableStateOf(false) }
 
     OpenNesSettingsPage(modifier = modifier) {
         OpenNesSettingsGroup(
@@ -59,6 +62,21 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ControllerAppearancePreview(appearance.palette)
+                OutlinedButton(
+                    onClick = {
+                        setupStore.requestAgain()
+                        setupRequested = true
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.opennes_setup_run_again))
+                }
+                if (setupRequested) {
+                    Text(
+                        text = stringResource(R.string.opennes_setup_next_game),
+                        color = OpenNesSettingsColors.muted,
+                    )
+                }
                 Text(
                     text = stringResource(R.string.opennes_controller_position_hint),
                     color = OpenNesSettingsColors.muted,

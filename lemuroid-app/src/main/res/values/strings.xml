@@ -370,6 +370,12 @@
     <string name="opennes_controller_colors">Customize every color</string>
     <string name="opennes_controller_colors_hint">Each color accepts a #RRGGBB hex value. Changes save automatically and apply in games.</string>
     <string name="opennes_controller_preview">Controller preview</string>
+    <string name="opennes_setup_title">Make your controller yours</string>
+    <string name="opennes_setup_explanation">Choose a style, then move the controls on your game screen. You can change everything again later.</string>
+    <string name="opennes_setup_customize">Customize layout</string>
+    <string name="opennes_setup_use_defaults">Play with this layout</string>
+    <string name="opennes_setup_run_again">Set up my controller again</string>
+    <string name="opennes_setup_next_game">Guided setup will open when you next start a NES game with touch controls.</string>
     <string name="opennes_controller_reset_appearance">Restore Classic Hardware colors</string>
     <string name="opennes_controller_position_hint">To move or resize the D-pad and buttons: open a game, pause, then choose Edit touch controls. Portrait and landscape layouts are stored separately.</string>
     <string name="opennes_controller_preset_selected">Selected</string>

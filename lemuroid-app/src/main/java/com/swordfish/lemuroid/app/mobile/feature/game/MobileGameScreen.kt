@@ -63,6 +63,7 @@ import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalNesControllerPalette
+import com.swordfish.touchinput.radial.NesControllerAppearanceStore
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
@@ -80,6 +81,10 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         val isLandscape = constraints.maxWidth > constraints.maxHeight
         // Appearance is global; geometry is still stored per orientation.
         val controllerAppearance = rememberNesControllerAppearance()
+        val appContext = LocalContext.current.applicationContext
+        val onboardingStore = remember(appContext) { NesControllerOnboardingStore(appContext) }
+        val appearanceStore = remember(appContext) { NesControllerAppearanceStore(appContext) }
+        val onboardingVisible = remember { mutableStateOf(false) }
 
         LaunchedEffect(isLandscape) {
             val orientation =
@@ -142,6 +147,16 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
             touchControllerSettings != null &&
                 currentControllerConfig != null &&
                 touchControlsVisibleState.value
+        val isLoading = viewModel.loadingState.collectAsState(true).value
+
+        // First-game onboarding waits until real NES controls are visible.
+        // A paired physical gamepad does not cause an unusable setup popup.
+        LaunchedEffect(showTouchPads, isLoading, dragEditMode) {
+            if (showTouchPads && !isLoading && !dragEditMode && onboardingStore.shouldShow()) {
+                onboardingVisible.value = true
+            }
+            if (!showTouchPads) onboardingVisible.value = false
+        }
 
         val landscapeOverlaySelected =
             touchControllerSettings?.landscapeOverlay ?: currentControllerConfig?.allowTouchOverlay ?: true
@@ -328,10 +343,21 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
             }
         }
 
-        val isLoading =
-            viewModel.loadingState
-                .collectAsState(true)
-                .value
+        if (onboardingVisible.value && showTouchPads && !isLoading) {
+            NesControllerSetupSheet(
+                currentPresetId = controllerAppearance.preset.id,
+                onChoosePreset = { appearanceStore.selectPreset(it) },
+                onCustomizeLayout = {
+                    onboardingStore.complete()
+                    onboardingVisible.value = false
+                    viewModel.setDragEditMode(true)
+                },
+                onUseDefaults = {
+                    onboardingStore.complete()
+                    onboardingVisible.value = false
+                },
+            )
+        }
 
         if (isLoading) {
             Box(
