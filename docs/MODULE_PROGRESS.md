@@ -34,7 +34,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Add Settings → Touch controller appearance → Set up my controller again for re-running the guide on the next game launch.
 - [x] Replace the overlong controller dialog with a compact bottom sheet: drag first, D-pad/A-B/More/Themes tabs, one cluster's compact sliders at a time, preserved reset confirmation and per-orientation persistence.
 - [ ] Confirm onboarding, sheet sizing, drag handoff, theme persistence, external-controller takeover and game-save behavior on a real phone.
-- [ ] Per-button geometry and touch-zone editing remain future enhancements; present layout edits still operate on left and right clusters.
+- [x] Allow independent Start, Select and Menu position and size edits under More, saved per orientation; existing layout data remains backward compatible.
+- [ ] Independent A/B and D-pad geometry/hitbox editing remains future work; main control groups still move as clusters.
 
 ## M3 source completion checklist
 

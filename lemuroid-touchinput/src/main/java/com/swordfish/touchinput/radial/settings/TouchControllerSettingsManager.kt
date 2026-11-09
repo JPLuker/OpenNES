@@ -23,6 +23,17 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         LANDSCAPE,
     }
 
+    /**
+     * Independent secondary-button placement. The neutral values preserve
+     * older saved layouts and the existing PadKit touch mappings.
+     */
+    @Serializable
+    data class ButtonGeometry(
+        val size: Float = 1f,
+        val offsetX: Float = 0f,
+        val offsetY: Float = 0f,
+    )
+
     @Serializable
     data class Settings(
         val scale: Float = DEFAULT_SCALE,
@@ -43,6 +54,9 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val leftOffsetY: Float = 0f,
         val rightOffsetX: Float = 0f,
         val rightOffsetY: Float = 0f,
+        val startButton: ButtonGeometry = ButtonGeometry(),
+        val selectButton: ButtonGeometry = ButtonGeometry(),
+        val menuButton: ButtonGeometry = ButtonGeometry(),
     )
 
     private fun computeInsetsPaddings(
@@ -222,6 +236,10 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         const val MAX_MARGINS = 96f
         const val MAX_CLUSTER_OFFSET_X = 56f
         const val MAX_CLUSTER_OFFSET_Y = 72f
+        const val MAX_BUTTON_OFFSET_X = 28f
+        const val MAX_BUTTON_OFFSET_Y = 32f
+        const val MIN_BUTTON_SIZE = 0.75f
+        const val MAX_BUTTON_SIZE = 1.25f
     }
 
     private fun getPreferenceString(

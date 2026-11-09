@@ -393,6 +393,8 @@
     <string name="opennes_editor_buttons">A/B</string>
     <string name="opennes_editor_more">More</string>
     <string name="opennes_editor_themes">Themes</string>
+    <string name="opennes_editor_secondary_controls">Individual button controls</string>
+    <string name="opennes_editor_reset_secondary">Reset selected button</string>
     <string name="opennes_editor_more_colors_hint">For individual colors, open Settings → Touch controller appearance.</string>
     <string name="opennes_editor_orientation_hint">Positions and sizes are saved for this orientation only.</string>
     <string name="opennes_editor_compact_hint">Side panels will appear when the screen is wider.</string>

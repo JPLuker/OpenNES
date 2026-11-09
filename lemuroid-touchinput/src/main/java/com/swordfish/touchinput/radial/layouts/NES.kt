@@ -1,6 +1,8 @@
 package com.swordfish.touchinput.radial.layouts
 
 import android.view.KeyEvent
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
@@ -47,7 +49,7 @@ fun PadKitScope.NESLeft(
             )
         },
         secondaryDials = {
-            NesSecondarySelect()
+            NesSecondarySelect(settings)
             SecondaryButtonMenuPlaceholder(settings)
         },
     )
@@ -87,7 +89,7 @@ fun PadKitScope.NESRight(
             )
         },
         secondaryDials = {
-            NesSecondaryStart()
+            NesSecondaryStart(settings)
             NesSecondaryMenu(settings)
         },
     )
@@ -95,10 +97,18 @@ fun PadKitScope.NESRight(
 
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
-private fun NesSecondarySelect() {
+private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings) {
     val scale = if (LocalNesPortraitLayout.current) 1.15f else 1.05f
+    val geometry = settings.selectButton
     ControlButton(
-        modifier = Modifier.radialPosition(120f).radialScale(scale),
+        modifier =
+            Modifier
+                .radialPosition(120f)
+                .radialScale(scale * geometry.size.coerceIn(TouchControllerSettingsManager.MIN_BUTTON_SIZE, TouchControllerSettingsManager.MAX_BUTTON_SIZE))
+                .offset(
+                    x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
+                    y = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f)).dp,
+                ),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_SELECT),
         foreground = { NesPillButtonForeground(pressed = it, label = "SELECT", expanded = true) },
         background = {},
@@ -107,10 +117,18 @@ private fun NesSecondarySelect() {
 
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
-private fun NesSecondaryStart() {
+private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings) {
     val scale = if (LocalNesPortraitLayout.current) 1.15f else 1.05f
+    val geometry = settings.startButton
     ControlButton(
-        modifier = Modifier.radialPosition(60f).radialScale(scale),
+        modifier =
+            Modifier
+                .radialPosition(60f)
+                .radialScale(scale * geometry.size.coerceIn(TouchControllerSettingsManager.MIN_BUTTON_SIZE, TouchControllerSettingsManager.MAX_BUTTON_SIZE))
+                .offset(
+                    x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
+                    y = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f)).dp,
+                ),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_START),
         foreground = { NesPillButtonForeground(pressed = it, label = "START", expanded = true) },
         background = {},
@@ -121,13 +139,21 @@ private fun NesSecondaryStart() {
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) {
+    val geometry = settings.menuButton
     ControlButton(
         modifier =
             Modifier
                 .radialPosition(
                     -60f + 2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
                 )
-                .radialScale(if (LocalNesPortraitLayout.current) 1.15f else 1.05f),
+                .radialScale(
+                    (if (LocalNesPortraitLayout.current) 1.15f else 1.05f) *
+                        geometry.size.coerceIn(TouchControllerSettingsManager.MIN_BUTTON_SIZE, TouchControllerSettingsManager.MAX_BUTTON_SIZE),
+                )
+                .offset(
+                    x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
+                    y = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f)).dp,
+                ),
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_MODE),
         foreground = { NesPillButtonForeground(pressed = it, label = "MENU", expanded = true) },
         background = {},

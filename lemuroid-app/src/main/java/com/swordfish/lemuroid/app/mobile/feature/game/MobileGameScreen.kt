@@ -483,6 +483,7 @@ private fun MenuEditTouchControls(
     val visible = viewModel.isEditControlShown().collectAsState(false)
     val confirmReset = remember { mutableStateOf(false) }
     val selectedTab = remember { mutableStateOf(0) }
+    val secondaryTab = remember { mutableStateOf(0) }
     val context = LocalContext.current.applicationContext
     val appearanceStore = remember(context) { NesControllerAppearanceStore(context) }
     val appearance = rememberNesControllerAppearance()
@@ -613,6 +614,46 @@ private fun MenuEditTouchControls(
                     )
                 }
                 2 -> {
+                    Text(
+                        text = stringResource(R.string.opennes_editor_secondary_controls),
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        listOf("START", "SELECT", "MENU").forEachIndexed { index, label ->
+                            FilterChip(
+                                selected = secondaryTab.value == index,
+                                onClick = { secondaryTab.value = index },
+                                label = { Text(label) },
+                            )
+                        }
+                    }
+                    val buttonGeometry =
+                        when (secondaryTab.value) {
+                            0 -> touchControllerSettings.startButton
+                            1 -> touchControllerSettings.selectButton
+                            else -> touchControllerSettings.menuButton
+                        }
+                    val updateButton: (TouchControllerSettingsManager.ButtonGeometry) ->
+                        TouchControllerSettingsManager.Settings = { geometry ->
+                        when (secondaryTab.value) {
+                            0 -> touchControllerSettings.copy(startButton = geometry)
+                            1 -> touchControllerSettings.copy(selectButton = geometry)
+                            else -> touchControllerSettings.copy(menuButton = geometry)
+                        }
+                    }
+                    MenuEditSecondaryButton(
+                        geometry = buttonGeometry,
+                        onPreview = { viewModel.previewTouchControllerSettings(updateButton(it)) },
+                        onCommit = { viewModel.updateTouchControllerSettings(updateButton(it)) },
+                        onReset = {
+                            viewModel.updateTouchControllerSettings(
+                                updateButton(TouchControllerSettingsManager.ButtonGeometry()),
+                            )
+                        },
+                    )
                     MenuEditTouchControlRow(
                         label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_opacity),
                     ) {
@@ -793,6 +834,53 @@ private fun MenuEditControllerCluster(
     }
     TextButton(onClick = onReset) {
         Text(text = resetLabel)
+    }
+}
+
+
+@Composable
+private fun MenuEditSecondaryButton(
+    geometry: TouchControllerSettingsManager.ButtonGeometry,
+    onPreview: (TouchControllerSettingsManager.ButtonGeometry) -> Unit,
+    onCommit: (TouchControllerSettingsManager.ButtonGeometry) -> Unit,
+    onReset: () -> Unit,
+) {
+    MenuEditTouchControlRow(label = stringResource(R.string.opennes_controls_size)) {
+        TouchControlEditorSlider(
+            value = geometry.size,
+            valueRange =
+                TouchControllerSettingsManager.MIN_BUTTON_SIZE..
+                    TouchControllerSettingsManager.MAX_BUTTON_SIZE,
+            onPreview = { onPreview(geometry.copy(size = it)) },
+            onCommit = { onCommit(geometry.copy(size = it)) },
+        )
+    }
+    MenuEditTouchControlRow(
+        label =
+            stringResource(R.string.opennes_controls_horizontal) +
+                " (${(geometry.offsetX * TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X).roundToInt()} dp)",
+    ) {
+        TouchControlEditorSlider(
+            value = geometry.offsetX,
+            valueRange = -1f..1f,
+            onPreview = { onPreview(geometry.copy(offsetX = it)) },
+            onCommit = { onCommit(geometry.copy(offsetX = it)) },
+        )
+    }
+    MenuEditTouchControlRow(
+        label =
+            stringResource(R.string.opennes_controls_vertical) +
+                " (${(geometry.offsetY * TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y).roundToInt()} dp)",
+    ) {
+        TouchControlEditorSlider(
+            value = geometry.offsetY,
+            valueRange = -1f..1f,
+            onPreview = { onPreview(geometry.copy(offsetY = it)) },
+            onCommit = { onCommit(geometry.copy(offsetY = it)) },
+        )
+    }
+    TextButton(onClick = onReset) {
+        Text(stringResource(R.string.opennes_editor_reset_secondary))
     }
 }
 
