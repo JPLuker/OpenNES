@@ -343,6 +343,7 @@
     <string name="opennes_artwork_gameplay">Gameplay screenshot</string>
     <string name="opennes_find_game_info">Search local NES catalogue</string>
     <string name="opennes_search_heading">NES COLLECTION</string>
+    <string name="opennes_search_field_hint">Search NES games</string>
     <string name="opennes_search_hint">Search for a game by name.</string>
     <string name="opennes_search_no_results">No games match that search.</string>
     <string name="opennes_search_error">Could not search the library.</string>
