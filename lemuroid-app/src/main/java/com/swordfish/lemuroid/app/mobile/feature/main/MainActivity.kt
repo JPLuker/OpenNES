@@ -40,6 +40,7 @@ import com.swordfish.lemuroid.app.mobile.feature.settings.bios.BiosScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.bios.BiosSettingsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.coreselection.CoresSelectionScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.coreselection.CoresSelectionViewModel
+import com.swordfish.lemuroid.app.mobile.feature.settings.general.LibraryMaintenanceScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.inputdevices.InputDevicesSettingsScreen
@@ -287,6 +288,20 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                         ),
                                 ),
                             navController = navController,
+                        )
+                    }
+                    composable(MainRoute.SETTINGS_LIBRARY) {
+                        LibraryMaintenanceScreen(
+                            modifier = Modifier.padding(padding),
+                            viewModel =
+                                viewModel(
+                                    factory =
+                                        HomeViewModel.Factory(
+                                            applicationContext,
+                                            retrogradeDb,
+                                            gameMetadataProvider,
+                                        ),
+                                ),
                         )
                     }
                     composable(MainRoute.SETTINGS_ADVANCED) {
