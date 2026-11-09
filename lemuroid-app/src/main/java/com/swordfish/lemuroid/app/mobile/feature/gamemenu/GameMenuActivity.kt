@@ -16,10 +16,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -264,7 +268,19 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                 shape = RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp),
                 border = BorderStroke(1.dp, GameMenuStyle.border),
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
+                // Keep the side panel's background edge-to-edge while its
+                // buttons and scrollable pages avoid system bars and cutouts.
+                // Game rendering outside this menu uses its own inset rules.
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(
+                                WindowInsets.safeDrawing.only(
+                                    WindowInsetsSides.Top + WindowInsetsSides.Bottom + WindowInsetsSides.End,
+                                ),
+                            ),
+                ) {
                     content()
                 }
             }
