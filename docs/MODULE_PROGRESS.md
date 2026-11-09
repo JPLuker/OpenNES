@@ -12,8 +12,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
 | **M2 — UI completion and cleanup** | **CODE-COMPLETE (source scope; not device accepted)**: NES library, navigation, detail sheets, menus, settings, ROM recovery, compact layouts and accessibility pass implemented; obsolete TV UI removed | Device and build acceptance remain paused; regressions will be assessed when testing resumes |
 | M3 — Portrait NES controller | **CODE-COMPLETE (source scope; unverified)**: NES D-pad/A/B/Start/Select/Menu, responsive defaults, saved orientation-specific editing, touch hit-region refinements and portrait housing | Build/device acceptance deferred: real NES input, gestures, cutouts, large text, pause and save/resume |
-| **M4 — Landscape NES controller** | **ACTIVE**: independent landscape settings and overlay/side-panel layout paths exist; NES side-panel trim and landscape video side-cutout padding started | Finish deliberate horizontal composition, secondary controls, wide/narrow displays and device acceptance |
-| M5 — Gameplay reliability | Partially implemented: audio/input fixes, save infrastructure and virtual input release handling | Comprehensive save/audio/suspend/regression verification |
+| M4 — Landscape NES controller | **CODE-COMPLETE (source scope; unverified)**: framed and overlay modes, minimal overlaid controls, NES secondary buttons, independent layout settings, cutout padding and adaptive defaults | Hardware acceptance deferred: gameplay framing, touch boundaries, landscape rotations and external devices |
+| **M5 — Gameplay reliability** | **ACTIVE**: existing audio/input fixes and save infrastructure; now auditing state operation results, lifecycle ownership and errors | Improve save/resume feedback and cancellation handling; audio and device acceptance deferred |
 | M6 — RetroAchievements | Not implemented | Official integration feasibility, hashing, accounts, runtime and progress |
 | M7 — Public release | Development distribution in place | Testing, security/license audit, signing and release docs |
 | M8 — RomM integration (additional planned workstream) | Not implemented | Server authentication, game sync, offline save/conflict design |
@@ -49,11 +49,19 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Force overlay display on landscape screens narrower than 640dp while keeping the user's saved side-panel choice for wider screens
 - [x] Replace the generic landscape menu button with matching NES Start/Select/Menu pills, keeping PadKit hold and mappings
 - [x] Add a landscape-only minimal-overlaid-controls option, eliminating the extra A/B backplate and softening directional/button shadows without changing hit targets
-- [ ] Tune landscape A/B and D-pad placement around the visible game, with separate secondary-button arrangement
+- [x] Use a landscape-specific radial layout with dedicated NES Start/Select/Menu capsules and independent D-pad/A/B size and positioning
 - [x] Reduce only new default landscape control scale on short screens, preserving existing saved per-orientation preferences
 - [x] Select overlay mode when the combined custom control widths would leave less than the minimum reserved gameplay area
-- [ ] Review extreme aspect ratios, safe touch zones, immersive mode and external gamepad transitions
+- [ ] **M4 acceptance deferred:** review extreme aspect ratios, safe touch zones, immersive mode and external gamepad transitions
 - [ ] **M4 acceptance deferred:** rotate and play NES titles with touch/hardware controllers on real devices
+
+## M5 active source checklist
+
+- [x] Existing NES refresh-rate preference and virtual-input release handling
+- [ ] Correct false-positive quick-save/load feedback and surface slot I/O failures
+- [ ] Review save/resume and foreground-session lifecycle ownership for interrupted games
+- [ ] Guard native video/input operations against late or stale events when possible
+- [ ] **M5 acceptance deferred:** on-device audio/frame pacing, save SRAM and slot versions, pause/resume, gamepad disconnect and process lifecycle
 
 ## M2 active checklist
 
@@ -225,6 +233,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Generated landscape control sizes now use available vertical space, minus safe top/bottom cutouts and a secondary-button reserve. Saved layouts remain authoritative, including legacy shared-scale preferences.
 - The side-panel fallback now accounts for actual left/right user scale overrides and a minimum 240dp gameplay area, not just a hard-coded 640dp device-width threshold. Side-panel preferences are preserved for a wider orientation/device.
 - The screens still require physical short/wide landscape verification once testing resumes.
+
+## M4 closure — source implementation complete, device acceptance deferred
+
+- Implemented both full-width overlay and NES-themed side-panel landscape modes, selectable inside the landscape controller editor; minimal overlay appearance has its own stored toggle. Portrait preferences and original input mappings are untouched.
+- A unified NES D-pad, A/B, Select, Start and Menu vocabulary is used, with landscape-specific radial sizes, cutout treatment and video framing. Narrow/short screens adapt generated defaults and fall back to overlay display when necessary. Saved custom layouts remain authoritative.
+- Existing external gamepad takeover continues hiding virtual controls. Device tests for real touches, physical gamepads, edge cases and visual acceptance are **not performed**. The module is **code-complete only**; no claim of reliable runtime behavior.
+- M4 now closes as a source milestone. Future discovered issues belong to regression acceptance rather than indefinite cosmetic passes.
 
 ## Development rules
 

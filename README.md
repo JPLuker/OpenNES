@@ -32,7 +32,7 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
 | M2 — Replace the complete Lemuroid user interface | **Code-complete (source scope)**: NES library, details, menus, settings, import recovery, accessible layouts and Android TV UI removal; build and on-device acceptance deferred |
 | M3 — Premium NES portrait controller skin | **Code-complete (source scope)**: NES housing, D-pad/A/B/Start/Select/Menu, responsive defaults and saved portrait-specific editor; device acceptance deferred |
-| M4 — Dedicated landscape controller skin | **Active**: separate landscape preferences, overlay/side-panel paths, initial NES-style inner panel trim and video cutout handling; layout refinement pending |
+| M4 — Dedicated landscape controller skin | **Code-complete (source scope)**: selectable framed/overlay gameplay, minimal appearance, dedicated secondary controls, adaptive sizing, cutout handling and separate settings; on-device acceptance deferred |
 | M5 — Gameplay, saves, input and performance polish | Partly implemented: audio, controller persistence and stuck-input fixes; regression testing pending |
 | M6 — RetroAchievements integration | Not started |
 | M7 — Production releases and maintenance | Debug release pipeline in place; production signing, audits and QA pending |
