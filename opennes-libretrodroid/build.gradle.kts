@@ -19,14 +19,14 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path = file("$"+"rootDir/vendor/LibretroDroid/libretrodroid/src/main/cpp/CMakeLists.txt")
+            path = rootProject.file("vendor/LibretroDroid/libretrodroid/src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
         }
     }
     sourceSets {
         getByName("main") {
-            java.srcDirs("$"+"rootDir/vendor/LibretroDroid/libretrodroid/src/main/java")
-            manifest.srcFile("$"+"rootDir/vendor/LibretroDroid/libretrodroid/src/main/AndroidManifest.xml")
+            java.srcDirs(rootProject.file("vendor/LibretroDroid/libretrodroid/src/main/java"))
+            manifest.srcFile(rootProject.file("vendor/LibretroDroid/libretrodroid/src/main/AndroidManifest.xml"))
         }
     }
     compileOptions {
