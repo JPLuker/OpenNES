@@ -75,8 +75,9 @@ class RetroAchievementsWebApi(context: Context) {
     ): Progress? =
         withContext(Dispatchers.IO) {
             require(romMd5.matches(Regex("[a-fA-F0-9]{32}"))) { "Invalid local NES fingerprint" }
-            val gameId = loadGameIndex(account.apiKey)[romMd5.lowercase(Locale.ROOT)]
-                ?: return@withContext null
+            val gameId =
+                loadGameIndex(account.apiKey)[romMd5.lowercase(Locale.ROOT)]
+                    ?: return@withContext null
             val raw =
                 getBody(
                     "API_GetGameInfoAndUserProgress.php",
@@ -88,8 +89,9 @@ class RetroAchievementsWebApi(context: Context) {
             require(game.optInt("ID", 0) == gameId && game.optInt("ConsoleID", -1) == NES_SYSTEM_ID) {
                 "RetroAchievements game association changed"
             }
-            val entries = game.optJSONObject("Achievements")
-                ?: throw IOException("RetroAchievements did not return an achievement list")
+            val entries =
+                game.optJSONObject("Achievements")
+                    ?: throw IOException("RetroAchievements did not return an achievement list")
             val achievements = mutableListOf<Pair<Int, VerifiedAchievement>>()
             val keys = entries.keys()
             while (keys.hasNext()) {
@@ -98,8 +100,10 @@ class RetroAchievementsWebApi(context: Context) {
                 val id = item.optInt("ID", -1)
                 val title = item.optString("Title")
                 if (id <= 0 || title.isBlank()) continue
-                val earned = item.has("DateEarned") && !item.isNull("DateEarned") &&
-                    item.optString("DateEarned").isNotBlank()
+                val earned =
+                    item.has("DateEarned") &&
+                        !item.isNull("DateEarned") &&
+                        item.optString("DateEarned").isNotBlank()
                 achievements += item.optInt("DisplayOrder", Int.MAX_VALUE) to
                     VerifiedAchievement(
                         id = id,
@@ -179,8 +183,10 @@ class RetroAchievementsWebApi(context: Context) {
             val updated = json.optLong("updated", 0)
             if (json.optInt("system") != NES_SYSTEM_ID ||
                 updated <= 0 ||
-                System.currentTimeMillis() - updated !in 0..INDEX_TTL_MS
-            ) return null
+                System.currentTimeMillis() - updated !in 0L..INDEX_TTL_MS
+            ) {
+                return null
+            }
             val hashes = json.optJSONObject("hashes") ?: return null
             return mapHashes(hashes)
         } catch (_: Exception) {
