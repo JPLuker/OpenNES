@@ -2,9 +2,9 @@
 
 **A dedicated, open-source NES emulator for Android — built around a premium touchscreen controller and a clean, mobile-first interface.**
 
-[Development roadmap](ROADMAP.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
+[Development roadmap](ROADMAP.md) · [Module progress](docs/MODULE_PROGRESS.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
 
-> **Early development:** The latest NES-only APK passed CI at **32.4 MB**, down from a 222 MB multi-console baseline, after removing non-NES cores and pruning packaged metadata. It contains FCEUmm only. Other-console layouts and artwork are also being removed. The UI is still largely inherited from [Lemuroid](https://github.com/Swordfish90/Lemuroid); RetroAchievements and the custom portrait/landscape skins are not built, and NES gameplay and audio have been tested on a physical device, but the latest metadata and artwork changes still need device testing.
+> **Early development:** The last verified development APK was approximately **32.7 MB**, down from a 222 MB multi-console baseline. It packages the FCEUmm NES core, and the home shelf, game details, search, pause and major settings screens now use OpenNES-specific UI. Portrait and landscape controller layouts exist but still need substantial polish. RetroAchievements is not implemented. **Device testing and deliberate build verification are currently paused**; new source commits must not be mistaken for verified releases.
 
 ## What OpenNES is meant to be
 
@@ -30,20 +30,20 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | --- | --- |
 | M0 — Own Android package/name and reproducible APK workflow | CI complete; device testing pending |
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
-| M2 — Replace the complete Lemuroid user interface | In progress: library shelves, game details, original search UI and automatic metadata enrichment |
+| M2 — Replace the complete Lemuroid user interface | Active: library, metadata, menus, settings, and navigation implemented; onboarding and remaining cleanup pending |
 | M3 — Premium NES portrait controller skin | In progress: NES-style D-pad, A/B, Start/Select and separate opacity/scale |
 | M4 — Dedicated landscape controller skin | In progress: separate landscape scale, margins, rotation and opacity; placement refinements pending |
-| M5 — Gameplay, saves, input and performance polish | Not started |
+| M5 — Gameplay, saves, input and performance polish | Partly implemented: audio, controller persistence and stuck-input fixes; regression testing pending |
 | M6 — RetroAchievements integration | Not started |
-| M7 — Production releases and maintenance | Not started |
+| M7 — Production releases and maintenance | Debug release pipeline in place; production signing, audits and QA pending |
 
-See the [full roadmap](ROADMAP.md) for sequencing and acceptance tests.
+See the [module progress tracker](docs/MODULE_PROGRESS.md) for the current implementation checklist and the [full roadmap](ROADMAP.md) for original acceptance gates.
 
 ### What works in the fork today?
 
 The inherited Lemuroid project provides a working Android emulation frontend, FCEUmm support, ROM scanning, gamepad/touch input and save-state infrastructure. **Those existing features have not all been validated in OpenNES on real hardware yet.** Current development is keeping this functionality intact while preparing the NES-only conversion.
 
-Still inherited: portions of Lemuroid's library/settings UI, multi-system metadata data, some dormant source, internal package names and launcher artwork. **Non-NES Libretro binaries are excluded from the APK.** The remaining upstream UI and branding are scheduled for replacement.
+Still inherited: some dormant Lemuroid source, shared internal package names, legacy infrastructure and portions of older platform code. **Non-NES Libretro binaries are excluded from the APK.** The remaining upstream UI and branding are scheduled for replacement.
 
 ## Download the latest OpenNES APK
 
