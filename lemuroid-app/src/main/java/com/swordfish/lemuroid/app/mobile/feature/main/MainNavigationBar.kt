@@ -36,9 +36,10 @@ private fun LemuroidNavigationBar(
     hasFavorites: Boolean,
 ) {
     NavigationBar(modifier = Modifier.fillMaxWidth()) {
-        MainNavigationRoutes.values()
-            .filter { it != MainNavigationRoutes.FAVORITES || hasFavorites }
-            .forEach { destination ->
+        val destinations = MainNavigationRoutes.values().filter {
+            it != MainNavigationRoutes.FAVORITES || hasFavorites
+        }
+        destinations.forEach { destination ->
             val isSelected = currentRoute?.root == destination.route
             val iconDrawable = if (isSelected) destination.selectedIcon else destination.unselectedIcon
 
