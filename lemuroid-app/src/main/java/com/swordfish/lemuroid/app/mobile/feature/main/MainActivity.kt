@@ -26,8 +26,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import com.swordfish.lemuroid.R
-import com.swordfish.lemuroid.app.mobile.feature.favorites.FavoritesScreen
-import com.swordfish.lemuroid.app.mobile.feature.favorites.FavoritesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesScreen
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeScreen
@@ -129,21 +127,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                     ?.let { MainRoute.findByRoute(it) }
                     ?: MainRoute.HOME
 
-            val favoriteCount =
-                remember(retrogradeDb) { retrogradeDb.gameDao().observeFavoriteGameCount() }
-                    .collectAsState(initial = -1)
-                    .value
-
-            // When the last favorite is removed, do not leave an empty orphaned tab.
-            LaunchedEffect(favoriteCount, currentRoute) {
-                if (favoriteCount == 0 && currentRoute == MainRoute.FAVORITES) {
-                    navController.navigate(MainRoute.HOME.route) {
-                        popUpTo(MainRoute.HOME.route) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                }
-            }
-
             val infoDialogDisplayed =
                 remember {
                     mutableStateOf(false)
@@ -191,13 +174,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                         )
                     }
                 },
-                bottomBar = {
-                    MainNavigationBar(
-                        currentRoute = currentRoute,
-                        navController = navController,
-                        hasFavorites = favoriteCount > 0,
-                    )
-                },
             ) { padding ->
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
@@ -223,17 +199,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             onFavoriteToggle = onGameFavoriteToggle,
                             onSearchClick = { navController.navigateToRoute(MainRoute.SEARCH) },
                             onSettingsClick = { navController.navigateToRoute(MainRoute.SETTINGS) },
-                        )
-                    }
-                    composable(MainRoute.FAVORITES) {
-                        FavoritesScreen(
-                            modifier = Modifier.padding(padding),
-                            viewModel =
-                                viewModel(
-                                    factory = FavoritesViewModel.Factory(retrogradeDb),
-                                ),
-                            onGameClick = onGameClick,
-                            onGameLongClick = onGameLongClick,
                         )
                     }
                     composable(MainRoute.SEARCH) {
