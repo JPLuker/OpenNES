@@ -65,6 +65,12 @@ enum class MainRoute(
         titleId = R.string.title_settings,
         showBottomNavigation = false,
     ),
+    SETTINGS_LIBRARY(
+        route = "settings/library",
+        titleId = R.string.opennes_library_maintenance,
+        parent = SETTINGS,
+        showBottomNavigation = false,
+    ),
     SETTINGS_ADVANCED(
         route = "settings/advanced",
         titleId = R.string.settings_title_advanced_settings,
