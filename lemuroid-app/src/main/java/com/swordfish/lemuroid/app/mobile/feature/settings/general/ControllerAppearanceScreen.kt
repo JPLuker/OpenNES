@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -21,9 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -180,15 +185,41 @@ private fun ColorPartEditor(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         val swatchDescription = stringResource(R.string.opennes_controller_color_wheel_accessibility)
+        // Keep the entire circular preview tappable. The small palette badge
+        // communicates that this is a picker, without changing HEX entry.
         Box(
             modifier =
                 Modifier
-                    .size(36.dp)
-                    .background(color, CircleShape)
-                    .border(1.dp, Color.Gray, CircleShape)
-                    .clickable(onClick = onPick)
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onPick)
                     .semantics { contentDescription = "$swatchDescription: ${part.label}" },
-        )
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(38.dp)
+                        .background(color, CircleShape)
+                        .border(1.dp, Color.Gray, CircleShape),
+            )
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(23.dp)
+                        .background(Color(0xFF222632), CircleShape)
+                        .border(1.dp, Color.White.copy(alpha = 0.8f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Palette,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(15.dp),
+                )
+            }
+        }
         OutlinedTextField(
             value = value,
             onValueChange = { text ->

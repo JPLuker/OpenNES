@@ -66,13 +66,9 @@ M2 replaced the old user-facing interface in source. Verify that every visible s
 
 **Direct download:** [OpenNES-debug.apk](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk)
 
-The [OpenNES Android CI workflow](https://github.com/JPLuker/OpenNES/actions) runs on each push to `master` or manual dispatch. Three jobs run:
+The [OpenNES Android CI workflow](https://github.com/JPLuker/OpenNES/actions) runs for pushes to `master` or manual dispatch. **One job** runs Kotlin lint, builds the NES-only debug APK, verifies its contents, generates a SHA-256 checksum and publishes to the single rolling [`dev-latest` release](https://github.com/JPLuker/OpenNES/releases/tag/dev-latest). There is **no second APK workflow artifact** or separate M5-candidate download.
 
-- **Build:** assemble and inspect the NES-only debug APK. Keep a build artifact for diagnostic purposes.
-- **Lint:** validate Kotlin formatting.
-- **Publish development:** only after build and lint succeed, publish/replace the `OpenNES-debug.apk` asset in a rolling [development prerelease](https://github.com/JPLuker/OpenNES/releases/tag/dev-latest).
-
-The download URL does not change after successful builds, and no ZIP extraction is needed. Each successful development upload includes a [SHA-256 checksum](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk.sha256) alongside the APK (newer source commits require the next successful workflow before that checksum asset exists). GitHub Release assets are public for a public repository. Failing builds do not overwrite the last successful APK. The workflow uses the built-in GitHub token for upload; **no keystore secrets or production signing are involved**.
+Use only the direct `dev-latest` APK link above for normal testing. Its filename and URL never change. Each successful upload includes [the matching checksum](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk.sha256). A failed lint/build does not overwrite the last successfully published APK. Check the release notes for the source commit before reporting regressions. The workflow uses the built-in GitHub token for upload; **no production signing key is involved**.
 
 The download uses package ID `com.jpluker.opennes.debug`, signed with the repository's existing development keystore. Do not expect it to update a future production build with application ID `com.jpluker.opennes` directly.
 
