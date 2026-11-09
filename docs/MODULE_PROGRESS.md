@@ -6,6 +6,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 
 ## Milestones
 
+**Mandatory sequence:** M7 RomM acceptance comes before M8 public release. Release hardening can proceed in parallel, but the public release is blocked until the agreed RomM scope passes acceptance.
+
 | Module | Implementation status | Next acceptance/development gate |
 | --- | --- | --- |
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
@@ -15,8 +17,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | M4 — Landscape NES controller | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: inherits new palette and single-piece controls; separate framed/overlay layouts and geometry settings retained | Verify safe layout, touch boundaries and theme visibility on compact/wide landscape screens |
 | **M5 — Gameplay reliability** | **ACTIVE**: existing audio/input fixes and save infrastructure; now auditing state operation results, lifecycle ownership and errors | Improve save/resume feedback and cancellation handling; audio and device acceptance deferred |
 | **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
-| **M7 — Public release** | **ACTIVE — release-hardening source**: rolling debug APK workflow remains; inherited release-signing credentials removed and production signing is optional/secret-provided | Verify production key custody, reproducible builds, licensing, CI permissions, APK contents and device acceptance |
-| **M8 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
+| **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
+| **M8 — Public release** | **ACTIVE — release-hardening source**: rolling debug APK workflow remains; inherited release-signing credentials removed and production signing is optional/secret-provided | After M7 RomM acceptance, verify production key custody, reproducible builds, licensing, CI permissions, APK contents and device acceptance |
 
 ## Latest controller visual overhaul — following M5 hardware feedback
 
@@ -102,17 +104,6 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 
 ## M7 active source checklist
 
-- [x] Preserve rolling development debug APK distribution without bundling commercial ROMs
-- [x] Remove inherited hardcoded release keystore alias/passwords and require explicit OpenNES environment-provided secrets
-- [x] Ignore new keystore material and document the unsigned-release default
-- [x] Review workflow's least-privilege release permission and artifact publishing dependency on compile/lint; publish a SHA-256 checksum alongside the rolling APK
-- [x] Pin GitHub Actions checkout, Java setup, artifact upload and download to verified immutable v4 commit IDs
-- [ ] Finish third-party library license audit, native dependency provenance and release-binary inspection
-- [ ] Inspect signing certificates, APK contents and native binaries against release requirements (testing paused)
-- [ ] **M7 acceptance deferred:** verified install/upgrade path, input, audio, saves, crash reporting and RetroAchievements claims
-
-## M8 active source checklist
-
 - [x] Add user-configurable HTTPS RomM server and scoped read-only bearer-token authentication
 - [x] Encrypt tokens with Android Keystore and store ciphertext outside Android Auto Backup
 - [x] Browse RomM's NES/Famicom platforms and paginated ROMs without touching non-NES entries
@@ -123,6 +114,17 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Reject malformed/multi-ROM ZIP imports and cap decompressed archive data; verify RomM's actual MD5 and sorted-entry ZIP save content hashes before backup export
 - [ ] Add two-way save sync only with explicit conflict resolution and independently versioned backups
 - [ ] **M8 acceptance deferred:** TLS/proxy, offline/revoked tokens, interrupted downloads and real ROM imports on-device
+
+## M8 active source checklist
+
+- [x] Preserve rolling development debug APK distribution without bundling commercial ROMs
+- [x] Remove inherited hardcoded release keystore alias/passwords and require explicit OpenNES environment-provided secrets
+- [x] Ignore new keystore material and document the unsigned-release default
+- [x] Review workflow's least-privilege release permission and artifact publishing dependency on compile/lint; publish a SHA-256 checksum alongside the rolling APK
+- [x] Pin GitHub Actions checkout, Java setup, artifact upload and download to verified immutable v4 commit IDs
+- [ ] Finish third-party library license audit, native dependency provenance and release-binary inspection
+- [ ] Inspect signing certificates, APK contents and native binaries against release requirements (testing paused)
+- [ ] **M7 acceptance deferred:** verified install/upgrade path, input, audio, saves, crash reporting and RetroAchievements claims
 
 ## M2 active checklist
 
@@ -316,32 +318,32 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Redundant resume callbacks no longer overwrite an ongoing playtime interval. Reset rethrows cancellation and missing menu tilt configuration no longer triggers a non-null assertion crash.
 - Device suspend/resume, saves and process lifetime remain untested.
 
-## M7 source batch — isolated release signing
+## M8 source batch — isolated release signing
 
 - Removed upstream hardcoded release key alias/password and inherited release-signing fallback. Production credentials are passed only through `OPENNES_RELEASE_*` environment variables. All four are required to activate the optional `openNesRelease` signing configuration; otherwise the release artifact is unsigned.
 - `.gitignore` now ignores newly created JKS/keystore files. Existing tracked developer/debug signing material remains unaffected.
 - Updated build instructions to distinguish code-complete UI source from unverified APKs, and to document production signing and publication blockers. No build or signing test was run.
 
-## M7 source batch — development APK checksum and CI policy
+## M8 source batch — development APK checksum and CI policy
 
 - Audited the existing Android workflow: build/lint jobs use read-only repository permission, while only the publish job requests write permission and it runs after successful build and lint.
 - The workflow now produces `OpenNES-debug.apk.sha256`, verifies it before release publication and uploads both APK and checksum to the rolling development prerelease.
 - The old wording `tested APK` was corrected: CI compilation and lint alone are not emulator or device acceptance. Workflow action pinning and signing/production review are still open.
 - This was source review only; no workflow run was triggered manually or inspected.
 
-## M7 source batch — immutable workflow actions
+## M8 source batch — immutable workflow actions
 
 - Pinned `actions/checkout`, `actions/setup-java`, `actions/upload-artifact` and `actions/download-artifact` to the exact commit IDs resolved from their official v4 tag refs. A moving tag can no longer silently change the build/upload action code.
 - Existing least-privilege workflow permissions, build-then-lint-then-publish sequence and rolling debug APK distribution are unchanged.
 - This is a source-level supply-chain hardening step, not a run or verification of the modified workflow.
 
-## M8 source batch — safe remote save backup export
+## M7 source batch — safe remote save backup export
 
 - RomM's current saves API supplies a bare per-ROM `SaveSchema` list, with `GET /api/saves/{id}/content` gated by the optional `assets.read` scope. The OpenNES RomM screen exposes per-ROM Saves and a manual Export backup action.
 - Save backups download to bounded app cache (16 MiB maximum), optionally check a 64-hex SHA-256 content hash, then write to a document chosen explicitly in Android's system Save As picker. They are never imported into SRAM, save states or local game files automatically.
 - This is manual backup/export, **not automatic or bidirectional sync**. The user must reconcile saves manually; no server or device testing was run.
 
-## M8 source batch — verified archives and RomM save hashes
+## M7 source batch — verified archives and RomM save hashes
 
 - Added a local verifier that rejects malformed NES files, oversized/multi-ROM ZIP archives and unsafe ZIP member paths before a RomM import can create any local document. ZIP expansion is capped at 64MiB across at most 256 entries.
 - Corrected RomM save backup integrity validation against upstream code: raw files use MD5, ZIP saves hash sorted `entry-name:entry-MD5` records via MD5, and future 64-hex SHA-256 hashes are checked as full-file digests. All validation happens before writing the backup document; ZIP save expansion is capped at 16MiB.

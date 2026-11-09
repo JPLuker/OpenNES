@@ -1,6 +1,6 @@
 # OpenNES — Development Roadmap
 
-**Status (2026-11-09):** M0 foundation implemented, M1 NES debloat mostly implemented, **M2 UI source implementation code-complete (device acceptance deferred)**, and **M3 portrait NES controller source code-complete (hardware acceptance deferred)**. **M4 landscape NES controller source implementation is code-complete (device acceptance deferred)**; **M5 gameplay reliability is active**. M6 RetroAchievements native integration is in progress, beginning with ROM identification and native bridge analysis; M8 RomM remains planned. Device testing and deliberate build verification are paused at the user's request. See [per-module progress](docs/MODULE_PROGRESS.md) for the current checklist.  
+**Status (2026-11-09):** M0 foundation implemented, M1 NES debloat mostly implemented, **M2 UI source implementation code-complete (device acceptance deferred)**, and **M3 portrait NES controller source code-complete (hardware acceptance deferred)**. **M4 landscape NES controller source implementation is code-complete (device acceptance deferred)**; **M5 gameplay reliability is active**. M6 RetroAchievements native integration is in progress, beginning with ROM identification and native bridge analysis; **M7 RomM integration precedes M8 public release**, with implementation underway and real-server/device acceptance still pending. Device testing and deliberate build verification are paused at the user's request. See [per-module progress](docs/MODULE_PROGRESS.md) for the current checklist.  
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -129,7 +129,20 @@
 
 **Exit criteria:** Successfully identifies supported games, loads achievements, and verifies supported Casual unlocks on real hardware. Any Hardcore features accurately reflect official authorization status.
 
-## M7 — Release, maintenance and open source
+## M7 — RomM integration (required before public release)
+
+**Goal:** Offer secure, integrated NES/Famicom access to a user-provided RomM server before the first public OpenNES release.
+
+- [x] Add configurable HTTPS connection and protected read-only authentication.
+- [x] Browse NES titles and safely import supported ROMs into the selected local folder.
+- [x] Provide optional save listing and explicit manual backup export without overwriting live saves.
+- [ ] Test connection, permissions, ROM imports, save exports, token revocation, and network interruptions against a real RomM server on Android.
+- [ ] Decide and implement the release scope for safe save synchronization, including versioned backups and conflict handling if two-way sync is included.
+- [ ] Finish privacy, security and failure-state reviews for the agreed RomM functionality.
+
+**Exit criteria:** The agreed RomM feature set is functional, tested, and documented; public-release signoff cannot precede this gate.
+
+## M8 — Release, maintenance and open source
 
 - [ ] Complete GPL/source attributions, third-party license audit, acknowledgements, and privacy documentation.
 - [ ] Create deterministic GitHub Actions CI for lint, tests, debug artifacts, and tagged releases.
@@ -138,7 +151,7 @@
 - [ ] Add bug-report templates, reproducible test cases, and NES-only regression checks.
 - [ ] Optional later: in-app update checks with explicit user consent/Android install flow.
 
-**Exit criteria:** A reproducible, installable public OpenNES release with documented known limitations.
+**Exit criteria:** A reproducible, installable public OpenNES release with documented known limitations, only after M7 RomM acceptance.
 
 ## Implementation sequence and guardrails
 
@@ -146,7 +159,8 @@
 2. **NES-only debloat before broad redesign** (M1 before M2–M4), so the UI is built on the intended product scope.
 3. **Design gameplay controls early**, with an interactive prototype and real-device acceptance criteria; do not postpone controller feel until the last milestone.
 4. **Start RetroAchievements feasibility investigation early**, but integrate it after the base emulator/controller reaches stability.
-5. Ship one coherent, reviewable workstream at a time, with APKs and clear verification.
+5. **Finish and accept M7 RomM integration before M8 public release.** Release-hardening work may run in parallel, but public distribution is gated on the agreed RomM scope.
+6. Ship one coherent, reviewable workstream at a time, with APKs and clear verification.
 
 ## Deferred / out of scope for initial release
 
