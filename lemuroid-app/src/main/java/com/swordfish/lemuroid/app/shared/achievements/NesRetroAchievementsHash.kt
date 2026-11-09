@@ -37,7 +37,10 @@ object NesRetroAchievementsHash {
     )
 
     /** Never uploads ROM bytes. Uses the exact locally indexed file URI. */
-    suspend fun forGame(context: Context, game: Game): Identity =
+    suspend fun forGame(
+        context: Context,
+        game: Game,
+    ): Identity =
         withContext(Dispatchers.IO) {
             require(game.systemId == "nes") { "Only indexed NES games are supported" }
             val uri = Uri.parse(game.fileUri)
@@ -55,7 +58,10 @@ object NesRetroAchievementsHash {
      * have exactly one .nes or .fds member; guessing among multiple games
      * would risk associating another user's progress with the wrong title.
      */
-    fun calculate(input: InputStream, fileName: String): Identity {
+    fun calculate(
+        input: InputStream,
+        fileName: String,
+    ): Identity {
         return when (extension(fileName)) {
             "nes", "fds" -> hashRaw(BufferedInputStream(input), extension(fileName))
             "zip" -> hashZip(input)
@@ -89,7 +95,10 @@ object NesRetroAchievementsHash {
         }
     }
 
-    private fun hashRaw(stream: InputStream, extension: String): Identity {
+    private fun hashRaw(
+        stream: InputStream,
+        extension: String,
+    ): Identity {
         val md5 = MessageDigest.getInstance("MD5")
         val prefix = ByteArray(16)
         var prefixSize = 0
@@ -105,14 +114,19 @@ object NesRetroAchievementsHash {
             }
         }
 
-        val hasHeader =
+        val hasNesHeader =
             prefixSize == 16 &&
-                (
-                    (prefix[0] == 0x4E.toByte() && prefix[1] == 0x45.toByte() &&
-                        prefix[2] == 0x53.toByte() && prefix[3] == 0x1A.toByte()) ||
-                        (prefix[0] == 0x46.toByte() && prefix[1] == 0x44.toByte() &&
-                            prefix[2] == 0x53.toByte() && prefix[3] == 0x1A.toByte())
-                )
+                prefix[0] == 0x4E.toByte() &&
+                prefix[1] == 0x45.toByte() &&
+                prefix[2] == 0x53.toByte() &&
+                prefix[3] == 0x1A.toByte()
+        val hasFdsHeader =
+            prefixSize == 16 &&
+                prefix[0] == 0x46.toByte() &&
+                prefix[1] == 0x44.toByte() &&
+                prefix[2] == 0x53.toByte() &&
+                prefix[3] == 0x1A.toByte()
+        val hasHeader = hasNesHeader || hasFdsHeader
         val skip = if (hasHeader) 16 else 0
         val console = if (extension == "fds") Console.FDS else Console.NES
         var payloadBytes = (prefixSize - skip).toLong()
@@ -141,6 +155,5 @@ object NesRetroAchievementsHash {
         return Identity(text.toString(), console)
     }
 
-    private fun extension(name: String) =
-        name.substringAfterLast('.', "").lowercase(Locale.ROOT)
+    private fun extension(name: String) = name.substringAfterLast('.', "").lowercase(Locale.ROOT)
 }

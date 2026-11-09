@@ -19,7 +19,10 @@ object RommDownloadVerification {
     private val SHA256_PATTERN = Regex("[a-f0-9]{64}")
 
     /** Fail closed on malformed NES files, multi-ROM ZIPs and ZIP bombs. */
-    fun checkImportedRom(file: File, name: String) {
+    fun checkImportedRom(
+        file: File,
+        name: String,
+    ) {
         when (name.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
             "nes" -> {
                 file.inputStream().use { stream ->
@@ -30,7 +33,9 @@ object RommDownloadVerification {
                         signature[1] != 0x45.toByte() ||
                         signature[2] != 0x53.toByte() ||
                         signature[3] != 0x1A.toByte()
-                    ) throw IOException("Downloaded NES file has no valid iNES header")
+                    ) {
+                        throw IOException("Downloaded NES file has no valid iNES header")
+                    }
                 }
             }
             "fds" -> {
@@ -76,7 +81,10 @@ object RommDownloadVerification {
      * entry-name:entry-MD5 lines, not from ZIP container bytes. Older or future
      * 64-character SHA-256 values are checked against the complete file.
      */
-    fun checkRemoteSaveHash(file: File, knownHash: String?) {
+    fun checkRemoteSaveHash(
+        file: File,
+        knownHash: String?,
+    ) {
         val expected = knownHash?.lowercase(Locale.ROOT) ?: return
         val actual =
             when {
@@ -126,20 +134,30 @@ object RommDownloadVerification {
         if (file.length() < 4) return false
         val signature = ByteArray(4)
         file.inputStream().use { it.read(signature) }
-        return signature[0] == 0x50.toByte() && signature[1] == 0x4B.toByte() &&
-            (signature[2] == 0x03.toByte() || signature[2] == 0x05.toByte() ||
-                signature[2] == 0x07.toByte())
+        val zipPrefix = signature[0] == 0x50.toByte() && signature[1] == 0x4B.toByte()
+        val knownSignature =
+            signature[2] == 0x03.toByte() ||
+                signature[2] == 0x05.toByte() ||
+                signature[2] == 0x07.toByte()
+        return zipPrefix && knownSignature
     }
 
     private fun requireSafeEntryName(name: String) {
         val normalized = name.replace('\\', '/')
-        if (normalized.startsWith("/") || normalized.split('/').any { it == ".." } ||
-            name.any { it.isISOControl() } || name.length > 512) {
+        val unsafe =
+            normalized.startsWith("/") ||
+                normalized.split('/').any { it == ".." } ||
+                name.any { it.isISOControl() } ||
+                name.length > 512
+        if (unsafe) {
             throw IOException("Unsafe archive entry name")
         }
     }
 
-    private fun digestFile(file: File, algorithm: String): String {
+    private fun digestFile(
+        file: File,
+        algorithm: String,
+    ): String {
         val digest = MessageDigest.getInstance(algorithm)
         file.inputStream().buffered().use { input ->
             val buffer = ByteArray(16 * 1024)

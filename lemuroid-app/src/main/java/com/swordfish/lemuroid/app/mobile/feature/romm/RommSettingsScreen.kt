@@ -48,13 +48,16 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     val store = remember(context) { RommConnectionStore(context) }
     val client = remember { RommApiClient() }
     val scope = rememberCoroutineScope()
+
     @Suppress("DEPRECATION")
-    val legacyFolderPrefs = remember(context) {
-        SharedPreferencesHelper.getLegacySharedPreferences(context)
-    }
-    val folderKey = remember(context) {
-        context.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
-    }
+    val legacyFolderPrefs =
+        remember(context) {
+            SharedPreferencesHelper.getLegacySharedPreferences(context)
+        }
+    val folderKey =
+        remember(context) {
+            context.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
+        }
     val hasRomFolder = !legacyFolderPrefs.getString(folderKey, null).isNullOrBlank()
 
     var serverUrl by remember { mutableStateOf(store.configuredServer().orEmpty()) }
@@ -99,9 +102,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             pendingSave = null
             if (destination != null && chosen != null) {
                 perform("Exporting save backup") {
-                    val connection = withContext(Dispatchers.IO) {
-                        store.load() ?: error("Reconnect to RomM")
-                    }
+                    val connection =
+                        withContext(Dispatchers.IO) {
+                            store.load() ?: error("Reconnect to RomM")
+                        }
                     client.exportSaveBackup(context, connection, chosen, destination)
                     status = context.getString(R.string.opennes_romm_save_exported)
                 }
@@ -110,9 +114,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
 
     val browse: (Int) -> Unit = { offset ->
         perform("Browsing NES games") {
-            val connection = withContext(Dispatchers.IO) {
-                store.load() ?: error("Connect to a RomM server first")
-            }
+            val connection =
+                withContext(Dispatchers.IO) {
+                    store.load() ?: error("Connect to a RomM server first")
+                }
             page = client.listNesRoms(connection, offset = offset)
             remoteSaves = null
             selectedSaveGame = null
@@ -176,9 +181,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                             enabled = !busy,
                             onClick = {
                                 perform("Checking connection") {
-                                    val connection = withContext(Dispatchers.IO) {
-                                        store.load() ?: error("Reconnect to RomM")
-                                    }
+                                    val connection =
+                                        withContext(Dispatchers.IO) {
+                                            store.load() ?: error("Reconnect to RomM")
+                                        }
                                     signedInAs = client.checkAccount(connection)
                                     status = "Connection verified"
                                 }
@@ -237,18 +243,20 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                 importAvailable = hasRomFolder,
                                 onSaves = {
                                     perform("Viewing save backups") {
-                                        val connection = withContext(Dispatchers.IO) {
-                                            store.load() ?: error("Reconnect to RomM")
-                                        }
+                                        val connection =
+                                            withContext(Dispatchers.IO) {
+                                                store.load() ?: error("Reconnect to RomM")
+                                            }
                                         remoteSaves = client.listRemoteSaves(connection, rom.id)
                                         selectedSaveGame = rom
                                     }
                                 },
                                 onImport = {
                                     perform("Importing " + rom.name) {
-                                        val connection = withContext(Dispatchers.IO) {
-                                            store.load() ?: error("Reconnect to RomM")
-                                        }
+                                        val connection =
+                                            withContext(Dispatchers.IO) {
+                                                store.load() ?: error("Reconnect to RomM")
+                                            }
                                         client.importIntoSelectedNesFolder(context, connection, rom)
                                         status = context.getString(R.string.opennes_romm_imported, rom.name)
                                     }

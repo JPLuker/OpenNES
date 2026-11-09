@@ -13,14 +13,14 @@ import com.swordfish.lemuroid.lib.injection.AndroidWorkerInjection
 import com.swordfish.lemuroid.lib.injection.WorkerKey
 import com.swordfish.lemuroid.lib.library.LemuroidLibrary
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
-import dagger.Binds
 import dagger.android.AndroidInjector
+import dagger.Binds
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class LibraryIndexWork(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
@@ -73,7 +73,10 @@ class LibraryIndexWork(context: Context, workerParams: WorkerParameters) :
     private fun selectedRomFolderIsReadable(): Boolean {
         val selectedFolder =
             SharedPreferencesHelper.getLegacySharedPreferences(applicationContext)
-                .getString(applicationContext.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder), null)
+                .getString(
+                    applicationContext.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder),
+                    null,
+                )
                 ?.takeIf { it.isNotBlank() }
                 ?: return true
 

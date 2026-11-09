@@ -637,7 +637,7 @@ private fun MenuEditTouchControls(
                             else -> touchControllerSettings.menuButton
                         }
                     val updateButton: (TouchControllerSettingsManager.ButtonGeometry) ->
-                        TouchControllerSettingsManager.Settings = { geometry ->
+                    TouchControllerSettingsManager.Settings = { geometry ->
                         when (secondaryTab.value) {
                             0 -> touchControllerSettings.copy(startButton = geometry)
                             1 -> touchControllerSettings.copy(selectButton = geometry)
@@ -837,7 +837,6 @@ private fun MenuEditControllerCluster(
     }
 }
 
-
 @Composable
 private fun MenuEditSecondaryButton(
     geometry: TouchControllerSettingsManager.ButtonGeometry,
@@ -848,9 +847,7 @@ private fun MenuEditSecondaryButton(
     MenuEditTouchControlRow(label = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_size)) {
         TouchControlEditorSlider(
             value = geometry.size,
-            valueRange =
-                TouchControllerSettingsManager.MIN_BUTTON_SIZE..
-                    TouchControllerSettingsManager.MAX_BUTTON_SIZE,
+            valueRange = TouchControllerSettingsManager.MIN_BUTTON_SIZE..TouchControllerSettingsManager.MAX_BUTTON_SIZE,
             onPreview = { onPreview(geometry.copy(size = it)) },
             onCommit = { onCommit(geometry.copy(size = it)) },
         )

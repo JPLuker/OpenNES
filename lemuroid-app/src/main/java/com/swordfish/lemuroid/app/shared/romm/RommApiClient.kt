@@ -74,83 +74,86 @@ class RommApiClient {
         connection: RommConnection,
         offset: Int = 0,
         limit: Int = 40,
-    ): Page = withContext(Dispatchers.IO) {
-        require(offset >= 0 && limit in 1..100) { "Invalid RomM page" }
-        val ids = findNesPlatformIds(connection)
-        if (ids.isEmpty()) return@withContext Page(emptyList(), 0, offset, limit)
-        val params =
-            mutableListOf(
-                "offset" to offset.toString(),
-                "limit" to limit.toString(),
-                "with_total" to "true",
-                "with_char_index" to "false",
-                "with_filter_values" to "false",
-            )
-        ids.forEach { id -> params += "platform_ids" to id.toString() }
-        val document = getJson(connection, listOf("api", "roms"), params)
-        val items = document.optJSONArray("items") ?: JSONArray()
-        val result =
-            (0 until items.length()).mapNotNull { index ->
-                val row = items.optJSONObject(index) ?: return@mapNotNull null
-                val platformId = row.optInt("platform_id", -1)
-                if (platformId !in ids) return@mapNotNull null
-                val id = row.optInt("id", -1)
-                val fileName = row.optString("fs_name")
-                if (id <= 0 || !safeRomFileName(fileName)) return@mapNotNull null
-                Rom(
-                    id = id,
-                    platformId = platformId,
-                    name = row.optString("name").takeIf { it.isNotBlank() } ?: fileName,
-                    fileName = fileName,
-                    sizeBytes = row.optLong("fs_size_bytes", 0L),
-                    md5 = row.optString("md5_hash")
-                        .lowercase(Locale.ROOT)
-                        .takeIf { it.matches(Regex("[a-f0-9]{32}")) },
+    ): Page =
+        withContext(Dispatchers.IO) {
+            require(offset >= 0 && limit in 1..100) { "Invalid RomM page" }
+            val ids = findNesPlatformIds(connection)
+            if (ids.isEmpty()) return@withContext Page(emptyList(), 0, offset, limit)
+            val params =
+                mutableListOf(
+                    "offset" to offset.toString(),
+                    "limit" to limit.toString(),
+                    "with_total" to "true",
+                    "with_char_index" to "false",
+                    "with_filter_values" to "false",
                 )
-            }
-        Page(
-            items = result,
-            total = document.optInt("total", offset + items.length()),
-            offset = offset,
-            limit = limit,
-        )
-    }
+            ids.forEach { id -> params += "platform_ids" to id.toString() }
+            val document = getJson(connection, listOf("api", "roms"), params)
+            val items = document.optJSONArray("items") ?: JSONArray()
+            val result =
+                (0 until items.length()).mapNotNull { index ->
+                    val row = items.optJSONObject(index) ?: return@mapNotNull null
+                    val platformId = row.optInt("platform_id", -1)
+                    if (platformId !in ids) return@mapNotNull null
+                    val id = row.optInt("id", -1)
+                    val fileName = row.optString("fs_name")
+                    if (id <= 0 || !safeRomFileName(fileName)) return@mapNotNull null
+                    Rom(
+                        id = id,
+                        platformId = platformId,
+                        name = row.optString("name").takeIf { it.isNotBlank() } ?: fileName,
+                        fileName = fileName,
+                        sizeBytes = row.optLong("fs_size_bytes", 0L),
+                        md5 =
+                            row.optString("md5_hash")
+                                .lowercase(Locale.ROOT)
+                                .takeIf { it.matches(Regex("[a-f0-9]{32}")) },
+                    )
+                }
+            Page(
+                items = result,
+                total = document.optInt("total", offset + items.length()),
+                offset = offset,
+                limit = limit,
+            )
+        }
 
     /** Requires an optional RomM token scope: assets.read. No writes to RomM. */
     suspend fun listRemoteSaves(
         connection: RommConnection,
         romId: Int,
-    ): List<RemoteSave> = withContext(Dispatchers.IO) {
-        require(romId > 0) { "Invalid RomM game" }
-        val response =
-            fetchJsonText(
-                connection,
-                listOf("api", "saves"),
-                listOf("rom_id" to romId.toString()),
-            )
-        // RomM 5.x exposes a bare SaveSchema array rather than a ROM page.
-        val array =
-            if (response.trimStart().startsWith("[")) {
-                JSONArray(response)
-            } else {
-                JSONObject(response).optJSONArray("items") ?: JSONArray()
+    ): List<RemoteSave> =
+        withContext(Dispatchers.IO) {
+            require(romId > 0) { "Invalid RomM game" }
+            val response =
+                fetchJsonText(
+                    connection,
+                    listOf("api", "saves"),
+                    listOf("rom_id" to romId.toString()),
+                )
+            // RomM 5.x exposes a bare SaveSchema array rather than a ROM page.
+            val array =
+                if (response.trimStart().startsWith("[")) {
+                    JSONArray(response)
+                } else {
+                    JSONObject(response).optJSONArray("items") ?: JSONArray()
+                }
+            (0 until array.length()).mapNotNull { index ->
+                val row = array.optJSONObject(index) ?: return@mapNotNull null
+                val id = row.optInt("id", -1)
+                if (id <= 0 || row.optInt("rom_id", -1) != romId) return@mapNotNull null
+                val filename = row.optString("file_name")
+                if (!safeAttachmentFileName(filename)) return@mapNotNull null
+                RemoteSave(
+                    id = id,
+                    romId = romId,
+                    fileName = filename,
+                    slot = row.optString("slot").takeIf { it.isNotBlank() && it != "null" },
+                    sizeBytes = row.optLong("file_size_bytes", 0L),
+                    contentHash = row.optString("content_hash").takeIf { it.isNotBlank() },
+                )
             }
-        (0 until array.length()).mapNotNull { index ->
-            val row = array.optJSONObject(index) ?: return@mapNotNull null
-            val id = row.optInt("id", -1)
-            if (id <= 0 || row.optInt("rom_id", -1) != romId) return@mapNotNull null
-            val filename = row.optString("file_name")
-            if (!safeAttachmentFileName(filename)) return@mapNotNull null
-            RemoteSave(
-                id = id,
-                romId = romId,
-                fileName = filename,
-                slot = row.optString("slot").takeIf { it.isNotBlank() && it != "null" },
-                sizeBytes = row.optLong("file_size_bytes", 0L),
-                contentHash = row.optString("content_hash").takeIf { it.isNotBlank() },
-            )
         }
-    }
 
     /**
      * Exports a copy to a user-selected SAF document, never to OpenNES's live
@@ -202,8 +205,9 @@ class RommApiClient {
                 RommDownloadVerification.checkRemoteSaveHash(temporary, save.contentHash)
             }
             coroutineContext.ensureActive()
-            val output = context.contentResolver.openOutputStream(destination, "w")
-                ?: throw IOException("Cannot write the selected backup document")
+            val output =
+                context.contentResolver.openOutputStream(destination, "w")
+                    
             output.use { stream ->
                 temporary.inputStream().use { input ->
                     val buffer = ByteArray(16 * 1024)
@@ -226,62 +230,65 @@ class RommApiClient {
         context: Context,
         connection: RommConnection,
         rom: Rom,
-    ): Uri = withContext(Dispatchers.IO) {
-        require(rom.id > 0 && safeRomFileName(rom.fileName)) {
-            "This RomM game is not a supported standalone NES file"
-        }
-        @Suppress("DEPRECATION")
-        val legacyPrefs = SharedPreferencesHelper.getLegacySharedPreferences(context)
-        val treeKey = context.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
-        val treeString = legacyPrefs.getString(treeKey, null)
-            ?: throw IOException("Choose an OpenNES ROM folder in Settings first")
-        val folder =
-            DocumentFile.fromTreeUri(context, Uri.parse(treeString))
-                ?: throw IOException("The selected NES ROM folder is unavailable")
-        if (!folder.isDirectory || !folder.canWrite()) {
-            throw IOException("The selected NES ROM folder is not writable")
-        }
-        if (folder.findFile(rom.fileName) != null) {
-            throw IOException("A local ROM with this filename already exists; nothing was overwritten")
-        }
-
-        val temporary = File.createTempFile("opennes-romm-", ".part", context.cacheDir)
-        try {
-            downloadToTemp(connection, rom, temporary)
-            RommDownloadVerification.checkImportedRom(temporary, rom.fileName)
-            coroutineContext.ensureActive()
+    ): Uri =
+        withContext(Dispatchers.IO) {
+            require(rom.id > 0 && safeRomFileName(rom.fileName)) {
+                "This RomM game is not a supported standalone NES file"
+            }
+            @Suppress("DEPRECATION")
+            val legacyPrefs = SharedPreferencesHelper.getLegacySharedPreferences(context)
+            val treeKey = context.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
+            val treeString =
+                legacyPrefs.getString(treeKey, null)
+                    
+            val folder =
+                DocumentFile.fromTreeUri(context, Uri.parse(treeString))
+                    ?: throw IOException("The selected NES ROM folder is unavailable")
+            if (!folder.isDirectory || !folder.canWrite()) {
+                throw IOException("The selected NES ROM folder is not writable")
+            }
             if (folder.findFile(rom.fileName) != null) {
-                throw IOException("The local ROM appeared during download; import cancelled")
+                throw IOException("A local ROM with this filename already exists; nothing was overwritten")
             }
-            val newFile =
-                folder.createFile("application/octet-stream", rom.fileName)
-                    ?: throw IOException("Could not create a file in the selected NES folder")
+
+            val temporary = File.createTempFile("opennes-romm-", ".part", context.cacheDir)
             try {
-                val stream = context.contentResolver.openOutputStream(newFile.uri, "w")
-                    ?: throw IOException("Cannot write to selected NES folder")
-                stream.use { output ->
-                    temporary.inputStream().use { input ->
-                        val buffer = ByteArray(16 * 1024)
-                        while (true) {
-                            coroutineContext.ensureActive()
-                            val count = input.read(buffer)
-                            if (count < 0) break
-                            if (count > 0) output.write(buffer, 0, count)
-                        }
-                    }
-                    output.flush()
+                downloadToTemp(connection, rom, temporary)
+                RommDownloadVerification.checkImportedRom(temporary, rom.fileName)
+                coroutineContext.ensureActive()
+                if (folder.findFile(rom.fileName) != null) {
+                    throw IOException("The local ROM appeared during download; import cancelled")
                 }
-            } catch (e: Exception) {
-                // This file was freshly created by OpenNES, never an old ROM.
-                newFile.delete()
-                throw e
+                val newFile =
+                    folder.createFile("application/octet-stream", rom.fileName)
+                        ?: throw IOException("Could not create a file in the selected NES folder")
+                try {
+                    val stream =
+                        context.contentResolver.openOutputStream(newFile.uri, "w")
+                            
+                    stream.use { output ->
+                        temporary.inputStream().use { input ->
+                            val buffer = ByteArray(16 * 1024)
+                            while (true) {
+                                coroutineContext.ensureActive()
+                                val count = input.read(buffer)
+                                if (count < 0) break
+                                if (count > 0) output.write(buffer, 0, count)
+                            }
+                        }
+                        output.flush()
+                    }
+                } catch (e: Exception) {
+                    // This file was freshly created by OpenNES, never an old ROM.
+                    newFile.delete()
+                    throw e
+                }
+                LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext)
+                newFile.uri
+            } finally {
+                temporary.delete()
             }
-            LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext)
-            newFile.uri
-        } finally {
-            temporary.delete()
         }
-    }
 
     private fun findNesPlatformIds(connection: RommConnection): Set<Int> {
         // RomM's GET /api/platforms returns a bare JSON array, unlike
@@ -334,7 +341,11 @@ class RommApiClient {
         }
     }
 
-    private suspend fun downloadToTemp(connection: RommConnection, rom: Rom, target: File) {
+    private suspend fun downloadToTemp(
+        connection: RommConnection,
+        rom: Rom,
+        target: File,
+    ) {
         val request =
             Request.Builder()
                 .url(buildUrl(connection, listOf("api", "roms", rom.id.toString(), "content", rom.fileName)))
@@ -383,8 +394,9 @@ class RommApiClient {
         path: List<String>,
         params: List<Pair<String, String>> = emptyList(),
     ): HttpUrl {
-        val root = validatedServerUrl(connection.serverUrl).toHttpUrlOrNull()
-            ?: throw IllegalArgumentException("Invalid RomM HTTPS address")
+        val root =
+            validatedServerUrl(connection.serverUrl).toHttpUrlOrNull()
+                
         return root.newBuilder().apply {
             path.forEach { addPathSegment(it) }
             params.forEach { (name, value) -> addQueryParameter(name, value) }
@@ -411,10 +423,16 @@ class RommApiClient {
         /** HTTPS-only: never expose bearer tokens over cleartext HTTP. */
         fun validatedServerUrl(raw: String): String {
             val candidate = raw.trim()
-            val parsed = candidate.toHttpUrlOrNull()
-                ?: throw IllegalArgumentException("Enter a valid RomM URL")
-            require(parsed.scheme == "https" && parsed.username.isEmpty() &&
-                parsed.password.isEmpty() && parsed.query == null && parsed.fragment == null) {
+            val parsed =
+                candidate.toHttpUrlOrNull()
+                    
+            require(
+                parsed.scheme == "https" &&
+                    parsed.username.isEmpty() &&
+                    parsed.password.isEmpty() &&
+                    parsed.query == null &&
+                    parsed.fragment == null,
+            ) {
                 "RomM requires an HTTPS URL without login details or query"
             }
             // Accept both https://host and https://host/subpath.
@@ -437,7 +455,10 @@ class RommApiClient {
             return fileName.none { it == '/' || it == '\\' || it.isISOControl() }
         }
 
-        private fun readBounded(input: java.io.InputStream, maxBytes: Long): ByteArray {
+        private fun readBounded(
+            input: java.io.InputStream,
+            maxBytes: Long,
+        ): ByteArray {
             val result = ByteArrayOutputStream()
             val buffer = ByteArray(8192)
             var total = 0L

@@ -30,7 +30,10 @@ class RommConnectionStore(context: Context) {
     fun hasSavedToken(): Boolean = secretFile.baseFile.isFile
 
     @Synchronized
-    fun save(serverUrl: String, token: String) {
+    fun save(
+        serverUrl: String,
+        token: String,
+    ) {
         val url = RommApiClient.validatedServerUrl(serverUrl)
         val trimmed = token.trim()
         require(
