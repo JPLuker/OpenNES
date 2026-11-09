@@ -18,13 +18,14 @@ import androidx.navigation.NavHostController
 fun MainNavigationBar(
     currentRoute: MainRoute?,
     navController: NavHostController,
+    hasFavorites: Boolean,
 ) {
     AnimatedVisibility(
         visible = currentRoute?.showBottomNavigation != false,
         enter = expandVertically(),
         exit = shrinkVertically(),
     ) {
-        LemuroidNavigationBar(currentRoute, navController)
+        LemuroidNavigationBar(currentRoute, navController, hasFavorites)
     }
 }
 
@@ -32,9 +33,12 @@ fun MainNavigationBar(
 private fun LemuroidNavigationBar(
     currentRoute: MainRoute?,
     navController: NavHostController,
+    hasFavorites: Boolean,
 ) {
     NavigationBar(modifier = Modifier.fillMaxWidth()) {
-        MainNavigationRoutes.values().forEach { destination ->
+        MainNavigationRoutes.values()
+            .filter { it != MainNavigationRoutes.FAVORITES || hasFavorites }
+            .forEach { destination ->
             val isSelected = currentRoute?.root == destination.route
             val iconDrawable = if (isSelected) destination.selectedIcon else destination.unselectedIcon
 
