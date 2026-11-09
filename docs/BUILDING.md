@@ -27,6 +27,17 @@ git submodule update --init --recursive
 
 Development proceeds by direct commits to `master`; use a pinned commit for reproducible troubleshooting rather than an unverified rolling branch.
 
+## Prepare native RetroAchievements bridge source
+
+The debug app now compiles a pinned upstream LibretroDroid v0.14.0 submodule rather than using a prebuilt native AAR. The native patch is deterministic and guarded by its exact upstream commit SHA:
+
+```sh
+git submodule update --init --recursive
+python3 scripts/prepare-libretrodroid-bridge.py
+```
+
+You must have the Android NDK and CMake 3.22.1 available (Gradle may obtain them via the configured Android SDK). The source-built module carries the existing LibretroDroid GPL license; changes are applied to the local checkout, not pushed to upstream. The bridge adds guarded emulated-memory copies and a once-per-emulated-frame native observer point. **No RetroAchievements unlocks are enabled** by the bridge alone.
+
 ## Compile an installable debug APK
 
 ```sh

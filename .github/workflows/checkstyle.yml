@@ -34,6 +34,10 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      - name: Prepare pinned native emulation bridge
+        run: |
+          python3 scripts/prepare-libretrodroid-bridge.py
+
       - name: Check Kotlin source formatting
         run: |
           chmod +x gradlew

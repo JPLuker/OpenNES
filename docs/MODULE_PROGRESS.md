@@ -16,7 +16,7 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M3 — Portrait NES controller** | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: live theme preview and HEX wheel available in-game; separate A/B and Start/Select/Menu anchor geometry is persisted per orientation | Verify actual A/B hit targets, one- and two-finger combined input, D-pad directions, wheel persistence and layout on device; D-pad segment geometry still outstanding |
 | M4 — Landscape NES controller | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: inherits independent A/B touch anchors plus landscape-specific framed/overlay layouts, themes and geometry settings | Verify A/B hitbox alignment, screen-safe layout and transitions on compact/wide landscape screens |
 | **M5 — Gameplay reliability** | **FINAL-TEST CANDIDATE**: save failures, cancellation and quit races improved; hardware key/motion events now use immutable snapshots before async processing; latest candidate passed CI | Execute the expanded M5 device matrix for saves, audio, A/B hitboxes, controller reconnects, rotation and resume |
-| **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
+| **M6 — RetroAchievements** | **ACTIVE — native bridge introduced**: local NES hash + in-game achievements + optional read-only website progress built; pinned LibretroDroid source module with emulated memory/frame bridge now needs CI and device validation. Native rc_client/emulator sign-in/unlocks not implemented | Verify new source-built native dependency and JNI on Android, pin/link rcheevos and implement authenticated per-frame native unlocks |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
 
@@ -114,6 +114,13 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [ ] Review save/resume and foreground-session lifecycle ownership for interrupted games
 - [ ] Guard native video/input operations against late or stale events when possible
 - [ ] **M5 acceptance deferred:** on-device audio/frame pacing, save SRAM and slot versions, pause/resume, gamepad disconnect and process lifecycle
+
+## M6 source-native bridge
+
+- [x] Pin upstream LibretroDroid v0.14.0 with its recursive source dependencies; avoid mixing its AAR with the native fork.
+- [x] Implement an idempotent, fail-closed native patch preparation script exposing guarded memory copies, emulated frame count and an internal frame observer slot.
+- [ ] Confirm source-built NDK APK succeeds on all required ABIs and memory/frame bridge does not regress NES playback.
+- [ ] Link official, pinned rcheevos client and route genuine memory/frame callbacks from the native core rather than render events.
 
 ## M6 active source checklist
 
