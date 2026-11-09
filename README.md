@@ -20,9 +20,9 @@ The goal is the convenience and polish of a dedicated Android emulator, designed
 
 The visual direction takes inspiration from Pizza Boy's level of polish, **not its copyrighted visual assets or source code**. All final OpenNES artwork and UI will be original.
 
-**Online metadata progress:** Game details now support an optional **Find online game info** lookup via Wikidata (CC0) with no API key. OpenNES only proposes verified NES video-game matches, previews genre/year/description, and fills fields only after confirmation. Existing manually entered fields are never overwritten; source attribution links to Wikidata. A **Check missing details** library action processes up to 12 eligible NES titles sequentially with progress and Stop. It caches completed/unmatched checks for 30 days and preserves local edits; it runs only when you request it, not at every launch. A fully unattended Plex-style sync remains future work.
+**Game metadata (Plex-style enrichment):** After ROM indexing, a separate network-constrained background worker automatically checks eligible NES titles. It verifies one unambiguous Wikidata (CC0) NES match, retrieves genre/year, and adds an attributed Wikipedia (CC BY-SA) article summary when available. It only sends cleaned game titles, never ROMs or saves. Results are stored in the game library and missing/unmatched checks are cached for 30 days; individual worker batches are limited to eight titles with pacing and retries. Existing manual metadata edits, covers and save data are preserved. **Settings → Library maintenance** can disable automatic lookups or manually run the existing 12-title metadata refresh. The Home screen remains game-first without an always-visible maintenance panel. Game descriptions appear in Continue Playing and game details when available. Matching remains conservative; some games may have missing metadata.
 
-**Artwork progress:** Matched NES games can show Libretro box art, title screens and gameplay screenshots in the game-details panel. The library prefetches a bounded group of visible covers into Coil's disk cache. Android can evict this cache, so offline artwork is best-effort rather than permanent. Custom covers always take priority. External metadata providers and full Plex-style refresh controls are still planned.
+**Artwork progress:** Matched NES games show Libretro box art, title screens and gameplay screenshots in game details. The library caches a bounded number of visible covers, and successful background metadata batches also prefetch matched game artwork into Coil's cache. Some ROM filenames can supply an exact Libretro cover fallback. Android may evict cached art, so offline availability is best-effort. Custom covers always take priority. This is not yet a complete Plex-style provider ecosystem.
 
 ## Development status
 
@@ -30,7 +30,7 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | --- | --- |
 | M0 — Own Android package/name and reproducible APK workflow | CI complete; device testing pending |
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
-| M2 — Replace the complete Lemuroid user interface | In progress: original Home shelf, Continue Playing and recorded playtime (PR #7) |
+| M2 — Replace the complete Lemuroid user interface | In progress: library shelves, game details, original search UI and automatic metadata enrichment |
 | M3 — Premium NES portrait controller skin | In progress: NES-style D-pad, A/B, Start/Select and separate opacity/scale |
 | M4 — Dedicated landscape controller skin | In progress: separate landscape scale, margins, rotation and opacity; placement refinements pending |
 | M5 — Gameplay, saves, input and performance polish | Not started |
@@ -85,6 +85,6 @@ Open a [GitHub issue](https://github.com/JPLuker/OpenNES/issues) with your Andro
 
 ## Licensing and acknowledgments
 
-OpenNES is forked from [Lemuroid](https://github.com/Swordfish90/Lemuroid), based on Libretro and [LibretroDroid](https://github.com/Swordfish90/LibretroDroid); the intended NES core is [FCEUmm](https://github.com/libretro/libretro-fceumm). Lemuroid is licensed under **GNU GPL version 3**. This fork retains `COPYING` and source notices; its dependencies and included native code must retain their applicable licensing and attribution.
+OpenNES is forked from [Lemuroid](https://github.com/Swordfish90/Lemuroid), based on Libretro and [LibretroDroid](https://github.com/Swordfish90/LibretroDroid); the intended NES core is [FCEUmm](https://github.com/libretro/libretro-fceumm). Lemuroid is licensed under **GNU GPL version 3**. This fork retains `COPYING` and source notices; its dependencies and included native code must retain their applicable licensing and attribution. Wikimedia metadata is credited per game: Wikidata data is CC0 and Wikipedia extracts require CC BY-SA attribution and link to the original article.
 
 OpenNES is not endorsed by or affiliated with Nintendo, Pizza Boy, Lemuroid's maintainers, or RetroAchievements. RetroAchievements integration is planned, not currently shipped.
