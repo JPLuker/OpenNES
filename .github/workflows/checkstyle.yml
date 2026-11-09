@@ -96,10 +96,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Download tested APK
+      - name: Download compiled M5 APK
         uses: actions/download-artifact@v4
         with:
-          name: OpenNES-debug-apk
+          name: OpenNES-M5-debug-apk
           path: dist
 
       - name: Publish rolling OpenNES development release
@@ -128,7 +128,7 @@ jobs:
           else
             gh release create m5-preview dist/OpenNES-M5-debug.apk \
               --target "$GITHUB_SHA" \
-              --title "OpenNES Development APK" \
+              --title "OpenNES M5 Preview APK" \
               --notes "$NOTES" \
               --prerelease \
               --repo "$GITHUB_REPOSITORY"
