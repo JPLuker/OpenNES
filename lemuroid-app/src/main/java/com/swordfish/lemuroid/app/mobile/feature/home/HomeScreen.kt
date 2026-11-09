@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,6 +82,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
+import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
@@ -145,6 +147,7 @@ fun HomeScreen(
             }
         },
         onSetDirectoryClicked = { viewModel.changeLocalStorageFolder(context) },
+        onRescanClicked = { LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext) },
     )
 
     selectedGame?.let { game ->
@@ -196,6 +199,7 @@ private fun OpenNesLibrary(
     onSettingsClick: () -> Unit,
     onEnableNotificationsClicked: () -> Unit,
     onSetDirectoryClicked: () -> Unit,
+    onRescanClicked: () -> Unit,
 ) {
     Column(
         modifier =
@@ -217,12 +221,11 @@ private fun OpenNesLibrary(
         }
 
         AnimatedVisibility(state.showNoGamesCard) {
-            LibraryNotice(
-                title = stringResource(R.string.home_empty_title),
-                message = stringResource(R.string.home_empty_message),
-                action = stringResource(R.string.home_empty_action),
-                enabled = !state.indexInProgress,
-                onAction = onSetDirectoryClicked,
+            LibrarySetupCard(
+                hasRomDirectory = state.hasRomDirectory,
+                scanInProgress = state.scanInProgress,
+                onChooseFolder = onSetDirectoryClicked,
+                onRescan = onRescanClicked,
             )
         }
 
@@ -1329,6 +1332,114 @@ private fun playTimeLabel(game: Game): String {
                 (minutes / 60L).toInt(),
                 (minutes % 60L).toInt(),
             )
+    }
+}
+
+/**
+ * Distinguishes first launch, an active scan and an empty scan result.
+ * The picker is never launched automatically; the player chooses their folder.
+ */
+@Composable
+private fun LibrarySetupCard(
+    hasRomDirectory: Boolean,
+    scanInProgress: Boolean,
+    onChooseFolder: () -> Unit,
+    onRescan: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        color = LibraryColors.panel,
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(1.dp, LibraryColors.border),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            val title =
+                when {
+                    !hasRomDirectory -> R.string.opennes_setup_choose_title
+                    scanInProgress -> R.string.opennes_setup_scanning_title
+                    else -> R.string.opennes_setup_no_games_title
+                }
+            val message =
+                when {
+                    !hasRomDirectory -> R.string.opennes_setup_choose_description
+                    scanInProgress -> R.string.opennes_setup_scanning_description
+                    else -> R.string.opennes_setup_no_games_description
+                }
+
+            Text(
+                text = stringResource(title),
+                color = LibraryColors.foreground,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+            )
+            Text(
+                text = stringResource(message),
+                color = LibraryColors.muted,
+                fontSize = 14.sp,
+            )
+
+            when {
+                !hasRomDirectory -> {
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onChooseFolder,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = LibraryColors.red,
+                                contentColor = LibraryColors.foreground,
+                            ),
+                    ) {
+                        Text(stringResource(R.string.opennes_setup_choose_action))
+                    }
+                }
+                scanInProgress -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = LibraryColors.red,
+                            strokeWidth = 2.dp,
+                        )
+                        Text(
+                            text = stringResource(R.string.opennes_setup_scanning_progress),
+                            color = LibraryColors.muted,
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
+                else -> {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = onRescan,
+                            modifier = Modifier.weight(1f),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = LibraryColors.red,
+                                    contentColor = LibraryColors.foreground,
+                                ),
+                        ) {
+                            Text(stringResource(R.string.opennes_setup_rescan_action))
+                        }
+                        OutlinedButton(
+                            onClick = onChooseFolder,
+                            modifier = Modifier.weight(1f),
+                            border = BorderStroke(1.dp, LibraryColors.border),
+                            colors =
+                                ButtonDefaults.outlinedButtonColors(
+                                    contentColor = LibraryColors.foreground,
+                                ),
+                        ) {
+                            Text(stringResource(R.string.opennes_setup_change_action))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
