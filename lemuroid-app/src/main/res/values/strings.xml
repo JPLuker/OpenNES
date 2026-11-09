@@ -441,4 +441,15 @@
     <string name="opennes_romm_view_saves">Saves</string>
     <string name="opennes_romm_import">Import</string>
     <string name="opennes_romm_save_exported">Save backup exported.</string>
+    <!-- Local HEX-enabled color wheel used by Settings and in-game onboarding. -->
+    <string name="opennes_controller_wheel_hint">Drag on the wheel to choose hue and saturation.</string>
+    <string name="opennes_controller_hex_label">HEX color (#RRGGBB)</string>
+    <string name="opennes_controller_saturation">Saturation</string>
+    <string name="opennes_controller_brightness">Brightness</string>
+    <string name="opennes_controller_color_apply">Apply color</string>
+    <string name="opennes_controller_color_cancel">Cancel</string>
+    <string name="opennes_controller_color_wheel_accessibility">Hue and saturation color wheel</string>
+    <string name="opennes_setup_custom_colors">Customize controller colors</string>
+    <string name="opennes_setup_color_hint">Choose a controller part to edit. Each color can be adjusted with the wheel or HEX.</string>
+    <string name="opennes_controller_colors_wheel_hint">Tap a color swatch to open the wheel, or type a HEX value.</string>
 </resources>
