@@ -394,6 +394,7 @@
     <string name="opennes_editor_buttons">A/B</string>
     <string name="opennes_editor_more">More</string>
     <string name="opennes_editor_themes">Themes</string>
+    <string name="opennes_editor_individual_faces">Individual A/B buttons</string>
     <string name="opennes_editor_secondary_controls">Individual button controls</string>
     <string name="opennes_editor_reset_secondary">Reset selected button</string>
     <string name="opennes_editor_color_picker_title">Customize button colors</string>

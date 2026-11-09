@@ -494,6 +494,7 @@ private fun MenuEditTouchControls(
     val confirmReset = remember { mutableStateOf(false) }
     val selectedTab = remember { mutableStateOf(0) }
     val secondaryTab = remember { mutableStateOf(0) }
+    val faceButtonTab = remember { mutableStateOf(0) }
     val selectedColorPart = remember { mutableStateOf<NesColorPart?>(null) }
     val context = LocalContext.current.applicationContext
     val appearanceStore = remember(context) { NesControllerAppearanceStore(context) }
@@ -620,6 +621,43 @@ private fun MenuEditTouchControls(
                         onReset = {
                             viewModel.updateTouchControllerSettings(
                                 touchControllerSettings.copy(rightScale = null, rightOffsetX = 0f, rightOffsetY = 0f),
+                            )
+                        },
+                    )
+                    Text(
+                        text = stringResource(com.swordfish.lemuroid.R.string.opennes_editor_individual_faces),
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("A", "B").forEachIndexed { index, name ->
+                            FilterChip(
+                                selected = faceButtonTab.value == index,
+                                onClick = { faceButtonTab.value = index },
+                                label = { Text(name) },
+                            )
+                        }
+                    }
+                    val selectedFaceGeometry =
+                        if (faceButtonTab.value == 0) {
+                            touchControllerSettings.aButton
+                        } else {
+                            touchControllerSettings.bButton
+                        }
+                    val updateFace: (TouchControllerSettingsManager.ButtonGeometry) ->
+                    TouchControllerSettingsManager.Settings = { geometry ->
+                        if (faceButtonTab.value == 0) {
+                            touchControllerSettings.copy(aButton = geometry)
+                        } else {
+                            touchControllerSettings.copy(bButton = geometry)
+                        }
+                    }
+                    MenuEditSecondaryButton(
+                        geometry = selectedFaceGeometry,
+                        onPreview = { viewModel.previewTouchControllerSettings(updateFace(it)) },
+                        onCommit = { viewModel.updateTouchControllerSettings(updateFace(it)) },
+                        onReset = {
+                            viewModel.updateTouchControllerSettings(
+                                updateFace(TouchControllerSettingsManager.ButtonGeometry()),
                             )
                         },
                     )

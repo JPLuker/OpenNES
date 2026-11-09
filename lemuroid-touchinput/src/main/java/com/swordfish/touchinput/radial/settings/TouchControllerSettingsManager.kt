@@ -57,6 +57,8 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val startButton: ButtonGeometry = ButtonGeometry(),
         val selectButton: ButtonGeometry = ButtonGeometry(),
         val menuButton: ButtonGeometry = ButtonGeometry(),
+        val aButton: ButtonGeometry = ButtonGeometry(),
+        val bButton: ButtonGeometry = ButtonGeometry(),
     )
 
     private fun computeInsetsPaddings(
