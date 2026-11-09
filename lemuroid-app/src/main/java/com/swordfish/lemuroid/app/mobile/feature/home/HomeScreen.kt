@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -1016,24 +1017,48 @@ private fun GameProfileSection(
             game.description?.takeIf { it.isNotBlank() }?.let {
                 GameDetailField(stringResource(R.string.opennes_game_description), it)
             }
-            game.wikipediaArticleTitle?.takeIf { it.isNotBlank() }?.let { article ->
-                TextButton(
-                    onClick = {
-                        val url = "https://en.wikipedia.org/wiki/" + Uri.encode(article.replace(' ', '_'))
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                    },
+            val article = game.wikipediaArticleTitle?.takeIf { it.isNotBlank() }
+            val entityId = game.wikidataEntityId?.takeIf { it.matches(Regex("Q[1-9][0-9]*")) }
+            if (article != null || entityId != null) {
+                // Attribution is a single compact, unobtrusive line, not two
+                // full-size buttons repeating the description's source.
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(stringResource(R.string.opennes_wikipedia_source))
-                }
-            }
-            game.wikidataEntityId?.takeIf { it.matches(Regex("Q[1-9][0-9]*")) }?.let { entityId ->
-                TextButton(
-                    onClick = {
-                        val uri = Uri.parse("https://www.wikidata.org/wiki/" + entityId)
-                        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
-                    },
-                ) {
-                    Text(stringResource(R.string.opennes_online_source))
+                    Text(
+                        text = stringResource(R.string.opennes_sources_label),
+                        color = LibraryColors.muted,
+                        fontSize = 11.sp,
+                    )
+                    article?.let {
+                        Text(
+                            text = stringResource(R.string.opennes_wikipedia_credit),
+                            modifier =
+                                Modifier.clickable {
+                                    val url = "https://en.wikipedia.org/wiki/" + Uri.encode(it.replace(' ', '_'))
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                },
+                            color = LibraryColors.muted,
+                            fontSize = 11.sp,
+                        )
+                    }
+                    if (article != null && entityId != null) {
+                        Text(text = "·", color = LibraryColors.muted, fontSize = 11.sp)
+                    }
+                    entityId?.let {
+                        Text(
+                            text = stringResource(R.string.opennes_wikidata_credit),
+                            modifier =
+                                Modifier.clickable {
+                                    val uri = Uri.parse("https://www.wikidata.org/wiki/" + it)
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                },
+                            color = LibraryColors.muted,
+                            fontSize = 11.sp,
+                        )
+                    }
                 }
             }
 
