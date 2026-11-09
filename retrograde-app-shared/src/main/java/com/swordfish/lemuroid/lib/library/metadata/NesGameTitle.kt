@@ -14,7 +14,8 @@ object NesGameTitle {
     private val nesExtension = Regex("""\.nes$""", RegexOption.IGNORE_CASE)
     private val catalogueSuffix =
         Regex(
-            """\s*\((?:USA|Europe|Japan|World|Nintendo|Australia|Asia|Brazil|Korea|Canada|France|Germany|Italy|Spain|United Kingdom|Rev(?:ision)?\s*[A-Za-z0-9.]+)\)\s*$""",
+            """\s*\((?:USA|Europe|Japan|World|Nintendo|Australia|Asia|Brazil|Korea|Canada|""" +
+                """France|Germany|Italy|Spain|United Kingdom|Rev(?:ision)?\s*[A-Za-z0-9.]+)\)\s*$""",
             RegexOption.IGNORE_CASE,
         )
     private val prgRevisionBeforeArticle =
