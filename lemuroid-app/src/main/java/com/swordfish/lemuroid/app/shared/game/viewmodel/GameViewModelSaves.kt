@@ -114,11 +114,14 @@ class GameViewModelSaves(
 
         try {
             retroGameView.waitGLEvent<GLRetroView.GLRetroEvents.FrameRendered>()
-            restoreQuickSave(saveState)
+            if (!restoreQuickSave(saveState)) {
+                sideEffects.showToast(appContext.getString(R.string.game_toast_load_state_failed))
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Error while loading auto-save")
+            sideEffects.showToast(appContext.getString(R.string.game_toast_load_state_failed))
         }
     }
 
@@ -150,13 +153,14 @@ class GameViewModelSaves(
     }
 
     // Now that we wait for the first rendered frame this is probably no longer needed, but we'll keep it just to be sure
-    private suspend fun restoreQuickSave(saveState: SaveState) {
-        var times = 10
-
-        while (!loadSaveState(saveState) && times > 0) {
-            delay(200)
-            times--
+    private suspend fun restoreQuickSave(saveState: SaveState): Boolean {
+        // Early frames can fail to restore valid state. Keep the bounded
+        // retry policy but report an exhausted retry instead of silence.
+        repeat(11) { attempt ->
+            if (loadSaveState(saveState)) return true
+            if (attempt < 10) delay(200)
         }
+        return false
     }
 
     private fun loadSaveState(saveState: SaveState): Boolean {

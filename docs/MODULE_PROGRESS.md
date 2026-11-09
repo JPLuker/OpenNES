@@ -63,6 +63,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Keep menu save/load/reset coroutines scoped to the game Activity rather than global process work
 - [x] Prevent duplicate Quit/Back finish requests from racing save writes; restore retry ability after a save failure
 - [x] Preserve foreground playtime across redundant resume callbacks and ignore missing menu tilt settings safely
+- [x] Surface exhausted or exceptional auto-save restore failures rather than silently continuing
+- [x] Preserve coroutine cancellation through game-service tasks and core-variable setup
 - [ ] Review save/resume and foreground-session lifecycle ownership for interrupted games
 - [ ] Guard native video/input operations against late or stale events when possible
 - [ ] **M5 acceptance deferred:** on-device audio/frame pacing, save SRAM and slot versions, pause/resume, gamepad disconnect and process lifecycle
@@ -324,6 +326,12 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Added a local verifier that rejects malformed NES files, oversized/multi-ROM ZIP archives and unsafe ZIP member paths before a RomM import can create any local document. ZIP expansion is capped at 64MiB across at most 256 entries.
 - Corrected RomM save backup integrity validation against upstream code: raw files use MD5, ZIP saves hash sorted `entry-name:entry-MD5` records via MD5, and future 64-hex SHA-256 hashes are checked as full-file digests. All validation happens before writing the backup document; ZIP save expansion is capped at 16MiB.
 - The verifier is source-only, uncompiled and untested. Unsupported archive formats fail safely and neither live saves nor existing ROMs are overwritten.
+
+## M5 source batch — explicit auto-save restoration failures
+
+- On a failed auto-save restoration after the existing bounded retry window, OpenNES now displays the existing load-failed toast instead of silently proceeding. Exceptions in the restore path are also surfaced; cancellation is rethrown.
+- The dedicated game service and resumed core-variable updater now propagate coroutine cancellation, rather than logging normal lifecycle teardown as an unrelated task failure.
+- Source-only reliability improvements; gameplay, frame pacing, audio, saves and process lifecycle remain untested.
 
 ## Development rules
 

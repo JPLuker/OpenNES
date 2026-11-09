@@ -30,6 +30,7 @@ import com.swordfish.libretrodroid.ImmersiveMode
 import com.swordfish.libretrodroid.Variable
 import com.swordfish.libretrodroid.ViewportAlignment
 import com.swordfish.libretrodroid.VirtualFile
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -309,6 +310,8 @@ class GameViewModelRetroGameView(
             waitRetroGameViewInitialized()
             val options = coreVariablesManager.getOptionsForCore(system.id, systemCoreConfig)
             updateCoreVariables(options)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e)
         }
