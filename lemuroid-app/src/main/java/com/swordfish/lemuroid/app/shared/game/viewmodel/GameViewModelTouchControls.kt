@@ -53,6 +53,11 @@ class GameViewModelTouchControls(
 
     private var loadingMenuJob: Job? = null
 
+    // Keep track of held virtual controls so an interrupted gesture cannot
+    // leave a button or D-pad direction latched inside LibretroDroid.
+    private val pressedVirtualKeys = mutableSetOf<Int>()
+    private val activeVirtualDirections = mutableSetOf<Int>()
+
     override fun onCreate(owner: LifecycleOwner) {
         owner.launchOnState(Lifecycle.State.CREATED) {
             getTouchControllerConfig().safeCollect {
@@ -108,8 +113,11 @@ class GameViewModelTouchControls(
     fun isDragEditMode(): Flow<Boolean> = dragEditMode
 
     fun setDragEditMode(enabled: Boolean) {
+        if (enabled) {
+            releaseVirtualInputs()
+            showEditControls.value = false
+        }
         dragEditMode.value = enabled
-        if (enabled) showEditControls.value = false
     }
 
     fun resetTouchControls() {
@@ -122,6 +130,7 @@ class GameViewModelTouchControls(
 
     fun updateScreenOrientation(orientation: TouchControllerSettingsManager.Orientation) {
         if (screenOrientation.value != orientation) {
+            releaseVirtualInputs()
             dragEditMode.value = false
         }
         screenOrientation.value = orientation
@@ -190,10 +199,19 @@ class GameViewModelTouchControls(
     }
 
     fun showEditControls(show: Boolean) {
+        if (show) releaseVirtualInputs()
         showEditControls.value = show
     }
 
     private fun handleVirtualInputButton(event: InputEvent.Button) {
+        val changed =
+            if (event.pressed) {
+                pressedVirtualKeys.add(event.id)
+            } else {
+                pressedVirtualKeys.remove(event.id)
+            }
+        if (!changed) return
+
         val action = if (event.pressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
         retroGameView.retroGameView?.sendKeyEvent(action, event.id)
     }
@@ -203,6 +221,12 @@ class GameViewModelTouchControls(
         xAxis: Float,
         yAxis: Float,
     ) {
+        if (xAxis == 0f && yAxis == 0f) {
+            activeVirtualDirections.remove(id)
+        } else {
+            activeVirtualDirections.add(id)
+        }
+
         when (id) {
             ComposeTouchLayouts.MOTION_SOURCE_DPAD -> {
                 retroGameView.retroGameView?.sendMotionEvent(GLRetroView.MOTION_SOURCE_DPAD, xAxis, yAxis)
@@ -241,6 +265,49 @@ class GameViewModelTouchControls(
                 )
             }
         }
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        releaseVirtualInputs()
+        super.onPause(owner)
+    }
+
+    /**
+     * Release every virtual input when a touch stream is interrupted. PadKit
+     * can lose an UP event when the screen rotates or a menu takes focus.
+     * Physical gamepads are handled independently and are not affected.
+     */
+    private fun releaseVirtualInputs() {
+        val gameView = retroGameView.retroGameView
+        pressedVirtualKeys.forEach { key ->
+            gameView?.sendKeyEvent(KeyEvent.ACTION_UP, key)
+        }
+        pressedVirtualKeys.clear()
+
+        activeVirtualDirections.forEach { direction ->
+            when (direction) {
+                ComposeTouchLayouts.MOTION_SOURCE_DPAD -> {
+                    gameView?.sendMotionEvent(MOTION_SOURCE_DPAD, 0f, 0f)
+                }
+                ComposeTouchLayouts.MOTION_SOURCE_LEFT_STICK -> {
+                    gameView?.sendMotionEvent(MOTION_SOURCE_ANALOG_LEFT, 0f, 0f)
+                }
+                ComposeTouchLayouts.MOTION_SOURCE_RIGHT_STICK,
+                ComposeTouchLayouts.MOTION_SOURCE_RIGHT_DPAD,
+                -> {
+                    gameView?.sendMotionEvent(MOTION_SOURCE_ANALOG_RIGHT, 0f, 0f)
+                }
+                ComposeTouchLayouts.MOTION_SOURCE_DPAD_AND_LEFT_STICK -> {
+                    gameView?.sendMotionEvent(MOTION_SOURCE_DPAD, 0f, 0f)
+                    gameView?.sendMotionEvent(MOTION_SOURCE_ANALOG_LEFT, 0f, 0f)
+                }
+            }
+        }
+        activeVirtualDirections.clear()
+
+        loadingMenuJob?.cancel()
+        loadingMenuJob = null
+        menuPressed.value = false
     }
 
     companion object {
