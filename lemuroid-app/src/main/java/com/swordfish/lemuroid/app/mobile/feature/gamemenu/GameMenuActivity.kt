@@ -11,14 +11,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -26,15 +28,15 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -149,7 +151,16 @@ class GameMenuActivity : RetrogradeComponentActivity() {
 
             SideMenu {
                 TopAppBar(
-                    title = { Text(stringResource(currentRoute.titleId)) },
+                    title = {
+                        Text(
+                            text = stringResource(currentRoute.titleId),
+                            color = GameMenuStyle.foreground,
+                        )
+                    },
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = GameMenuStyle.background,
+                        ),
                     windowInsets = WindowInsets(0.dp),
                     navigationIcon = {
                         AnimatedContent(targetState = currentRoute.canGoBack(), label = "Back") { canGoBack ->
@@ -171,7 +182,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                         }
                     },
                 )
-                Divider(modifier = Modifier.fillMaxWidth())
+                Divider(modifier = Modifier.fillMaxWidth(), color = GameMenuStyle.border)
                 NavHost(
                     modifier =
                         Modifier
@@ -234,21 +245,25 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     @Composable
     private fun SideMenu(content: @Composable () -> Unit) {
         BoxWithConstraints(
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(ComposeColor.Black.copy(alpha = 0.55f)),
             contentAlignment = Alignment.CenterEnd,
         ) {
             val panelWidth =
                 remember(maxWidth) {
-                    minOf(maxWidth * 0.8f, 400f.dp)
+                    minOf(maxWidth * 0.92f, 460.dp)
                 }
 
             Surface(
                 modifier =
                     Modifier
-                        .padding()
                         .fillMaxHeight()
-                        .width(panelWidth)
-                        .clip(MaterialTheme.shapes.large),
+                        .width(panelWidth),
+                color = GameMenuStyle.background,
+                shape = RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp),
+                border = BorderStroke(1.dp, GameMenuStyle.border),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     content()
