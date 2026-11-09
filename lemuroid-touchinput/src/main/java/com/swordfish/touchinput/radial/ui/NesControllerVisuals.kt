@@ -1,17 +1,12 @@
 package com.swordfish.touchinput.radial.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -19,24 +14,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import gg.padkit.ui.DefaultCrossForeground
 
-/** Original NES-style visuals; PadKit retains the actual multi-touch hit testing. */
+/**
+ * NES-style cross with recessed horizontal/vertical ridges in place of the
+ * modern arrow icons. PadKit still owns directional and diagonal hit testing.
+ */
+private enum class NesGripAxis {
+    HORIZONTAL,
+    VERTICAL,
+}
+
 @Composable
 fun NesCrossForeground(directionState: State<Offset>) {
     DefaultCrossForeground(
         modifier = Modifier.fillMaxSize(),
         directionState = directionState,
         allowDiagonals = true,
-        leftDial = { NesDPadDirection(it, Icons.Default.KeyboardArrowLeft) },
-        rightDial = { NesDPadDirection(it, Icons.Default.KeyboardArrowRight) },
-        topDial = { NesDPadDirection(it, Icons.Default.KeyboardArrowUp) },
-        bottomDial = { NesDPadDirection(it, Icons.Default.KeyboardArrowDown) },
+        leftDial = { NesDPadDirection(it, NesGripAxis.VERTICAL) },
+        rightDial = { NesDPadDirection(it, NesGripAxis.VERTICAL) },
+        topDial = { NesDPadDirection(it, NesGripAxis.HORIZONTAL) },
+        bottomDial = { NesDPadDirection(it, NesGripAxis.HORIZONTAL) },
         foregroundComposite = { NesDPadCenter(it) },
     )
 }
@@ -44,7 +48,7 @@ fun NesCrossForeground(directionState: State<Offset>) {
 @Composable
 private fun NesDPadDirection(
     pressed: State<Boolean>,
-    direction: ImageVector,
+    gripAxis: NesGripAxis,
 ) {
     val opacity = LocalLemuroidPadTheme.current.opacity
     GlassSurface(
@@ -55,15 +59,39 @@ private fun NesDPadDirection(
                 .copy(alpha = opacity),
         shadowColor = Color.Black.copy(alpha = 0.32f * opacity),
         shadowWidth = 2.dp,
-        content = {
-            Icon(
-                modifier = Modifier.size(maxWidth * 0.42f, maxHeight * 0.42f),
-                imageVector = direction,
-                contentDescription = null,
-                tint = Color(0xFF787A80).copy(alpha = opacity),
-            )
-        },
-    )
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val halfLength = size.minDimension * 0.22f
+            val gap = size.minDimension * 0.16f
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val gripColor =
+                (if (pressed.value) Color(0xFF5D6067) else Color(0xFF666970))
+                    .copy(alpha = 0.85f * opacity)
+
+            for (line in -1..1) {
+                val shift = gap * line
+                val start =
+                    if (gripAxis == NesGripAxis.HORIZONTAL) {
+                        Offset(center.x - halfLength, center.y + shift)
+                    } else {
+                        Offset(center.x + shift, center.y - halfLength)
+                    }
+                val end =
+                    if (gripAxis == NesGripAxis.HORIZONTAL) {
+                        Offset(center.x + halfLength, center.y + shift)
+                    } else {
+                        Offset(center.x + shift, center.y + halfLength)
+                    }
+                drawLine(
+                    color = gripColor,
+                    start = start,
+                    end = end,
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -77,7 +105,20 @@ private fun NesDPadCenter(pressed: State<Boolean>) {
                 .copy(alpha = opacity),
         shadowColor = Color.Black.copy(alpha = 0.16f * opacity),
         shadowWidth = 1.dp,
-    )
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val radius = size.minDimension * 0.23f
+            drawCircle(
+                color = Color(0xFF15171B).copy(alpha = opacity),
+                radius = radius,
+            )
+            drawCircle(
+                color = Color(0xFF5D6065).copy(alpha = 0.62f * opacity),
+                radius = radius,
+                style = Stroke(width = 1.dp.toPx()),
+            )
+        }
+    }
 }
 
 @Composable

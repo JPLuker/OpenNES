@@ -114,6 +114,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 HapticFeedbackMode.PRESS_RELEASE -> HapticFeedbackType.PRESS_RELEASE
             }
 
+        val showTouchPads =
+            touchControllerSettings != null &&
+                currentControllerConfig != null &&
+                touchControlsVisibleState.value
+
         PadKit(
             modifier = Modifier.fillMaxSize(),
             onInputEvents = { viewModel.handleVirtualInputEvent(it) },
@@ -161,6 +166,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     GameScreenLayout.buildConstraintSet(
                         isLandscape,
                         currentControllerConfig?.allowTouchOverlay ?: true,
+                        showTouchPads,
                     ),
             ) {
                 Box(
@@ -171,12 +177,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             .onGloballyPositioned { viewportPosition.value = it.boundsInRoot() },
                 )
 
-                val isVisible =
-                    touchControllerSettings != null &&
-                        currentControllerConfig != null &&
-                        touchControlsVisibleState.value
-
-                if (isVisible) {
+                if (showTouchPads && touchControllerSettings != null && currentControllerConfig != null) {
                     CompositionLocalProvider(
                         LocalLemuroidPadTheme provides LemuroidPadTheme(touchControllerSettings.opacity),
                     ) {

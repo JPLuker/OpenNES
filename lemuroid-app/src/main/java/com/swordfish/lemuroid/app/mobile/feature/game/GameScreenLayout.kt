@@ -16,11 +16,38 @@ object GameScreenLayout {
     fun buildConstraintSet(
         isLandscape: Boolean,
         allowTouchOverlay: Boolean,
+        showTouchPads: Boolean = true,
     ): ConstraintSet {
         return when {
+            // With a physical gamepad, no virtual pad exists to constrain the
+            // game view. Do not attach its bottom edge to a missing pad.
+            !showTouchPads -> buildConstraintSetWithoutTouchPads()
             !isLandscape -> buildConstraintSetPortrait()
             allowTouchOverlay -> buildConstraintSetLandscape()
             else -> buildConstraintSetLandscapeNoOverlay()
+        }
+    }
+
+    private fun buildConstraintSetWithoutTouchPads(): ConstraintSet {
+        return ConstraintSet {
+            val gameView = createRefFor(CONSTRAINTS_GAME_VIEW)
+            val gameContainer = createRefFor(CONSTRAINTS_GAME_CONTAINER)
+
+            constrain(gameView) {
+                width = Dimension.fillToConstraints
+                height = Dimension.fillToConstraints
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                absoluteLeft.linkTo(parent.absoluteLeft)
+                absoluteRight.linkTo(parent.absoluteRight)
+            }
+
+            constrain(gameContainer) {
+                absoluteLeft.linkTo(gameView.absoluteLeft)
+                absoluteRight.linkTo(gameView.absoluteRight)
+                top.linkTo(gameView.top)
+                bottom.linkTo(gameView.bottom)
+            }
         }
     }
 

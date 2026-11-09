@@ -32,6 +32,8 @@ fun PadKitScope.NESLeft(
         primaryDial = {
             LemuroidControlCross(
                 id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
+                allowDiagonals = true,
+                expandedTouchArea = true,
                 foreground = { NesCrossForeground(directionState = it) },
             )
         },
@@ -52,6 +54,11 @@ fun PadKitScope.NESRight(
         modifier = modifier,
         primaryDial = {
             LemuroidControlFaceButtons(
+                // Preserve independent A/B presses and the combined A+B
+                // gesture; minimize padding around the actual touch targets.
+                includeComposite = true,
+                trackPointers = true,
+                applyPadding = false,
                 ids =
                     persistentListOf(
                         Id.Key(KeyEvent.KEYCODE_BUTTON_A),

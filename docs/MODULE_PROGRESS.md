@@ -11,12 +11,24 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and GitHub debug APK workflow | Production signing and repeatable real-device regression still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
 | **M2 — UI completion and cleanup** | **CODE-COMPLETE (source scope; not device accepted)**: NES library, navigation, detail sheets, menus, settings, ROM recovery, compact layouts and accessibility pass implemented; obsolete TV UI removed | Device and build acceptance remain paused; regressions will be assessed when testing resumes |
-| **M3 — Portrait NES controller** | **NEXT ACTIVE**: NES visual skin, independent settings, drag/slider customization partially implemented | Polish D-pad/A/B ergonomics, touch hit zones and portrait layout; runtime acceptance paused |
+| **M3 — Portrait NES controller** | **ACTIVE**: original NES controls, portrait-specific sizing and editing already present; first ergonomics pass adds D-pad ridges, enlarged NES touch bounds and full-screen viewport with hardware gamepads | Finish safe small-phone positioning, Start/Select/menu reachability and controller editor usability; device acceptance paused |
 | M4 — Landscape NES controller | Partially implemented: dedicated orientation settings and placements | Design-specific responsive layout and cutout review |
 | M5 — Gameplay reliability | Partially implemented: audio/input fixes, save infrastructure and virtual input release handling | Comprehensive save/audio/suspend/regression verification |
 | M6 — RetroAchievements | Not implemented | Official integration feasibility, hashing, accounts, runtime and progress |
 | M7 — Public release | Development distribution in place | Testing, security/license audit, signing and release docs |
 | M8 — RomM integration (additional planned workstream) | Not implemented | Server authentication, game sync, offline save/conflict design |
+
+## M3 active source checklist
+
+- [x] Keep portrait and landscape controller settings independently persisted
+- [x] NES-only D-pad, A/B, Start and Select foregrounds and button IDs
+- [x] Allow D-pad diagonals and simultaneous A/B through existing PadKit input dispatch
+- [x] Give NES D-pad a textured, recessed cross without modern arrow icons
+- [x] Expand NES D-pad and face-button interactive regions without remapping input
+- [x] Use an unconstrained full-screen game viewport when no virtual pads exist (physical controller or disabled overlay)
+- [ ] Constrain default portrait controller layout for narrow phones without discarding user-set sizes/positions
+- [ ] Review Start/Select/menu ergonomics and editing affordances
+- [ ] Physically verify multi-touch, diagonals, touch cancellation, save/resume and portrait orientation (testing paused)
 
 ## M2 active checklist
 
@@ -109,6 +121,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 **Transferred to other milestones:** M1 owns deeper NES-only dependency/source cleanup and shared Leanback storage API migration; M7 owns license/security/release signoff. Neither is a reason to endlessly keep M2 open. Fix any future discovered regression in the module responsible instead.
 
 **Next active work: M3 — signature portrait NES controller.**
+
+## Latest M3 source batch — NES grip and touch-visibility layout
+
+- Replaced modern directional arrows with subtle three-ridge grips on the NES D-pad arms and a recessed center detail. The pad remains mapped to the existing NES directional ID and diagonal logic.
+- Reduced control padding **only for NES** to increase D-pad reach; face-button controls no longer consume an unnecessary inner inset. A/B pointer tracking and combination behavior are explicitly retained.
+- The viewport no longer links to nonexistent virtual-pad constraints when touch controls disappear after a hardware controller takes over. A full-screen constraint set is used until touch pads return.
+- The changes are source-only. No build, automated test, emulator test, APK inspection or real-device touch acceptance was performed.
 
 ## Development rules
 

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.dp
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.ui.LemuroidControlBackground
 import com.swordfish.touchinput.radial.ui.LemuroidCrossForeground
@@ -18,6 +19,7 @@ fun LemuroidControlCross(
     modifier: Modifier = Modifier,
     id: Id.DiscreteDirection,
     allowDiagonals: Boolean = true,
+    expandedTouchArea: Boolean = false,
     background: @Composable () -> Unit = {
         LemuroidControlBackground()
     },
@@ -30,7 +32,9 @@ fun LemuroidControlCross(
 ) {
     val theme = LocalLemuroidPadTheme.current
     ControlCross(
-        modifier = modifier.padding(theme.padding),
+        // NES D-pad uses a narrower inset so thumbs can reach the outer
+        // directions without reducing the drawn cross itself.
+        modifier = modifier.padding(if (expandedTouchArea) 1.dp else theme.padding),
         id = id,
         allowDiagonals = allowDiagonals,
         background = background,
