@@ -61,6 +61,11 @@ interface GameDao {
     @Query("SELECT * FROM games WHERE isFavorite = 1 ORDER BY lastPlayedAt DESC LIMIT :limit")
     fun selectFirstFavorites(limit: Int): Flow<List<Game>>
 
+    // Keep the Favorites destination hidden until the NES library actually has favorites.
+    // A Room Flow updates navigation as soon as a game is favorited/unfavorited.
+    @Query("SELECT COUNT(*) FROM games WHERE systemId = 'nes' AND isFavorite = 1")
+    fun observeFavoriteGameCount(): Flow<Int>
+
     @Query("SELECT * FROM games WHERE lastPlayedAt IS NULL LIMIT :limit")
     fun selectFirstNotPlayed(limit: Int): Flow<List<Game>>
 
