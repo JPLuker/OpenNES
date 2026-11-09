@@ -414,4 +414,30 @@
     <string name="opennes_controls_drag_sliders">Fine-tune</string>
     <string name="opennes_controls_reset_confirm_title">Reset this controller layout?</string>
     <string name="opennes_controls_reset_confirm_description">This resets sizes, positions, opacity and rotation for the current orientation. Your other orientation and saved games are not affected.</string>
+    <!-- Optional RomM integration. Also needed by M5 APK compile. -->
+    <string name="opennes_romm_title">RomM library</string>
+    <string name="opennes_romm_settings_description">Connect to a RomM server and import NES games</string>
+    <string name="opennes_romm_explanation">Connect to your own RomM server to browse and manually import NES or Famicom games. Your ROM folder must be selected first.</string>
+    <string name="opennes_romm_server">RomM HTTPS server URL</string>
+    <string name="opennes_romm_token">Read-only access token</string>
+    <string name="opennes_romm_connect">Connect</string>
+    <string name="opennes_romm_connected">Server: %1$s</string>
+    <string name="opennes_romm_verified">Signed in as %1$s</string>
+    <string name="opennes_romm_check">Check connection</string>
+    <string name="opennes_romm_disconnect">Disconnect</string>
+    <string name="opennes_romm_browse">Browse NES games</string>
+    <string name="opennes_romm_action_busy">%1$s…</string>
+    <string name="opennes_romm_results">Available NES games: %1$d</string>
+    <string name="opennes_romm_import_note">Imports use your selected local ROM folder. Existing files are not overwritten.</string>
+    <string name="opennes_romm_no_folder">Choose a local NES ROM folder in Settings before importing.</string>
+    <string name="opennes_romm_no_roms">No NES games found on this server.</string>
+    <string name="opennes_romm_imported">Imported %1$s. OpenNES will rescan your library.</string>
+    <string name="opennes_romm_more">Load more</string>
+    <string name="opennes_romm_save_backups_for">Save backups for %1$s</string>
+    <string name="opennes_romm_save_backups_note">Exports are downloaded as separate backup files and do not replace active OpenNES saves.</string>
+    <string name="opennes_romm_no_saves">No remote save backups are available for this game.</string>
+    <string name="opennes_romm_export_save">Export backup</string>
+    <string name="opennes_romm_view_saves">Saves</string>
+    <string name="opennes_romm_import">Import</string>
+    <string name="opennes_romm_save_exported">Save backup exported.</string>
 </resources>

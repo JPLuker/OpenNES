@@ -33,8 +33,11 @@ class RommConnectionStore(context: Context) {
     fun save(serverUrl: String, token: String) {
         val url = RommApiClient.validatedServerUrl(serverUrl)
         val trimmed = token.trim()
-        require(trimmed.isNotEmpty() && trimmed.length <= 2048 &&
-            trimmed.none { it.isWhitespace() || it.isISOControl() }) {
+        require(
+            trimmed.isNotEmpty() &&
+                trimmed.length <= 2048 &&
+                trimmed.none { it.isWhitespace() || it.isISOControl() },
+        ) {
             "Enter a valid RomM client token"
         }
 
