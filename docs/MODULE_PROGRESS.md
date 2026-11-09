@@ -28,6 +28,14 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [ ] Compile and lint the updated branch and verify the new APK with real NES gameplay and both orientations.
 - [ ] Longer-term: independent per-button position/hitbox control and deeper material styling.
 
+## First-game controller onboarding and compact editor
+
+- [x] On the first NES game launch with visible virtual controls, offer six original color palettes and a direct transition into drag editing, or keep the current layout. Suppress the prompt after a choice or dismissal.
+- [x] Add Settings → Touch controller appearance → Set up my controller again for re-running the guide on the next game launch.
+- [x] Replace the overlong controller dialog with a compact bottom sheet: drag first, D-pad/A-B/More/Themes tabs, one cluster's compact sliders at a time, preserved reset confirmation and per-orientation persistence.
+- [ ] Confirm onboarding, sheet sizing, drag handoff, theme persistence, external-controller takeover and game-save behavior on a real phone.
+- [ ] Per-button geometry and touch-zone editing remain future enhancements; present layout edits still operate on left and right clusters.
+
 ## M3 source completion checklist
 
 - [x] Keep portrait and landscape controller settings independently persisted
