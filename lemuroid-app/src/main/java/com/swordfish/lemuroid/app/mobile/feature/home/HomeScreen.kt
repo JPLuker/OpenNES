@@ -965,10 +965,11 @@ private fun WikidataLookupSection(
 @Composable
 private fun GameProfileSection(
     game: Game,
+    editing: Boolean,
+    onEditingChange: (Boolean) -> Unit,
     onSave: (String?, Int?, String?, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
 ) {
-    var editing by remember(game.id) { mutableStateOf(false) }
     var genreInput by remember(game.id) { mutableStateOf(game.genre.orEmpty()) }
     var yearInput by remember(game.id) { mutableStateOf(game.releaseYear?.toString().orEmpty()) }
     var descriptionInput by remember(game.id) { mutableStateOf(game.description.orEmpty()) }
@@ -977,8 +978,19 @@ private fun GameProfileSection(
     var invalidYear by remember(game.id) { mutableStateOf(false) }
     val context = LocalContext.current
 
+    LaunchedEffect(editing) {
+        if (editing) {
+            genreInput = game.genre.orEmpty()
+            yearInput = game.releaseYear?.toString().orEmpty()
+            descriptionInput = game.description.orEmpty()
+            saveFailed = false
+            invalidYear = false
+        }
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        game.genre?.takeIf { it.isNotBlank() }?.let {
+        if (!editing) {
+            game.genre?.takeIf { it.isNotBlank() }?.let {
             GameDetailField(stringResource(R.string.opennes_game_genre), it)
         }
         game.releaseYear?.let {
@@ -1008,27 +1020,12 @@ private fun GameProfileSection(
             }
         }
 
-        if (!editing) {
             if (game.genre.isNullOrBlank() && game.releaseYear == null && game.description.isNullOrBlank()) {
                 Text(
                     text = stringResource(R.string.opennes_profile_empty),
                     color = LibraryColors.muted,
                     fontSize = 12.sp,
                 )
-            }
-            OutlinedButton(
-                onClick = {
-                    genreInput = game.genre.orEmpty()
-                    yearInput = game.releaseYear?.toString().orEmpty()
-                    descriptionInput = game.description.orEmpty()
-                    saveFailed = false
-                    invalidYear = false
-                    editing = true
-                },
-                border = BorderStroke(1.dp, LibraryColors.border),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-            ) {
-                Text(stringResource(R.string.opennes_profile_edit))
             }
         } else {
             OutlinedTextField(
@@ -1075,7 +1072,7 @@ private fun GameProfileSection(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
-                    onClick = { editing = false },
+                    onClick = { onEditingChange(false) },
                     enabled = !saving,
                     border = BorderStroke(1.dp, LibraryColors.border),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
@@ -1099,7 +1096,7 @@ private fun GameProfileSection(
                                 if (updated == null) {
                                     saveFailed = true
                                 } else {
-                                    editing = false
+                                    onEditingChange(false)
                                     onGameUpdated(updated)
                                 }
                             }
