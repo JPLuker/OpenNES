@@ -29,8 +29,9 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] NES-styled main, advanced, gamepad and save-sync settings
 - [x] Controller input capture UI with retry/write completion
 - [x] Remove dead bottom navigation, dedicated Favorites page and console/game picker destinations
-- [ ] Audit and simplify first-run ROM-folder onboarding and empty states
+- [x] Audit and simplify first-run ROM-folder onboarding and empty states: folder not selected / active scan / no compatible NES ROMs are distinct, with rescan and change-folder recovery
 - [ ] Remove remaining obsolete Lemuroid views/resources and dead multi-console routing safely
+- [ ] Review ROM import failure reporting and inaccessible-folder errors (currently surfaced as an empty result when scanning cannot read a folder)
 - [ ] Polish accessibility, small screens, system bars, display cutouts and orientation layouts
 - [ ] Verify all interactions on a physical device (paused)
 
