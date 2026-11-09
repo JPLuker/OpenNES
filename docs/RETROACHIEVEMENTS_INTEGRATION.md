@@ -38,6 +38,7 @@
 
 - The project now carries an **upstream LibretroDroid 0.14.0 source submodule**, pinned to commit `8835c3098514390a271e36983957f7bb5f40abf1`, together with its recursive Oboe and libretro-common dependencies. OpenNES uses a single source-built module rather than mixing that native library with its older JitPack AAR.
 - Run `python3 scripts/prepare-libretrodroid-bridge.py` after checkout/submodule update. The script fails closed on a different source revision and applies an idempotent local patch, tracked in OpenNES rather than directly changing the upstream fork. The CI workflow runs the script before lint and compilation.
+- The source preparation also supplies explicit `<functional>` includes in two upstream headers that relied on transitive includes and failed with the current NDK Clang. These are compatibility fixes only.
 - The bridge exposes a lock-protected **copy** of supported core RAM regions and emulated frame count to Java, and installs a native after-`retro_run` observer hook for the future `rc_client_do_frame` call. The observer must run on the native core thread under the lock; it must **not** recursively call the memory-copy JNI method.
 - **This is plumbing, not a working achievement runtime.** There are no native unlock or leaderboard events until the pinned rcheevos runtime is linked and authenticated, then tested on real hardware.
 

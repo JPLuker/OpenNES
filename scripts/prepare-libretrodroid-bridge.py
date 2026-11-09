@@ -35,7 +35,24 @@ def main() -> int:
     header = SRC / "cpp" / "libretrodroid.h"
     jni = SRC / "cpp" / "libretrodroidjni.cpp"
     java = SRC / "java" / "com" / "swordfish" / "libretrodroid" / "LibretroDroid.java"
-    files = {path: path.read_text() for path in (cpp, header, jni, java)}
+    javautils = SRC / "cpp" / "utils" / "javautils.h"
+    rumble = SRC / "cpp" / "rumble.h"
+    files = {path: path.read_text() for path in (cpp, header, jni, java, javautils, rumble)}
+
+    # The pinned v0.14.0 library relied on transitive C++ includes, which
+    # modern Android NDK Clang correctly rejects when building from source.
+    files[javautils] = replace_once(
+        files[javautils],
+        '#include "unordered_map"',
+        '#include <functional>\\n#include "unordered_map"',
+        "javautils.h include",
+    )
+    files[rumble] = replace_once(
+        files[rumble],
+        "#include <array>",
+        "#include <array>\\n#include <functional>",
+        "rumble.h include",
+    )
     h = files[header]
     h = replace_once(
         h, "#include <vector>", "#include <vector>\n#include <functional>\n#include <cstdint>",
