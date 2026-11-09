@@ -30,13 +30,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -248,7 +247,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .background(ComposeColor.Black.copy(alpha = 0.55f)),
+                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.55f)),
             contentAlignment = Alignment.CenterEnd,
         ) {
             val panelWidth =
