@@ -23,6 +23,9 @@ import java.util.zip.ZipInputStream
  */
 object NesRetroAchievementsHash {
     private const val MAX_ROM_BYTES = 64L * 1024L * 1024L
+    // Includes ignored archive members. A malformed ZIP must not make
+    // a pause-menu identification request inflate unlimited data.
+    private const val MAX_ZIP_UNCOMPRESSED_BYTES = 96L * 1024L * 1024L
     private const val MAX_ZIP_ENTRIES = 256
     private val HEX = "0123456789abcdef".toCharArray()
 
@@ -75,23 +78,76 @@ object NesRetroAchievementsHash {
         ZipInputStream(BufferedInputStream(input)).use { archive ->
             var result: Identity? = null
             var count = 0
+            var remainingBudget = MAX_ZIP_UNCOMPRESSED_BYTES
+            val scratch = ByteArray(16 * 1024)
             while (true) {
                 val entry = archive.nextEntry ?: break
                 count++
                 if (count > MAX_ZIP_ENTRIES) throw IOException("NES archive has too many entries")
                 val format = extension(entry.name)
-                if (!entry.isDirectory && (format == "nes" || format == "fds")) {
-                    if (result != null) {
-                        throw IOException("NES archive contains multiple games")
-                    }
-                    if (entry.size > MAX_ROM_BYTES) {
-                        throw IOException("NES archive entry exceeds safe size limit")
-                    }
-                    result = hashRaw(archive, format)
+                val supported = !entry.isDirectory && (format == "nes" || format == "fds")
+                if (supported && result != null) throw IOException("NES archive contains multiple games")
+                if (supported && entry.size > MAX_ROM_BYTES) {
+                    throw IOException("NES archive entry exceeds safe size limit")
                 }
+                if (entry.size > remainingBudget) {
+                    throw IOException("NES archive exceeds safe decompression size")
+                }
+
+                // Hashing or deliberately draining every entry enforces one
+                // aggregate uncompressed-size budget, including ignored files.
+                val bounded = BoundedEntryStream(archive, remainingBudget)
+                if (supported) {
+                    result = hashRaw(bounded, format)
+                } else {
+                    while (true) {
+                        val read = bounded.read(scratch)
+                        if (read < 0) break
+                    }
+                }
+                remainingBudget -= bounded.bytesRead
                 archive.closeEntry()
             }
             return result ?: throw IOException("Archive does not contain a supported NES game")
+        }
+    }
+
+    /**
+     * A non-closing wrapper for one ZIP member; reading one byte past the
+     * configured ceiling raises an error rather than silently truncating
+     * content and producing a misleading ROM hash.
+     */
+    private class BoundedEntryStream(
+        private val delegate: InputStream,
+        private val budget: Long,
+    ) : InputStream() {
+        var bytesRead = 0L
+            private set
+
+        override fun read(): Int {
+            val result = delegate.read()
+            if (result >= 0) {
+                bytesRead++
+                if (bytesRead > budget) throw IOException("NES archive exceeds safe decompression size")
+            }
+            return result
+        }
+
+        override fun read(
+            buffer: ByteArray,
+            offset: Int,
+            length: Int,
+        ): Int {
+            if (length == 0) return 0
+            val remaining = budget - bytesRead
+            // Allow one extra byte to detect overflow at the exact boundary.
+            val allowed = minOf(length.toLong(), remaining + 1L).coerceAtLeast(1L).toInt()
+            val result = delegate.read(buffer, offset, allowed)
+            if (result > 0) {
+                bytesRead += result
+                if (bytesRead > budget) throw IOException("NES archive exceeds safe decompression size")
+            }
+            return result
         }
     }
 
@@ -136,7 +192,16 @@ object NesRetroAchievementsHash {
         while (true) {
             val read = stream.read(buffer)
             if (read < 0) break
-            if (read == 0) continue
+            if (read == 0) {
+                // Some Android content providers legally return zero without
+                // indicating EOF. Read one byte so this loop cannot spin.
+                val value = stream.read()
+                if (value < 0) break
+                payloadBytes++
+                if (payloadBytes > MAX_ROM_BYTES) throw IOException("NES ROM exceeds safe hashing size limit")
+                md5.update(value.toByte())
+                continue
+            }
             payloadBytes += read.toLong()
             if (payloadBytes > MAX_ROM_BYTES) {
                 throw IOException("NES ROM exceeds safe hashing size limit")
