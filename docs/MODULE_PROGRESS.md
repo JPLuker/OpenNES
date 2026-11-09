@@ -36,7 +36,8 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Replace remaining user-visible English references to Lemuroid in loading, save-state, reset and crash messages
 - [ ] Audit remaining legacy resources, TV code and internal identifiers without breaking runtime dependencies or license notices
 - [x] Propagate failed ROM scans instead of reporting success, preflight selected-folder read grants, preserve indexed games on failure, and show recovery actions even when earlier games remain visible (device acceptance still paused)
-- [ ] Polish accessibility, small screens, system bars, display cutouts and orientation layouts
+- [x] Improve narrow-phone and large-text layouts for game-details actions, featured cover and ROM folder recovery buttons; add explicit screen-reader labels for shelf taps and long-press actions (device acceptance paused)
+- [ ] Review additional accessibility paths, system bars, display cutouts and portrait/landscape edge cases
 - [ ] Verify all interactions on a physical device (paused)
 
 ## Latest M2 source batch — ROM import failure protection
@@ -46,6 +47,14 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - The home library displays a recoverable, specific error instead of calling a failed scan an empty collection. Previously indexed shelves remain visible.
 - Re-selecting an existing folder retries permission acquisition. Newly selected folder access is secured before previously granted access is released.
 - **Not accepted on-device:** blocked/revoked folder flows, canceled scans, empty valid folders, successful rescan, and retention of existing saves remain regression scenarios for later verification.
+
+## Latest M2 source batch — compact layouts and accessible actions
+
+- Compact game-details layouts now position the Play/hamburger actions under the game header rather than squeezing them next to narrow text. Normal phone layouts retain the original beside-artwork arrangement.
+- NES box-art proportions remain unchanged; the featured and game-details covers use narrower widths where needed.
+- Shelf covers expose explicit tap-to-details and long-press-for-actions screen-reader labels. The hamburger action label includes the selected game title.
+- ROM scan recovery actions stack vertically when narrow widths or enlarged text make side-by-side buttons cramped.
+- **Implementation only:** no emulator, APK or UI device tests were executed. Next M2 review should focus on insets/cutouts, screen reader focus order, and legacy resources.
 
 ## Development rules
 
