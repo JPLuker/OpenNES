@@ -34,7 +34,7 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | M3 — Premium NES portrait controller skin | **Code-complete (source scope)**: NES housing, D-pad/A/B/Start/Select/Menu, responsive defaults and saved portrait-specific editor; device acceptance deferred |
 | M4 — Dedicated landscape controller skin | **Code-complete (source scope)**: selectable framed/overlay gameplay, minimal appearance, dedicated secondary controls, adaptive sizing, cutout handling and separate settings; on-device acceptance deferred |
 | M5 — Gameplay, saves, input and performance polish | Partly implemented: audio, controller persistence and stuck-input fixes; regression testing pending |
-| M6 — RetroAchievements integration | Not started |
+| M6 — RetroAchievements integration | Native integration started: local NES ROM hashing and LibretroDroid/rc_client technical handoff; sign-in, runtime and unlocks not implemented |
 | M7 — Production releases and maintenance | Debug release pipeline in place; production signing, audits and QA pending |
 
 See the [module progress tracker](docs/MODULE_PROGRESS.md) for the current implementation checklist, M2 code-complete disposition and deferred device acceptance; the [full roadmap](ROADMAP.md) retains original acceptance gates.

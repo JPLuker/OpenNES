@@ -14,7 +14,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 | M3 — Portrait NES controller | **CODE-COMPLETE (source scope; unverified)**: NES D-pad/A/B/Start/Select/Menu, responsive defaults, saved orientation-specific editing, touch hit-region refinements and portrait housing | Build/device acceptance deferred: real NES input, gestures, cutouts, large text, pause and save/resume |
 | M4 — Landscape NES controller | **CODE-COMPLETE (source scope; unverified)**: framed and overlay modes, minimal overlaid controls, NES secondary buttons, independent layout settings, cutout padding and adaptive defaults | Hardware acceptance deferred: gameplay framing, touch boundaries, landscape rotations and external devices |
 | **M5 — Gameplay reliability** | **ACTIVE**: existing audio/input fixes and save infrastructure; now auditing state operation results, lifecycle ownership and errors | Improve save/resume feedback and cancellation handling; audio and device acceptance deferred |
-| M6 — RetroAchievements | Not implemented | Official integration feasibility, hashing, accounts, runtime and progress |
+| **M6 — RetroAchievements** | **ACTIVE — native integration boundary mapped**: local NES/FDS header-aware streaming ROM identification added; native rc_client, core memory/frame bridge, accounts and unlock events not yet implemented | Fork/vendor the LibretroDroid memory/frame API and link the official rcheevos runtime before any achievement claims |
 | M7 — Public release | Development distribution in place | Testing, security/license audit, signing and release docs |
 | M8 — RomM integration (additional planned workstream) | Not implemented | Server authentication, game sync, offline save/conflict design |
 
@@ -66,6 +66,17 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [ ] Review save/resume and foreground-session lifecycle ownership for interrupted games
 - [ ] Guard native video/input operations against late or stale events when possible
 - [ ] **M5 acceptance deferred:** on-device audio/frame pacing, save SRAM and slot versions, pause/resume, gamepad disconnect and process lifecycle
+
+## M6 active source checklist
+
+- [x] Verify FCEUmm is an achievement-compatible Libretro core and identify the official rc_client/native memory requirements
+- [x] Implement bounded, local header-aware NES/FDS/ZIP hashing without uploading ROM bytes
+- [x] Document native LibretroDroid dependency boundary, exact emulated-frame hook and secure account/session requirements
+- [ ] Expose NES emulated memory and per-frame callbacks from the native frontend with Android/JNI-safe ownership
+- [ ] Integrate pinned stable rcheevos/rc_client and authenticated transport
+- [ ] Login/token security, game association, unlock events, achievement lists, progress, rich presence and leaderboard UI
+- [ ] Implement hardcore pause/savestate/cheat constraints and network failure handling
+- [ ] **M6 acceptance deferred:** verify actual RA account logins, supported NES game hashes and real unlocks on approved device/core
 
 ## M2 active checklist
 
