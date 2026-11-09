@@ -30,7 +30,10 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Prevent no-op editor slider release from persisting stale preview settings
 - [x] Enlarge portrait Start/Select touch targets and provide a matching NES-style Menu pill; preserve existing landscape secondary controls and menu-hold behavior
 - [x] Confirm before resetting the current orientation's controller layout; clarify that the editor moves Start/Select/Menu with their assigned clusters
-- [ ] Refine portrait control positioning and visual balance after on-device acceptance resumes
+- [x] Reserve portrait video space against the taller of the D-pad or A/B groups instead of only the left group
+- [x] Add a compact-phone side gutter to generated portrait defaults, accounting for the gutter in default dial sizing; saved layouts remain authoritative
+- [x] Skip zero-size viewport calculations during initial layout or rotation
+- [ ] Review final portrait visual balance and custom-offset edge cases on device (testing paused)
 - [ ] Physically verify multi-touch, diagonals, touch cancellation, save/resume and portrait orientation (testing paused)
 
 ## M2 active checklist
@@ -145,6 +148,13 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - A portrait-only NES-style Menu pill replaces the generic menu icon while retaining `KEYCODE_BUTTON_MODE`, its angular position and the established hold-to-open behavior.
 - The controller editor explains the D-pad/Select and A/B/Start/Menu grouping and now asks for confirmation before resetting current-orientation size, position, opacity and rotation. Saved layout for the other orientation and saved games are unaffected.
 - Changes are source-only; builds, device touch hit region checks and controller acceptance are still paused.
+
+## Latest M3 source batch — portrait balance and viewport protection
+
+- Portrait video and controller faceplate are constrained against the topmost of two independently sized control groups using a Compose top barrier. Enlarging A/B no longer leaves the game region anchored only to D-pad height.
+- Phones at or under 360 dp of unobstructed width receive an 8 dp inset for each default portrait control side, and the generated dial-size calculation accounts for both insets. Saved preferences stay authoritative and landscape is untouched.
+- The viewport does not receive invalid fractions while the root or video region has a zero dimension during initial layout/rotation.
+- Source-only implementation. Controller alignment and video appearance still require device verification after the testing pause.
 
 ## Development rules
 

@@ -74,8 +74,20 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         // flow remains authoritative, including legacy shared scale values.
         val safePortraitWidthDp =
             portraitWidthDp?.minus(horizontalPadding.value * 2f)
+        // A narrow phone benefits from small side gutters. These affect only
+        // generated defaults, never any saved controller configuration.
+        val portraitSideGutterDp =
+            if (
+                orientation == Orientation.PORTRAIT &&
+                safePortraitWidthDp != null &&
+                safePortraitWidthDp <= PORTRAIT_COMPACT_WIDTH_DP
+            ) {
+                PORTRAIT_SIDE_GUTTER_DP
+            } else {
+                0f
+            }
         val portraitScale =
-            safePortraitWidthDp
+            safePortraitWidthDp?.minus(portraitSideGutterDp * 2f)
                 ?.takeIf { it.isFinite() && it > 0f }
                 ?.let { availableWidthDp ->
                     val dialWidthDp = (availableWidthDp - PORTRAIT_HORIZONTAL_RESERVE_DP) / 2f
@@ -92,7 +104,7 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
                         DEFAULT_LANDSCAPE_SCALE
                     },
                 rotation = DEFAULT_ROTATION,
-                marginX = horizontalPadding.value / MAX_MARGINS,
+                marginX = (horizontalPadding.value + portraitSideGutterDp) / MAX_MARGINS,
                 marginY = verticalPadding.value / MAX_MARGINS,
             )
         val settingsKey = getPreferenceString(touchControllerID, orientation)
@@ -177,6 +189,8 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         // compact screens. This controls only generated portrait defaults.
         const val BASE_DIAL_SIZE_DP = 160f
         const val PORTRAIT_HORIZONTAL_RESERVE_DP = 32f
+        const val PORTRAIT_COMPACT_WIDTH_DP = 360f
+        const val PORTRAIT_SIDE_GUTTER_DP = 8f
 
         const val MAX_ROTATION = 45f
         const val MIN_SCALE = 0.75f

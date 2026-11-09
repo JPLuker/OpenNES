@@ -157,7 +157,13 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
 
             LaunchedEffect(fullPos, viewPos) {
                 val gameView = viewModel.retroGameView.retroGameViewFlow()
-                if (fullPos == null || viewPos == null) return@LaunchedEffect
+                if (
+                    fullPos == null || viewPos == null ||
+                    fullPos.width <= 0f || fullPos.height <= 0f ||
+                    viewPos.width <= 0f || viewPos.height <= 0f
+                ) {
+                    return@LaunchedEffect
+                }
                 val viewport =
                     RectF(
                         (viewPos.left - fullPos.left) / fullPos.width,

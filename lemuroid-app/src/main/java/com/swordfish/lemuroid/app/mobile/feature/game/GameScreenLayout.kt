@@ -60,6 +60,8 @@ object GameScreenLayout {
             val bottomContainer = createRefFor(CONSTRAINTS_BOTTOM_CONTAINER)
 
             val gamePadChain = createHorizontalChain(leftPad, rightPad, chainStyle = ChainStyle.SpreadInside)
+            // Use whichever cluster rises higher when left/right scaling differs.
+            val controlsTop = createTopBarrier(leftPad, rightPad)
 
             constrain(gameView) {
                 width = Dimension.fillToConstraints
@@ -67,7 +69,7 @@ object GameScreenLayout {
                 top.linkTo(parent.top)
                 absoluteLeft.linkTo(parent.absoluteLeft)
                 absoluteRight.linkTo(parent.absoluteRight)
-                bottom.linkTo(leftPad.top)
+                bottom.linkTo(controlsTop)
             }
 
             constrain(bottomContainer) {
@@ -75,7 +77,7 @@ object GameScreenLayout {
                 height = Dimension.fillToConstraints
                 absoluteLeft.linkTo(parent.absoluteLeft)
                 absoluteRight.linkTo(parent.absoluteRight)
-                top.linkTo(leftPad.top)
+                top.linkTo(controlsTop)
                 bottom.linkTo(parent.bottom)
             }
 
