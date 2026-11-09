@@ -191,16 +191,29 @@ private fun RomsSettings(
 
     val currentDirectoryName =
         remember(state.currentDirectory) {
-            runCatching {
-                DocumentFile.fromTreeUri(context, Uri.parse(currentDirectory))?.name
-            }.getOrNull() ?: emptyDirectory
+            if (currentDirectory.isBlank()) {
+                emptyDirectory
+            } else {
+                runCatching {
+                    DocumentFile.fromTreeUri(context, Uri.parse(currentDirectory))?.name
+                }.getOrNull() ?: emptyDirectory
+            }
         }
 
     OpenNesSettingsGroup(title = { Text(text = stringResource(id = R.string.roms)) }) {
         OpenNesSettingsLink(
-            title = { Text(text = stringResource(id = R.string.directory)) },
-            subtitle = { Text(text = currentDirectoryName) },
-            onClick = { onChangeFolder() },
+            title = { Text(text = stringResource(R.string.opennes_setup_folder_setting)) },
+            subtitle = {
+                Text(
+                    text =
+                        if (currentDirectory.isBlank()) {
+                            stringResource(R.string.opennes_setup_no_folder_selected)
+                        } else {
+                            currentDirectoryName
+                        },
+                )
+            },
+            onClick = onChangeFolder,
             enabled = !indexingInProgress,
         )
         OpenNesSettingsLink(
@@ -213,9 +226,10 @@ private fun RomsSettings(
                 title = { Text(text = stringResource(id = R.string.stop)) },
                 onClick = { LibraryIndexScheduler.cancelLibrarySync(context) },
             )
-        } else {
+        } else if (currentDirectory.isNotBlank()) {
             OpenNesSettingsLink(
                 title = { Text(text = stringResource(id = R.string.rescan)) },
+                subtitle = { Text(text = stringResource(R.string.opennes_setup_rescan_description)) },
                 onClick = { LibraryIndexScheduler.scheduleLibrarySync(context) },
                 enabled = !indexingInProgress,
             )
