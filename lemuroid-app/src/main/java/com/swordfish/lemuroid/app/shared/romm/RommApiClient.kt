@@ -162,27 +162,24 @@ class RommApiClient {
     }
 
     private fun findNesPlatformIds(connection: RommConnection): Set<Int> {
-        val matching = mutableSetOf<Int>()
-        var offset = 0
-        repeat(10) {
-            val document =
-                getJson(
-                    connection,
-                    listOf("api", "platforms"),
-                    listOf("limit" to "100", "offset" to offset.toString()),
-                )
-            val array = document.optJSONArray("items") ?: document.optJSONArray("platforms")
-                ?: JSONArray()
-            for (index in 0 until array.length()) {
-                val platform = array.optJSONObject(index) ?: continue
-                val slug = platform.optString("slug").lowercase(Locale.ROOT)
-                val fsSlug = platform.optString("fs_slug").lowercase(Locale.ROOT)
-                if (slug in NES_SLUGS || fsSlug in NES_SLUGS) {
-                    platform.optInt("id").takeIf { it > 0 }?.let { matching += it }
-                }
+        // RomM's GET /api/platforms returns a bare JSON array, unlike
+        // the paginated {items, total} response of GET /api/roms.
+        val payload = fetchJsonText(connection, listOf("api", "platforms"))
+        val array =
+            if (payload.trimStart().startsWith("[")) {
+                JSONArray(payload)
+            } else {
+                val page = JSONObject(payload)
+                page.optJSONArray("items") ?: page.optJSONArray("platforms") ?: JSONArray()
             }
-            if (array.length() < 100) return matching
-            offset += array.length()
+        val matching = mutableSetOf<Int>()
+        for (index in 0 until array.length()) {
+            val platform = array.optJSONObject(index) ?: continue
+            val slug = platform.optString("slug").lowercase(Locale.ROOT)
+            val fsSlug = platform.optString("fs_slug").lowercase(Locale.ROOT)
+            if (slug in NES_SLUGS || fsSlug in NES_SLUGS) {
+                platform.optInt("id").takeIf { it > 0 }?.let { matching += it }
+            }
         }
         return matching
     }
@@ -191,7 +188,13 @@ class RommApiClient {
         connection: RommConnection,
         path: List<String>,
         params: List<Pair<String, String>> = emptyList(),
-    ): JSONObject {
+    ): JSONObject = JSONObject(fetchJsonText(connection, path, params))
+
+    private fun fetchJsonText(
+        connection: RommConnection,
+        path: List<String>,
+        params: List<Pair<String, String>> = emptyList(),
+    ): String {
         val url = buildUrl(connection, path, params)
         val request =
             Request.Builder()
@@ -205,11 +208,11 @@ class RommApiClient {
             if (!response.isSuccessful) throw httpError(response.code)
             val body = response.body ?: throw IOException("Empty RomM response")
             val bytes = body.byteStream().use { readBounded(it, MAX_JSON_BYTES) }
-            JSONObject(String(bytes, Charsets.UTF_8))
+            String(bytes, Charsets.UTF_8)
         }
     }
 
-    private fun downloadToTemp(connection: RommConnection, rom: Rom, target: File) {
+    private suspend fun downloadToTemp(connection: RommConnection, rom: Rom, target: File) {
         val request =
             Request.Builder()
                 .url(buildUrl(connection, listOf("api", "roms", rom.id.toString(), "content", rom.fileName)))
