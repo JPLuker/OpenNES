@@ -3,6 +3,7 @@ package com.swordfish.lemuroid.app.mobile.feature.game
 import android.graphics.RectF
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,12 +22,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -61,6 +66,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
+import com.swordfish.lemuroid.app.mobile.shared.compose.controller.NesColorWheelDialog
 import com.swordfish.lemuroid.app.shared.game.BaseGameScreenViewModel
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelTouchControls.Companion.MENU_LOADING_ANIMATION_MILLIS
 import com.swordfish.lemuroid.app.shared.settings.HapticFeedbackMode
@@ -69,6 +76,7 @@ import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalNesControllerPalette
+import com.swordfish.touchinput.radial.NesColorPart
 import com.swordfish.touchinput.radial.NesControllerAppearanceStore
 import com.swordfish.touchinput.radial.NesControllerPresets
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
@@ -486,6 +494,7 @@ private fun MenuEditTouchControls(
     val confirmReset = remember { mutableStateOf(false) }
     val selectedTab = remember { mutableStateOf(0) }
     val secondaryTab = remember { mutableStateOf(0) }
+    val selectedColorPart = remember { mutableStateOf<NesColorPart?>(null) }
     val context = LocalContext.current.applicationContext
     val appearanceStore = remember(context) { NesControllerAppearanceStore(context) }
     val appearance = rememberNesControllerAppearance()
@@ -737,17 +746,57 @@ private fun MenuEditTouchControls(
                     }
                 }
                 else -> {
-                    NesControllerPresets.all.forEach { preset ->
-                        FilterChip(
-                            selected = appearance.preset.id == preset.id,
-                            onClick = { appearanceStore.selectPreset(preset.id) },
-                            label = { Text(preset.title) },
-                        )
+                    // The same real-time rendering as Settings and onboarding.
+                    // Theme and color changes update the running game immediately.
+                    ControllerAppearancePreview(appearance.palette)
+                    NesControllerPresets.all.chunked(2).forEach { presets ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            presets.forEach { preset ->
+                                FilterChip(
+                                    selected = appearance.preset.id == preset.id,
+                                    onClick = { appearanceStore.selectPreset(preset.id) },
+                                    label = { Text(preset.title, maxLines = 2) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
                     }
                     Text(
-                        stringResource(com.swordfish.lemuroid.R.string.opennes_editor_more_colors_hint),
-                        fontSize = 12.sp,
+                        stringResource(com.swordfish.lemuroid.R.string.opennes_editor_color_picker_title),
+                        fontWeight = FontWeight.Bold,
                     )
+                    NesColorPart.values().forEach { part ->
+                        TextButton(
+                            onClick = { selectedColorPart.value = part },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .width(28.dp)
+                                            .heightIn(min = 28.dp)
+                                            .background(appearance.palette.color(part), CircleShape),
+                                )
+                                Text(part.label, modifier = Modifier.weight(1f), maxLines = 2)
+                                Text(
+                                    NesControllerAppearanceStore.toHex(appearance.palette.color(part)),
+                                    fontSize = 11.sp,
+                                )
+                                Icon(
+                                    imageVector = Icons.Outlined.Palette,
+                                    contentDescription = null,
+                                )
+                            }
+                        }
+                    }
                 }
             }
             Text(
@@ -755,6 +804,18 @@ private fun MenuEditTouchControls(
                 fontSize = 11.sp,
             )
         }
+    }
+
+    selectedColorPart.value?.let { part ->
+        NesColorWheelDialog(
+            part = part,
+            initialColor = appearance.palette.color(part),
+            onDismiss = { selectedColorPart.value = null },
+            onApply = { hex ->
+                appearanceStore.setColor(part, hex)
+                selectedColorPart.value = null
+            },
+        )
     }
 
     if (confirmReset.value) {
