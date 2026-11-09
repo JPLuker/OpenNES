@@ -1095,7 +1095,7 @@ private fun GameArtworkGallery(game: Game) {
 }
 
 @Composable
-private fun GameCover(
+fun GameCover(
     game: Game,
     modifier: Modifier = Modifier,
 ) {
