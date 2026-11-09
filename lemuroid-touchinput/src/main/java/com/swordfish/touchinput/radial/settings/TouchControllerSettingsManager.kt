@@ -30,6 +30,9 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val marginX: Float = DEFAULT_MARGIN_X,
         val marginY: Float = DEFAULT_MARGIN_Y,
         val opacity: Float = DEFAULT_OPACITY,
+        // Null retains the inherited controller's overlay decision for
+        // existing installs; a selection in the landscape editor overrides it.
+        val landscapeOverlay: Boolean? = null,
         // Null per-side scale preserves existing saved shared scale on upgrade.
         val leftScale: Float? = null,
         val rightScale: Float? = null,

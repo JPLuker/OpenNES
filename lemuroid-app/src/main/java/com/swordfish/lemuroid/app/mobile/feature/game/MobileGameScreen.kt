@@ -24,6 +24,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -131,6 +132,15 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 currentControllerConfig != null &&
                 touchControlsVisibleState.value
 
+        val landscapeOverlaySelected =
+            touchControllerSettings?.landscapeOverlay ?: currentControllerConfig?.allowTouchOverlay ?: true
+        // Side-panel mode needs enough width for both control clusters
+        // and a readable NES 4:3 gameplay viewport. Small devices fall
+        // back visually to overlay while retaining the saved mode choice.
+        val compactLandscape = isLandscape && maxWidth < 640.dp
+        val allowTouchOverlay =
+            if (compactLandscape) true else landscapeOverlaySelected
+
         // The editing overlay must never outlive the virtual controls.
         // A physical gamepad can become active mid-drag and hide PadKit.
         LaunchedEffect(dragEditMode, showTouchPads) {
@@ -201,7 +211,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 constraintSet =
                     GameScreenLayout.buildConstraintSet(
                         isLandscape,
-                        currentControllerConfig?.allowTouchOverlay ?: true,
+                        allowTouchOverlay,
                         showTouchPads,
                     ),
             ) {
@@ -228,7 +238,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_BOTTOM_CONTAINER),
                                 portrait = true,
                             )
-                        } else if (!currentControllerConfig.allowTouchOverlay) {
+                        } else if (!allowTouchOverlay) {
                             PadContainer(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_LEFT_CONTAINER),
                                 innerEdge = LandscapePanelInnerEdge.RIGHT,
@@ -260,6 +270,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             touchControllerSettings = touchControllerSettings,
                             viewModel = viewModel,
                             isLandscape = isLandscape,
+                            compactLandscape = compactLandscape,
                         )
                     }
                 }
@@ -377,6 +388,7 @@ private fun GameScreenRunningCentralMenu(
     touchControllerSettings: TouchControllerSettingsManager.Settings,
     controllerConfig: ControllerConfig,
     isLandscape: Boolean,
+    compactLandscape: Boolean,
 ) {
     val menuPressed = viewModel.isMenuPressed().collectAsState(false)
     Box(
@@ -388,7 +400,13 @@ private fun GameScreenRunningCentralMenu(
             animationDurationMillis = MENU_LOADING_ANIMATION_MILLIS,
             icon = R.drawable.button_menu,
         )
-        MenuEditTouchControls(viewModel, controllerConfig, touchControllerSettings, isLandscape)
+        MenuEditTouchControls(
+            viewModel,
+            controllerConfig,
+            touchControllerSettings,
+            isLandscape,
+            compactLandscape,
+        )
     }
 }
 
@@ -398,6 +416,7 @@ private fun MenuEditTouchControls(
     controllerConfig: ControllerConfig,
     touchControllerSettings: TouchControllerSettingsManager.Settings,
     isLandscape: Boolean,
+    compactLandscape: Boolean,
 ) {
     val showEditControls = viewModel.isEditControlShown().collectAsState(false)
     val confirmReset = remember { mutableStateOf(false) }
@@ -434,6 +453,39 @@ private fun MenuEditTouchControls(
                     text = stringResource(com.swordfish.lemuroid.R.string.opennes_controls_editor_hint),
                     fontSize = 12.sp,
                 )
+                if (isLandscape) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_side_panels),
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_side_panels_description),
+                                fontSize = 12.sp,
+                            )
+                        }
+                        Switch(
+                            checked = !(touchControllerSettings.landscapeOverlay ?: controllerConfig.allowTouchOverlay),
+                            onCheckedChange = { checked ->
+                                viewModel.updateTouchControllerSettings(
+                                    touchControllerSettings.copy(landscapeOverlay = !checked),
+                                )
+                            },
+                        )
+                    }
+                    if (compactLandscape && touchControllerSettings.landscapeOverlay == false) {
+                        Text(
+                            text = stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback),
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
                 TextButton(onClick = { viewModel.setDragEditMode(true) }) {
                     Text(stringResource(com.swordfish.lemuroid.R.string.opennes_controls_drag_start))
                 }
