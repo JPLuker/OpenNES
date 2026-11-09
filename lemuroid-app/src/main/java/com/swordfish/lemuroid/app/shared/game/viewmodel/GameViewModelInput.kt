@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onCompletion
@@ -60,9 +59,26 @@ class GameViewModelInput(
 ) : DefaultLifecycleObserver {
     private data class SingleAxisEvent(val axis: Int, val action: Int, val keyCode: Int, val port: Int)
 
+    // Original Android input objects may be recycled once Activity dispatch
+    // ends, before these async flows finish consuming them.
+    private data class GamePadKeyEvent(
+        val device: InputDevice,
+        val action: Int,
+        val keyCode: Int,
+        val repeatCount: Int,
+    )
+
+    private data class GamePadMotionEvent(
+        val device: InputDevice,
+        val source: Int,
+        val axisValues: Map<Int, Float>,
+    ) {
+        fun getAxisValue(axis: Int): Float = axisValues[axis] ?: 0f
+    }
+
     private val controllerConfigsState = MutableStateFlow<Map<Int, ControllerConfig>>(mapOf())
-    private val keyEventsFlow: MutableSharedFlow<KeyEvent?> = MutableSharedFlow()
-    private val motionEventsFlow: MutableSharedFlow<MotionEvent> = MutableSharedFlow()
+    private val keyEventsFlow: MutableSharedFlow<GamePadKeyEvent> = MutableSharedFlow()
+    private val motionEventsFlow: MutableSharedFlow<GamePadMotionEvent> = MutableSharedFlow()
 
     fun getAllTiltConfigurations(): List<TiltConfiguration> {
         return controllerConfigsState.value[0]
@@ -75,7 +91,7 @@ class GameViewModelInput(
     }
 
     private fun sendStickMotions(
-        event: MotionEvent,
+        event: GamePadMotionEvent,
         port: Int,
     ) {
         if (port < 0) return
@@ -91,7 +107,7 @@ class GameViewModelInput(
     }
 
     private fun sendMergedMotionEvents(
-        event: MotionEvent,
+        event: GamePadMotionEvent,
         port: Int,
     ) {
         val events =
@@ -116,7 +132,7 @@ class GameViewModelInput(
     }
 
     private fun sendStickMotion(
-        event: MotionEvent,
+        event: GamePadMotionEvent,
         source: Int,
         xAxis: Int,
         yAxis: Int,
@@ -127,7 +143,7 @@ class GameViewModelInput(
     }
 
     private fun sendDPADMotion(
-        event: MotionEvent,
+        event: GamePadMotionEvent,
         source: Int,
         xAxis: Int,
         yAxis: Int,
@@ -142,7 +158,7 @@ class GameViewModelInput(
     }
 
     private fun sendSeparateMotionEvents(
-        event: MotionEvent,
+        event: GamePadMotionEvent,
         port: Int,
     ) {
         sendDPADMotion(
@@ -169,7 +185,7 @@ class GameViewModelInput(
     }
 
     private fun retrieveCoordinates(
-        event: MotionEvent,
+        event: GamePadMotionEvent,
         xAxis: Int,
         yAxis: Int,
     ): PointF {
@@ -180,18 +196,36 @@ class GameViewModelInput(
         keyCode: Int,
         event: KeyEvent,
     ): Boolean {
-        if (InputKey(keyCode) in event.device.getInputClass().getInputKeys()) {
-            scope.launch {
-                keyEventsFlow.emit(event)
-            }
-            return true
+        val device = event.device ?: return false
+        if (InputKey(keyCode) !in device.getInputClass().getInputKeys()) return false
+        val snapshot = GamePadKeyEvent(device, event.action, keyCode, event.repeatCount)
+        scope.launch {
+            keyEventsFlow.emit(snapshot)
         }
-        return false
+        return true
     }
 
     fun sendMotionEvent(event: MotionEvent): Boolean {
+        // Non-joystick generic motions should continue to Activity dispatch.
+        if (!event.isFromSource(InputDevice.SOURCE_JOYSTICK)) return false
+        val device = event.device ?: return false
+        // Never retain MotionEvent across a coroutine suspension: Android may
+        // recycle it while either of our two flow collectors is still active.
+        val axes =
+            (
+                device.getInputClass().getAxesMap().keys +
+                    listOf(
+                        MotionEvent.AXIS_HAT_X,
+                        MotionEvent.AXIS_HAT_Y,
+                        MotionEvent.AXIS_X,
+                        MotionEvent.AXIS_Y,
+                        MotionEvent.AXIS_Z,
+                        MotionEvent.AXIS_RZ,
+                    )
+            ).distinct().associateWith { axis -> event.getAxisValue(axis) }
+        val snapshot = GamePadMotionEvent(device, event.source, axes)
         scope.launch {
-            motionEventsFlow.emit(event)
+            motionEventsFlow.emit(snapshot)
         }
         return true
     }
@@ -283,7 +317,6 @@ class GameViewModelInput(
 
         val filteredKeyEvents =
             keyEventsFlow
-                .filterNotNull()
                 .filter { it.repeatCount == 0 }
                 .map { Triple(it.device, it.action, it.keyCode) }
                 .distinctUntilChanged()
