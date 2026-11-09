@@ -39,6 +39,16 @@ object NesAutoMetadataScheduler {
         )
     }
 
+    /** Catch up on existing ROMs after app upgrade without stacking launch jobs. */
+    fun ensureScheduled(context: Context) {
+        if (!enabled(context)) return
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            WORK_ID,
+            ExistingWorkPolicy.KEEP,
+            request(),
+        )
+    }
+
     private fun request() =
         OneTimeWorkRequestBuilder<NesAutoMetadataWork>()
             .setConstraints(
