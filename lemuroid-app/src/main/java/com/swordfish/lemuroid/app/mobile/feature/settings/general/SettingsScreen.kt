@@ -2,28 +2,28 @@ package com.swordfish.lemuroid.app.mobile.feature.settings.general
 
 import android.net.Uri
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.NavController
-import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
 import com.swordfish.lemuroid.app.mobile.feature.main.navigateToRoute
-import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
-import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsLink
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSlider
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSwitch
+import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.utils.android.settings.booleanPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.indexPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.intPreferenceState
 import com.swordfish.lemuroid.app.utils.android.stringListResource
+import com.swordfish.lemuroid.R
 
 @Composable
 fun SettingsScreen(
