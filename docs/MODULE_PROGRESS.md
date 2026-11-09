@@ -2,7 +2,7 @@
 
 Updated: 2026-11-09
 
-This tracker records **implementation**, not test acceptance. At Joseph's request, interactive/device testing and deliberate build verification are paused while development continues. Pushing to `master` can still trigger GitHub Actions automatically; a source commit is not proof of a working APK.
+This tracker records **implementation**, not test acceptance. M0–M5 are being prepared for final device testing; source stabilization changes are not hardware-accepted until the exact candidate passes CI and the manual test matrix in [M5 final-testing handoff](M5_FINAL_TESTING.md). M6–M8 remain unaccepted. Pushing to `master` can still trigger GitHub Actions automatically; a source commit is not proof of a working APK.
 
 ## Milestones
 
@@ -75,6 +75,15 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Select overlay mode when the combined custom control widths would leave less than the minimum reserved gameplay area
 - [ ] **M4 acceptance deferred:** review extreme aspect ratios, safe touch zones, immersive mode and external gamepad transitions
 - [ ] **M4 acceptance deferred:** rotate and play NES titles with touch/hardware controllers on real devices
+
+## M5 final-testing freeze candidate
+
+- [x] Propagate save RAM and state-write failures rather than suppressing unsuccessful disk writes.
+- [x] Reject empty serialized state data and preserve coroutine cancellation through retry helpers.
+- [x] Log absent background capture instead of silently returning.
+- [ ] Confirm **build, Kotlin lint and NES-only APK inspection** for the final candidate commit.
+- [ ] Execute and accept the manual [M0–M5 final-testing matrix](M5_FINAL_TESTING.md) on a real phone.
+- [ ] Resolve P0/P1 issues identified by acceptance before calling M5 complete.
 
 ## M5 active source checklist
 

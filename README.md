@@ -2,7 +2,7 @@
 
 **A dedicated, open-source NES emulator for Android — built around a premium touchscreen controller and a clean, mobile-first interface.**
 
-[Development roadmap](ROADMAP.md) · [Module progress](docs/MODULE_PROGRESS.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
+[Development roadmap](ROADMAP.md) · [Module progress](docs/MODULE_PROGRESS.md) · [M5 final-testing checklist](docs/M5_FINAL_TESTING.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
 
 > **Early development:** The last verified development APK was approximately **32.7 MB**, down from a 222 MB multi-console baseline. It packages the FCEUmm NES core, and the home shelf, game details, search, pause and major settings screens now use OpenNES-specific UI. Portrait and landscape controller layouts exist but still need substantial polish. RetroAchievements is not implemented. **Device testing and deliberate build verification are currently paused**; new source commits must not be mistaken for verified releases.
 

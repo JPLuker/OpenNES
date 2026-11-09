@@ -39,6 +39,10 @@ Look in `lemuroid-app/build/outputs/apk/freeBundle/debug/` for an `.apk`. The `f
 
 The current debug package ID is `com.jpluker.opennes.debug`. **Do not install the old upstream Lemuroid release APK and assume it is OpenNES.**
 
+## M5 final-testing protocol
+
+For a complete M0–M5 freeze checklist, use [M5 final-testing handoff](M5_FINAL_TESTING.md). Only test the exact source commit after CI has passed build, lint and APK inspection. Preserve existing game saves before upgrading. This is not a production release.
+
 ## Install and smoke test
 
 To install an APK directly:
