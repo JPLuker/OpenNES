@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
+import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.lib.library.SystemID
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
@@ -236,13 +237,7 @@ class HomeViewModel(
                         }
                         val dao = retrogradeDb.gameDao()
                         val old = dao.selectById(gameId) ?: return@runCatching null
-                        val canFill =
-                            (old.genre.isNullOrBlank() && !candidate.genre.isNullOrBlank()) ||
-                                (old.releaseYear == null && candidate.releaseYear != null) ||
-                                (old.description.isNullOrBlank() && !candidate.description.isNullOrBlank()) ||
-                                (old.wikidataEntityId != null &&
-                                    old.wikipediaArticleTitle == null &&
-                                    candidate.wikipediaArticleTitle != null)
+                        val canFill = old.needsOnlineMetadata(candidate)
                         if (!canFill) return@runCatching null
 
                         val changed =
@@ -339,19 +334,7 @@ class HomeViewModel(
                                     is WikidataNesMetadataSource.Result.Match -> {
                                         // Re-read now; skip fields filled during the HTTP call.
                                         val latest = dao.selectById(game.id)
-                                        val canFill =
-                                            latest != null &&
-                                                (
-                                                    (latest.genre.isNullOrBlank() && !result.genre.isNullOrBlank()) ||
-                                                        (latest.releaseYear == null && result.releaseYear != null) ||
-                                                        (
-                                                            latest.description.isNullOrBlank() &&
-                                                                !result.description.isNullOrBlank()
-                                                        ) ||
-                                                    (latest.wikidataEntityId != null &&
-                                                        latest.wikipediaArticleTitle == null &&
-                                                        result.wikipediaArticleTitle != null)
-                                                )
+                                        val canFill = latest?.needsOnlineMetadata(result) == true
                                         if (canFill) {
                                             dao.fillMissingOnlineGameInfo(
                                                 gameId = game.id,
