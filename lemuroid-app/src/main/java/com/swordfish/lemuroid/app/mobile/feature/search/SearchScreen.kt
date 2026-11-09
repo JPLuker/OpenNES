@@ -145,8 +145,11 @@ private fun SearchGameRow(
         border = BorderStroke(1.dp, SearchColors.border),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().combinedClickable(onClick = onPlay, onLongClick = onMore)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(onClick = onPlay, onLongClick = onMore)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -182,13 +185,14 @@ private fun SearchGameRow(
             IconButton(onClick = onFavorite) {
                 Icon(
                     imageVector = if (game.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = stringResource(
-                        if (game.isFavorite) {
-                            R.string.game_context_menu_remove_from_favorites
-                        } else {
-                            R.string.game_context_menu_add_to_favorites
-                        },
-                    ),
+                    contentDescription =
+                        stringResource(
+                            if (game.isFavorite) {
+                                R.string.game_context_menu_remove_from_favorites
+                            } else {
+                                R.string.game_context_menu_add_to_favorites
+                            },
+                        ),
                     tint = if (game.isFavorite) SearchColors.red else SearchColors.muted,
                 )
             }
