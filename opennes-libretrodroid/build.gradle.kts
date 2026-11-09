@@ -44,3 +44,16 @@ android {
 dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
 }
+
+/*
+ * Upstream LibretroDroid Kotlin sources are immutable at the pinned commit
+ * and use their own historical formatting. Validate our Gradle script, but
+ * do not reformat third-party Kotlin from inside its submodule.
+ * All first-party OpenNES Kotlin continues to be checked by CI.
+ */
+tasks.matching {
+    it.name == "runKtlintCheckOverMainSourceSet" ||
+        it.name == "ktlintMainSourceSetCheck"
+}.configureEach {
+    enabled = false
+}
