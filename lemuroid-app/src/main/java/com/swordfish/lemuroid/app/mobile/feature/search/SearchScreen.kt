@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.swordfish.lemuroid.R
-import com.swordfish.lemuroid.app.mobile.feature.home.GameCover
+import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 
 /** NES-only library search, sharing the artwork and visual language of OpenNES Home. */
@@ -153,7 +153,7 @@ private fun SearchGameRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            GameCover(game = game, modifier = Modifier.width(64.dp))
+            NesBoxArtwork(game = game, modifier = Modifier.width(66.dp))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(5.dp),
