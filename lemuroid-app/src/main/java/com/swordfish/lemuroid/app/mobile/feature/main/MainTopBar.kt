@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.swordfish.lemuroid.R
@@ -187,15 +189,16 @@ private fun OpenNesSearchView(
                     .fillMaxSize()
                     .focusRequester(focusRequester),
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFFF2EDE6)),
-            placeholder = { Text("Search NES games", color = Color(0xFFB2B2B4)) },
+            placeholder = { Text(stringResource(R.string.opennes_search_field_hint), color = Color(0xFFB2B2B4)) },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFB2B2B4))
             },
             onValueChange = { onUpdateQueryString(it) },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions =
                 KeyboardActions(
-                    onDone = { focusManager.clearFocus(true) },
+                    onSearch = { focusManager.clearFocus() },
                 ),
             colors =
                 TextFieldDefaults.colors(
