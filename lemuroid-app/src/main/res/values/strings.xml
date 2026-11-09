@@ -133,6 +133,7 @@
     <string name="game_menu_change_disk_button">Change Disk</string>
     <string name="game_menu_edit_touch_controls">Edit Controls</string>
     <string name="game_menu_mute_audio">Mute</string>
+    <string name="opennes_pause_game_audio">Game audio</string>
     <string name="game_menu_fast_forward">Fast-Forward</string>
     <string name="game_menu_change_disk_disk">Disk %1$s</string>
     <string name="game_menu_tilt_sensor">Tilt Sensor</string>
@@ -386,29 +387,4 @@
     <string name="opennes_controls_drag_sliders">Fine-tune</string>
     <string name="opennes_controls_reset_confirm_title">Reset this controller layout?</string>
     <string name="opennes_controls_reset_confirm_description">This resets sizes, positions, opacity and rotation for the current orientation. Your other orientation and saved games are not affected.</string>
-    <string name="opennes_romm_title">RomM library</string>
-    <string name="opennes_romm_settings_description">Connect a RomM server and import NES games into your existing ROM folder</string>
-    <string name="opennes_romm_explanation">Use a read-only RomM Client API Token with me.read, platforms.read and roms.read. A secure HTTPS URL is required. Files stay local after import.</string>
-    <string name="opennes_romm_server">RomM server URL (https://…/)</string>
-    <string name="opennes_romm_token">RomM client token</string>
-    <string name="opennes_romm_connect">Connect</string>
-    <string name="opennes_romm_disconnect">Disconnect</string>
-    <string name="opennes_romm_check">Check connection</string>
-    <string name="opennes_romm_browse">Browse NES games</string>
-    <string name="opennes_romm_more">Next page</string>
-    <string name="opennes_romm_import">Import</string>
-    <string name="opennes_romm_imported">Imported %1$s. Library scan queued.</string>
-    <string name="opennes_romm_connected">Server configured: %1$s</string>
-    <string name="opennes_romm_verified">Authenticated as %1$s</string>
-    <string name="opennes_romm_no_roms">No importable NES files were found on this page.</string>
-    <string name="opennes_romm_results">NES library · %1$d available on server</string>
-    <string name="opennes_romm_import_note">Import stores a new file in your selected OpenNES NES ROM folder. Existing files and game saves are not overwritten.</string>
-    <string name="opennes_romm_action_busy">Working: %1$s</string>
-    <string name="opennes_romm_no_folder">Select a writable ROM folder in OpenNES settings before importing games.</string>
-    <string name="opennes_romm_view_saves">Saves</string>
-    <string name="opennes_romm_save_backups_for">RomM saves · %1$s</string>
-    <string name="opennes_romm_save_backups_note">Optional assets.read scope required. Exporting makes a separate backup document. It never replaces OpenNES live save data.</string>
-    <string name="opennes_romm_no_saves">No RomM saves found for this game.</string>
-    <string name="opennes_romm_export_save">Export backup</string>
-    <string name="opennes_romm_save_exported">RomM save backup exported. OpenNES save data was not changed.</string>
 </resources>
