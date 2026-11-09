@@ -62,7 +62,7 @@
     <string name="settings_bios_category_not_detected">Supported</string>
 
     <string name="settings_title_reset_settings">Factory reset</string>
-    <string name="settings_description_reset_settings">Reset Lemuroid to its factory settings</string>
+    <string name="settings_description_reset_settings">Reset OpenNES preferences and controller settings</string>
 
     <string name="settings_title_advanced_settings">Advanced settings</string>
     <string name="settings_description_advanced_settings">Display advanced settings</string>
@@ -73,7 +73,7 @@
     <string name="settings_description_nes_stable_audio">Request a 60 Hz display mode when available. May improve sound stability on high-refresh-rate phones. Restart the game to apply.</string>
 
     <string name="settings_title_direct_game_load">Direct game load</string>
-    <string name="settings_description_direct_game_load">(Experimental) Reduce loading time and cache usage on supported consoles.</string>
+    <string name="settings_description_direct_game_load">(Experimental) Reduce game loading time and temporary storage use when supported.</string>
 
     <string name="settings_title_enable_rumble">Rumble</string>
     <string name="settings_description_enable_rumble">Enable rumble in supported games and controllers</string>
@@ -82,7 +82,7 @@
     <string name="settings_description_enable_device_rumble">When no controller is connected vibrate the device instead</string>
 
     <string name="reset_settings_warning_message_title">Are you sure?</string>
-    <string name="reset_settings_warning_message_description">This will reset Lemuroid to its factory settings. Saves and States will be preserved.</string>
+    <string name="reset_settings_warning_message_description">This resets OpenNES preferences, including selected folders and controller settings. Your existing game saves and save states will be preserved.</string>
 
     <string name="settings_title_save_sync">Cloud saves</string>
     <string name="settings_description_save_sync">Back up and Sync your saves on the cloud</string>
@@ -94,7 +94,7 @@
     <string name="settings_save_sync_include_saves">Sync in-game saves</string>
     <string name="settings_save_sync_include_saves_description">%1$s on device</string>
     <string name="settings_save_sync_include_states">Sync states</string>
-    <string name="settings_save_sync_include_states_description">More convenient, but heavier and less reliable. Choose which cores/systems you want to sync</string>
+    <string name="settings_save_sync_include_states_description">Choose whether to include FCEUmm NES save states. Syncing states can be slower and less reliable than syncing in-game saves.</string>
 
     <string name="game_context_menu_add_to_favorites">Add to favorites</string>
     <string name="game_context_menu_remove_from_favorites">Remove from favorites</string>
@@ -109,7 +109,7 @@
     <string name="game_context_menu_custom_name_dialog_title">Set custom name</string>
 
     <string name="home_notification_title">Enable notifications</string>
-    <string name="home_notification_message">OpenNES can notify you when a background library operation finishes.</string>
+    <string name="home_notification_message">OpenNES can show notifications while games or library operations are running in the background.</string>
     <string name="home_notification_action">Enable</string>
 
     <string name="home_microphone_title">Enable microphone</string>
@@ -163,15 +163,15 @@
     <string name="game_running_notification_message">Make sure to save your progress</string>
 
     <string name="game_loader_error_gl_incompatible">This Core requires an OpenGL ES version which is not supported by your device.</string>
-    <string name="game_loader_error_load_game">Something bad happened while loading your game. Make sure the ROM is supported by Lemuroid and rescan your games.</string>
-    <string name="game_loader_error_save">Something bad happened with your save file. If the issue persists, try disabling auto-save.</string>
+    <string name="game_loader_error_load_game">Could not load this NES game. Verify that your ROM is supported, then rescan your game folder.</string>
+    <string name="game_loader_error_save">Could not load the saved game. Check your save data and try disabling auto-save.</string>
     <string name="game_loader_error_unsupported_architecture">This Core is not supported by your device.</string>
 
-    <string name="game_loader_error_generic">Something bad happened. Try the following:\n
+    <string name="game_loader_error_generic">OpenNES could not start this game. Try the following:\n
         \n\u2022 Disable auto-save and re-run the game
         \n\u2022 Go into Android settings and clear the app cache
-        \n\u2022 Go into Lemuroid settings and perform a Factory Reset
-        \n\nIf none of the above works, it might be possible that this Game/Core is not supported by this device.
+        \n\u2022 Open OpenNES settings and review advanced troubleshooting options
+        \n\nIf the problem continues, this game or emulator core might not be supported by your device.
     </string>
 
     <string name="game_loader_error_missing_bios">It looks like you\'re missing the required BIOS, put them in your ROMs directory and rescan. Required files: %1$s</string>
@@ -213,7 +213,7 @@
     <string name="mobile_settings_support">Support</string>
     <string name="lemuroid_help_content"><![CDATA[
         <b>Adding NES games</b><br/>
-        Open Settings, select your ROM directory, then run a library rescan. OpenNES discovers .nes ROM files and compatible archives in subfolders.<br/><br/>
+        On first launch, choose the folder containing your NES ROMs. OpenNES scans the folder and its subfolders; if nothing is found, choose Rescan or Change folder on the home screen.<br/><br/>
         <b>Missing games or artwork</b><br/>
         Check the ROM filename and file format. Use Library maintenance to refresh missing details, or set a custom cover from a game\'s detail sheet.<br/><br/>
         <b>Controls and saves</b><br/>
@@ -223,11 +223,11 @@
     <string name="lemuroid_crash_disclamer">It looks like the Libretro core has experienced an unexpected issue. If it\'s persistent please try the following:\n
         \n\u2022 Disable auto-save and re-run the game
         \n\u2022 Go into Android settings and clear the app cache
-        \n\u2022 Go into Lemuroid settings and perform a Factory Reset
-        \n\n If none of the above works, it might be possible that this Game/Core is not supported by this device.
+        \n\u2022 Open OpenNES settings and review advanced troubleshooting options
+        \n\n If the problem continues, this game or emulator core might not be supported by your device.
     </string>
 
-    <string name="error_message_incompatible_state">This save state is not compatible with the current core version. Please load the latest in-game save or use a previous Lemuroid version.</string>
+    <string name="error_message_incompatible_state">This save state is not compatible with the current NES core version. Try loading an in-game save, or restore a compatible save-state backup.</string>
 
     <string name="shader_filter_names_auto">Auto</string>
     <string name="shader_filter_names_sharp">Sharp</string>
