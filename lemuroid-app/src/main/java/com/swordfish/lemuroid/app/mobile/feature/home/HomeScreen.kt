@@ -569,214 +569,214 @@ private fun GameDetailsSheet(
                         .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                verticalAlignment = Alignment.Top,
-            ) {
-                NesBoxArtwork(game, Modifier.width(110.dp))
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    verticalAlignment = Alignment.Top,
                 ) {
-                    Text(
-                        text = stringResource(R.string.opennes_system_nes),
-                        color = LibraryColors.red,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        letterSpacing = 1.sp,
-                    )
-                    Text(
-                        text = game.displayName(),
-                        color = LibraryColors.foreground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 21.sp,
-                        maxLines = 4,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = playTimeLabel(game),
-                        color = LibraryColors.muted,
-                        fontSize = 13.sp,
-                    )
-                }
-            }
-
-            game.developer?.takeIf { it.isNotBlank() }?.let {
-                GameDetailField(
-                    label = stringResource(R.string.opennes_game_developer),
-                    value = it,
-                )
-            }
-
-            GameProfileSection(
-                game = game,
-                onSave = onSaveProfile,
-                onGameUpdated = onGameUpdated,
-            )
-
-            WikidataLookupSection(
-                game = game,
-                onLookup = onLookupOnline,
-                onApply = onApplyOnline,
-                onGameUpdated = onGameUpdated,
-            )
-
-            game.lastPlayedAt?.let { lastPlayed ->
-                val date =
-                    DateUtils.getRelativeTimeSpanString(
-                        lastPlayed,
-                        System.currentTimeMillis(),
-                        DateUtils.MINUTE_IN_MILLIS,
-                    ).toString()
-                GameDetailField(
-                    label = stringResource(R.string.opennes_game_last_played),
-                    value = date,
-                )
-            }
-
-            GameDetailField(
-                label = stringResource(R.string.opennes_game_rom_file),
-                value = game.fileName,
-            )
-
-            GameArtworkGallery(game)
-
-            OutlinedButton(
-                onClick = { searchExpanded = !searchExpanded },
-                border = BorderStroke(1.dp, LibraryColors.border),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-            ) {
-                Text(stringResource(R.string.opennes_find_game_info))
-            }
-
-            if (searchExpanded) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = {
-                            searchText = it
-                            searched = false
-                        },
-                        label = { Text(stringResource(R.string.opennes_search_game_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Button(
-                        onClick = {
-                            searching = true
-                            searched = false
-                            onSearchMetadata(searchText) { matches ->
-                                searchResults = matches
-                                searched = true
-                                searching = false
-                            }
-                        },
-                        enabled = !searching && searchText.trim().length >= 3,
-                        colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                    NesBoxArtwork(game, Modifier.width(110.dp))
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(stringResource(R.string.opennes_search_catalogue))
-                    }
-                    if (searched && searchResults.isEmpty()) {
                         Text(
-                            text = stringResource(R.string.opennes_no_catalog_matches),
+                            text = stringResource(R.string.opennes_system_nes),
+                            color = LibraryColors.red,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            letterSpacing = 1.sp,
+                        )
+                        Text(
+                            text = game.displayName(),
+                            color = LibraryColors.foreground,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 21.sp,
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = playTimeLabel(game),
                             color = LibraryColors.muted,
                             fontSize = 13.sp,
                         )
                     }
-                    if (matchFailed) {
-                        Text(
-                            text = stringResource(R.string.opennes_metadata_update_failed),
-                            color = LibraryColors.red,
-                            fontSize = 13.sp,
-                        )
-                    }
-                    searchResults.forEach { match ->
-                        Row(
+                }
+
+                game.developer?.takeIf { it.isNotBlank() }?.let {
+                    GameDetailField(
+                        label = stringResource(R.string.opennes_game_developer),
+                        value = it,
+                    )
+                }
+
+                GameProfileSection(
+                    game = game,
+                    onSave = onSaveProfile,
+                    onGameUpdated = onGameUpdated,
+                )
+
+                WikidataLookupSection(
+                    game = game,
+                    onLookup = onLookupOnline,
+                    onApply = onApplyOnline,
+                    onGameUpdated = onGameUpdated,
+                )
+
+                game.lastPlayedAt?.let { lastPlayed ->
+                    val date =
+                        DateUtils.getRelativeTimeSpanString(
+                            lastPlayed,
+                            System.currentTimeMillis(),
+                            DateUtils.MINUTE_IN_MILLIS,
+                        ).toString()
+                    GameDetailField(
+                        label = stringResource(R.string.opennes_game_last_played),
+                        value = date,
+                    )
+                }
+
+                GameDetailField(
+                    label = stringResource(R.string.opennes_game_rom_file),
+                    value = game.fileName,
+                )
+
+                GameArtworkGallery(game)
+
+                OutlinedButton(
+                    onClick = { searchExpanded = !searchExpanded },
+                    border = BorderStroke(1.dp, LibraryColors.border),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                ) {
+                    Text(stringResource(R.string.opennes_find_game_info))
+                }
+
+                if (searchExpanded) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(
+                            value = searchText,
+                            onValueChange = {
+                                searchText = it
+                                searched = false
+                            },
+                            label = { Text(stringResource(R.string.opennes_search_game_hint)) },
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = match.name.orEmpty(),
-                                    color = LibraryColors.foreground,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                )
-                                match.developer?.takeIf { it.isNotBlank() }?.let {
-                                    Text(text = it, color = LibraryColors.muted, fontSize = 12.sp)
+                        )
+                        Button(
+                            onClick = {
+                                searching = true
+                                searched = false
+                                onSearchMetadata(searchText) { matches ->
+                                    searchResults = matches
+                                    searched = true
+                                    searching = false
                                 }
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    applying = true
-                                    matchFailed = false
-                                    onApplyMetadata(match) { updated ->
-                                        applying = false
-                                        if (updated == null) {
-                                            matchFailed = true
-                                        } else {
-                                            searchExpanded = false
-                                            onGameUpdated(updated)
-                                        }
-                                    }
-                                },
-                                enabled = !applying,
-                                border = BorderStroke(1.dp, LibraryColors.border),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                            },
+                            enabled = !searching && searchText.trim().length >= 3,
+                            colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                        ) {
+                            Text(stringResource(R.string.opennes_search_catalogue))
+                        }
+                        if (searched && searchResults.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.opennes_no_catalog_matches),
+                                color = LibraryColors.muted,
+                                fontSize = 13.sp,
+                            )
+                        }
+                        if (matchFailed) {
+                            Text(
+                                text = stringResource(R.string.opennes_metadata_update_failed),
+                                color = LibraryColors.red,
+                                fontSize = 13.sp,
+                            )
+                        }
+                        searchResults.forEach { match ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(stringResource(R.string.opennes_use_catalog_match))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = match.name.orEmpty(),
+                                        color = LibraryColors.foreground,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                    )
+                                    match.developer?.takeIf { it.isNotBlank() }?.let {
+                                        Text(text = it, color = LibraryColors.muted, fontSize = 12.sp)
+                                    }
+                                }
+                                OutlinedButton(
+                                    onClick = {
+                                        applying = true
+                                        matchFailed = false
+                                        onApplyMetadata(match) { updated ->
+                                            applying = false
+                                            if (updated == null) {
+                                                matchFailed = true
+                                            } else {
+                                                searchExpanded = false
+                                                onGameUpdated(updated)
+                                            }
+                                        }
+                                    },
+                                    enabled = !applying,
+                                    border = BorderStroke(1.dp, LibraryColors.border),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                                ) {
+                                    Text(stringResource(R.string.opennes_use_catalog_match))
+                                }
                             }
                         }
                     }
                 }
+
+                Text(
+                    text = stringResource(R.string.opennes_achievements_future),
+                    color = LibraryColors.muted,
+                    fontSize = 12.sp,
+                )
+
             }
 
-            Text(
-                text = stringResource(R.string.opennes_achievements_future),
-                color = LibraryColors.muted,
-                fontSize = 12.sp,
+            Spacer(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(LibraryColors.border),
             )
 
-        }
-
-        Spacer(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(LibraryColors.border),
-        )
-
-        // Persistent actions: still visible when the game has a long summary.
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Button(
-                onClick = onPlay,
-                modifier = Modifier.weight(1f),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = LibraryColors.red,
-                        contentColor = LibraryColors.foreground,
-                    ),
+            // Persistent actions: still visible when the game has a long summary.
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 18.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                Text(stringResource(R.string.opennes_play))
+                Button(
+                    onClick = onPlay,
+                    modifier = Modifier.weight(1f),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = LibraryColors.red,
+                            contentColor = LibraryColors.foreground,
+                        ),
+                ) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Text(stringResource(R.string.opennes_play))
+                }
+                OutlinedButton(
+                    onClick = onMore,
+                    border = BorderStroke(1.dp, LibraryColors.border),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                ) {
+                    Text(stringResource(R.string.opennes_game_more))
+                }
             }
-            OutlinedButton(
-                onClick = onMore,
-                border = BorderStroke(1.dp, LibraryColors.border),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-            ) {
-                Text(stringResource(R.string.opennes_game_more))
-            }
-        }
         }
     }
 }
