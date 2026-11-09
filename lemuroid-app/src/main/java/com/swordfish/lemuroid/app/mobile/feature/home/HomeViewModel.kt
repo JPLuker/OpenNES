@@ -6,10 +6,11 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
-import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
+import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
@@ -67,6 +68,7 @@ class HomeViewModel(
         val indexInProgress: Boolean = true,
         val scanInProgress: Boolean = false,
         val hasRomDirectory: Boolean = false,
+        val scanError: String? = null,
         val showNoNotificationPermissionCard: Boolean = false,
         val showNoGamesCard: Boolean = false,
     )
@@ -426,6 +428,7 @@ class HomeViewModel(
         indexInProgress: Boolean,
         scanInProgress: Boolean,
         hasRomDirectory: Boolean,
+        scanError: String?,
         notificationsPermissionEnabled: Boolean,
     ): UIState {
         val noGames = recentGames.isEmpty() && favoritesGames.isEmpty() && discoveryGames.isEmpty()
@@ -437,6 +440,7 @@ class HomeViewModel(
             indexInProgress = indexInProgress,
             scanInProgress = scanInProgress,
             hasRomDirectory = hasRomDirectory,
+            scanError = scanError,
             // First-run setup is more important than the optional notification prompt.
             showNoNotificationPermissionCard = !notificationsPermissionEnabled && !noGames,
             showNoGamesCard = noGames,
@@ -462,12 +466,17 @@ class HomeViewModel(
                 FlowSharedPreferences(SharedPreferencesHelper.getLegacySharedPreferences(appContext))
                     .getString(folderKey)
                     .asFlow()
+            val scanErrorFlow =
+                FlowSharedPreferences(LibraryScanStatus.preferences(appContext))
+                    .getString(LibraryScanStatus.ERROR_KEY)
+                    .asFlow()
             val setupState =
                 combine(
                     folderFlow,
                     notificationsPermissionEnabledState,
-                ) { directory, notificationsEnabled ->
-                    directory.isNotBlank() to notificationsEnabled
+                    scanErrorFlow,
+                ) { directory, notificationsEnabled, scanError ->
+                    Triple(directory.isNotBlank(), notificationsEnabled, scanError.takeIf { it.isNotBlank() })
                 }
 
             val uiStatesFlow =
@@ -485,6 +494,7 @@ class HomeViewModel(
                         indexInProgress = work.first,
                         scanInProgress = work.second,
                         hasRomDirectory = setup.first,
+                        scanError = setup.third,
                         notificationsPermissionEnabled = setup.second,
                     )
                 }
