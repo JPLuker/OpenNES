@@ -51,6 +51,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.gamemenu.achievements.GameMenuAchievementsScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.states.GameMenuStatesScreen
@@ -268,6 +269,9 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                                 onResult { putExtra(GameMenuContract.RESULT_LOAD, it) }
                             },
                         )
+                    }
+                    composable(GameMenuRoute.ACHIEVEMENTS) {
+                        GameMenuAchievementsScreen(gameMenuRequest.game)
                     }
                     composable(GameMenuRoute.OPTIONS) {
                         GameMenuCoreOptionsScreen(

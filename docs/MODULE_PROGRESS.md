@@ -123,7 +123,8 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [ ] Expose NES emulated memory and per-frame callbacks from the native frontend with Android/JNI-safe ownership
 - [ ] Integrate pinned stable rcheevos/rc_client and authenticated transport
 - [ ] Login/token security, game association, unlock events, achievement lists, progress, rich presence and leaderboard UI
-- [ ] Add a Steam-inspired **Achievements** entry directly to the in-game pause/menu UI: show the current game's achievements, unlocked/locked status, progress and descriptions in a browsable panel without leaving gameplay. Keep this distinct from optional unlock popups; use OpenNES-original UI rather than copying Steam assets. No fake unlock/progress data; render signed-in, unavailable and no-match states honestly.
+- [x] Add a Steam-inspired **Achievements** entry directly to the in-game pause menu, linking to an OpenNES-native current-game screen with honest runtime status and local ROM identification.
+- [ ] Once native rc_client integration exists, populate verified achievement descriptions, locked/unlocked state, completion progress and points. Distinguish unavailable/no-match/signed-in statuses; never fabricate unlocks or points.
 - [ ] Implement hardcore pause/savestate/cheat constraints and network failure handling
 - [ ] **M6 acceptance deferred:** verify actual RA account logins, supported NES game hashes and real unlocks on approved device/core
 

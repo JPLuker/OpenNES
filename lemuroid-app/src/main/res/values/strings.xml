@@ -454,4 +454,16 @@
     <string name="opennes_setup_custom_colors">Customize controller colors</string>
     <string name="opennes_setup_color_hint">Choose a controller part to edit. Each color can be adjusted with the wheel or HEX.</string>
     <string name="opennes_controller_colors_wheel_hint">Tap a color swatch to open the wheel, or type a HEX value.</string>
+    <string name="opennes_ra_menu_title">Achievements</string>
+    <string name="opennes_ra_menu_subtitle">RetroAchievements</string>
+    <string name="opennes_ra_game_label">CURRENT GAME</string>
+    <string name="opennes_ra_runtime_unavailable">Not connected</string>
+    <string name="opennes_ra_runtime_explanation">RetroAchievements unlocks and account sessions are not available yet. This screen will show the current game’s achievements once the native runtime is integrated.</string>
+    <string name="opennes_ra_no_progress">No unlock count, points or completion percentage is shown until verified achievement data is available.</string>
+    <string name="opennes_ra_rom_identification">Game identification</string>
+    <string name="opennes_ra_identifying">Identifying local ROM…</string>
+    <string name="opennes_ra_identity_unavailable">This ROM cannot be identified locally.</string>
+    <string name="opennes_ra_identified">%1$s ROM fingerprint ready</string>
+    <string name="opennes_ra_md5_label">Local MD5 fingerprint (long-press to copy)</string>
+    <string name="opennes_ra_local_hash_notice">Calculated on your device. No ROM bytes, accounts or achievements are uploaded by this screen. A fingerprint alone does not confirm RetroAchievements support.</string>
 </resources>
