@@ -82,6 +82,7 @@ class GameViewModelTouchControls(
         density: Density,
         insets: WindowInsets,
         portraitWidthDp: Float? = null,
+        landscapeHeightDp: Float? = null,
     ): Flow<TouchControllerSettingsManager.Settings?> {
         return combine(
             touchControlId,
@@ -94,6 +95,7 @@ class GameViewModelTouchControls(
                     density,
                     insets,
                     portraitWidthDp,
+                    landscapeHeightDp,
                 )
             }
     }

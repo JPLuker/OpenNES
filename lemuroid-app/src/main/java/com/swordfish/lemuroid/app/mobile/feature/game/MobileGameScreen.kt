@@ -99,9 +99,15 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         val density = LocalDensity.current
         val cutoutInsets = WindowInsets.displayCutout
         val portraitWidthDp = if (isLandscape) null else maxWidth.value
+        val landscapeHeightDp = if (isLandscape) maxHeight.value else null
         val touchSettingsFlow =
-            remember(viewModel, density, cutoutInsets, portraitWidthDp) {
-                viewModel.getTouchControlsSettings(density, cutoutInsets, portraitWidthDp)
+            remember(viewModel, density, cutoutInsets, portraitWidthDp, landscapeHeightDp) {
+                viewModel.getTouchControlsSettings(
+                    density,
+                    cutoutInsets,
+                    portraitWidthDp,
+                    landscapeHeightDp,
+                )
             }
         val touchControllerSettingsState = touchSettingsFlow.collectAsState(null)
 
@@ -138,7 +144,25 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         // Side-panel mode needs enough width for both control clusters
         // and a readable NES 4:3 gameplay viewport. Small devices fall
         // back visually to overlay while retaining the saved mode choice.
-        val compactLandscape = isLandscape && maxWidth < 640.dp
+        val dialWidthDp = TouchControllerSettingsManager.BASE_DIAL_SIZE_DP
+        val minScale = TouchControllerSettingsManager.MIN_SCALE
+        val scaleSpan = TouchControllerSettingsManager.MAX_SCALE - minScale
+        val leftDialWidth =
+            dialWidthDp * (
+                minScale + scaleSpan *
+                    (touchControllerSettings?.leftScale ?: touchControllerSettings?.scale ?: 0f).coerceIn(0f, 1f)
+            )
+        val rightDialWidth =
+            dialWidthDp * (
+                minScale + scaleSpan *
+                    (touchControllerSettings?.rightScale ?: touchControllerSettings?.scale ?: 0f).coerceIn(0f, 1f)
+            )
+        val minimumSidePanelWidth =
+            TouchControllerSettingsManager.LANDSCAPE_MIN_GAME_WIDTH_DP +
+                TouchControllerSettingsManager.LANDSCAPE_HORIZONTAL_RESERVE_DP +
+                leftDialWidth + rightDialWidth
+        val compactLandscape =
+            isLandscape && maxWidth.value < maxOf(640f, minimumSidePanelWidth)
         val allowTouchOverlay =
             if (compactLandscape) true else landscapeOverlaySelected
 

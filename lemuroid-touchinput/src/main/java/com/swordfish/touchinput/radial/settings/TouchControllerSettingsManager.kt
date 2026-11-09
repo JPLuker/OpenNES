@@ -67,6 +67,7 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         density: Density,
         insets: WindowInsets,
         portraitWidthDp: Float? = null,
+        landscapeHeightDp: Float? = null,
     ): Flow<Settings> {
         val paddings = computeInsetsPaddings(density, insets)
         val horizontalPadding =
@@ -100,13 +101,27 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
                         (dialWidthDp / BASE_DIAL_SIZE_DP - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)
                     rawScale.coerceIn(0f, DEFAULT_PORTRAIT_SCALE)
                 } ?: DEFAULT_PORTRAIT_SCALE
+        // A short landscape display cannot fit the original large
+        // radial clusters plus secondary buttons. Scale only the generated
+        // default; a stored layout is never silently reduced or replaced.
+        val safeLandscapeHeightDp =
+            landscapeHeightDp?.minus(paddings.calculateTopPadding().value + verticalPadding.value)
+        val landscapeScale =
+            safeLandscapeHeightDp
+                ?.takeIf { it.isFinite() && it > 0f }
+                ?.let { availableHeightDp ->
+                    val dialHeightDp = availableHeightDp - LANDSCAPE_VERTICAL_RESERVE_DP
+                    val rawScale =
+                        (dialHeightDp / BASE_DIAL_SIZE_DP - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)
+                    rawScale.coerceIn(0f, DEFAULT_LANDSCAPE_SCALE)
+                } ?: DEFAULT_LANDSCAPE_SCALE
         val defaultSettings =
             Settings(
                 scale =
                     if (orientation == Orientation.PORTRAIT) {
                         portraitScale
                     } else {
-                        DEFAULT_LANDSCAPE_SCALE
+                        landscapeScale
                     },
                 rotation = DEFAULT_ROTATION,
                 marginX = (horizontalPadding.value + portraitSideGutterDp) / MAX_MARGINS,
@@ -196,6 +211,9 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         const val PORTRAIT_HORIZONTAL_RESERVE_DP = 32f
         const val PORTRAIT_COMPACT_WIDTH_DP = 360f
         const val PORTRAIT_SIDE_GUTTER_DP = 8f
+        const val LANDSCAPE_VERTICAL_RESERVE_DP = 64f
+        const val LANDSCAPE_MIN_GAME_WIDTH_DP = 240f
+        const val LANDSCAPE_HORIZONTAL_RESERVE_DP = 48f
 
         const val MAX_ROTATION = 45f
         const val MIN_SCALE = 0.75f
