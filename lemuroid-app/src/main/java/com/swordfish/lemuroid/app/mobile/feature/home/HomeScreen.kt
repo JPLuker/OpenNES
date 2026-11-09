@@ -773,7 +773,6 @@ private fun GameDetailsSheet(
                     fontSize = 12.sp,
                 )
             }
-
         }
     }
 }
