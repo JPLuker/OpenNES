@@ -13,11 +13,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,7 +54,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -372,29 +376,25 @@ private fun LibraryHeader(
     }
 }
 
+/**
+ * Featured selection sits on the same visual shelf as the collection.
+ * No giant rounded recommendation card or duplicate artwork title footer.
+ */
 @Composable
 private fun FeaturedGame(
     game: Game,
     onGameClick: (Game) -> Unit,
 ) {
-    Surface(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-        color = LibraryColors.panel,
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, LibraryColors.border),
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Bottom,
         ) {
-            GameCover(game = game, modifier = Modifier.width(112.dp))
+            NesBoxArtwork(game = game, modifier = Modifier.width(124.dp))
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp),
             ) {
                 Text(
                     text = stringResource(R.string.opennes_continue),
@@ -408,7 +408,7 @@ private fun FeaturedGame(
                     color = LibraryColors.foreground,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
-                    maxLines = 3,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
@@ -421,7 +421,7 @@ private fun FeaturedGame(
                         text = description,
                         color = LibraryColors.muted,
                         fontSize = 12.sp,
-                        maxLines = 3,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -438,6 +438,7 @@ private fun FeaturedGame(
                 }
             }
         }
+        NesShelfRail()
     }
 }
 
@@ -450,7 +451,7 @@ private fun GameShelf(
 ) {
     if (games.isEmpty()) return
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
             modifier = Modifier.padding(horizontal = 20.dp),
@@ -462,7 +463,8 @@ private fun GameShelf(
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            verticalAlignment = Alignment.Bottom,
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 4.dp),
         ) {
             items(games, key = { it.id }) { game ->
                 ShelfGame(
@@ -472,17 +474,31 @@ private fun GameShelf(
                 )
             }
         }
-
-        // A recessed strip gives the row a shelf-like visual anchor.
-        Spacer(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(3.dp)
-                    .background(LibraryColors.border, RoundedCornerShape(3.dp)),
-        )
+        NesShelfRail()
     }
+}
+
+/** A subtle charcoal ledge grounds the cases without framing them as cards. */
+@Composable
+private fun NesShelfRail() {
+    Spacer(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(7.dp)
+                .background(
+                    brush =
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF646871),
+                                Color(0xFF383C45),
+                                Color(0xFF1A1C22),
+                            ),
+                        ),
+                    shape = RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp),
+                ),
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -492,43 +508,18 @@ private fun ShelfGame(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    Surface(
-        color = LibraryColors.surface,
-        shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(1.dp, LibraryColors.border),
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .width(148.dp)
-                    .combinedClickable(
-                        onClick = onClick,
-                        onLongClick = onLongClick,
-                    ),
-        ) {
-            GameCover(game = game, modifier = Modifier.fillMaxWidth())
-            Column(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = game.displayName(),
-                    maxLines = 2,
-                    minLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = LibraryColors.foreground,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                )
-                Text(
-                    text = playTimeLabel(game),
-                    color = LibraryColors.muted,
-                    maxLines = 2,
-                    fontSize = 11.sp,
-                )
-            }
-        }
-    }
+    // Box art is the game card. A tap opens the profile; a long press shows
+    // actions. Titles and playtime remain available in the game detail sheet.
+    NesBoxArtwork(
+        game = game,
+        modifier =
+            Modifier
+                .width(128.dp)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                ),
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -570,7 +561,7 @@ private fun GameDetailsSheet(
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
                 verticalAlignment = Alignment.Top,
             ) {
-                GameCover(game, Modifier.width(110.dp))
+                NesBoxArtwork(game, Modifier.width(110.dp))
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1085,6 +1076,41 @@ private fun GameArtworkGallery(game: Game) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Authentic front-facing NES cardboard case: approximately 5 x 7.125 in.
+ * A thin edge and low shadow suggest the original carton; no cropped art,
+ * rounded app cards, title overlays or fake Nintendo marks.
+ */
+@Composable
+fun NesBoxArtwork(
+    game: Game,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .aspectRatio(NES_BOX_ART_ASPECT_RATIO)
+                .shadow(6.dp, RoundedCornerShape(1.dp))
+                .background(Color(0xFF15171B))
+                .border(1.dp, Color(0xFF55545A), RoundedCornerShape(1.dp)),
+    ) {
+        GameCover(game = game, modifier = Modifier.fillMaxSize())
+        // The folded box edge remains subtle and never conceals the cover.
+        Spacer(
+            modifier =
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .fillMaxHeight()
+                    .width(2.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(Color.Black.copy(alpha = 0.32f), Color.Transparent),
+                        ),
+                    ),
+        )
     }
 }
 
