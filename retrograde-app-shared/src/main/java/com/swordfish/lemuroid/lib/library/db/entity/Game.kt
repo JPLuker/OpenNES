@@ -24,8 +24,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.io.Serializable
 import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
+import java.io.Serializable
 
 @Entity(
     tableName = "games",
