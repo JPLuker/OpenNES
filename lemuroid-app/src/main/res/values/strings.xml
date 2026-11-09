@@ -254,6 +254,9 @@
     <string name="opennes_library_subtitle">An entire era, one shelf at a time.</string>
     <string name="opennes_continue">CONTINUE PLAYING</string>
     <string name="opennes_pause_label">PAUSED</string>
+    <string name="opennes_no_gamepads">No gamepad detected. Connect a Bluetooth or USB controller to configure its buttons.</string>
+    <string name="opennes_reset_bindings_title">Reset controller bindings?</string>
+    <string name="opennes_reset_bindings_description">This restores all custom controller button mappings to their defaults.</string>
     <string name="opennes_pause_audio_on">On</string>
     <string name="opennes_pause_audio_off">Off</string>
     <string name="opennes_pause_fast_on">On</string>
