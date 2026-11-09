@@ -458,14 +458,14 @@
     <string name="opennes_ra_menu_subtitle">RetroAchievements</string>
     <string name="opennes_ra_game_label">CURRENT GAME</string>
     <string name="opennes_ra_runtime_unavailable">Not connected</string>
-    <string name="opennes_ra_runtime_explanation">RetroAchievements unlocks and account sessions are not available yet. This screen will show the current game’s achievements once the native runtime is integrated.</string>
+    <string name="opennes_ra_runtime_explanation">Native emulator sign-in and automatic achievement unlocks are not available yet. Optional website progress shown below is view-only and cannot award new achievements.</string>
     <string name="opennes_ra_no_progress">No unlock count, points or completion percentage is shown until verified achievement data is available.</string>
     <string name="opennes_ra_rom_identification">Game identification</string>
     <string name="opennes_ra_identifying">Identifying local ROM…</string>
     <string name="opennes_ra_identity_unavailable">This ROM cannot be identified locally.</string>
     <string name="opennes_ra_identified">%1$s ROM fingerprint ready</string>
     <string name="opennes_ra_md5_label">Local MD5 fingerprint (long-press to copy)</string>
-    <string name="opennes_ra_local_hash_notice">Calculated on your device. No ROM bytes, accounts or achievements are uploaded by this screen. A fingerprint alone does not confirm RetroAchievements support.</string>
+    <string name="opennes_ra_local_hash_notice">This fingerprint is calculated on your device. No ROM bytes are uploaded. If you explicitly request website progress, OpenNES sends your web API key and username over HTTPS to RetroAchievements. A fingerprint alone does not confirm support.</string>
     <string name="opennes_ra_runtime_ready">Achievements connected</string>
     <string name="opennes_ra_runtime_connecting">Connecting to RetroAchievements</string>
     <string name="opennes_ra_runtime_no_match">Game not recognized</string>
