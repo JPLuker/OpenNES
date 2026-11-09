@@ -14,3 +14,8 @@ Branch: `release/m5-candidate` created from the M5 gameplay reliability mileston
 - Hardware acceptance still requires ROM loading, audio, 60Hz pacing, touch controls, D-pad diagonals, SRAM, save-state round-trip, pause/resume, rotation, keyboard and gamepad tests.
 - The candidate receives an isolated prerelease tag `m5-preview`. It does not overwrite `dev-latest` or change the newer `master` branch.
 - Do not claim verified compatibility until the Android APK can be installed and exercised on a real device.
+
+## Controller visual rework (requested after M5 device testing)
+- Removed inherited square backplates from NES cross and face buttons.
+- A+B composite input remains, with the redundant overlapping composite artwork hidden.
+- Layout and input IDs remain unchanged. Build/device visual verification pending.

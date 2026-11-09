@@ -41,6 +41,8 @@ fun PadKitScope.NESLeft(
                 id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
                 allowDiagonals = true,
                 expandedTouchArea = true,
+                // Remove the inherited square backplate, not the hit target.
+                background = {},
                 foreground = { NesCrossForeground(directionState = it) },
             )
         },
@@ -66,6 +68,8 @@ fun PadKitScope.NESRight(
                 includeComposite = true,
                 trackPointers = true,
                 applyPadding = false,
+                background = {},
+                showCompositeForeground = false,
                 ids =
                     persistentListOf(
                         Id.Key(KeyEvent.KEYCODE_BUTTON_A),
