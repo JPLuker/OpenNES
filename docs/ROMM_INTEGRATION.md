@@ -13,8 +13,8 @@
 
 - NES/Famicom and FDS platform slugs only. Remote files are offered only for supported `.nes`, `.fds` and `.zip` formats. No direct writes to the RomM server.
 - Every download must be requested explicitly by the player. The client streams into a temporary bounded app cache file first, optionally checks the server-provided MD5, then adds a **new** document to the OpenNES-selected ROM tree. Existing same-name files are never overwritten, and local game saves and state files are not touched.
-- A successful import schedules ordinary library indexing. Downloading never automatically launches a ROM.
-- Optional `assets.read` scope enables a manual **Saves → Export backup** workflow for the selected remote NES game. The downloaded save is staged, size-bounded and exported through the Android Save As picker. It never touches live OpenNES save RAM or states. Automatic save synchronization or conflict merging remains **not implemented** and must never silently replace local progress.
+- Downloads are validated before import: .nes files require an iNES header, ZIPs require exactly one compatible ROM and are checked for dangerous paths, oversized expansion and entry count. A successful import schedules ordinary library indexing. Downloading never automatically launches a ROM.
+- Optional `assets.read` scope enables a manual **Saves → Export backup** workflow for the selected remote NES game. The downloaded save is staged, size-bounded, compared to RomM's raw MD5 or ZIP content hash when available, and exported through the Android Save As picker. It never touches live OpenNES save RAM or states. Automatic save synchronization or conflict merging remains **not implemented** and must never silently replace local progress.
 
 ## API references
 

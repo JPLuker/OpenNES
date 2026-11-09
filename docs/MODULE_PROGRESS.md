@@ -98,6 +98,7 @@ This tracker records **implementation**, not test acceptance. At Joseph's reques
 - [x] Provide Settings → RomM library UI with Connect, Check, Disconnect, Browse, Next page and per-ROM Import
 - [ ] Validate against a real RomM server's OpenAPI schema and acceptance permissions
 - [x] Add optional RomM save listing (assets.read scope) and per-save manual SAF backup export without writing to live OpenNES saves
+- [x] Reject malformed/multi-ROM ZIP imports and cap decompressed archive data; verify RomM's actual MD5 and sorted-entry ZIP save content hashes before backup export
 - [ ] Add two-way save sync only with explicit conflict resolution and independently versioned backups
 - [ ] **M8 acceptance deferred:** TLS/proxy, offline/revoked tokens, interrupted downloads and real ROM imports on-device
 
@@ -317,6 +318,12 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - RomM's current saves API supplies a bare per-ROM `SaveSchema` list, with `GET /api/saves/{id}/content` gated by the optional `assets.read` scope. The OpenNES RomM screen exposes per-ROM Saves and a manual Export backup action.
 - Save backups download to bounded app cache (16 MiB maximum), optionally check a 64-hex SHA-256 content hash, then write to a document chosen explicitly in Android's system Save As picker. They are never imported into SRAM, save states or local game files automatically.
 - This is manual backup/export, **not automatic or bidirectional sync**. The user must reconcile saves manually; no server or device testing was run.
+
+## M8 source batch — verified archives and RomM save hashes
+
+- Added a local verifier that rejects malformed NES files, oversized/multi-ROM ZIP archives and unsafe ZIP member paths before a RomM import can create any local document. ZIP expansion is capped at 64MiB across at most 256 entries.
+- Corrected RomM save backup integrity validation against upstream code: raw files use MD5, ZIP saves hash sorted `entry-name:entry-MD5` records via MD5, and future 64-hex SHA-256 hashes are checked as full-file digests. All validation happens before writing the backup document; ZIP save expansion is capped at 16MiB.
+- The verifier is source-only, uncompiled and untested. Unsupported archive formats fail safely and neither live saves nor existing ROMs are overwritten.
 
 ## Development rules
 

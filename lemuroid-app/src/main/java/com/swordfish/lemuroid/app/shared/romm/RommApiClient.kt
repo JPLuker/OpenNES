@@ -182,7 +182,6 @@ class RommApiClient {
                     throw IOException("RomM save exceeds supported backup size")
                 }
                 var total = 0L
-                val digest = MessageDigest.getInstance("SHA-256")
                 body.byteStream().use { input ->
                     temporary.outputStream().use { output ->
                         val buffer = ByteArray(16 * 1024)
@@ -195,23 +194,12 @@ class RommApiClient {
                             if (total > MAX_SAVE_BYTES) {
                                 throw IOException("RomM save exceeds supported backup size")
                             }
-                            digest.update(buffer, 0, count)
                             output.write(buffer, 0, count)
                         }
                     }
                 }
                 if (total == 0L) throw IOException("RomM returned an empty save")
-                val knownSha256 = save.contentHash
-                    ?.lowercase(Locale.ROOT)
-                    ?.takeIf { it.matches(Regex("[a-f0-9]{64}")) }
-                if (knownSha256 != null) {
-                    val actual = digest.digest().joinToString("") {
-                        (it.toInt() and 0xFF).toString(16).padStart(2, '0')
-                    }
-                    if (actual != knownSha256) {
-                        throw IOException("RomM save content hash mismatch")
-                    }
-                }
+                RommDownloadVerification.checkRemoteSaveHash(temporary, save.contentHash)
             }
             coroutineContext.ensureActive()
             val output = context.contentResolver.openOutputStream(destination, "w")
@@ -260,6 +248,7 @@ class RommApiClient {
         val temporary = File.createTempFile("opennes-romm-", ".part", context.cacheDir)
         try {
             downloadToTemp(connection, rom, temporary)
+            RommDownloadVerification.checkImportedRom(temporary, rom.fileName)
             coroutineContext.ensureActive()
             if (folder.findFile(rom.fileName) != null) {
                 throw IOException("The local ROM appeared during download; import cancelled")
