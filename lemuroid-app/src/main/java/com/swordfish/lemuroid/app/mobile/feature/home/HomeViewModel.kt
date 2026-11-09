@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
+import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
@@ -19,12 +20,14 @@ import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
 import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
+import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOn
@@ -62,6 +65,8 @@ class HomeViewModel(
         val recentGames: List<Game> = emptyList(),
         val discoveryGames: List<Game> = emptyList(),
         val indexInProgress: Boolean = true,
+        val scanInProgress: Boolean = false,
+        val hasRomDirectory: Boolean = false,
         val showNoNotificationPermissionCard: Boolean = false,
         val showNoGamesCard: Boolean = false,
     )
@@ -419,6 +424,8 @@ class HomeViewModel(
         recentGames: List<Game>,
         discoveryGames: List<Game>,
         indexInProgress: Boolean,
+        scanInProgress: Boolean,
+        hasRomDirectory: Boolean,
         notificationsPermissionEnabled: Boolean,
     ): UIState {
         val noGames = recentGames.isEmpty() && favoritesGames.isEmpty() && discoveryGames.isEmpty()
@@ -428,22 +435,59 @@ class HomeViewModel(
             recentGames = recentGames,
             discoveryGames = discoveryGames,
             indexInProgress = indexInProgress,
-            showNoNotificationPermissionCard = !notificationsPermissionEnabled,
+            scanInProgress = scanInProgress,
+            hasRomDirectory = hasRomDirectory,
+            // First-run setup is more important than the optional notification prompt.
+            showNoNotificationPermissionCard = !notificationsPermissionEnabled && !noGames,
             showNoGamesCard = noGames,
         )
     }
 
     init {
         viewModelScope.launch {
+            val operationsMonitor = PendingOperationsMonitor(appContext)
+            val workState =
+                combine(
+                    operationsMonitor.anyLibraryOperationInProgress(),
+                    operationsMonitor.isDirectoryScanInProgress(),
+                ) { indexing, scanning ->
+                    indexing to scanning
+                }
+
+            // The picker writes this legacy preference. Observing it ensures
+            // returning from Android's document picker refreshes onboarding
+            // immediately, even when the user cancels selection.
+            val folderKey = appContext.getString(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
+            val folderFlow =
+                FlowSharedPreferences(SharedPreferencesHelper.getLegacySharedPreferences(appContext))
+                    .getString(folderKey)
+                    .asFlow()
+            val setupState =
+                combine(
+                    folderFlow,
+                    notificationsPermissionEnabledState,
+                ) { directory, notificationsEnabled ->
+                    directory.isNotBlank() to notificationsEnabled
+                }
+
             val uiStatesFlow =
                 combine(
                     favoritesGames(retrogradeDb),
                     recentGames(retrogradeDb),
                     discoveryGames(retrogradeDb),
-                    indexingInProgress(appContext),
-                    notificationsPermissionEnabledState,
-                    ::buildViewState,
-                )
+                    workState,
+                    setupState,
+                ) { favorites, recent, discovery, work, setup ->
+                    buildViewState(
+                        favoritesGames = favorites,
+                        recentGames = recent,
+                        discoveryGames = discovery,
+                        indexInProgress = work.first,
+                        scanInProgress = work.second,
+                        hasRomDirectory = setup.first,
+                        notificationsPermissionEnabled = setup.second,
+                    )
+                }
 
             uiStatesFlow
                 .debounce(DEBOUNCE_TIME)
@@ -456,9 +500,6 @@ class HomeViewModel(
                 }
         }
     }
-
-    private fun indexingInProgress(appContext: Context) =
-        PendingOperationsMonitor(appContext).anyLibraryOperationInProgress()
 
     private fun discoveryGames(retrogradeDb: RetrogradeDatabase) =
         retrogradeDb.gameDao().selectFirstNotPlayed(CAROUSEL_MAX_ITEMS)
