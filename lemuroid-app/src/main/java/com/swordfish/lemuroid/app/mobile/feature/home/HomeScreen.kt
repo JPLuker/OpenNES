@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -43,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -598,6 +601,35 @@ private fun GameDetailsSheet(
                             color = LibraryColors.muted,
                             fontSize = 13.sp,
                         )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Button(
+                                onClick = onPlay,
+                                modifier = Modifier.weight(1f),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = LibraryColors.red,
+                                        contentColor = LibraryColors.foreground,
+                                    ),
+                            ) {
+                                Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                                Text(stringResource(R.string.opennes_play))
+                            }
+                            OutlinedIconButton(
+                                onClick = onMore,
+                                modifier = Modifier.size(48.dp),
+                                border = BorderStroke(1.dp, LibraryColors.border),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Menu,
+                                    contentDescription = stringResource(R.string.opennes_game_more),
+                                    tint = LibraryColors.foreground,
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -742,43 +774,6 @@ private fun GameDetailsSheet(
                 )
             }
 
-            Spacer(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(LibraryColors.border),
-            )
-
-            // Persistent actions: still visible when the game has a long summary.
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 18.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Button(
-                    onClick = onPlay,
-                    modifier = Modifier.weight(1f),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = LibraryColors.red,
-                            contentColor = LibraryColors.foreground,
-                        ),
-                ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Text(stringResource(R.string.opennes_play))
-                }
-                OutlinedButton(
-                    onClick = onMore,
-                    border = BorderStroke(1.dp, LibraryColors.border),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
-                ) {
-                    Text(stringResource(R.string.opennes_game_more))
-                }
-            }
         }
     }
 }
