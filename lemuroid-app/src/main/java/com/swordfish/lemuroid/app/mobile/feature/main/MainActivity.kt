@@ -54,7 +54,6 @@ import com.swordfish.lemuroid.app.shared.main.BusyActivity
 import com.swordfish.lemuroid.app.shared.main.GameLaunchTaskHandler
 import com.swordfish.lemuroid.app.shared.settings.SettingsInteractor
 import com.swordfish.lemuroid.common.coroutines.safeLaunch
-import com.swordfish.lemuroid.ext.feature.review.ReviewManager
 import com.swordfish.lemuroid.lib.android.RetrogradeComponentActivity
 import com.swordfish.lemuroid.lib.injection.PerActivity
 import com.swordfish.lemuroid.lib.library.covers.CustomCoverManager
@@ -93,8 +92,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
     @Inject
     lateinit var inputDeviceManager: InputDeviceManager
 
-    private val reviewManager = ReviewManager()
-
     private val mainViewModel: MainViewModel by viewModels {
         MainViewModel.Factory(applicationContext, saveSyncManager)
     }
@@ -105,10 +102,6 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             SystemBarStyle.dark(Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
-
-        GlobalScope.safeLaunch {
-            reviewManager.initialize(applicationContext)
-        }
 
         setContent {
             val navController = rememberNavController()
