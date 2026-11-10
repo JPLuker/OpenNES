@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,12 +34,15 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
+import com.swordfish.lemuroid.app.shared.romm.RommPendingSyncJournal
+import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncPlanner
 import com.swordfish.lemuroid.app.shared.romm.RommVersionedSaveBackupStore
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
  * Optional RomM NES-only remote library. Never imports automatically.
@@ -50,6 +54,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     val store = remember(context) { RommConnectionStore(context) }
     val client = remember { RommApiClient() }
     val scope = rememberCoroutineScope()
+    val syncJournal =
+        remember(context) {
+            RommPendingSyncJournal(File(context.noBackupFilesDir, "romm-offline-sync"))
+        }
 
     @Suppress("DEPRECATION")
     val legacyFolderPrefs =
@@ -73,7 +81,12 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     var selectedSaveGame by remember { mutableStateOf<RommApiClient.Rom?>(null) }
     var pendingSave by remember { mutableStateOf<RommApiClient.RemoteSave?>(null) }
     var pendingArchive by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
+    var pendingArchiveDeletion by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
+    var pendingIntentDeletion by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
     var archivedSaves by remember { mutableStateOf<List<RommVersionedSaveBackupStore.Backup>>(emptyList()) }
+    var syncQueue by remember {
+        mutableStateOf<RommPendingSyncJournal.ReadResult>(RommPendingSyncJournal.ReadResult.Entries(emptyList()))
+    }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var operation by remember { mutableStateOf("") }
@@ -134,6 +147,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     // connected RomM credentials, or an online save-list request.
     LaunchedEffect(context) {
         archivedSaves = client.listOfflineSaveBackups(context)
+        syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
     }
 
     val browse: (Int) -> Unit = { offset ->
@@ -391,10 +405,142 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                 archivePicker.launch("romm-${backup.romId}.savebak")
                             },
                         ) { Text(stringResource(R.string.opennes_romm_export_save)) }
+                        TextButton(
+                            enabled = !busy,
+                            onClick = { pendingArchiveDeletion = backup },
+                        ) { Text(stringResource(R.string.opennes_romm_archive_delete)) }
                     }
                 }
             }
         }
+
+        OpenNesSettingsGroup(
+            title = { Text(stringResource(R.string.opennes_romm_pending_title)) },
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text(stringResource(R.string.opennes_romm_pending_description))
+                OutlinedButton(
+                    enabled = !busy,
+                    onClick = {
+                        perform("Reviewing pending transfers") {
+                            syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
+                            status = context.getString(R.string.opennes_romm_pending_refreshed)
+                        }
+                    },
+                ) { Text(stringResource(R.string.opennes_romm_pending_refresh)) }
+                when (val result = syncQueue) {
+                    RommPendingSyncJournal.ReadResult.Corrupt ->
+                        Text(stringResource(R.string.opennes_romm_pending_corrupt))
+                    is RommPendingSyncJournal.ReadResult.Entries -> {
+                        if (result.pending.isEmpty()) {
+                            Text(stringResource(R.string.opennes_romm_pending_empty))
+                        }
+                        result.pending.forEach { pending ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    val direction =
+                                        if (pending.direction == RommSaveSyncPlanner.Direction.UPLOAD) {
+                                            stringResource(R.string.opennes_romm_pending_upload)
+                                        } else {
+                                            stringResource(R.string.opennes_romm_pending_download)
+                                        }
+                                    Text(
+                                        stringResource(
+                                            R.string.opennes_romm_pending_entry,
+                                            pending.romId,
+                                            direction,
+                                        ),
+                                    )
+                                    Text(stringResource(R.string.opennes_romm_pending_unapproved))
+                                }
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = { pendingIntentDeletion = pending },
+                                ) { Text(stringResource(R.string.opennes_romm_pending_discard)) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pendingArchiveDeletion?.let { selected ->
+        AlertDialog(
+            onDismissRequest = { pendingArchiveDeletion = null },
+            title = { Text(stringResource(R.string.opennes_romm_archive_delete)) },
+            text = {
+                Text(stringResource(R.string.opennes_romm_archive_delete_confirm, selected.romId))
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !busy,
+                    onClick = {
+                        pendingArchiveDeletion = null
+                        perform("Deleting archived backup") {
+                            val deleted = client.deleteOfflineSaveBackup(context, selected)
+                            archivedSaves = client.listOfflineSaveBackups(context)
+                            status =
+                                context.getString(
+                                    if (deleted) {
+                                        R.string.opennes_romm_archive_deleted
+                                    } else {
+                                        R.string.opennes_romm_archive_delete_failed
+                                    },
+                                )
+                        }
+                    },
+                ) { Text(stringResource(R.string.opennes_romm_archive_delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingArchiveDeletion = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+    pendingIntentDeletion?.let { selected ->
+        AlertDialog(
+            onDismissRequest = { pendingIntentDeletion = null },
+            title = { Text(stringResource(R.string.opennes_romm_pending_discard)) },
+            text = {
+                Text(stringResource(R.string.opennes_romm_pending_discard_confirm, selected.romId))
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !busy,
+                    onClick = {
+                        pendingIntentDeletion = null
+                        perform("Discarding pending request") {
+                            val discarded = withContext(Dispatchers.IO) {
+                                syncJournal.discard(selected.id)
+                            }
+                            syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
+                            status =
+                                context.getString(
+                                    if (discarded) {
+                                        R.string.opennes_romm_pending_discarded
+                                    } else {
+                                        R.string.opennes_romm_pending_discard_failed
+                                    },
+                                )
+                        }
+                    },
+                ) { Text(stringResource(R.string.opennes_romm_pending_discard)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingIntentDeletion = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 }
 
