@@ -39,9 +39,12 @@ import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.achievements.NesRetroAchievementsHash
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsDisplayState
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeAccountStore
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeGameResolver
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -56,10 +59,24 @@ fun GameMenuAchievementsScreen(
     session: RetroAchievementsDisplayState = RetroAchievementsDisplayState.NotConnected,
 ) {
     var advancedExpanded by remember { mutableStateOf(false) }
+    var websiteExpanded by remember { mutableStateOf(false) }
+    var savedEmulatorUsername by remember { mutableStateOf<String?>(null) }
     var identification by remember(game.id, game.fileUri) {
         mutableStateOf<LocalIdentification>(LocalIdentification.Checking)
     }
     val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    // The pause menu runs in the :game process. Read the shared encrypted
+    // token from disk, but do not confuse that with an active game session.
+    LaunchedEffect(Unit) {
+        savedEmulatorUsername =
+            try {
+                withContext(Dispatchers.IO) {
+                    RetroAchievementsNativeAccountStore(context).load()?.username
+                }
+            } catch (_: Exception) {
+                null
+            }
+    }
     var recognizedGame by remember(game.id, game.fileUri) {
         mutableStateOf<RetroAchievementsNativeGameResolver.Result?>(null)
     }
@@ -150,10 +167,20 @@ fun GameMenuAchievementsScreen(
                             session is RetroAchievementsDisplayState.NoMatchingGame ->
                                 R.string.opennes_ra_runtime_no_match
                             session is RetroAchievementsDisplayState.Active -> R.string.opennes_ra_runtime_hash_mismatch
-                            else -> R.string.opennes_ra_runtime_unavailable
+                            else ->
+                                if (savedEmulatorUsername != null) {
+                                    R.string.opennes_ra_game_account_saved
+                                } else {
+                                    R.string.opennes_ra_game_account_unavailable
+                                }
                         }
                     Text(
-                        text = stringResource(statusTitle),
+                        text =
+                            if (statusTitle == R.string.opennes_ra_game_account_saved) {
+                                stringResource(statusTitle, savedEmulatorUsername.orEmpty())
+                            } else {
+                                stringResource(statusTitle)
+                            },
                         color = GameMenuStyle.foreground,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
@@ -165,8 +192,10 @@ fun GameMenuAchievementsScreen(
                             stringResource(
                                 if (session is RetroAchievementsDisplayState.NoMatchingGame) {
                                     R.string.opennes_ra_no_match_explanation
+                                } else if (savedEmulatorUsername != null) {
+                                    R.string.opennes_ra_game_tracking_pending
                                 } else {
-                                    R.string.opennes_ra_native_short
+                                    R.string.opennes_ra_game_signin_hint
                                 },
                             ),
                         color = GameMenuStyle.muted,
@@ -190,8 +219,8 @@ fun GameMenuAchievementsScreen(
             border = BorderStroke(1.dp, GameMenuStyle.border),
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
                     text = stringResource(R.string.opennes_ra_lookup_heading),
@@ -221,18 +250,29 @@ fun GameMenuAchievementsScreen(
                             color = GameMenuStyle.muted,
                         )
                 }
-                Text(
-                    text = stringResource(R.string.opennes_ra_lookup_notice),
-                    color = GameMenuStyle.muted,
-                    fontSize = 12.sp,
-                )
+                // Recognition is not an active native achievement session.
+                // The account status card above already explains that boundary.
             }
         }
 
-        RetroAchievementsWebSection(
-            romMd5 = (identification as? LocalIdentification.Identified)?.identity?.md5,
-            console = (identification as? LocalIdentification.Identified)?.identity?.console,
-        )
+        TextButton(onClick = { websiteExpanded = !websiteExpanded }) {
+            Text(
+                text =
+                    stringResource(
+                        if (websiteExpanded) {
+                            R.string.opennes_ra_account_hide_web
+                        } else {
+                            R.string.opennes_ra_account_show_web
+                        },
+                    ),
+            )
+        }
+        if (websiteExpanded) {
+            RetroAchievementsWebSection(
+                romMd5 = (identification as? LocalIdentification.Identified)?.identity?.md5,
+                console = (identification as? LocalIdentification.Identified)?.identity?.console,
+            )
+        }
         TextButton(onClick = { advancedExpanded = !advancedExpanded }) {
             Text(
                 stringResource(
