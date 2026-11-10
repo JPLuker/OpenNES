@@ -243,9 +243,11 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_pars
     server.http_status_code = httpStatus;
     rc_api_resolve_hash_response_t parsed{};
     const int result = rc_api_process_resolve_hash_server_response(&parsed, &server);
-    const uint32_t id =
-        (result == RC_OK && parsed.response.succeeded) ? parsed.game_id : 0;
+    const bool success = result == RC_OK && parsed.response.succeeded;
+    const uint32_t id = success ? parsed.game_id : 0;
     rc_api_destroy_resolve_hash_response(&parsed);
-    // Java side represents only positive signed game IDs.
-    return id > 0 && id <= 0x7fffffffU ? static_cast<jint>(id) : 0;
+    // -1 = invalid/error response; 0 = verified no match; >0 = known game.
+    // Never represent malformed data or a server error as "no match".
+    if (!success || id > 0x7fffffffU) return -1;
+    return static_cast<jint>(id);
 }
