@@ -66,6 +66,7 @@ def main() -> int:
             b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startFrameProbe",
             b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_stopFrameProbe",
             b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_observedProbeFrames",
+            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_mappedProbeBytes",
         )
         with zipfile.ZipFile(args.apk) as archive:
             for lib in libs:

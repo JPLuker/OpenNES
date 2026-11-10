@@ -21,4 +21,7 @@ internal object RetroAchievementsNative {
     external fun stopFrameProbe()
 
     external fun observedProbeFrames(): Long
+
+    /** Bytes in official NES memory mapping; zero until a core is available. */
+    external fun mappedProbeBytes(): Long
 }

@@ -109,6 +109,9 @@ target_link_libraries(libretrodroid
 
     // OpenNES bridge: lock-protected *copies*, never dangling core pointers.
     std::vector<uint8_t> copyCoreMemory(unsigned memoryType);
+    // Only call from the frame observer, while coreLock is already held.
+    // Never retain the pointer past the current emulated frame.
+    std::pair<uint8_t*, size_t> coreMemoryRegionWhileLocked(unsigned memoryType);
     uint64_t emulatedFrameCount();
     // Future rc_client hook runs synchronously after *every* retro_run().
     void setEmulatedFrameObserver(std::function<void()> callback);""",
@@ -174,6 +177,18 @@ target_link_libraries(libretrodroid
     auto* address = static_cast<const uint8_t*>(core->retro_get_memory_data(memoryType));
     if (!address) return {};
     return std::vector<uint8_t>(address, address + length);
+}
+
+std::pair<uint8_t*, size_t> LibretroDroid::coreMemoryRegionWhileLocked(unsigned memoryType) {
+    if (!achievementsGameLoaded || !core) return {nullptr, 0};
+    if (memoryType != RETRO_MEMORY_SAVE_RAM &&
+        memoryType != RETRO_MEMORY_SYSTEM_RAM &&
+        memoryType != RETRO_MEMORY_VIDEO_RAM) return {nullptr, 0};
+    auto length = core->retro_get_memory_size(memoryType);
+    if (length == 0 || length > 16 * 1024 * 1024) return {nullptr, 0};
+    auto* pointer = static_cast<uint8_t*>(core->retro_get_memory_data(memoryType));
+    if (!pointer) return {nullptr, 0};
+    return {pointer, length};
 }
 
 uint64_t LibretroDroid::emulatedFrameCount() {
