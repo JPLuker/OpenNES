@@ -18,14 +18,14 @@ object GameScreenLayout {
         isLandscape: Boolean,
         allowTouchOverlay: Boolean,
         showTouchPads: Boolean = true,
-        handheldSideWidthDp: Float? = null,
+        sidePanelWidthDp: Float? = null,
     ): ConstraintSet {
         return when {
             // With a physical gamepad, no virtual pad exists to constrain the
             // game view. Do not attach its bottom edge to a missing pad.
             !showTouchPads -> buildConstraintSetWithoutTouchPads()
             !isLandscape -> buildConstraintSetPortrait()
-            handheldSideWidthDp != null -> buildConstraintSetLandscapeHandheld(handheldSideWidthDp)
+            sidePanelWidthDp != null -> buildConstraintSetLandscapeSidePanels(sidePanelWidthDp)
             allowTouchOverlay -> buildConstraintSetLandscape()
             else -> buildConstraintSetLandscapeNoOverlay()
         }
@@ -153,11 +153,11 @@ object GameScreenLayout {
     }
 
     /**
-     * True handheld mode gets two equal-width control zones and a centered
-     * video viewport. Their width is fixed by the available display space,
-     * not by asymmetric PadKit content or secondary-button placement.
+     * Both framed and handheld modes get equal-width controller zones
+     * surrounding a truly centered 4:3 NES viewport. The layout does not
+     * depend on saved controller sizes or secondary radial button offsets.
      */
-    private fun buildConstraintSetLandscapeHandheld(sideWidthDp: Float): ConstraintSet {
+    private fun buildConstraintSetLandscapeSidePanels(sideWidthDp: Float): ConstraintSet {
         return ConstraintSet {
             val gameView = createRefFor(CONSTRAINTS_GAME_VIEW)
             val gameContainer = createRefFor(CONSTRAINTS_GAME_CONTAINER)
