@@ -525,4 +525,10 @@
     <string name="opennes_landscape_handheld_description">Compact NES-inspired console surrounding the game.</string>
     <string name="opennes_landscape_style_preview_hint">Landscape selection is saved separately from portrait.</string>
     <string name="opennes_landscape_handheld_help">A classic NES-inspired handheld shell wraps around the game, with the D-pad and A/B beside the screen. Your current controller colors apply here too.</string>
+    <string name="opennes_ra_settings_title">RetroAchievements</string>
+    <string name="opennes_ra_settings_subtitle">Account, connection, and achievement integration</string>
+    <string name="opennes_ra_settings_explanation">Manage RetroAchievements before starting a game. You can connect a web account to view previously earned achievements from the game menu.</string>
+    <string name="opennes_ra_settings_native_pending">Live sign-in, unlock notifications, Hardcore Mode, and earning achievements are not available yet. Saving a web API key does not activate them.</string>
+    <string name="opennes_library_loading">Preparing your NES library…</string>
+    <string name="opennes_library_loading_covers">Loading game covers</string>
 </resources>
