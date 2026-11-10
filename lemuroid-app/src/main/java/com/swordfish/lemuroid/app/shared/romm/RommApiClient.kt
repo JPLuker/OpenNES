@@ -250,7 +250,7 @@ class RommApiClient {
         }
 
     /** Save a user-selected remote save into an immutable app-private archive. */
-    suspend fun keepRemoteSaveBackup(
+    internal suspend fun keepRemoteSaveBackup(
         context: Context,
         connection: RommConnection,
         save: RemoteSave,
@@ -264,7 +264,7 @@ class RommApiClient {
             }
         }
 
-    suspend fun listOfflineSaveBackups(
+    internal suspend fun listOfflineSaveBackups(
         context: Context,
         romId: Int? = null,
     ): List<RommVersionedSaveBackupStore.Backup> =
@@ -273,7 +273,7 @@ class RommApiClient {
         }
 
     /** User-chosen SAF destination; never replaces emulator SRAM/state files. */
-    suspend fun exportOfflineSaveBackup(
+    internal suspend fun exportOfflineSaveBackup(
         context: Context,
         backup: RommVersionedSaveBackupStore.Backup,
         destination: Uri,
