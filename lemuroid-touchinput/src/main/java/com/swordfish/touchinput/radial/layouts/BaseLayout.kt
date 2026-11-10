@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
-import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import gg.padkit.PadKitScope
 import gg.padkit.layouts.radial.LayoutRadial
