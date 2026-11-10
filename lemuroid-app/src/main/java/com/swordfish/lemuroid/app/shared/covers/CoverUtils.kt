@@ -15,14 +15,27 @@ import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 
 object CoverUtils {
+    /**
+     * Use the same Coil memory key for an NES cover in every shelf, details
+     * panel and pause screen. The default ImageRequest sizing changes across
+     * those surfaces; a shared key lets Coil reuse the decoded image instead
+     * of temporarily rendering a title placeholder on every navigation.
+     */
+    fun coverMemoryKey(artworkUrl: String): String = "opennes:nes-cover:$artworkUrl"
+
     fun loadCover(
         game: Game,
         imageView: ImageView?,
     ) {
         if (imageView == null) return
 
-        imageView.load(game.displayCoverUrl(), imageView.context.imageLoader) {
+        val artworkUrl = game.displayCoverUrl()
+        imageView.load(artworkUrl, imageView.context.imageLoader) {
             val fallbackDrawable = getFallbackDrawable(game)
+            if (!artworkUrl.isNullOrBlank()) {
+                memoryCacheKey(coverMemoryKey(artworkUrl))
+                placeholderMemoryCacheKey(coverMemoryKey(artworkUrl))
+            }
             fallback(fallbackDrawable)
             error(fallbackDrawable)
         }
@@ -46,7 +59,9 @@ object CoverUtils {
                     .addNetworkInterceptor(ThrottleFailedThumbnailsInterceptor)
                     .build()
             }
-            .crossfade(true)
+            // Instant replacement avoids flickering a generic title card
+            // when returning to shelves or switching between detail screens.
+            .crossfade(false)
             .interceptorDispatcher(Dispatchers.IO)
             .diskCachePolicy(CachePolicy.ENABLED)
             .memoryCachePolicy(CachePolicy.ENABLED)
