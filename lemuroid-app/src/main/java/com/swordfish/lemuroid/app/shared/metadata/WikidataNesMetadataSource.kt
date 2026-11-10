@@ -45,6 +45,130 @@ class WikidataNesMetadataSource {
         data object Unavailable : Result
     }
 
+    /** User-selected candidates may have a different displayed title, but
+     * must still be positively identified as an NES video game. */
+    data class Candidate(
+        val entityId: String,
+        val title: String,
+        val shortDescription: String?,
+        val releaseYear: Int?,
+    )
+
+    sealed interface CandidateResults {
+        data class Found(val candidates: List<Candidate>) : CandidateResults
+
+        data object NoMatch : CandidateResults
+
+        data object Unavailable : CandidateResults
+    }
+
+    suspend fun searchManualCandidates(query: String): CandidateResults =
+        withContext(Dispatchers.IO) {
+            val term = NesGameTitle.clean(query)
+            if (term.length !in 3..120) return@withContext CandidateResults.NoMatch
+            runCatching { findManualCandidates(term) }
+                .onFailure { Timber.w(it, "Manual NES metadata candidate search unavailable") }
+                .getOrElse { CandidateResults.Unavailable }
+        }
+
+    suspend fun resolveManualCandidate(entityId: String): Result =
+        withContext(Dispatchers.IO) {
+            if (!entityId.matches(Regex("Q[1-9][0-9]*"))) return@withContext Result.NoMatch
+            runCatching { findManualCandidateDetails(entityId) }
+                .onFailure { Timber.w(it, "Manual NES metadata candidate lookup unavailable") }
+                .getOrElse { Result.Unavailable }
+        }
+
+    private fun findManualCandidates(term: String): CandidateResults {
+        val search =
+            request(
+                mapOf(
+                    "action" to "wbsearchentities",
+                    "search" to term,
+                    "language" to "en",
+                    "type" to "item",
+                    "limit" to "15",
+                    "format" to "json",
+                    "maxlag" to "5",
+                ),
+            )
+        val names = search.optJSONArray("search") ?: return CandidateResults.NoMatch
+        val items =
+            (0 until names.length())
+                .mapNotNull { names.optJSONObject(it) }
+                .filter { it.optString("id").matches(Regex("Q[1-9][0-9]*")) }
+                .distinctBy { it.optString("id") }
+                .take(15)
+        if (items.isEmpty()) return CandidateResults.NoMatch
+
+        val entities =
+            request(
+                mapOf(
+                    "action" to "wbgetentities",
+                    "ids" to items.joinToString("|") { it.optString("id") },
+                    "props" to "claims|descriptions",
+                    "languages" to "en",
+                    "format" to "json",
+                    "maxlag" to "5",
+                ),
+            ).optJSONObject("entities") ?: return CandidateResults.NoMatch
+
+        val matches =
+            items.mapNotNull { item ->
+                val id = item.optString("id")
+                val entity = entities.optJSONObject(id) ?: return@mapNotNull null
+                if (!isVerifiedNesVideoGame(entity)) return@mapNotNull null
+                val label = item.optString("label").trim().takeIf { it.isNotBlank() }
+                    ?: return@mapNotNull null
+                val claims = entity.optJSONObject("claims")
+                val year =
+                    claims?.let { gameClaims ->
+                        claimStatements(gameClaims, "P577").mapNotNull { statement ->
+                            val time =
+                                statement.optJSONObject("mainsnak")
+                                    ?.optJSONObject("datavalue")
+                                    ?.optJSONObject("value")
+                                    ?.optString("time") ?: return@mapNotNull null
+                            Regex("^[+-]([0-9]{4})").find(time)
+                                ?.groupValues?.getOrNull(1)?.toIntOrNull()
+                                ?.takeIf { it in 1950..2100 }
+                        }.minOrNull()
+                    }
+                val description =
+                    entity.optJSONObject("descriptions")
+                        ?.optJSONObject("en")
+                        ?.optString("value")
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                Candidate(id, label, description, year)
+            }.take(8)
+
+        return if (matches.isEmpty()) CandidateResults.NoMatch else CandidateResults.Found(matches)
+    }
+
+    private fun findManualCandidateDetails(id: String): Result {
+        val response =
+            request(
+                mapOf(
+                    "action" to "wbgetentities",
+                    "ids" to id,
+                    "props" to "claims|descriptions|sitelinks",
+                    "languages" to "en",
+                    "format" to "json",
+                    "maxlag" to "5",
+                ),
+            )
+        val entity = response.optJSONObject("entities")?.optJSONObject(id) ?: return Result.NoMatch
+        if (!isVerifiedNesVideoGame(entity)) return Result.NoMatch
+        return buildVerifiedMatch(id, entity) ?: Result.NoMatch
+    }
+
+    private fun isVerifiedNesVideoGame(entity: JSONObject): Boolean {
+        val claims = entity.optJSONObject("claims") ?: return false
+        return claimItemIds(claims, "P31").contains("Q7889") &&
+            claimItemIds(claims, "P400").contains("Q172742")
+    }
+
     private val http =
         OkHttpClient.Builder()
             .connectTimeout(6, TimeUnit.SECONDS)
@@ -114,7 +238,14 @@ class WikidataNesMetadataSource {
         // the ambiguity manually; never pick the first result.
         if (eligible.size != 1) return Result.NoMatch
         val (id, entity) = eligible.single()
-        val claims = entity.optJSONObject("claims") ?: return Result.NoMatch
+        return buildVerifiedMatch(id, entity) ?: Result.NoMatch
+    }
+
+    private fun buildVerifiedMatch(
+        id: String,
+        entity: JSONObject,
+    ): Result.Match? {
+        val claims = entity.optJSONObject("claims") ?: return null
 
         val years =
             claimStatements(claims, "P577").mapNotNull { statement ->
