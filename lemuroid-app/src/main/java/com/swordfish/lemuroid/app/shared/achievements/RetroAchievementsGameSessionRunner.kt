@@ -42,6 +42,9 @@ internal class RetroAchievementsGameSessionRunner(
             } catch (_: Exception) {
                 return
             }
+        // FCEUmm's FDS memory map is not yet validated. Never evaluate FDS
+        // achievements through the NES (console 7) RAM mapping.
+        if (!supportsNativeGame(identity)) return
         val md5 = identity.md5
         val ticket = RetroAchievementsGameStateStore.begin(md5)
         var session = 0L
@@ -78,8 +81,16 @@ internal class RetroAchievementsGameSessionRunner(
         var active = false
         val connection = NativeConnectionGate()
         var lastRefresh = 0L
+        var lastIdle = 0L
         val started = System.nanoTime()
         while (true) {
+            val now = System.nanoTime()
+            if (lastIdle == 0L || elapsedMillis(lastIdle, now) >= 250L) {
+                // Process rc_client timers during pause and while a server
+                // response is pending. Native never reads RAM outside frames.
+                RetroAchievementsNative.idleGameSession(session)
+                lastIdle = now
+            }
             val status = RetroAchievementsNative.gameSessionStatus(session)
             when (status) {
                 -2, -1 -> return
@@ -193,6 +204,9 @@ internal class RetroAchievementsGameSessionRunner(
     }
 
     companion object {
+        internal fun supportsNativeGame(identity: NesRetroAchievementsHash.Identity): Boolean =
+            identity.console == NesRetroAchievementsHash.Console.NES
+
         internal fun decodeNativeEvent(raw: String): NativeGameEvent? {
             if (raw == "disconnected") return NativeGameEvent.Disconnected
             if (raw == "reconnected") return NativeGameEvent.Reconnected

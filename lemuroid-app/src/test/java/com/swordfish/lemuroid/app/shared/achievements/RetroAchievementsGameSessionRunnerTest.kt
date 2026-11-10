@@ -83,6 +83,22 @@ class RetroAchievementsGameSessionRunnerTest {
     }
 
     @Test
+    fun nativeAwardsAreRestrictedToVerifiedNesMemoryMaps() {
+        val nes =
+            NesRetroAchievementsHash.Identity(
+                "a".repeat(32),
+                NesRetroAchievementsHash.Console.NES,
+            )
+        val fds =
+            NesRetroAchievementsHash.Identity(
+                "b".repeat(32),
+                NesRetroAchievementsHash.Console.FDS,
+            )
+        assertTrue(RetroAchievementsGameSessionRunner.supportsNativeGame(nes))
+        assertFalse(RetroAchievementsGameSessionRunner.supportsNativeGame(fds))
+    }
+
+    @Test
     fun nativeEventsRejectMalformedAwardsAndReportConnectionChanges() {
         val decode: (String) -> RetroAchievementsGameSessionRunner.NativeGameEvent? =
             { RetroAchievementsGameSessionRunner.decodeNativeEvent(it) }

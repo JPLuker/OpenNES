@@ -25,6 +25,9 @@ constexpr jsize kMaxResponse = 2 * 1024 * 1024;
 std::mutex lifecycleMutex;
 std::recursive_mutex clientMutex;
 std::atomic<uint64_t> activeId{0};
+// Only the observer, under coreLock, is allowed to read emulated NES RAM.
+// rc_client_idle may run on Kotlin's IO thread, but must never access RAM.
+thread_local uint64_t frameReadingSessionId = 0;
 uint64_t issuedId = 0;
 uint64_t requestSequence = 0;
 rc_client_t* gameClient = nullptr;
@@ -194,7 +197,7 @@ uint32_t RC_CCONV readMemory(
 ) {
     // Background memory reads are disabled, so this runs only while the
     // observer owns the emulator's coreLock and the game generation matches.
-    if (!memoryMapped || sessionState != 2 ||
+    if (frameReadingSessionId != activeId.load() || !memoryMapped || sessionState != 2 ||
         libretrodroid::LibretroDroid::getInstance().currentGameGeneration() != coreGeneration)
         return 0;
     return rc_libretro_memory_read(&regions, address, buffer, bytes);
@@ -230,7 +233,9 @@ void onEmulatedFrame(uint64_t id) {
         // read succeeded on the matching emulation core generation.
         sessionState = 2;
     }
+    frameReadingSessionId = id;
     rc_client_do_frame(gameClient);
+    frameReadingSessionId = 0;
 }
 
 void closeClient() {
@@ -375,6 +380,22 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_comp
     }
     request.callback(&response, request.userData);
     return JNI_TRUE;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_idleGameSession(
+    JNIEnv*, jobject, jlong session
+) {
+    std::lock_guard<std::recursive_mutex> lock(clientMutex);
+    if (session <= 0 || activeId.load() != static_cast<uint64_t>(session) ||
+        !gameClient || disposing || sessionState < 0) return;
+    if (libretrodroid::LibretroDroid::getInstance().currentGameGeneration() != coreGeneration) {
+        sessionState = -2;
+        return;
+    }
+    // rc_client's timers and callbacks must keep progressing even when
+    // Android pauses the renderer. The RAM callback is frame-thread gated.
+    rc_client_idle(gameClient);
 }
 
 extern "C" JNIEXPORT jint JNICALL

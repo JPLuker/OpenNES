@@ -75,6 +75,9 @@ internal object RetroAchievementsNative {
     /** -2=closed, -1=error, 0=sign-in, 1=loading, 3=validating RAM, 2=live. */
     external fun gameSessionStatus(session: Long): Int
 
+    /** Process native rc_client timers while paused; never read emulated RAM here. */
+    external fun idleGameSession(session: Long)
+
     /** Positive official game ID only after rc_client completes game load. */
     external fun loadedGameId(session: Long): Int
 
