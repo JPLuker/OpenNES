@@ -20,6 +20,14 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
 
+## November 10 — Emulator account login and persistent offline RomM archive
+
+- **M6 source implementation:** `Settings → RetroAchievements` now provides a real official `login2` account sign-in. The password is submitted only over pinned official HTTPS; the response must confirm `Success`, `User`, and a valid token before it is saved in the separate encrypted, no-backup native account store. The Settings UI supports local sign-out and clearly labels earning as unavailable until the native emulator session exists. This is **not** a verified real-device login or an achievement-award implementation.
+- **M6 tests:** Added offline tests for URL-encoded password fields, safe rejection of invalid credentials, invalid server tokens, and disallowed account values.
+- **M7 source implementation:** Remote saves can now be manually kept in an app-private offline archive. Existing bounded downloads and remote checksum checks are reused. Each save snapshot has a fresh filename and a persisted SHA-256 manifest. Only valid copies appear in the archive after a process restart; the user can verify them and export a selected copy via Android's document picker even when disconnected from RomM. No live save is overwritten.
+- **M7 tests:** Archive inventory survives store reinitialization and rejects corrupted files/manifests. Remote server compatibility and physical storage/document-picker behavior still need device and server acceptance.
+- **Still blocked:** Real native `rc_client` game login/activation/event queue and authentic unlocks; RomM opt-in upload/conflict UI plus real-server integration. Neither is completed by this batch.
+
 ## November 10 — M6 cancellable transport / M7 safe recovery and snapshots
 
 - **M6 source-only:** The official-host-only HTTPS transport now uses cancellable OkHttp requests. Cancelling a game/session coroutine cancels the associated socket; responses remain size-bounded and URL/secret contents are never logged. A cancellation regression test was added. **This transport is not connected to native `rc_client` server callbacks**; there is no functional in-app native login or earned awards yet.
