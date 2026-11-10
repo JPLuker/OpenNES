@@ -267,6 +267,63 @@ class HomeViewModel(
         }
     }
 
+    /** Plex-style manual matching: present verified NES candidates first. */
+    fun searchFixMatch(
+        query: String,
+        onResult: (WikidataNesMetadataSource.CandidateResults) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) { wikidataSource.searchManualCandidates(query) }
+            onResult(result)
+        }
+    }
+
+    fun resolveFixMatch(
+        candidateId: String,
+        onResult: (WikidataNesMetadataSource.Result) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) { wikidataSource.resolveManualCandidate(candidateId) }
+            onResult(result)
+        }
+    }
+
+    /** A selected, verified candidate replaces editorial metadata only. */
+    fun applyFixMatch(
+        gameId: Int,
+        candidate: WikidataNesMetadataSource.Result.Match,
+        onResult: (Game?) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val updated =
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        if (!candidate.entityId.matches(Regex("Q[1-9][0-9]*"))) {
+                            return@runCatching null
+                        }
+                        val dao = retrogradeDb.gameDao()
+                        if (
+                            dao.applySelectedOnlineMatch(
+                                gameId = gameId,
+                                genre = candidate.genre,
+                                releaseYear = candidate.releaseYear,
+                                description = candidate.description?.takeIf { it.isNotBlank() },
+                                sourceId = candidate.entityId,
+                                wikipediaTitle = candidate.wikipediaArticleTitle,
+                                checkedAt = System.currentTimeMillis(),
+                            ) == 0
+                        ) {
+                            return@runCatching null
+                        }
+                        dao.selectById(gameId)
+                    }.onFailure {
+                        Timber.e(it, "Could not apply selected NES Fix Match result")
+                    }.getOrNull()
+                }
+            onResult(updated)
+        }
+    }
+
     /**
      * On-demand bulk enrichment. Each tap checks up to 12 eligible NES titles.
      * Successful or unmatched lookups are cached for 30 days in Room.
