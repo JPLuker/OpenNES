@@ -116,7 +116,7 @@ fun PadKitScope.NESRight(
  * Defaults approximate the existing paired layout, while independently
  * adjusting the anchor changes the painted disc and real touch hitbox alike.
  */
-private fun nesFaceAnchor(
+internal fun nesFaceAnchor(
     id: Id.Key,
     baseX: Float,
     geometry: TouchControllerSettingsManager.ButtonGeometry,
