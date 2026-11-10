@@ -3,7 +3,10 @@
 #include <jni.h>
 #include <atomic>
 #include <mutex>
+#include <string>
+#include <vector>
 #include "rc_client.h"
+#include "rc_api_runtime.h"
 #include "rc_libretro.h"
 #include "libretrodroid.h"
 
@@ -150,4 +153,76 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_succ
         libretrodroid::LibretroDroid::getInstance().currentGameGeneration())
         return 0;
     return static_cast<jlong>(successfulMemorySamples.load(std::memory_order_relaxed));
+}
+
+
+/*
+ * Native RetroAchievements game identity verification.
+ *
+ * These helpers use the exact pinned rcheevos 12.5.0 request encoder and
+ * response parser. Java/Kotlin owns the bounded HTTPS transport; C++ never
+ * handles credentials, follows redirects, or reads core memory here.
+ * A matched game ID alone MUST NOT be used to report an active rc_client
+ * session, achievement progress, or an unlock.
+ */
+namespace {
+bool validMd5(const std::string& hash) {
+    if (hash.size() != 32) return false;
+    for (unsigned char ch : hash) {
+        if (!((ch >= '0' && ch <= '9') ||
+              (ch >= 'a' && ch <= 'f') ||
+              (ch >= 'A' && ch <= 'F'))) return false;
+    }
+    return true;
+}
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_prepareGameResolveRequest(
+    JNIEnv* env, jobject, jstring rawMd5
+) {
+    if (!rawMd5) return nullptr;
+    const char* utf = env->GetStringUTFChars(rawMd5, nullptr);
+    if (!utf) return nullptr;
+    const std::string hash(utf);
+    env->ReleaseStringUTFChars(rawMd5, utf);
+    if (!validMd5(hash)) return nullptr;
+
+    rc_api_resolve_hash_request_t params{};
+    params.game_hash = hash.c_str();
+    rc_api_request_t request{};
+    const int result = rc_api_init_resolve_hash_request(&request, &params);
+    std::string url;
+    if (result == RC_OK && request.url) url.assign(request.url);
+    rc_api_destroy_request(&request);
+    if (url.empty()) return nullptr;
+    return env->NewStringUTF(url.c_str());
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_parseGameResolveResponse(
+    JNIEnv* env, jobject, jbyteArray rawBody, jint httpStatus
+) {
+    if (!rawBody || httpStatus < 200 || httpStatus >= 300) return 0;
+    const jsize size = env->GetArrayLength(rawBody);
+    if (size <= 0 || size > 2 * 1024 * 1024) return 0;
+    // Ensure a NUL terminator for versions of the parser that expect it,
+    // while also passing the exact content length to the official parser.
+    std::vector<char> payload(static_cast<size_t>(size) + 1, 0);
+    env->GetByteArrayRegion(
+        rawBody, 0, size, reinterpret_cast<jbyte*>(payload.data())
+    );
+    if (env->ExceptionCheck()) return 0;
+
+    rc_api_server_response_t server{};
+    server.body = payload.data();
+    server.body_length = static_cast<size_t>(size);
+    server.http_status_code = httpStatus;
+    rc_api_resolve_hash_response_t parsed{};
+    const int result = rc_api_process_resolve_hash_server_response(&parsed, &server);
+    const uint32_t id =
+        (result == RC_OK && parsed.response.succeeded) ? parsed.game_id : 0;
+    rc_api_destroy_resolve_hash_response(&parsed);
+    // Java side represents only positive signed game IDs.
+    return id > 0 && id <= 0x7fffffffU ? static_cast<jint>(id) : 0;
 }
