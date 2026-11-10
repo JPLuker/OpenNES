@@ -13,9 +13,7 @@ internal object NesCoverResolutionCache {
     private const val MAX_ITEMS = 256
     private val successful =
         object : LinkedHashMap<String, String>(MAX_ITEMS, 0.75f, true) {
-            override fun removeEldestEntry(
-                eldest: MutableMap.MutableEntry<String, String>?,
-            ): Boolean {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
                 return size > MAX_ITEMS
             }
         }
