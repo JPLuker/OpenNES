@@ -3,6 +3,7 @@
 #include <jni.h>
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <deque>
 #include <map>
 #include <mutex>
