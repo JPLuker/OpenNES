@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.EmojiEvents
@@ -301,7 +302,7 @@ fun RetroAchievementsSettingsScreen(modifier: Modifier = Modifier) {
                         ) {
                             if (busy) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.padding(end = 10.dp),
+                                    modifier = Modifier.size(18.dp).padding(end = 2.dp),
                                     color = Color.White,
                                     strokeWidth = 2.dp,
                                 )
