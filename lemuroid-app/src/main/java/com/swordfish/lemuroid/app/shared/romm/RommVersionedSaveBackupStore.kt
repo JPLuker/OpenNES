@@ -50,9 +50,9 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             }
         val partialFiles =
             files.count { file ->
-                file.name.endsWith(".partial") &&
-                    (file.name.startsWith("opennes-romm-") ||
-                        file.name.startsWith("opennes-manifest-"))
+                val backupPartial = file.name.startsWith("opennes-romm-")
+                val manifestPartial = file.name.startsWith("opennes-manifest-")
+                file.name.endsWith(".partial") && (backupPartial || manifestPartial)
             }
         return ArchiveAudit(
             verified = trusted.size,

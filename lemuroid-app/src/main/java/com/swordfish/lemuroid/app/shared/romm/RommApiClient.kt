@@ -279,9 +279,7 @@ class RommApiClient {
      * Read-only integrity counts for local offline backup files. Files with
      * corrupt or missing manifests are shown as unverified, not deleted.
      */
-    internal suspend fun auditOfflineSaveBackups(
-        context: Context,
-    ): RommVersionedSaveBackupStore.ArchiveAudit =
+    internal suspend fun auditOfflineSaveBackups(context: Context): RommVersionedSaveBackupStore.ArchiveAudit =
         withContext(Dispatchers.IO) {
             privateBackupStore(context).audit()
         }
