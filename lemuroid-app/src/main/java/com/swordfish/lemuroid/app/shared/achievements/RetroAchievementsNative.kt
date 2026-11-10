@@ -16,7 +16,8 @@ internal object RetroAchievementsNative {
      * This does not authenticate a player, start a native game session,
      * or award achievements.
      */
-    external fun prepareGameResolveRequest(md5: String): String?
+    /** Returns official [HTTPS URL, URL-encoded POST form data]. */
+    external fun prepareGameResolveRequest(md5: String): Array<String>?
 
     /** Official API response parsing; zero means no verified game match. */
     external fun parseGameResolveResponse(
