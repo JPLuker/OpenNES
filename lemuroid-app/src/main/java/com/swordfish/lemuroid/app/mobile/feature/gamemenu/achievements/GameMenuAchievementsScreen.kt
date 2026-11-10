@@ -248,45 +248,48 @@ fun GameMenuAchievementsScreen(
             )
         }
 
-        Surface(
-            color = GameMenuStyle.surface,
-            shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(1.dp, GameMenuStyle.border),
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+        if (activeSession == null) {
+            Surface(
+                color = GameMenuStyle.surface,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, GameMenuStyle.border),
             ) {
-                Text(
-                    text = stringResource(R.string.opennes_ra_lookup_heading),
-                    color = GameMenuStyle.foreground,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                when (val resolved = recognizedGame) {
-                    null ->
-                        CircularProgressIndicator(
-                            modifier = Modifier.width(18.dp),
-                            color = GameMenuStyle.red,
-                            strokeWidth = 2.dp,
-                        )
-                    is RetroAchievementsNativeGameResolver.Result.VerifiedGame ->
-                        Text(
-                            text = stringResource(R.string.opennes_ra_lookup_match, resolved.id),
-                            color = GameMenuStyle.foreground,
-                        )
-                    RetroAchievementsNativeGameResolver.Result.NoMatch ->
-                        Text(
-                            text = stringResource(R.string.opennes_ra_lookup_not_found),
-                            color = GameMenuStyle.muted,
-                        )
-                    RetroAchievementsNativeGameResolver.Result.Unavailable ->
-                        Text(
-                            text = stringResource(R.string.opennes_ra_lookup_offline),
-                            color = GameMenuStyle.muted,
-                        )
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                            text = stringResource(R.string.opennes_ra_lookup_heading),
+                        color = GameMenuStyle.foreground,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    when (val resolved = recognizedGame) {
+                        null ->
+                            CircularProgressIndicator(
+                                modifier = Modifier.width(18.dp),
+                                color = GameMenuStyle.red,
+                                strokeWidth = 2.dp,
+                            )
+                        is RetroAchievementsNativeGameResolver.Result.VerifiedGame ->
+                            Text(
+                                text = stringResource(R.string.opennes_ra_lookup_match, resolved.id),
+                                color = GameMenuStyle.foreground,
+                            )
+                        RetroAchievementsNativeGameResolver.Result.NoMatch ->
+                            Text(
+                                text = stringResource(R.string.opennes_ra_lookup_not_found),
+                                color = GameMenuStyle.muted,
+                            )
+                        RetroAchievementsNativeGameResolver.Result.Unavailable ->
+                            Text(
+                                text = stringResource(R.string.opennes_ra_lookup_offline),
+                                color = GameMenuStyle.muted,
+                            )
+                    }
+                    // The native game session already verified the same ROM
+                    // hash and activated the game. Don't show the duplicate
+                    // standalone identification panel while connected.
                 }
-                // Recognition is not an active native achievement session.
-                // The account status card above already explains that boundary.
             }
         }
 

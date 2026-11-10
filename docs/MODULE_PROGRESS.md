@@ -20,6 +20,14 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
 
+## November 10 — phone feedback and M6 finalization candidate
+
+- **Phone evidence:** Zelda and RoboCop both presented authenticated game achievements, lists, account identification, and previously earned progress. This validates game/achievement retrieval on the user's device, **not** a newly earned, remotely persisted unlock.
+- **Compatibility notice fix:** rcheevos 12.5 injects a synthetic “Unknown Emulator” entry with a reserved achievement ID. OpenNES now displays this as a compatibility notice rather than counting it as an unlocked game achievement or completion percentage.
+- **Account lifecycle fix:** A game opened before sign-in keeps a cancellable, network-free credential watcher; later sign-in can attach the native session without ROM restart. Account changes/sign-out invalidate the old native session; failures remain visible with an explicit user-initiated Retry action.
+- **UI cleanup:** The independent game-identification card is omitted once the same ROM has an authenticated native achievement session, reducing redundant information.
+- **Acceptance still open:** Exact latest CI, real award event plus server persistence, device sign-out/sign-in/retry and rotation stress, and official emulator compatibility review.
+
 ## November 10 — game-owned authenticated native rc_client
 
 - **M6 native implementation:** Separate game-scoped client authenticates the previously saved emulator token, verifies an NES ROM hash and game load, maps RAM under the matching emulation core generation, processes actual emulated frames and forwards native events without inventing unlocks in Kotlin.
