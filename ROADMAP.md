@@ -4,9 +4,9 @@
 
 **Real-device M6 evidence (2026-11-10):** The user has confirmed native RetroAchievements sessions listing actual game achievements and historical unlock progress for Zelda and RoboCop. A newly triggered, server-persisted award is **not** yet confirmed. The most recent M6 source batch repairs late sign-in/reconnect/retry and separates client-generated emulator warnings from genuine achievement totals; it requires final CI plus device acceptance.
 
-**CI baseline:** [run 42890671021](https://github.com/JPLuker/OpenNES/actions/runs/42890671021) passed Kotlin lint, offline JVM regressions, native Android build, NES-only APK inspection and rolling release for the full code feature batch. Source acceptance does not equal device/server verification.
+**CI baseline:** [run 42902652152](https://github.com/JPLuker/OpenNES/actions/runs/42902652152) passed Kotlin lint, offline JVM regressions, native Android build, NES-only APK inspection and rolling release for the Hardcore foundation and atomic cheats. Source acceptance does not equal device/server verification.
 
-**Next feature tracks:** M5-C NES cheat manager is **source implemented and CI verified** (run 42886631595), with a per-ROM editor, raw and Game Genie validation, session-only opt-in toggles and native FCEUmm cheat calls. Device behavior and code persistence still need acceptance; bounded local JSON import/export is source implemented with Android document pickers and non-activating imports. Atomic native cheat replacement and real-device acceptance remain. M6-H RetroAchievements Hardcore mode is **not implemented**. Cheats are Casual-only; Hardcore must enforce official restrictions on states, cheats, speed controls and suspended sessions, with emulator recognition/approval as an external gate.
+**Next feature tracks:** M5-C NES cheat manager is **source implemented and CI verified** (run 42886631595), with a per-ROM editor, raw and Game Genie validation, session-only opt-in toggles and native FCEUmm cheat calls. Device behavior and code persistence still need acceptance; bounded local JSON import/export is source implemented with Android document pickers and non-activating imports. Atomic native cheat replacement is now CI-verified with a core-generation lease and per-ROM reset; real-game acceptance remains. M6-H has a **CI-verified, fail-closed restrictions foundation**, but Hardcore mode is **not available** and the native RA client still operates in Casual. Emulator recognition, compliant offline unlock handling, real-device verification and a clean-reset native activation path are still required.
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -180,19 +180,21 @@
 - [ ] Carefully manage network outages, retries, and session state; do not falsely display unearned or unverified unlocks.
 - [ ] Restrict Hardcore actions appropriately and follow official approval/compliance requirements before promising competitive Hardcore credit.
 
-### M6-H — Hardcore RetroAchievements (fail-closed policy in source; NOT enabled)
+### M6-H — Hardcore RetroAchievements (CI-verified guards; NOT enabled)
 
 **Goal:** Add a policy-enforced **Casual / Hardcore** selection, not merely a visual toggle. A fail-closed policy and entry-point guards are now in source for manual/quick/automatic state loading, cheat application, Game Genie core options and Android suspend/resume. The native `rc_client` still runs in Casual mode; both emulator recognition and native-mode readiness are explicitly false in the production build. No UI can enable Hardcore. Complete and verify a genuine Casual award and compliance work first.
 
 - [ ] Review the current [RetroAchievements Hardcore Compliance Requirements](https://docs.retroachievements.org/general/hardcore-compliance-requirements.html) and seek the applicable emulator integration/recognition review. **Do not claim official Hardcore award eligibility until recognized/authorized.**
 - [ ] Provide an explicit mode selector during game launch and in RetroAchievements settings, with visible in-game Hardcore/Casual status and a clear explanation of restrictions.
 - [ ] Wire verified policy state to native `rc_client_set_hardcore_enabled` and any current integration requirements. Activation must occur only when compliant, before award evaluation.
-- [ ] Block **loading** manual/quick/automatic save states while Hardcore is active; saving a state may remain possible, but loading it is prohibited. A suspended/quick-resumed emulator session must fall back to Casual.
+- [x] Install policy guards at manual/quick/automatic save-state restoration and final native unserialize call sites; allow saving states. Conservative Android onStop downgrade is wired. **Device acceptance and native Hardcore synchronization remain outstanding.**
 - [ ] Disable emulator cheats, memory edits, Game Genie hardware emulation, rewind, slowdown, and frame advance while Hardcore is active; audit all existing core options and alternate paths for bypasses. **Fast-forward is allowed** under current RetroAchievements rules.
 - [ ] Switching **Casual → Hardcore** mid-session requires a full game reset and a clean Hardcore session. Switching **Hardcore → Casual** is allowed with an explicit confirmation; do not silently represent Casual progress as Hardcore credit.
 - [ ] Preserve normal cartridge battery saves and legitimate gameplay; assess leaderboards and Rich Presence support, which must not be disabled in Hardcore when supported by the game.
 - [ ] Add regression tests at each save-state, cheat, resume, core-option, and speed-control entry point, plus real-device testing of resets, background recovery, offline mode, and verified server-side Hardcore award records.
 - [ ] If official emulator recognition remains outstanding, keep the feature visibly unavailable/experimental rather than spoofing another emulator identifier.
+
+See [Hardcore compliance audit](docs/HARDCORE_COMPLIANCE_AUDIT.md) for implemented safeguards and the still-blocking server, eligibility, lifecycle and gameplay requirements.
 
 **Hardcore acceptance:** Every prohibited operation is enforced by the emulator, the native client reports the correct mode, and RetroAchievements recognizes a genuinely earned Hardcore award. Not a substitute for the existing Casual M6 acceptance.
 
