@@ -43,6 +43,7 @@ import kotlinx.coroutines.withContext
 internal fun RetroAchievementsWebSection(
     romMd5: String?,
     console: NesRetroAchievementsHash.Console?,
+    accountOnly: Boolean = false,
 ) {
     val context = LocalContext.current.applicationContext
     val store = remember(context) { RetroAchievementsWebAccountStore(context) }
@@ -134,7 +135,7 @@ internal fun RetroAchievementsWebSection(
             }
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
+                if (!accountOnly) Button(
                     enabled = !busy && romMd5 != null && console != null,
                     onClick = {
                         val hash = romMd5
@@ -175,7 +176,7 @@ internal fun RetroAchievementsWebSection(
                     Text(stringResource(R.string.opennes_ra_web_disconnect))
                 }
             }
-            if (romMd5 == null || console == null) {
+            if (!accountOnly && (romMd5 == null || console == null)) {
                 Text(
                     text = stringResource(R.string.opennes_ra_web_need_hash),
                     color = GameMenuStyle.muted,
@@ -211,7 +212,8 @@ internal fun RetroAchievementsWebSection(
                 null -> null
             }
         progress?.takeIf {
-            romMd5 != null &&
+            !accountOnly &&
+                romMd5 != null &&
                 expectedSystem != null &&
                 it.romMd5.equals(romMd5, ignoreCase = true) &&
                 it.systemId == expectedSystem
