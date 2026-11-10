@@ -2,7 +2,7 @@
 
 Updated: 2026-11-10
 
-This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The latest confirmed successful baseline before the public game-ID lookup is [commit `ca8ed9f8`](https://github.com/JPLuker/OpenNES/commit/ca8ed9f8d8fb4535e2a13449e800a9d764aa5625), [CI run 42844492287](https://github.com/JPLuker/OpenNES/actions/runs/42844492287). The new M6 native hash lookup and its JVM tests require a separate green CI verdict. The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) remains unaccepted; M6 native authenticated awards and M7 real-server sync are **not implemented**. See the [no-device work plan](NO_DEVICE_BUILD_PLAN_2026-11-10.md).
+This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The latest verified baseline is [commit `f5049eb1`](https://github.com/JPLuker/OpenNES/commit/f5049eb177c97dad2ad34732a29a7361a4820c23), [CI run 42853667514](https://github.com/JPLuker/OpenNES/actions/runs/42853667514). This newly added native rc_client token verification, Settings wiring and tests still require their own CI verdict. The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) remains unaccepted; M6 native authenticated awards and M7 real-server sync are **not implemented**. See the [no-device work plan](NO_DEVICE_BUILD_PLAN_2026-11-10.md).
 
 ## Milestones
 
@@ -19,6 +19,14 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M6 — RetroAchievements** | **ACTIVE — native diagnostics DEVICE-SAMPLED**: real phone observed 234 emulated frames, 65,536 mapped bytes and 234 successful NES zero-page reads; website history retrieved matching RoboCop set. Dormant native `rc_client` bridge is source-built; full login and new awards are NOT implemented | Test save/restart/fast-forward stress and complete native account/achievement lifecycle; do not equate diagnostic counters with authenticated award readiness |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
+
+## November 10 — Native token verification through real rc_client transport
+
+- **M6 source implementation:** A short-lived, isolated native `rc_client` runs `rc_client_begin_login_with_token` against the user's already encrypted emulator token. Native callbacks copy bounded official requests into an ephemeral, session-ID-tagged queue. Kotlin validates the official HTTPS endpoint, drives the existing cancellable transport, and returns bounded responses to the exact pending native callback.
+- **Lifecycle and safety:** A serialized single-session driver closes every native client, rejects stale/duplicate callbacks, and invalidates queued requests on stop, timeout and cancellation. It has **no game loaded, no RAM reads, no award events, and no save mutations**.
+- **Settings UI:** The account screen now includes **Verify emulator connection**. A verified token is reported separately from actual in-game achievement earning.
+- **Regression tests:** Added fake-native session tests for legitimate official requests, unsafe-host rejection, password-form rejection and cancellation cleanup. Device-level token verification and native runtime integration remain unaccepted.
+- **Next remaining work:** A separate, game-owned `rc_client` lifetime bound to LibretroDroid core generation, official game load, emulated frames, actual achievement unlock events and server award delivery.
 
 ## November 10 — Official native game-ID recognition
 
