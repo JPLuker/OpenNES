@@ -51,6 +51,11 @@
 - CI verifies explicit JNI exports for core memory snapshots, emulated frame count and rcheevos preflight in every packaged ABI.
 - **Not yet implemented:** real emulator user login/token, rc_client memory mapping callbacks, HTTPS server transport, native game activation, unlock events, hardcore restrictions and live overlays. Linking the library is not proof of accurate achievements.
 
+## FDS website progress and native limitation
+
+- Read-only website lookup uses RetroAchievements system **7 for NES** and **81 for Famicom Disk System**, based on local ROM identification, with separate cached indexes. One system's results cannot appear for the other.
+- Native FDS unlock compatibility is **not implemented**: the pinned FCEUmm Libretro core does not expose all additional FDS RAM required for achievements. Support must not be claimed until the core and memory map have been tested against real FDS games.
+
 ## Debug-only real-device native acceptance tool
 
 - Open Pause → Achievements → **Native bridge diagnostics (debug only)**, then Start probe, resume NES gameplay, reopen and Refresh. Expect observed frames to advance and mapped memory to be nonzero for a supported FCEUmm game. Stop probe afterward.

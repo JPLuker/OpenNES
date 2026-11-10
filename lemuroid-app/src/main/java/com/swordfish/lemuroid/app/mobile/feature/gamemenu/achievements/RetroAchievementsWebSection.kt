@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
+import com.swordfish.lemuroid.app.shared.achievements.NesRetroAchievementsHash
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsWebAccount
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsWebAccountStore
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsWebApi
@@ -39,7 +40,10 @@ import kotlinx.coroutines.withContext
  * never becomes an emulator login token or a source of local unlock awards.
  */
 @Composable
-internal fun RetroAchievementsWebSection(romMd5: String?) {
+internal fun RetroAchievementsWebSection(
+    romMd5: String?,
+    console: NesRetroAchievementsHash.Console?,
+) {
     val context = LocalContext.current.applicationContext
     val store = remember(context) { RetroAchievementsWebAccountStore(context) }
     val api = remember(context) { RetroAchievementsWebApi(context) }
@@ -49,7 +53,7 @@ internal fun RetroAchievementsWebSection(romMd5: String?) {
     var apiKeyInput by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var statusId by remember { mutableStateOf<Int?>(null) }
-    var progress by remember(romMd5) { mutableStateOf<RetroAchievementsWebApi.Progress?>(null) }
+    var progress by remember(romMd5, console) { mutableStateOf<RetroAchievementsWebApi.Progress?>(null) }
 
     // Credentials are only ever read and decrypted inside a user-initiated
     // operation, and the key is not copied into any Compose state after save.
@@ -124,16 +128,17 @@ internal fun RetroAchievementsWebSection(romMd5: String?) {
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    enabled = !busy && romMd5 != null,
+                    enabled = !busy && romMd5 != null && console != null,
                     onClick = {
                         val hash = romMd5
-                        if (hash != null) {
+                        val selectedConsole = console
+                        if (hash != null && selectedConsole != null) {
                             run {
                                 val account =
                                     withContext(Dispatchers.IO) {
                                         store.load() ?: error("Missing website account")
                                     }
-                                progress = api.lookupProgress(account, hash)
+                                progress = api.lookupProgress(account, hash, selectedConsole)
                                 statusId =
                                     if (progress == null) {
                                         R.string.opennes_ra_web_no_match
@@ -163,7 +168,7 @@ internal fun RetroAchievementsWebSection(romMd5: String?) {
                     Text(stringResource(R.string.opennes_ra_web_disconnect))
                 }
             }
-            if (romMd5 == null) {
+            if (romMd5 == null || console == null) {
                 Text(
                     text = stringResource(R.string.opennes_ra_web_need_hash),
                     color = GameMenuStyle.muted,
@@ -192,7 +197,15 @@ internal fun RetroAchievementsWebSection(romMd5: String?) {
                 fontSize = 12.sp,
             )
         }
-        progress?.takeIf { romMd5 != null && it.romMd5.equals(romMd5, ignoreCase = true) }
+        progress?.takeIf {
+            romMd5 != null && console != null &&
+                it.romMd5.equals(romMd5, ignoreCase = true) &&
+                it.systemId ==
+                when (console) {
+                    NesRetroAchievementsHash.Console.NES -> 7
+                    NesRetroAchievementsHash.Console.FDS -> 81
+                }
+        }
             ?.let { value ->
                 VerifiedAchievementList(
                     username = value.username,

@@ -35,11 +35,14 @@ class RetroAchievementsWebApi(context: Context) {
         val gameId: Int,
         val username: String,
         val romMd5: String,
+        val systemId: Int,
         val achievements: List<VerifiedAchievement>,
     )
 
-    private val indexFile =
-        AtomicFile(File(context.applicationContext.cacheDir, "opennes-ra-nes-hashes-v1.json"))
+    private val cacheDir = context.applicationContext.cacheDir
+
+    private fun indexFile(systemId: Int): AtomicFile =
+        AtomicFile(File(cacheDir, "opennes-ra-system-${systemId}-hashes-v1.json"))
 
     private val http =
         OkHttpClient.Builder()
@@ -72,11 +75,17 @@ class RetroAchievementsWebApi(context: Context) {
     suspend fun lookupProgress(
         account: RetroAchievementsWebAccount,
         romMd5: String,
+        console: NesRetroAchievementsHash.Console,
     ): Progress? =
         withContext(Dispatchers.IO) {
             require(romMd5.matches(Regex("[a-fA-F0-9]{32}"))) { "Invalid local NES fingerprint" }
+            val systemId =
+                when (console) {
+                    NesRetroAchievementsHash.Console.NES -> NES_SYSTEM_ID
+                    NesRetroAchievementsHash.Console.FDS -> FDS_SYSTEM_ID
+                }
             val gameId =
-                loadGameIndex(account.apiKey)[romMd5.lowercase(Locale.ROOT)]
+                loadGameIndex(account.apiKey, systemId)[romMd5.lowercase(Locale.ROOT)]
                     ?: return@withContext null
             val raw =
                 getBody(
@@ -86,7 +95,7 @@ class RetroAchievementsWebApi(context: Context) {
                     MAX_PROFILE_BYTES,
                 )
             val game = JSONObject(raw)
-            require(game.optInt("ID", 0) == gameId && game.optInt("ConsoleID", -1) == NES_SYSTEM_ID) {
+            require(game.optInt("ID", 0) == gameId && game.optInt("ConsoleID", -1) == systemId) {
                 "RetroAchievements game association changed"
             }
             val entries =
@@ -117,12 +126,17 @@ class RetroAchievementsWebApi(context: Context) {
                 gameId = gameId,
                 username = account.username,
                 romMd5 = romMd5.lowercase(Locale.ROOT),
+                systemId = systemId,
                 achievements = achievements.sortedBy { it.first }.map { it.second },
             )
         }
 
-    private suspend fun loadGameIndex(apiKey: String): Map<String, Int> {
-        val cache = readIndex()
+    private suspend fun loadGameIndex(
+        apiKey: String,
+        systemId: Int,
+    ): Map<String, Int> {
+        require(systemId == NES_SYSTEM_ID || systemId == FDS_SYSTEM_ID)
+        val cache = readIndex(systemId)
         if (cache != null) return cache
         // One rate-limited request only, explicitly initiated by the player.
         // The website specifically recommends caching this large endpoint.
@@ -130,7 +144,7 @@ class RetroAchievementsWebApi(context: Context) {
             getBody(
                 "API_GetGameList.php",
                 apiKey,
-                listOf("i" to NES_SYSTEM_ID.toString(), "f" to "1", "h" to "1"),
+                listOf("i" to systemId.toString(), "f" to "1", "h" to "1"),
                 MAX_INDEX_BYTES,
             )
         val list = JSONArray(raw)
@@ -140,7 +154,7 @@ class RetroAchievementsWebApi(context: Context) {
         for (index in 0 until list.length()) {
             coroutineContext.ensureActive()
             val game = list.optJSONObject(index) ?: continue
-            if (game.optInt("ConsoleID", -1) != NES_SYSTEM_ID) continue
+            if (game.optInt("ConsoleID", -1) != systemId) continue
             val gameId = game.optInt("ID", 0)
             if (gameId <= 0) continue
             val hashes = game.optJSONArray("Hashes") ?: continue
@@ -156,19 +170,20 @@ class RetroAchievementsWebApi(context: Context) {
         val payload =
             JSONObject()
                 .put("updated", System.currentTimeMillis())
-                .put("system", NES_SYSTEM_ID)
+                .put("system", systemId)
                 .put("hashes", entries)
                 .toString()
                 .toByteArray(StandardCharsets.UTF_8)
         require(payload.size <= MAX_CACHE_BYTES) { "NES game index is too large to cache" }
         // A failed cache write does not invalidate a successfully downloaded index.
         try {
-            val stream = indexFile.startWrite()
+            val file = indexFile(systemId)
+            val stream = file.startWrite()
             try {
                 stream.write(payload)
-                indexFile.finishWrite(stream)
+                file.finishWrite(stream)
             } catch (e: Exception) {
-                indexFile.failWrite(stream)
+                file.failWrite(stream)
             }
         } catch (_: Exception) {
             // Cache is optional; no credentials are written here.
@@ -176,12 +191,13 @@ class RetroAchievementsWebApi(context: Context) {
         return mapHashes(entries)
     }
 
-    private fun readIndex(): Map<String, Int>? {
+    private fun readIndex(systemId: Int): Map<String, Int>? {
         try {
-            if (!indexFile.baseFile.isFile || indexFile.baseFile.length() > MAX_CACHE_BYTES) return null
-            val json = JSONObject(String(indexFile.readFully(), StandardCharsets.UTF_8))
+            val file = indexFile(systemId)
+            if (!file.baseFile.isFile || file.baseFile.length() > MAX_CACHE_BYTES) return null
+            val json = JSONObject(String(file.readFully(), StandardCharsets.UTF_8))
             val updated = json.optLong("updated", 0)
-            if (json.optInt("system") != NES_SYSTEM_ID ||
+            if (json.optInt("system") != systemId ||
                 updated <= 0 ||
                 System.currentTimeMillis() - updated !in 0L..INDEX_TTL_MS
             ) {
@@ -261,6 +277,7 @@ class RetroAchievementsWebApi(context: Context) {
 
     companion object {
         private const val NES_SYSTEM_ID = 7
+        private const val FDS_SYSTEM_ID = 81
         private const val MAX_INDEX_BYTES = 12 * 1024 * 1024
         private const val MAX_CACHE_BYTES = 5 * 1024 * 1024
         private const val MAX_PROFILE_BYTES = 1024 * 1024

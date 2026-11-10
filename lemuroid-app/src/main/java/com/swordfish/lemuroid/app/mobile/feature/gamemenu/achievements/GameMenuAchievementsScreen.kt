@@ -180,6 +180,7 @@ fun GameMenuAchievementsScreen(
 
         RetroAchievementsWebSection(
             romMd5 = (identification as? LocalIdentification.Identified)?.identity?.md5,
+            console = (identification as? LocalIdentification.Identified)?.identity?.console,
         )
         NativeBridgeDiagnostics()
 
