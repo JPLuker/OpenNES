@@ -19,6 +19,9 @@
 namespace {
 constexpr size_t kQueueLimit = 12;
 constexpr size_t kEventLimit = 32;
+// Pinned rcheevos 12.5 rc_client.c reserves IDs >= 101000001 for
+// emulator compatibility notices. They are NOT actual achievements.
+constexpr uint32_t kClientWarningId = 101000001u;
 constexpr size_t kMaxUrl = 2048;
 constexpr size_t kMaxForm = 64 * 1024;
 constexpr jsize kMaxResponse = 2 * 1024 * 1024;
@@ -447,6 +450,15 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_game
         for (uint32_t i = 0; i < bucket.num_achievements && rows.size() < 512; ++i) {
             const rc_client_achievement_t* item = bucket.achievements[i];
             if (!item || item->id == 0) continue;
+            if (item->id >= kClientWarningId) {
+                // Preserve compatibility diagnostics, but keep them OUT of
+                // achievement totals and unlocked/locked filters.
+                rows.push_back(
+                    "notice\t" + safeLabel(item->title, 220) + "\t" +
+                    safeLabel(item->description, 640)
+                );
+                continue;
+            }
             rows.push_back(
                 std::to_string(item->id) + "\t" +
                 std::to_string(item->points) + "\t" +

@@ -203,6 +203,13 @@ fun GameMenuAchievementsScreen(
                         fontSize = 16.sp,
                     )
                 }
+                activeSession?.compatibilityNotices?.forEach { notice ->
+                    Text(
+                        text = notice,
+                        color = GameMenuStyle.muted,
+                        fontSize = 12.sp,
+                    )
+                }
                 if (activeSession == null) {
                     Text(
                         text =

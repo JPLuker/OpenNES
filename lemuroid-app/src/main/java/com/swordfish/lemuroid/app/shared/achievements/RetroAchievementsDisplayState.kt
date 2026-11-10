@@ -19,6 +19,7 @@ sealed interface RetroAchievementsDisplayState {
         val romMd5: String,
         val username: String,
         val achievements: List<VerifiedAchievement>,
+        val compatibilityNotices: List<String> = emptyList(),
     ) : RetroAchievementsDisplayState
 }
 

@@ -23,17 +23,6 @@ internal class RetroAchievementsGameSessionRunner(
     private val transport: RetroAchievementsNativeHttpTransport = RetroAchievementsNativeHttpTransport(),
 ) {
     suspend fun run(game: Game) {
-        val credentials =
-            try {
-                withContext(Dispatchers.IO) {
-                    RetroAchievementsNativeAccountStore(context).load()
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                null
-            } ?: return
-
         val identity =
             try {
                 NesRetroAchievementsHash.forGame(context, game)
@@ -45,6 +34,10 @@ internal class RetroAchievementsGameSessionRunner(
         // FCEUmm's FDS memory map is not yet validated. Never evaluate FDS
         // achievements through the NES (console 7) RAM mapping.
         if (!supportsNativeGame(identity)) return
+        // The game can start BEFORE the user signs in. Stay attached to this
+        // ViewModel's cancellation-bound job and accept a later sign-in
+        // without asking the user to restart their ROM.
+        val credentials = awaitCredentials()
         val md5 = identity.md5
         val ticket = RetroAchievementsGameStateStore.begin(md5)
         var session = 0L
@@ -79,6 +72,23 @@ internal class RetroAchievementsGameSessionRunner(
                     RetroAchievementsGameStateStore.clear(ticket)
                 }
             }
+        }
+    }
+
+    private suspend fun awaitCredentials(): NativeCredentials {
+        val store = RetroAchievementsNativeAccountStore(context)
+        while (true) {
+            val credentials =
+                try {
+                    withContext(Dispatchers.IO) { store.load() }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null
+                }
+            if (credentials != null) return credentials
+            // No network or native client is created while signed out.
+            delay(2_000)
         }
     }
 
@@ -174,14 +184,18 @@ internal class RetroAchievementsGameSessionRunner(
                 if (connection.isConnected) {
                     val now = System.nanoTime()
                     if (lastRefresh == 0L || elapsedMillis(lastRefresh, now) >= 1_000L) {
-                        val achievements =
-                            RetroAchievementsNative.gameAchievementRows(session)
-                                ?.mapNotNull(::decodeAchievementRow)
-                                ?: emptyList()
+                        val rows = RetroAchievementsNative.gameAchievementRows(session)?.toList().orEmpty()
+                        val achievements = rows.mapNotNull(::decodeAchievementRow)
+                        val notices = rows.mapNotNull(::decodeCompatibilityNotice).distinct().take(3)
                         RetroAchievementsGameStateStore.publish(
                             ticket,
                             md5,
-                            RetroAchievementsDisplayState.Active(md5, username, achievements),
+                            RetroAchievementsDisplayState.Active(
+                                md5,
+                                username,
+                                achievements,
+                                compatibilityNotices = notices,
+                            ),
                         )
                         lastRefresh = now
                     }
@@ -257,10 +271,27 @@ internal class RetroAchievementsGameSessionRunner(
                 false
             }
 
+        // rcheevos reserves IDs >= 101000001 for client-generated notices,
+        // such as "Warning: Unknown Emulator". They never count as awards.
+        internal const val CLIENT_WARNING_ID = 101000001
+
+        internal fun decodeCompatibilityNotice(raw: String): String? {
+            val fields = raw.split('\t', limit = 3)
+            if (fields.size != 3 || fields[0] != "notice") return null
+            val heading = fields[1].trim().take(220)
+            val detail = fields[2].trim().take(640)
+            if (heading.isEmpty() || detail.isEmpty() ||
+                heading.any { it.isISOControl() } || detail.any { it.isISOControl() }
+            ) {
+                return null
+            }
+            return "$heading: $detail"
+        }
+
         internal fun decodeAchievementRow(raw: String): VerifiedAchievement? {
             val fields = raw.split('\t', limit = 5)
             if (fields.size != 5) return null
-            val id = fields[0].toIntOrNull()?.takeIf { it > 0 } ?: return null
+            val id = fields[0].toIntOrNull()?.takeIf { it in 1 until CLIENT_WARNING_ID } ?: return null
             val points = fields[1].toIntOrNull()?.takeIf { it in 0..500 } ?: return null
             if (fields[2] != "0" && fields[2] != "1") return null
             return VerifiedAchievement(

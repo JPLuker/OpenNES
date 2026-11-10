@@ -83,6 +83,29 @@ class RetroAchievementsGameSessionRunnerTest {
     }
 
     @Test
+    fun clientEmulatorWarningsNeverCountTowardRealAwards() {
+        val warning = "notice\tWarning: Unknown Emulator\tHardcore unlocks cannot be earned using this emulator."
+        assertEquals(
+            "Warning: Unknown Emulator: Hardcore unlocks cannot be earned using this emulator.",
+            RetroAchievementsGameSessionRunner.decodeCompatibilityNotice(warning),
+        )
+        assertEquals(null, RetroAchievementsGameSessionRunner.decodeAchievementRow(warning))
+        assertEquals(
+            null,
+            RetroAchievementsGameSessionRunner.decodeAchievementRow(
+                "101000001\t0\t1\tWarning: Unknown Emulator\tNot a real achievement",
+            ),
+        )
+        assertEquals(null, RetroAchievementsGameSessionRunner.decodeCompatibilityNotice("notice\t\tMissing title"))
+        assertEquals(null, RetroAchievementsGameSessionRunner.decodeCompatibilityNotice("notice\tUnsafe\tNew\nline"))
+        assertNotNull(
+            RetroAchievementsGameSessionRunner.decodeAchievementRow(
+                "19245\t5\t1\tGenuine NES award\tEarned through gameplay",
+            ),
+        )
+    }
+
+    @Test
     fun nativeAwardsAreRestrictedToVerifiedNesMemoryMaps() {
         val nes =
             NesRetroAchievementsHash.Identity(
