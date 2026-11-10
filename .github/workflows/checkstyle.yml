@@ -43,7 +43,7 @@ jobs:
           chmod +x gradlew
           ./gradlew ktlintCheck --stacktrace
 
-      - name: Run offline NES import regression tests
+      - name: Run offline JVM regression tests
         run: |
           ./gradlew :lemuroid-app:testFreeBundleDebugUnitTest --stacktrace
 
