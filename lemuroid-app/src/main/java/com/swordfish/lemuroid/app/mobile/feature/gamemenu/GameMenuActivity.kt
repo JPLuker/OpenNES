@@ -15,6 +15,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -313,7 +314,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     @Composable
     private fun SideMenu(
         fullscreen: Boolean = false,
-        content: @Composable () -> Unit,
+        content: @Composable ColumnScope.() -> Unit,
     ) {
         BoxWithConstraints(
             modifier =
