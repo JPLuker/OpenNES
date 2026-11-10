@@ -38,3 +38,7 @@
 - A save changed on both devices is a conflict even if one file has a later timestamp. Missing baselines require explicit initial pairing. Offline changes must be revalidated against the remote state on reconnect rather than blindly replayed. The planner returns expected hashes for a future executor to recheck before modifying a file.
 - JVM tests exercise opt-in, offline behavior, unverified identity, first pairing, diverged saves, required backups, explicit direction and no-op equality.
 - **Still absent:** encrypted persistent sync queue, remote create/update endpoint, immutable upload snapshot storage, transactional local replacement, conflict resolution UI and server/device validation. No code enables RomM remote writes or overwrites live saves. Build each layer separately, then require real-server testing before release signoff.
+
+### Versioned local backup writer (source implemented, not connected to sync)
+
+`RommVersionedSaveBackupStore` copies a local save into an app-private directory under a new per-ROM version name. It streams and SHA-256 hashes the content with a 16 MiB cap, syncs the staged file to disk, renames it to a unique `.savebak` filename, and re-reads the result to verify the digest. The original save is never modified. Incomplete/corrupt backups are discarded; callers may reverify a stored snapshot before using it. A separate opt-in executor is still needed to connect this backup to the `RommSaveSyncPlanner` decision and any RomM API write. No remote mutations are enabled.
