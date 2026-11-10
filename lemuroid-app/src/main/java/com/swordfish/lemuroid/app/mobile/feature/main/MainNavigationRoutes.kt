@@ -69,6 +69,11 @@ enum class MainRoute(
         titleId = R.string.opennes_romm_title,
         parent = SETTINGS,
     ),
+    SETTINGS_RETROACHIEVEMENTS(
+        route = "settings/retroachievements",
+        titleId = R.string.opennes_ra_settings_title,
+        parent = SETTINGS,
+    ),
     ;
 
     companion object {
