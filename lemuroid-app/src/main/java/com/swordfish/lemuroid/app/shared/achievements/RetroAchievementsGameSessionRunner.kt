@@ -48,6 +48,7 @@ internal class RetroAchievementsGameSessionRunner(
         val md5 = identity.md5
         val ticket = RetroAchievementsGameStateStore.begin(md5)
         var session = 0L
+        var activationFailed = false
         try {
             withContext(Dispatchers.IO) {
                 session =
@@ -56,18 +57,27 @@ internal class RetroAchievementsGameSessionRunner(
                         credentials.token,
                         md5,
                     )
-                if (session <= 0L) return@withContext
-                pollGame(session, ticket, md5, credentials.username)
+                activationFailed =
+                    if (session <= 0L) {
+                        true
+                    } else {
+                        pollGame(session, ticket, md5, credentials.username)
+                    }
             }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            // Don't expose tokens, raw POST forms, or potentially sensitive
-            // server error messages through UI, logs or crash reporting.
+            // Keep native/transport details private, but don't silently
+            // represent a failed session as if it were still connecting.
+            activationFailed = true
         } finally {
             withContext(NonCancellable + Dispatchers.IO) {
                 if (session > 0) RetroAchievementsNative.stopGameSession(session)
-                RetroAchievementsGameStateStore.clear(ticket)
+                if (activationFailed) {
+                    RetroAchievementsGameStateStore.finishFailed(ticket, md5)
+                } else {
+                    RetroAchievementsGameStateStore.clear(ticket)
+                }
             }
         }
     }
@@ -77,7 +87,7 @@ internal class RetroAchievementsGameSessionRunner(
         ticket: Long,
         md5: String,
         username: String,
-    ) {
+    ): Boolean {
         var active = false
         val connection = NativeConnectionGate()
         var lastRefresh = 0L
@@ -93,20 +103,21 @@ internal class RetroAchievementsGameSessionRunner(
             }
             val status = RetroAchievementsNative.gameSessionStatus(session)
             when (status) {
-                -2, -1 -> return
+                -2 -> return false // Session replaced or game exited.
+                -1 -> return true // Native login, game load or memory failure.
                 2 -> {
-                    if (RetroAchievementsNative.loadedGameId(session) <= 0) return
+                    if (RetroAchievementsNative.loadedGameId(session) <= 0) return true
                     active = true
                 }
             }
-            if (!active && elapsedSeconds(started) > 120) return
+            if (!active && elapsedSeconds(started) > 120) return true
 
             // Native callbacks are owned by this session. A cancelled or
             // superseded game cannot deliver a response to another client.
             val request = RetroAchievementsNative.takeGameRequest(session)
             if (request != null) {
                 val id = request.getOrNull(0)?.toLongOrNull()
-                if (request.size != 3 || id == null || id <= 0) return
+                if (request.size != 3 || id == null || id <= 0) return true
                 val reply =
                     try {
                         if (!isOfficialGameRequest(request[1], request[2])) {
@@ -120,7 +131,7 @@ internal class RetroAchievementsGameSessionRunner(
                         RetroAchievementsNativeHttpTransport.Reply(-1, ByteArray(0))
                     }
                 if (!RetroAchievementsNative.completeGameRequest(session, id, reply.statusCode, reply.body)) {
-                    return
+                    return false // Stale response after a new ROM or teardown.
                 }
             }
 

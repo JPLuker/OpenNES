@@ -39,6 +39,20 @@ internal object RetroAchievementsGameStateStore {
         mutable.value = Snapshot(romMd5, state)
     }
 
+    /**
+     * Persist a generic, non-sensitive activation failure for this ROM until
+     * the next session begins. A stale worker cannot modify a newer game.
+     */
+    @Synchronized
+    fun finishFailed(
+        ticket: Long,
+        romMd5: String,
+    ) {
+        if (currentTicket != ticket || mutable.value.romMd5 != romMd5) return
+        currentTicket = 0L
+        mutable.value = Snapshot(romMd5, RetroAchievementsDisplayState.Unavailable)
+    }
+
     @Synchronized
     fun clear(ticket: Long) {
         if (currentTicket != ticket) return

@@ -11,6 +11,8 @@ sealed interface RetroAchievementsDisplayState {
 
     data object Connecting : RetroAchievementsDisplayState
 
+    data object Unavailable : RetroAchievementsDisplayState
+
     data object NoMatchingGame : RetroAchievementsDisplayState
 
     data class Active(

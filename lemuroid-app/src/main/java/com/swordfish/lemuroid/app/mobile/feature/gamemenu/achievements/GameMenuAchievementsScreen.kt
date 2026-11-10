@@ -178,6 +178,8 @@ fun GameMenuAchievementsScreen(
                             isFdsRom -> R.string.opennes_ra_fds_unavailable
                             visibleSession is RetroAchievementsDisplayState.Connecting ->
                                 R.string.opennes_ra_runtime_connecting
+                            visibleSession is RetroAchievementsDisplayState.Unavailable ->
+                                R.string.opennes_ra_runtime_failed
                             visibleSession is RetroAchievementsDisplayState.NoMatchingGame ->
                                 R.string.opennes_ra_runtime_no_match
                             visibleSession is RetroAchievementsDisplayState.Active ->
@@ -207,6 +209,8 @@ fun GameMenuAchievementsScreen(
                             stringResource(
                                 if (isFdsRom) {
                                     R.string.opennes_ra_fds_explanation
+                                } else if (visibleSession is RetroAchievementsDisplayState.Unavailable) {
+                                    R.string.opennes_ra_runtime_failed_explanation
                                 } else if (visibleSession is RetroAchievementsDisplayState.NoMatchingGame) {
                                     R.string.opennes_ra_no_match_explanation
                                 } else if (savedEmulatorUsername != null) {

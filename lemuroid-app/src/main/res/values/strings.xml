@@ -471,6 +471,8 @@
     <string name="opennes_ra_local_hash_notice">This fingerprint is calculated on your device. No ROM bytes are uploaded. If you explicitly request website progress, OpenNES sends your web API key and username over HTTPS to RetroAchievements. A fingerprint alone does not confirm support.</string>
     <string name="opennes_ra_runtime_ready">Achievements connected</string>
     <string name="opennes_ra_runtime_connecting">Connecting to RetroAchievements</string>
+    <string name="opennes_ra_runtime_failed">Could not start live achievements</string>
+    <string name="opennes_ra_runtime_failed_explanation">OpenNES could not establish a native achievement session for this game. Check the connection and emulator account; gameplay is unaffected.</string>
     <string name="opennes_ra_runtime_no_match">Game not recognized</string>
     <string name="opennes_ra_runtime_hash_mismatch">Game identification mismatch</string>
     <string name="opennes_ra_fds_unavailable">FDS achievements unavailable</string>

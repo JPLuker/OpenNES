@@ -133,6 +133,32 @@ class RetroAchievementsGameSessionRunnerTest {
     }
 
     @Test
+    fun failedNativeSessionRemainsVisibleWithoutLeakingToAnotherGame() {
+        val gameA = "a".repeat(32)
+        val gameB = "b".repeat(32)
+        val failedTicket = RetroAchievementsGameStateStore.begin(gameA)
+        RetroAchievementsGameStateStore.finishFailed(failedTicket, gameA)
+        assertEquals(
+            RetroAchievementsDisplayState.Unavailable,
+            RetroAchievementsGameStateStore.snapshots.value.state,
+        )
+        RetroAchievementsGameStateStore.clear(failedTicket)
+        assertEquals(
+            RetroAchievementsDisplayState.Unavailable,
+            RetroAchievementsGameStateStore.snapshots.value.state,
+        )
+
+        val nextTicket = RetroAchievementsGameStateStore.begin(gameB)
+        RetroAchievementsGameStateStore.finishFailed(failedTicket, gameA)
+        assertEquals(gameB, RetroAchievementsGameStateStore.snapshots.value.romMd5)
+        assertEquals(
+            RetroAchievementsDisplayState.Connecting,
+            RetroAchievementsGameStateStore.snapshots.value.state,
+        )
+        RetroAchievementsGameStateStore.clear(nextTicket)
+    }
+
+    @Test
     fun lateGameSessionCannotOverwriteNewRomAchievements() {
         val gameA = "a".repeat(32)
         val gameB = "b".repeat(32)
