@@ -803,22 +803,24 @@ private fun MenuEditTouchControls(
                                 fontSize = 12.sp,
                             )
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal),
-                                modifier = Modifier.weight(1f),
-                            )
-                            Switch(
-                                checked = touchControllerSettings.landscapeMinimal,
-                                onCheckedChange = {
-                                    viewModel.updateTouchControllerSettings(
-                                        touchControllerSettings.copy(landscapeMinimal = it),
-                                    )
-                                },
-                            )
+                        if (landscapeMode == 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_minimal),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Switch(
+                                    checked = touchControllerSettings.landscapeMinimal,
+                                    onCheckedChange = {
+                                        viewModel.updateTouchControllerSettings(
+                                            touchControllerSettings.copy(landscapeMinimal = it),
+                                        )
+                                    },
+                                )
+                            }
                         }
                         if (compactLandscape && landscapeMode != 0) {
                             Text(

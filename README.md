@@ -8,7 +8,7 @@ One normal testing download: `master` → validated build → rolling `dev-lates
 
 [Development roadmap](ROADMAP.md) · [Module progress](docs/MODULE_PROGRESS.md) · [M5 final-testing checklist](docs/M5_FINAL_TESTING.md) · [Android build instructions](docs/BUILDING.md) · [NES-only cleanup audit](docs/NES_ONLY_AUDIT.md) · [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) · [Report an issue](https://github.com/JPLuker/OpenNES/issues)
 
-> **Early development:** The [current test APK](https://github.com/JPLuker/OpenNES/actions/runs/42703489576) successfully passed CI build, lint, NES-only package inspection and publication. The controller UI now includes live preset previews, a HEX/HSV color picker, visible palette icons and the Up/Down feedback correction. **Full M0–M5 on-device acceptance is not finished**. Native RetroAchievements and RomM acceptance remain pending.
+> **Early development:** The [rolling development APK](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk) is published from the latest successfully linted, compiled and inspected `master` commit. The controller UI now includes live preset previews, a HEX/HSV color picker, visible palette icons and the Up/Down feedback correction. **Full M0–M5 on-device acceptance is not finished**. Native RetroAchievements and RomM acceptance remain pending.
 
 ## What OpenNES is meant to be
 
@@ -38,7 +38,7 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
 | M2 — Replace the complete Lemuroid user interface | **Code-complete (source scope)**: NES library, details, menus, settings, import recovery, accessible layouts and Android TV UI removal; build and on-device acceptance deferred |
 | M3 — Premium NES portrait controller skin | Six themes, real-time in-game preview/HEX wheel, swatch palette icons, fixed D-pad visuals, independent A/B and Start/Select/Menu positioning with PadKit touch anchors; hardware acceptance pending |
-| M4 — Dedicated landscape controller skin | **Code-complete (source scope)**: selectable framed/overlay gameplay, minimal appearance, dedicated secondary controls, adaptive sizing, cutout handling and separate settings; on-device acceptance deferred |
+| M4 — Dedicated landscape controller skin | Overlay, Framed and optional NES Handheld landscape layouts, controller palette integration, compact-screen fallback and independent orientation settings; real-device acceptance pending |
 | M5 — Gameplay, saves, input and performance polish | CI-verified test build includes immutable queued hardware-input snapshots and save reliability fixes; expanded manual input/save/audio/controller regression testing remains |
 | M6 — RetroAchievements integration | Local ROM hashing, in-game Achievements screen and optional encrypted, read-only website progress lookup implemented in source; native rc_client login/runtime and new unlock awards not implemented |
 | M7 — RomM integration (pre-release requirement) | Source implementation underway: secure read-only connection and local NES import screen; untested against a server, save sync/conflicts not implemented |

@@ -13,10 +13,10 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and one CI-verified rolling debug APK/checksum workflow | Real-device regression and production signing still pending |
 | M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
 | **M2 — UI completion and cleanup** | **SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: library, menus, settings, ROM recovery, theme/onboarding previews and color-picker UI | CI passed; verify previews, colors and navigation on phones |
-| **M3 — Portrait NES controller** | **VISUAL REDESIGN IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: live theme preview and HEX wheel available in-game; separate A/B and Start/Select/Menu anchor geometry is persisted per orientation | Verify actual A/B hit targets, one- and two-finger combined input, D-pad directions, wheel persistence and layout on device; D-pad segment geometry still outstanding |
-| M4 — Landscape NES controller | **THREE SOURCE MODES, DEVICE ACCEPTANCE OPEN**: existing overlay/framed styles plus optional palette-driven NES Handheld shell surrounding the measured gameplay viewport; per-orientation settings persist | Verify integrated housing, unobscured 4:3 gameplay, real D-pad/A/B hit targets, rotation and compact-phone overlay fallback on physical devices |
+| **M3 — Portrait NES controller** | **SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: live theme previews/HEX wheel, independent A/B and Start/Select/Menu geometry; first-game onboarding has a fully expanded sheet with a fixed Save controller & continue action and optional drag-editor handoff | Verify first-run confirmation, A/B hit targets, orientation persistence and multitouch on a phone |
+| M4 — Landscape NES controller | **THREE SOURCE MODES, DEVICE ACCEPTANCE OPEN**: Overlay, Framed and new NES Handheld shell around the measured game viewport, sharing the controller palette with saved landscape geometry | Verify 4:3 gameplay is unobstructed, portrait/landscape rotation, control touch targets, handheld bezel appearance and compact-device fallback |
 | **M5 — Gameplay reliability** | **FINAL-TEST CANDIDATE**: save failures, cancellation and quit races improved; hardware key/motion events now use immutable snapshots before async processing; latest candidate passed CI | Execute the expanded M5 device matrix for saves, audio, A/B hitboxes, controller reconnects, rotation and resume |
-| **M6 — RetroAchievements** | **ACTIVE — native bridge + pinned rcheevos built**: local NES hash, in-game achievements and optional read-only website progress implemented; LibretroDroid source-built with memory/frame JNI hooks and dormant rc_client smoke/probe. No authenticated emulator session or new unlocks yet | Verify per-emulated-frame probe on an actual phone; implement rc_client memory mapping, secure emulator account session, network transport and real award events |
+| **M6 — RetroAchievements** | **ACTIVE — native diagnostics DEVICE-SAMPLED**: real phone observed 234 emulated frames, 65,536 mapped bytes and 234 successful NES zero-page reads; website history retrieved matching RoboCop set. Dormant native `rc_client` bridge is source-built; full login and new awards are NOT implemented | Test save/restart/fast-forward stress and complete native account/achievement lifecycle; do not equate diagnostic counters with authenticated award readiness |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
 
@@ -42,6 +42,14 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [x] One permanent [test APK download](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk) with [matching checksum](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk.sha256); no separate APK artifact channel.
 - [x] Verified the consolidated workflow with [successful run 42703489576](https://github.com/JPLuker/OpenNES/actions/runs/42703489576).
 - [ ] Production signing, licenses and stable release remain M8 tasks after RomM acceptance.
+
+## Latest pause and controller UI refinements
+
+- [x] Keep Save controller & continue visible below scrollable onboarding settings; fully expand the sheet and provide an explicit Adjust button positions option.
+- [x] Change fast-forward from a menu-closing action to an independent persistent switch, matching the working Audio toggle.
+- [x] Full-width in-game Achievements page with pinned Resume game, concise status, advanced diagnostics hidden by default, and long achievement titles allowed to wrap.
+- [x] Offer Overlay, Framed and NES Handheld modes in landscape. Handheld draws an integrated single-piece theme housing around the actual measured game viewport, without moving touch hit targets.
+- [ ] Accept those visual changes on a real Android device; screenshots and controller ergonomics can require follow-up adjustments.
 
 ## First-game controller onboarding and compact editor
 
