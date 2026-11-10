@@ -1,7 +1,6 @@
 package com.swordfish.lemuroid.app.shared.achievements
 
 import kotlinx.coroutines.CancellationException
-import java.io.IOException
 
 /**
  * Public, non-authenticated game recognition via official rcheevos.
@@ -12,10 +11,10 @@ import java.io.IOException
  * This intentionally never uses the website API key or emulator login token.
  */
 internal class RetroAchievementsNativeGameResolver(
-    private val encode: (String) -> String? = RetroAchievementsNative::prepareGameResolveRequest,
+    private val encode: (String) -> Array<String>? = RetroAchievementsNative::prepareGameResolveRequest,
     private val decode: (ByteArray, Int) -> Int = RetroAchievementsNative::parseGameResolveResponse,
-    private val fetch: suspend (String) -> RetroAchievementsNativeHttpTransport.Reply = {
-        RetroAchievementsNativeHttpTransport().execute(it, null)
+    private val fetch: suspend (String, String) -> RetroAchievementsNativeHttpTransport.Reply = { url, form ->
+        RetroAchievementsNativeHttpTransport().execute(url, form)
     },
 ) {
     sealed interface Result {
@@ -31,10 +30,21 @@ internal class RetroAchievementsNativeGameResolver(
         if (!md5.matches(HASH_PATTERN)) return Result.Unavailable
         try {
             val request = encode(md5) ?: return Result.Unavailable
-            // Apply the transport's strict origin restriction even if an
-            // unexpected native API request format is returned.
-            RetroAchievementsNativeHttpTransport.validatedEndpoint(request)
-            val reply = fetch(request)
+            if (request.size != 2) return Result.Unavailable
+            val url = request[0]
+            val form = request[1]
+            // Fail closed on an unexpected C-library request. This is a
+            // public hash lookup, never a credentials-bearing endpoint.
+            val endpoint = RetroAchievementsNativeHttpTransport.validatedEndpoint(url)
+            if (endpoint.encodedPath != "/dorequest.php" || endpoint.query != null) {
+                return Result.Unavailable
+            }
+            if (!form.matches(Regex("r=gameid&m=[0-9a-fA-F]{32}")) ||
+                !form.substringAfter("&m=").equals(md5, ignoreCase = true)
+            ) {
+                return Result.Unavailable
+            }
+            val reply = fetch(url, form)
             if (reply.statusCode !in 200..299) return Result.Unavailable
             val id = decode(reply.body, reply.statusCode)
             return if (id > 0) Result.VerifiedGame(id) else Result.NoMatch
