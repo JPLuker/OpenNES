@@ -551,9 +551,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                     onClick = {
                         pendingIntentDeletion = null
                         perform("Discarding pending request") {
-                            val discarded = withContext(Dispatchers.IO) {
-                                syncJournal.discard(selected.id)
-                            }
+                            val discarded =
+                                withContext(Dispatchers.IO) {
+                                    syncJournal.discard(selected.id)
+                                }
                             syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
                             status =
                                 context.getString(
