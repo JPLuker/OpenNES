@@ -87,8 +87,9 @@ internal object RommDeviceSyncProtocol {
         if (sessionRaw !is Number || sessionRaw.toLong() <= 0L) {
             return ParseResult.Rejected(Rejection.UNSUPPORTED_SCHEMA)
         }
-        val rows = root.optJSONArray("operations")
-            ?: return ParseResult.Rejected(Rejection.UNSUPPORTED_SCHEMA)
+        val rows =
+            root.optJSONArray("operations")
+                ?: return ParseResult.Rejected(Rejection.UNSUPPORTED_SCHEMA)
         if (rows.length() > MAX_OPERATIONS) {
             return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
         }
@@ -96,8 +97,9 @@ internal object RommDeviceSyncProtocol {
         val operationKeys = mutableSetOf<Triple<Int, String?, String>>()
         val totals = mutableMapOf<Action, Int>()
         for (i in 0 until rows.length()) {
-            val row = rows.optJSONObject(i)
-                ?: return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
+            val row =
+                rows.optJSONObject(i)
+                    ?: return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
             val action =
                 when (row.optString("action")) {
                     "upload" -> Action.UPLOAD
