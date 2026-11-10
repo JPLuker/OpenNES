@@ -81,14 +81,15 @@ internal class RommPendingSyncJournal(private val directory: File) {
         if (romId <= 0 || direction == RommSaveSyncPlanner.Direction.NONE) return false
         val current = (list() as? ReadResult.Entries)?.pending ?: return false
         if (current.size >= MAX_PENDING || current.any { it.romId == romId }) return false
-        val addition = Pending(
-            id = UUID.randomUUID().toString(),
-            romId = romId,
-            direction = direction,
-            observedLocal = local,
-            observedRemote = remote,
-            requestedAtMillis = System.currentTimeMillis(),
-        )
+        val addition =
+            Pending(
+                id = UUID.randomUUID().toString(),
+                romId = romId,
+                direction = direction,
+                observedLocal = local,
+                observedRemote = remote,
+                requestedAtMillis = System.currentTimeMillis(),
+            )
         return persist(current + addition)
     }
 

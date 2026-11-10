@@ -85,8 +85,8 @@ internal fun GameMenuCheatsScreen(game: Game) {
                                         NesCheatExchange.readBounded(it)
                                     } ?: return@runCatching null
                                 val entries = NesCheatExchange.decode(bytes) ?: return@runCatching null
-                                val merged = NesCheatExchange.merge(definitions, entries)
-                                    ?: return@runCatching null
+                                val merged =
+                                    NesCheatExchange.merge(definitions, entries) ?: return@runCatching null
                                 if (repository.save(uri, merged)) merged else null
                             }.getOrNull()
                         }
