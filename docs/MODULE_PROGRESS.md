@@ -2,7 +2,7 @@
 
 Updated: 2026-11-10
 
-This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The latest verified baseline is [commit `f5049eb1`](https://github.com/JPLuker/OpenNES/commit/f5049eb177c97dad2ad34732a29a7361a4820c23), [CI run 42853667514](https://github.com/JPLuker/OpenNES/actions/runs/42853667514). This newly added native rc_client token verification, Settings wiring and tests still require their own CI verdict. The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) remains unaccepted; M6 native authenticated awards and M7 real-server sync are **not implemented**. See the [no-device work plan](NO_DEVICE_BUILD_PLAN_2026-11-10.md).
+This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The last completed successful APK baseline before the game-runtime batch was [commit `fa1286fe`](https://github.com/JPLuker/OpenNES/commit/fa1286fe26b40e1236e6b6cb5ac92747e871fa27), [CI run 42870882730](https://github.com/JPLuker/OpenNES/actions/runs/42870882730). Subsequent native session, paused-idle and UI commits still require their own CI verdict. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
 
 ## Milestones
 
@@ -16,9 +16,15 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M3 — Portrait NES controller** | **SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: live theme previews/HEX wheel, independent A/B and Start/Select/Menu geometry; first-game onboarding has a fully expanded sheet with a fixed Save controller & continue action and optional drag-editor handoff | Verify first-run confirmation, A/B hit targets, orientation persistence and multitouch on a phone |
 | M4 — Landscape NES controller | **THREE SOURCE MODES, DEVICE ACCEPTANCE OPEN**: Overlay, Framed and new NES Handheld shell around the measured game viewport, sharing the controller palette with saved landscape geometry | Verify 4:3 gameplay is unobstructed, portrait/landscape rotation, control touch targets, handheld bezel appearance and compact-device fallback |
 | **M5 — Gameplay reliability** | **FINAL-TEST CANDIDATE**: save failures, cancellation and quit races improved; hardware key/motion events now use immutable snapshots before async processing; latest candidate passed CI | Execute the expanded M5 device matrix for saves, audio, A/B hitboxes, controller reconnects, rotation and resume |
-| **M6 — RetroAchievements** | **ACTIVE — native diagnostics DEVICE-SAMPLED**: real phone observed 234 emulated frames, 65,536 mapped bytes and 234 successful NES zero-page reads; website history retrieved matching RoboCop set. Dormant native `rc_client` bridge is source-built; full login and new awards are NOT implemented | Test save/restart/fast-forward stress and complete native account/achievement lifecycle; do not equate diagnostic counters with authenticated award readiness |
+| **M6 — RetroAchievements** | **AUTHENTICATED GAME SESSION SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: official game identity, saved token login, native `rc_client`, core-generation-bound NES RAM, emulated frames, awards/events, safe paused idle and connectivity gating; FDS awards disabled | Exact-candidate CI plus a genuine phone unlock reflected on the RetroAchievements website; stress lifecycle/transport failures |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
+
+## November 10 — game-owned authenticated native rc_client
+
+- **M6 native implementation:** Separate game-scoped client authenticates the previously saved emulator token, verifies an NES ROM hash and game load, maps RAM under the matching emulation core generation, processes actual emulated frames and forwards native events without inventing unlocks in Kotlin.
+- **Lifecycle and connectivity:** Readable NES RAM is mandatory before showing Active. On disconnect, the UI hides live progress until native reconnect. `rc_client_idle` holds emulator `coreLock` before `clientMutex` to protect memory while paused, and does not run game conditions before the first valid map. FDS awards are disabled rather than using the NES map.
+- **Acceptance:** CI needs to pass for the final commit; hardware must demonstrate a real server-persisted award before M6 can be considered complete.
 
 ## November 10 — Native token verification through real rc_client transport
 

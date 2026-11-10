@@ -1,6 +1,8 @@
 # OpenNES — RetroAchievements native integration boundary
 
-**Status (2026-11-09): M6 in-game achievements shell and optional read-only website lookup implemented, native runtime not implemented.** The page hashes the current ROM locally and supports manually fetching real, existing website awards using the user's own web API key. OpenNES still cannot generate or submit new achievement unlocks.
+**Status (2026-11-10): game-owned authenticated native rc_client source implemented, CI/device acceptance pending.** The runtime signs in using the saved emulator token, loads an officially recognized NES game, validates real mapped RAM and processes emulated frames. Official server callbacks and native achievement events are delivered through bounded session-scoped queues. FDS native awards are disabled until its memory mapping is validated. The optional website API remains view-only. A compiled APK is not proof that an actual award persists on RetroAchievements.
+
+The sections below record earlier integration phases, including historical statements that features were not implemented when those sections were written. The status above supersedes those historical implementation claims.
 
 ## Grounded architecture
 

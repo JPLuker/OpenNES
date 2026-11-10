@@ -15,7 +15,7 @@
 | M3 — Portrait controller | NES visual shell, layout onboarding, independent theme and button geometry implemented | Device ergonomics, simultaneous touch, orientation persistence |
 | M4 — Landscape controller | Separate Overlay/Framed/Handheld, dedicated full-grip PadKit controls, centered video, shared editor travel geometry implemented | Real phone camera notch, editor touch bounds, persisted offsets and fallback layout |
 | M5 — Gameplay | Save/restore/lifecycle and gamepad event hardening implemented | Real audio, frame pacing, SRAM/save state, suspend/resume and reconnect tests |
-| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, encrypted `login2` sign-in, native game-ID recognition, isolated real `rc_client` token-verification HTTP queue, cancellation and tests | Implement distinct game-owned `rc_client` with authenticated load, native frame/event evaluation and awards; validate native token check and real unlock on device |
+| M6 — RetroAchievements | Game-owned authenticated native `rc_client` implemented in source for NES only, with core-bound RAM, frame events, HTTPS callbacks, disconnect gating and safe idle | Exact-candidate CI, real phone award plus server persistence; FDS memory unsupported |
 | M7 — RomM | HTTPS token storage, browse/import, manual remote-save archiving and SAF export, persisted verified SHA-256 manifests, recovery staging, snapshots, conflict planner | Real RomM server validation and explicit opt-in upload/conflict UI remain; no sync or replacement of emulator saves is enabled |
 | M8 — Release | Development CI and partial signing/attribution groundwork | License/security audits, official signing, final device sign-off; M7 acceptance required |
 
