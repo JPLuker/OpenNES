@@ -2,6 +2,7 @@
 
 **Status (2026-11-10):** M0/M1 have a CI-verified NES-only rolling debug APK; additional debloat and release signing remain. M2/M3/M4 keyboard, metadata and controller changes are implemented in source, but latest notch/editor behavior still requires phone acceptance. M5 saves, audio and input are manual-test gates. **M6 now has a game-owned, authenticated native `rc_client` for NES ROMs**, with emulated-frame evaluation, RAM validation before activation, native achievement events, cancellable HTTPS callbacks, disconnect/reconnect gating and pause-time idle processing under the core lock. FDS native awards remain disabled pending memory mapping validation. **A real achievement award and server-side persistence have not yet been verified on a phone.** M7 RomM read-only import, manual offline save archives and explicit export are available in source; two-way sync and real-server testing remain. **M7 acceptance precedes M8 public release.** See [module progress](docs/MODULE_PROGRESS.md) and [the no-device plan](docs/NO_DEVICE_BUILD_PLAN_2026-11-10.md).
 
+**Next planned feature tracks:** M5-C NES cheat manager and M6-H RetroAchievements Hardcore mode. Neither is implemented in the current APK. Cheats are Casual-only; Hardcore must enforce official restrictions on states, cheats, speed controls and suspended sessions, with emulator recognition/approval as an external gate.
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -133,6 +134,20 @@
 - [ ] Add in-app diagnostics for crashes/loading failures, with privacy-preserving logs.
 - [ ] Test battery drain, suspend/resume, calls, audio focus, background/foreground, and configuration changes.
 
+### M5-C — NES cheats (planned; NOT implemented in OpenNES)
+
+**Goal:** A native-feeling, optional cheat manager in the in-game pause menu, separate from normal gameplay and RetroAchievements account settings. FCEUmm supports Libretro/native cheats, but OpenNES currently has no supported cheat-entry, persistence, toggle, or import UI.
+
+- [ ] Expose the pinned FCEUmm core's supported cheat API through the source-built LibretroDroid bridge; verify Game Genie and other advertised formats against the actual pinned core before listing them in the UI.
+- [ ] Add **Pause → Cheats** with manual code entry, an editable friendly name, enable/disable toggle, deletion, per-game saved lists, and clear unsupported/invalid-code feedback.
+- [ ] Keep cheats **off by default**; never apply a saved cheat automatically without a user-enabled setting. Avoid putting cheat values, ROM data or user secrets in logs.
+- [ ] Apply changes on the emulator/core thread with safe lifecycle teardown and no cross-ROM leakage; support turning all cheats off and verify the core actually clears them.
+- [ ] Provide optional local import/export of codes only after strict input validation; do not depend on a third-party cheat catalog to ship the basic editor.
+- [ ] Integrate with the RetroAchievements mode policy: built-in cheats, Game Genie hardware/cartridge emulation, external cheat files and memory editing must be blocked while Hardcore is active; attempting to enable them requires an explicit downgrade to Casual.
+- [ ] Test code activation, save/restart, ROM switching, disabled defaults, broken codes, and cheat-free gameplay on a real phone.
+
+**Cheat feature acceptance:** A user can safely enter, save, toggle, remove and verify a real NES cheat in Casual mode without changing unrelated games. This track is planned, not yet built.
+
 **Exit criteria:** NES gameplay is stable across representative titles and Android device configurations. The [M0–M5 real-device test matrix](docs/M5_FINAL_TESTING.md) must pass; CI alone is insufficient.
 
 ### Additional M5 hardware input stabilization
@@ -160,6 +175,22 @@
 - [ ] Implement game rich presence and leaderboards where supported.
 - [ ] Carefully manage network outages, retries, and session state; do not falsely display unearned or unverified unlocks.
 - [ ] Restrict Hardcore actions appropriately and follow official approval/compliance requirements before promising competitive Hardcore credit.
+
+### M6-H — Hardcore RetroAchievements (planned; NOT enabled)
+
+**Goal:** Add an actual policy-enforced **Casual / Hardcore** selection, not merely a visual toggle. The current game-owned native `rc_client` deliberately runs in Casual mode. Complete and verify a genuine Casual award first.
+
+- [ ] Review the current [RetroAchievements Hardcore Compliance Requirements](https://docs.retroachievements.org/general/hardcore-compliance-requirements.html) and seek the applicable emulator integration/recognition review. **Do not claim official Hardcore award eligibility until recognized/authorized.**
+- [ ] Provide an explicit mode selector during game launch and in RetroAchievements settings, with visible in-game Hardcore/Casual status and a clear explanation of restrictions.
+- [ ] Wire verified policy state to native `rc_client_set_hardcore_enabled` and any current integration requirements. Activation must occur only when compliant, before award evaluation.
+- [ ] Block **loading** manual/quick/automatic save states while Hardcore is active; saving a state may remain possible, but loading it is prohibited. A suspended/quick-resumed emulator session must fall back to Casual.
+- [ ] Disable emulator cheats, memory edits, Game Genie hardware emulation, rewind, slowdown, and frame advance while Hardcore is active; audit all existing core options and alternate paths for bypasses. **Fast-forward is allowed** under current RetroAchievements rules.
+- [ ] Switching **Casual → Hardcore** mid-session requires a full game reset and a clean Hardcore session. Switching **Hardcore → Casual** is allowed with an explicit confirmation; do not silently represent Casual progress as Hardcore credit.
+- [ ] Preserve normal cartridge battery saves and legitimate gameplay; assess leaderboards and Rich Presence support, which must not be disabled in Hardcore when supported by the game.
+- [ ] Add regression tests at each save-state, cheat, resume, core-option, and speed-control entry point, plus real-device testing of resets, background recovery, offline mode, and verified server-side Hardcore award records.
+- [ ] If official emulator recognition remains outstanding, keep the feature visibly unavailable/experimental rather than spoofing another emulator identifier.
+
+**Hardcore acceptance:** Every prohibited operation is enforced by the emulator, the native client reports the correct mode, and RetroAchievements recognizes a genuinely earned Hardcore award. Not a substitute for the existing Casual M6 acceptance.
 
 **Exit criteria:** Successfully identifies supported games, loads achievements, and verifies supported Casual unlocks on real hardware. Any Hardcore features accurately reflect official authorization status.
 
@@ -203,7 +234,7 @@
 - General-purpose Libretro core browser, multiprocess console metadata, cloud ROM library.
 - Built-in commercial ROM downloads or copyrighted game assets.
 - Direct copying of Pizza Boy source, UI assets or controller art.
-- Hardcore-compliant claim or competitive Hardcore awards without RetroAchievements approval.
+- Hardcore-compliant claim or competitive Hardcore awards without RetroAchievements approval (Hardcore is **planned**, not removed from the roadmap).
 - Android TV-specific experience unless needed for a future, separately approved scope.
 
 ## Latest verified CI evidence (2026-11-09)
