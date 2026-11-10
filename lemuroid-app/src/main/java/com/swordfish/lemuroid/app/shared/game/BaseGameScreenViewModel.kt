@@ -187,8 +187,9 @@ class BaseGameScreenViewModel(
     fun getLandscapeTouchControlsSettings(
         density: Density,
         insets: WindowInsets,
-    ): Flow<TouchControllerSettingsManager.Settings> =
-        touchControls.getLandscapeTouchControlsSettings(density, insets)
+    ): Flow<TouchControllerSettingsManager.Settings> {
+        return touchControls.getLandscapeTouchControlsSettings(density, insets)
+    }
 
     fun updateLandscapeTouchControllerSettings(settings: TouchControllerSettingsManager.Settings) {
         touchControls.updateLandscapeTouchControllerSettings(settings)
