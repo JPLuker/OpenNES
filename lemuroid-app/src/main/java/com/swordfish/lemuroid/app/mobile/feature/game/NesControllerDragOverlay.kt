@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
+import com.swordfish.touchinput.radial.layouts.NesLandscapeDragLimits
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import kotlin.math.roundToInt
 import com.swordfish.touchinput.controller.R as TouchInputR
@@ -58,6 +59,7 @@ internal fun NesControllerDragOverlay(
     leftBounds: Rect?,
     rightBounds: Rect?,
     settings: TouchControllerSettingsManager.Settings,
+    landscapeSidePanels: Boolean = false,
     onPreview: (TouchControllerSettingsManager.Settings) -> Unit,
     onCommit: (TouchControllerSettingsManager.Settings) -> Unit,
     onDone: () -> Unit,
@@ -73,6 +75,13 @@ internal fun NesControllerDragOverlay(
                 .onGloballyPositioned { editingBounds.value = it.boundsInRoot() },
     ) {
         val compactActions = maxWidth < 360.dp || LocalDensity.current.fontScale > 1.2f
+        val gripWidthDp =
+            if (landscapeSidePanels) {
+                ((maxWidth.value - maxHeight.value * 4f / 3f) / 2f).coerceAtLeast(0f)
+            } else {
+                null
+            }
+        val gripHeightDp = maxHeight.value
         leftBounds?.let {
             NesDragTarget(
                 bounds = it,
@@ -80,6 +89,8 @@ internal fun NesControllerDragOverlay(
                 label = stringResource(R.string.opennes_controls_left_group),
                 isLeft = true,
                 settings = settings,
+                gripWidthDp = gripWidthDp,
+                gripHeightDp = gripHeightDp,
                 onPreview = onPreview,
                 onCommit = onCommit,
             )
@@ -91,6 +102,8 @@ internal fun NesControllerDragOverlay(
                 label = stringResource(R.string.opennes_controls_right_group),
                 isLeft = false,
                 settings = settings,
+                gripWidthDp = gripWidthDp,
+                gripHeightDp = gripHeightDp,
                 onPreview = onPreview,
                 onCommit = onCommit,
             )
@@ -155,6 +168,8 @@ private fun NesDragTarget(
     label: String,
     isLeft: Boolean,
     settings: TouchControllerSettingsManager.Settings,
+    gripWidthDp: Float?,
+    gripHeightDp: Float,
     onPreview: (TouchControllerSettingsManager.Settings) -> Unit,
     onCommit: (TouchControllerSettingsManager.Settings) -> Unit,
 ) {
@@ -166,7 +181,16 @@ private fun NesDragTarget(
     val latestCommit = rememberUpdatedState(onCommit)
     val width = with(density) { bounds.width.toDp().coerceAtLeast(72.dp) }
     val height = with(density) { bounds.height.toDp().coerceAtLeast(72.dp) }
-    val edgeInsetPx = with(density) { 8.dp.toPx() }
+    val edgeInsetPx = with(density) { 10.dp.toPx() }
+    val horizontalRangeDp =
+        gripWidthDp?.let { NesLandscapeDragLimits.horizontalTravelDp(it, width.value) }
+            ?: TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X
+    val verticalRangeDp =
+        if (gripWidthDp != null) {
+            NesLandscapeDragLimits.verticalTravelDp(gripHeightDp, height.value)
+        } else {
+            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y
+        }
     val corner = RoundedCornerShape(16.dp)
 
     Box(
@@ -239,12 +263,12 @@ private fun NesDragTarget(
                                         leftOffsetX =
                                             (
                                                 startSettings.leftOffsetX +
-                                                    xDp / TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X
+                                                    xDp / horizontalRangeDp.coerceAtLeast(0.001f)
                                             ).coerceIn(-1f, 1f),
                                         leftOffsetY =
                                             (
                                                 startSettings.leftOffsetY +
-                                                    yDp / TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y
+                                                    yDp / verticalRangeDp.coerceAtLeast(0.001f)
                                             ).coerceIn(-1f, 1f),
                                     )
                                 } else {
@@ -252,12 +276,12 @@ private fun NesDragTarget(
                                         rightOffsetX =
                                             (
                                                 startSettings.rightOffsetX +
-                                                    xDp / TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X
+                                                    xDp / horizontalRangeDp.coerceAtLeast(0.001f)
                                             ).coerceIn(-1f, 1f),
                                         rightOffsetY =
                                             (
                                                 startSettings.rightOffsetY +
-                                                    yDp / TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y
+                                                    yDp / verticalRangeDp.coerceAtLeast(0.001f)
                                             ).coerceIn(-1f, 1f),
                                     )
                                 }
