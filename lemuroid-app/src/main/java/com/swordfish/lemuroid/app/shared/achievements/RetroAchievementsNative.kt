@@ -25,6 +25,33 @@ internal object RetroAchievementsNative {
     ): Int
 
     /**
+     * A temporary, authenticated rc_client session for verifying the saved
+     * emulator token against the official server. Does not activate a game,
+     * inspect emulated RAM, or award achievements.
+     */
+    external fun beginTokenValidation(
+        username: String,
+        token: String,
+    ): Long
+
+    /** One queued request: [id, official URL, URL-encoded POST body]. */
+    external fun takeValidationRequest(session: Long): Array<String>?
+
+    external fun completeValidationRequest(
+        session: Long,
+        requestId: Long,
+        httpStatus: Int,
+        responseBody: ByteArray,
+    ): Boolean
+
+    /** 0=waiting, 1=authenticated, -1=failed, -2=closed/stale. */
+    external fun tokenValidationState(session: Long): Int
+
+    external fun validatedTokenUsername(session: Long): String?
+
+    external fun stopTokenValidation(session: Long)
+
+    /**
      * Native diagnostic only. No account, ROM identification, network, awards
      * or leaderboard submission occurs while this probe is active.
      * Must be stopped before any future authenticated native session starts.
