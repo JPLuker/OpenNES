@@ -66,6 +66,7 @@ class HomeViewModel(
         val recentGames: List<Game> = emptyList(),
         val discoveryGames: List<Game> = emptyList(),
         val indexInProgress: Boolean = true,
+        val libraryReady: Boolean = false,
         val scanInProgress: Boolean = false,
         val hasRomDirectory: Boolean = false,
         val scanError: String? = null,
@@ -503,7 +504,10 @@ class HomeViewModel(
                 .debounce(DEBOUNCE_TIME)
                 .flowOn(Dispatchers.IO)
                 .collect { state ->
-                    uiStates.value = state
+                    // The initial UI state is empty until the library flows
+                    // produce a snapshot. Do not briefly present an empty
+                    // shelf as if no games exist at startup.
+                    uiStates.value = state.copy(libraryReady = true)
                     val games = state.recentGames + state.favoritesGames + state.discoveryGames
                     // Cache just shelf covers; never download an entire ROM collection.
                     launch(Dispatchers.IO) { coverPrefetcher.prefetch(games) }
