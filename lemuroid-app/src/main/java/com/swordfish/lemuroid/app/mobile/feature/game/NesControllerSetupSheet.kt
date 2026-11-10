@@ -20,6 +20,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,7 +78,10 @@ internal fun NesControllerSetupSheet(
     val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.78f).dp
     var colorsExpanded by remember { mutableStateOf(false) }
     var selectedColorPart by remember { mutableStateOf<NesColorPart?>(null) }
-    ModalBottomSheet(onDismissRequest = onUseDefaults) {
+    ModalBottomSheet(
+        onDismissRequest = onUseDefaults,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
         Column(
             modifier =
                 Modifier
