@@ -22,7 +22,6 @@ fun BaseLayoutLeft(
     primaryDial: @Composable () -> Unit,
     secondaryDials: @Composable LayoutRadialSecondaryDialsScope.() -> Unit,
 ) {
-    val handheldFactor = if (LocalNesLandscapeHandheld.current) 0.72f else 1f
     val interpolatedDialSize =
         remember(settings.leftScale, settings.scale) {
             lerp(
@@ -51,7 +50,7 @@ fun BaseLayoutLeft(
         primaryDial = primaryDial,
         secondaryDials = secondaryDials,
         primaryDialMaxSize =
-            TouchControllerSettingsManager.BASE_DIAL_SIZE_DP.dp * interpolatedDialSize * handheldFactor,
+            TouchControllerSettingsManager.BASE_DIAL_SIZE_DP.dp * interpolatedDialSize,
         secondaryDialsBaseRotationInDegrees = settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
 }
@@ -64,7 +63,6 @@ fun BaseLayoutRight(
     primaryDial: @Composable () -> Unit,
     secondaryDials: @Composable LayoutRadialSecondaryDialsScope.() -> Unit,
 ) {
-    val handheldFactor = if (LocalNesLandscapeHandheld.current) 0.72f else 1f
     LayoutRadial(
         modifier =
             modifier
@@ -89,7 +87,7 @@ fun BaseLayoutRight(
                     TouchControllerSettingsManager.MIN_SCALE,
                     TouchControllerSettingsManager.MAX_SCALE,
                     (settings.rightScale ?: settings.scale).coerceIn(0f, 1f),
-                ) * handheldFactor,
+                ),
         secondaryDialsBaseRotationInDegrees = -settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
 }
