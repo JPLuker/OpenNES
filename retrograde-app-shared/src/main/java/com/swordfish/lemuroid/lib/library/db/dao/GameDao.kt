@@ -190,6 +190,35 @@ interface GameDao {
         lastChecked: Long,
     ): Int
 
+    /**
+     * Explicit Fix Match confirmation may replace only the game's editorial
+     * metadata and provenance. The ROM identity, cover art, title, favorite,
+     * save data, and playtime stay untouched.
+     */
+    @Query(
+        """
+        UPDATE games
+        SET genre = COALESCE(:genre, genre),
+            releaseYear = COALESCE(:releaseYear, releaseYear),
+            description = COALESCE(:description, description),
+            wikidataEntityId = :sourceId,
+            wikipediaArticleTitle = CASE
+                WHEN :description IS NOT NULL THEN :wikipediaTitle
+                ELSE wikipediaArticleTitle END,
+            lastOnlineMetadataCheckedAt = :checkedAt
+        WHERE id = :gameId AND systemId = 'nes'
+        """,
+    )
+    suspend fun applySelectedOnlineMatch(
+        gameId: Int,
+        genre: String?,
+        releaseYear: Int?,
+        description: String?,
+        sourceId: String,
+        wikipediaTitle: String?,
+        checkedAt: Long,
+    ): Int
+
     @Update
     suspend fun update(game: Game)
 
