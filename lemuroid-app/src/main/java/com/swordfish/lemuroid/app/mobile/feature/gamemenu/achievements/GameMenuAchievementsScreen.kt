@@ -21,8 +21,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -176,7 +176,8 @@ fun GameMenuAchievementsScreen(
                                 R.string.opennes_ra_runtime_connecting
                             visibleSession is RetroAchievementsDisplayState.NoMatchingGame ->
                                 R.string.opennes_ra_runtime_no_match
-                            visibleSession is RetroAchievementsDisplayState.Active -> R.string.opennes_ra_runtime_hash_mismatch
+                            visibleSession is RetroAchievementsDisplayState.Active ->
+                                R.string.opennes_ra_runtime_hash_mismatch
                             else ->
                                 if (savedEmulatorUsername != null) {
                                     R.string.opennes_ra_game_account_saved
