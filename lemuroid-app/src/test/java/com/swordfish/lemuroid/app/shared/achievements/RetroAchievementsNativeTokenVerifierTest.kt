@@ -22,7 +22,10 @@ class RetroAchievementsNativeTokenVerifierTest {
         var transmitted: Int? = null
         var requestAvailable = true
 
-        override fun start(username: String, token: String): Long = 37L
+        override fun start(
+            username: String,
+            token: String,
+        ): Long = 37L
 
         override fun take(session: Long): Array<String>? {
             if (!requestAvailable) return null
@@ -44,8 +47,7 @@ class RetroAchievementsNativeTokenVerifierTest {
 
         override fun state(session: Long) = status
 
-        override fun username(session: Long): String? =
-            if (status == 1) "TestUser" else null
+        override fun username(session: Long): String? = if (status == 1) "TestUser" else null
 
         override fun stop(session: Long) {
             closed = true
