@@ -149,6 +149,7 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - [x] Provide Settings → RomM library UI with Connect, Check, Disconnect, Browse, Next page and per-ROM Import
 - [ ] Validate against a real RomM server's OpenAPI schema and acceptance permissions
 - [x] Add optional RomM save listing (assets.read scope) and per-save manual SAF backup export without writing to live OpenNES saves
+- [x] Prevent zero-byte HTTP/SAF stream reads from looping during RomM browsing, imports and save-backup exports; preserve existing size, cancellation and hash safeguards
 - [x] Reject malformed/multi-ROM ZIP imports and cap decompressed archive data; verify RomM's actual MD5 and sorted-entry ZIP save content hashes before backup export
 - [ ] Add two-way save sync only with explicit conflict resolution and independently versioned backups
 - [ ] **M8 acceptance deferred:** TLS/proxy, offline/revoked tokens, interrupted downloads and real ROM imports on-device

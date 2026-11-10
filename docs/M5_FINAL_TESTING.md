@@ -29,6 +29,7 @@ Mark each row **Pass / Fail / Blocked / Not tested** and include evidence for fa
 | RA-01 | In a debug APK, open Pause → Achievements → Native bridge diagnostics, start probe, resume and play, reopen to refresh, then stop | Frame count rises during actual emulation (not only drawing), mapped NES memory is nonzero and verified zero-page RAM reads rise, and stop produces no freeze or crash |
 | RA-02 | With probe active, quit and restart a game, then start again and refresh | New game does not inherit a stale positive memory map; re-arming produces fresh frame counters, and stopping does not crash or hang |
 | RA-03 | With probe active, rotate/suspend/resume and stop while gameplay is paused | No stale memory access, destroyed-game crash, or core-lock deadlock; only the current game reports mapped RAM |
+| ROMM-01 | Browse/import a game and export a remote save backup, then retry with an interrupted connection | Fail without hanging, do not replace an existing ROM or live save, and show an accurate retryable failure |
 | P-01 | Portrait: D-pad directions/diagonals, hold direction while pressing A and B, Start/Select/Menu | Inputs register correctly and release when fingers lift; no stuck or accidental presses |
 | P-02 | Portrait: onboarding, theme selection and editing controls | First-run guide appears once for visible touch controls; theme persists and setup can be rerun |
 | P-03 | Portrait: independently adjust Start/Select/Menu and drag control clusters | Edits persist across game launch and do not make the game viewport unusable |

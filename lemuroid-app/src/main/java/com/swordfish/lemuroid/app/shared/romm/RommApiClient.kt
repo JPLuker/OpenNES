@@ -17,6 +17,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -190,9 +191,8 @@ class RommApiClient {
                         val buffer = ByteArray(16 * 1024)
                         while (true) {
                             coroutineContext.ensureActive()
-                            val count = input.read(buffer)
+                            val count = readProgressing(input, buffer)
                             if (count < 0) break
-                            if (count == 0) continue
                             total += count
                             if (total > MAX_SAVE_BYTES) {
                                 throw IOException("RomM save exceeds supported backup size")
@@ -213,9 +213,9 @@ class RommApiClient {
                     val buffer = ByteArray(16 * 1024)
                     while (true) {
                         coroutineContext.ensureActive()
-                        val count = input.read(buffer)
+                        val count = readProgressing(input, buffer)
                         if (count < 0) break
-                        if (count > 0) stream.write(buffer, 0, count)
+                        stream.write(buffer, 0, count)
                     }
                 }
                 stream.flush()
@@ -271,9 +271,9 @@ class RommApiClient {
                             val buffer = ByteArray(16 * 1024)
                             while (true) {
                                 coroutineContext.ensureActive()
-                                val count = input.read(buffer)
+                                val count = readProgressing(input, buffer)
                                 if (count < 0) break
-                                if (count > 0) output.write(buffer, 0, count)
+                                output.write(buffer, 0, count)
                             }
                         }
                         output.flush()
@@ -366,9 +366,8 @@ class RommApiClient {
                     val buffer = ByteArray(16 * 1024)
                     while (true) {
                         coroutineContext.ensureActive()
-                        val count = input.read(buffer)
+                        val count = readProgressing(input, buffer)
                         if (count < 0) break
-                        if (count == 0) continue
                         countTotal += count
                         if (countTotal > MAX_ROM_BYTES) {
                             throw IOException("RomM ROM exceeds import size limit")
@@ -455,15 +454,32 @@ class RommApiClient {
             return fileName.none { it == '/' || it == '\\' || it.isISOControl() }
         }
 
+        /**
+         * A bulk read returning zero is not EOF. Consume one byte instead
+         * of retrying indefinitely; every caller retains its own limits.
+         */
+        private fun readProgressing(
+            input: InputStream,
+            buffer: ByteArray,
+        ): Int {
+            require(buffer.isNotEmpty())
+            val count = input.read(buffer)
+            if (count != 0) return count
+            val one = input.read()
+            if (one < 0) return -1
+            buffer[0] = one.toByte()
+            return 1
+        }
+
         private fun readBounded(
-            input: java.io.InputStream,
+            input: InputStream,
             maxBytes: Long,
         ): ByteArray {
             val result = ByteArrayOutputStream()
             val buffer = ByteArray(8192)
             var total = 0L
             while (true) {
-                val amount = input.read(buffer)
+                val amount = readProgressing(input, buffer)
                 if (amount < 0) break
                 total += amount
                 if (total > maxBytes) throw IOException("RomM JSON response exceeds limit")
