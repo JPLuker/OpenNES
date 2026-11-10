@@ -595,6 +595,10 @@
     <string name="opennes_romm_archive_entry">RomM game #%1$d</string>
     <string name="opennes_romm_archive_size">%1$d bytes · Verified</string>
     <string name="opennes_romm_archive_delete">Delete backup</string>
+    <string name="opennes_romm_archive_audit">Audit local backup integrity</string>
+    <string name="opennes_romm_archive_audited">Offline backup inventory checked. No files were changed.</string>
+    <string name="opennes_romm_archive_audit_results">Verified: %1$d · Unverified: %2$d · Orphaned manifests: %3$d · Incomplete writes: %4$d</string>
+    <string name="opennes_romm_archive_audit_warning">Some archived save files could not be verified. They remain untouched but cannot be used as trusted backups. Keep them for manual recovery.</string>
     <string name="opennes_romm_compare_action">Compare</string>
     <string name="opennes_romm_compare_matching">Selected save and archived backup have identical bytes. No files were changed.</string>
     <string name="opennes_romm_compare_different">Selected save and archived backup differ. No files were changed; this does not establish which save is newer.</string>

@@ -276,6 +276,17 @@ class RommApiClient {
         }
 
     /**
+     * Read-only integrity counts for local offline backup files. Files with
+     * corrupt or missing manifests are shown as unverified, not deleted.
+     */
+    internal suspend fun auditOfflineSaveBackups(
+        context: Context,
+    ): RommVersionedSaveBackupStore.ArchiveAudit =
+        withContext(Dispatchers.IO) {
+            privateBackupStore(context).audit()
+        }
+
+    /**
      * Explicit local cleanup only. Never touches live OpenNES saves or
      * makes an HTTP request, and never deletes an unverified archive.
      */

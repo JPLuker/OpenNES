@@ -94,6 +94,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
         mutableStateOf<Map<String, RommPendingSyncJournal.LocalReview>>(emptyMap())
     }
     var archivedSaves by remember { mutableStateOf<List<RommVersionedSaveBackupStore.Backup>>(emptyList()) }
+    var archiveAudit by remember { mutableStateOf<RommVersionedSaveBackupStore.ArchiveAudit?>(null) }
     var syncQueue by remember {
         mutableStateOf<RommPendingSyncJournal.ReadResult>(RommPendingSyncJournal.ReadResult.Entries(emptyList()))
     }
@@ -463,11 +464,40 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                     onClick = {
                         perform("Checking offline save backups") {
                             archivedSaves = client.listOfflineSaveBackups(context)
+                            archiveAudit = null
                             status = context.getString(R.string.opennes_romm_archive_checked)
                         }
                     },
                 ) {
                     Text(stringResource(R.string.opennes_romm_archive_refresh))
+                }
+                OutlinedButton(
+                    enabled = !busy,
+                    onClick = {
+                        perform("Auditing offline backup integrity") {
+                            archiveAudit = client.auditOfflineSaveBackups(context)
+                            archivedSaves = client.listOfflineSaveBackups(context)
+                            status = context.getString(R.string.opennes_romm_archive_audited)
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.opennes_romm_archive_audit))
+                }
+                archiveAudit?.let { audit ->
+                    Text(
+                        stringResource(
+                            R.string.opennes_romm_archive_audit_results,
+                            audit.verified,
+                            audit.unverifiedArchives,
+                            audit.orphanedManifests,
+                            audit.incompleteWrites,
+                        ),
+                    )
+                    if (audit.unverifiedArchives > 0 || audit.orphanedManifests > 0 ||
+                        audit.incompleteWrites > 0
+                    ) {
+                        Text(stringResource(R.string.opennes_romm_archive_audit_warning))
+                    }
                 }
                 if (archivedSaves.isEmpty()) {
                     Text(stringResource(R.string.opennes_romm_archive_empty))

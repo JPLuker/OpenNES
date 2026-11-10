@@ -22,6 +22,46 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
         val sourceServerFingerprint: String? = null,
     )
 
+    /** Counts only. Never removes files or repairs manifests automatically. */
+    data class ArchiveAudit(
+        val verified: Int,
+        val unverifiedArchives: Int,
+        val orphanedManifests: Int,
+        val incompleteWrites: Int,
+    )
+
+    /**
+     * Integrity inventory for archives that are otherwise silently filtered
+     * out by listVerifiedBackups(). Unknown or incomplete files remain intact
+     * for manual recovery; none is treated as safe for synchronization.
+     */
+    @Synchronized
+    fun audit(): ArchiveAudit {
+        val files = directory.listFiles()?.filter { it.isFile }.orEmpty()
+        val trusted = listVerifiedBackups().map { it.file.name }.toSet()
+        val archiveNames =
+            files.filter { it.name.startsWith("romm-") && it.name.endsWith(".savebak") }
+                .map { it.name }
+        val missingFiles =
+            files.count { manifest ->
+                manifest.name.startsWith("romm-") &&
+                    manifest.name.endsWith(".savebak.sha256") &&
+                    !File(directory, manifest.name.removeSuffix(".sha256")).isFile
+            }
+        val partialFiles =
+            files.count { file ->
+                file.name.endsWith(".partial") &&
+                    (file.name.startsWith("opennes-romm-") ||
+                        file.name.startsWith("opennes-manifest-"))
+            }
+        return ArchiveAudit(
+            verified = trusted.size,
+            unverifiedArchives = archiveNames.count { it !in trusted },
+            orphanedManifests = missingFiles,
+            incompleteWrites = partialFiles,
+        )
+    }
+
     fun createVerifiedBackup(
         romId: Int,
         original: File,

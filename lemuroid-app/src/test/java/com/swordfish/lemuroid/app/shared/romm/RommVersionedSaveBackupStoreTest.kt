@@ -92,6 +92,34 @@ class RommVersionedSaveBackupStoreTest {
     }
 
     @Test
+    fun integrityAuditReportsHiddenDamageWithoutDeletingEvidence() {
+        val source = temporary.newFile("live.sav")
+        source.writeBytes(ByteArray(128) { it.toByte() })
+        val folder = temporary.newFolder("versions")
+        val store = RommVersionedSaveBackupStore(folder)
+        store.createVerifiedBackup(1, source)
+        val damaged = store.createVerifiedBackup(2, source)
+        val orphan = store.createVerifiedBackup(3, source)
+        damaged.file.writeBytes(ByteArray(128) { 9 })
+        assertTrue(orphan.file.delete())
+        java.io.File(folder, "opennes-romm-unfinished.partial").writeBytes(byteArrayOf(1))
+        java.io.File(folder, "unrelated-note.txt").writeText("leave this alone")
+
+        assertEquals(
+            RommVersionedSaveBackupStore.ArchiveAudit(
+                verified = 1,
+                unverifiedArchives = 1,
+                orphanedManifests = 1,
+                incompleteWrites = 1,
+            ),
+            store.audit(),
+        )
+        assertTrue(damaged.file.exists())
+        assertTrue(java.io.File(folder, orphan.file.name + ".sha256").exists())
+        assertTrue(source.exists())
+    }
+
+    @Test
     fun boundArchivesRetainServerIdentityWhileLegacyExportsRemainUsable() {
         val source = temporary.newFile("source.sav")
         source.writeBytes(ByteArray(200) { it.toByte() })
