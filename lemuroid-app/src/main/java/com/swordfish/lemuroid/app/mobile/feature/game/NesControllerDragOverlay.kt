@@ -174,8 +174,8 @@ private fun NesDragTarget(
             Modifier
                 .offset {
                     IntOffset(
-                        bounds.left.roundToInt(),
-                        bounds.top.roundToInt(),
+                        (bounds.left - (editingBounds?.left ?: 0f)).roundToInt(),
+                        (bounds.top - (editingBounds?.top ?: 0f)).roundToInt(),
                     )
                 }
                 .size(width, height)
