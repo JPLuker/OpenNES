@@ -51,8 +51,7 @@ class RommSaveSnapshotterTest {
             RommSaveSnapshotter.fromFile(java.io.File(folder.root, "absent.sav"))
         }
         val huge = folder.newFile("huge.sav")
-        huge.outputStream().use { it.channel.truncate(16L * 1024L * 1024L + 1) }
-        // FileChannel.truncate never extends a file; RandomAccessFile does.
+        // setLength creates a sparse file without allocating 16 MB of test data.
         java.io.RandomAccessFile(huge, "rw").use { it.setLength(16L * 1024L * 1024L + 1) }
         assertTrue(huge.length() > 16L * 1024L * 1024L)
         assertThrows(IOException::class.java) { RommSaveSnapshotter.fromFile(huge) }
