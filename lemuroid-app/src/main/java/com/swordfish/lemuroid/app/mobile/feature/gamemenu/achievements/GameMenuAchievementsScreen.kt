@@ -21,6 +21,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,7 @@ import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.achievements.NesRetroAchievementsHash
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsDisplayState
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameStateStore
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeAccountStore
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeGameResolver
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -101,12 +103,20 @@ fun GameMenuAchievementsScreen(
             }
     }
 
-    // Never show data from a different ROM or a merely local (unmatched)
-    // identity. Only the native session provider may ever supply Active.
+    // The menu and running emulator share the same :game process.
+    // Only rc_client can publish Active here. A stale game process or
+    // previous ROM can never make an unrelated title look unlocked.
+    val runtime by RetroAchievementsGameStateStore.snapshots.collectAsState()
+    val currentHash = (identification as? LocalIdentification.Identified)?.identity?.md5
+    val visibleSession =
+        if (currentHash != null && runtime.romMd5.equals(currentHash, ignoreCase = true)) {
+            runtime.state
+        } else {
+            session
+        }
     val activeSession =
-        (session as? RetroAchievementsDisplayState.Active)?.takeIf { active ->
-            val hash = (identification as? LocalIdentification.Identified)?.identity?.md5
-            hash != null && active.romMd5.equals(hash, ignoreCase = true)
+        (visibleSession as? RetroAchievementsDisplayState.Active)?.takeIf { active ->
+            currentHash != null && active.romMd5.equals(currentHash, ignoreCase = true)
         }
 
     Column(
@@ -162,11 +172,11 @@ fun GameMenuAchievementsScreen(
                     val statusTitle =
                         when {
                             activeSession != null -> R.string.opennes_ra_runtime_ready
-                            session is RetroAchievementsDisplayState.Connecting ->
+                            visibleSession is RetroAchievementsDisplayState.Connecting ->
                                 R.string.opennes_ra_runtime_connecting
-                            session is RetroAchievementsDisplayState.NoMatchingGame ->
+                            visibleSession is RetroAchievementsDisplayState.NoMatchingGame ->
                                 R.string.opennes_ra_runtime_no_match
-                            session is RetroAchievementsDisplayState.Active -> R.string.opennes_ra_runtime_hash_mismatch
+                            visibleSession is RetroAchievementsDisplayState.Active -> R.string.opennes_ra_runtime_hash_mismatch
                             else ->
                                 if (savedEmulatorUsername != null) {
                                     R.string.opennes_ra_game_account_saved
@@ -190,7 +200,7 @@ fun GameMenuAchievementsScreen(
                     Text(
                         text =
                             stringResource(
-                                if (session is RetroAchievementsDisplayState.NoMatchingGame) {
+                                if (visibleSession is RetroAchievementsDisplayState.NoMatchingGame) {
                                     R.string.opennes_ra_no_match_explanation
                                 } else if (savedEmulatorUsername != null) {
                                     R.string.opennes_ra_game_tracking_pending
