@@ -3,6 +3,7 @@ package com.swordfish.lemuroid.app.mobile.feature.game
 import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
+import androidx.compose.ui.unit.dp
 
 object GameScreenLayout {
     const val CONSTRAINTS_BOTTOM_CONTAINER = "bottomContainer"
@@ -17,12 +18,14 @@ object GameScreenLayout {
         isLandscape: Boolean,
         allowTouchOverlay: Boolean,
         showTouchPads: Boolean = true,
+        handheldSideWidthDp: Float? = null,
     ): ConstraintSet {
         return when {
             // With a physical gamepad, no virtual pad exists to constrain the
             // game view. Do not attach its bottom edge to a missing pad.
             !showTouchPads -> buildConstraintSetWithoutTouchPads()
             !isLandscape -> buildConstraintSetPortrait()
+            handheldSideWidthDp != null -> buildConstraintSetLandscapeHandheld(handheldSideWidthDp)
             allowTouchOverlay -> buildConstraintSetLandscape()
             else -> buildConstraintSetLandscapeNoOverlay()
         }
@@ -138,6 +141,51 @@ object GameScreenLayout {
                 verticalBias = 1.0f
                 bottom.linkTo(parent.bottom)
                 top.linkTo(parent.top)
+            }
+
+            constrain(gameContainer) {
+                absoluteLeft.linkTo(gameView.absoluteLeft)
+                absoluteRight.linkTo(gameView.absoluteRight)
+                top.linkTo(gameView.top)
+                bottom.linkTo(gameView.bottom)
+            }
+        }
+    }
+
+    /**
+     * True handheld mode gets two equal-width control zones and a centered
+     * video viewport. Their width is fixed by the available display space,
+     * not by asymmetric PadKit content or secondary-button placement.
+     */
+    private fun buildConstraintSetLandscapeHandheld(sideWidthDp: Float): ConstraintSet {
+        return ConstraintSet {
+            val gameView = createRefFor(CONSTRAINTS_GAME_VIEW)
+            val gameContainer = createRefFor(CONSTRAINTS_GAME_CONTAINER)
+            val leftPad = createRefFor(CONSTRAINTS_LEFT_PAD)
+            val rightPad = createRefFor(CONSTRAINTS_RIGHT_PAD)
+            val sideWidth = Dimension.value(sideWidthDp.coerceAtLeast(0f).dp)
+
+            constrain(leftPad) {
+                width = sideWidth
+                absoluteLeft.linkTo(parent.absoluteLeft)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+            }
+
+            constrain(rightPad) {
+                width = sideWidth
+                absoluteRight.linkTo(parent.absoluteRight)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+            }
+
+            constrain(gameView) {
+                width = Dimension.fillToConstraints
+                height = Dimension.fillToConstraints
+                absoluteLeft.linkTo(leftPad.absoluteRight)
+                absoluteRight.linkTo(rightPad.absoluteLeft)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
             }
 
             constrain(gameContainer) {
