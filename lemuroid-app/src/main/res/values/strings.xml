@@ -579,4 +579,24 @@
     <string name="opennes_ra_native_verified_state">Native emulator login verified in this session.</string>
     <string name="opennes_ra_native_saved_state">Account saved securely. Native emulator login is not yet verified in this session.</string>
     <string name="opennes_ra_native_saved_unverified">Your account was accepted and saved, but native emulator verification did not complete. Use Verify emulator connection to retry.</string>
+    <string name="opennes_ra_account_subtitle">Emulator sign-in</string>
+    <string name="opennes_ra_account_login_hint">Connect your account to identify games and prepare achievement tracking.</string>
+    <string name="opennes_ra_account_verified">Account verified</string>
+    <string name="opennes_ra_account_saved">Saved on this device</string>
+    <string name="opennes_ra_account_verify_short">Verify connection</string>
+    <string name="opennes_ra_account_reverified">Your emulator login is verified.</string>
+    <string name="opennes_ra_account_game_status_title">Achievement tracking</string>
+    <string name="opennes_ra_account_game_status_body">Game recognition works, but earning and displaying new unlocks during gameplay is not enabled yet.</string>
+    <string name="opennes_ra_account_show_web">Website history (optional)</string>
+    <string name="opennes_ra_account_hide_web">Hide website history</string>
+    <string name="opennes_ra_account_signout_title">Sign out of RetroAchievements?</string>
+    <string name="opennes_ra_account_signout_body">This removes the emulator login from this device. It will not delete your RetroAchievements account or earned achievements.</string>
+    <string name="opennes_ra_account_signout_failed">Could not sign out on this device. Try again.</string>
+    <string name="opennes_ra_game_account_saved">Signed in as %1$s</string>
+    <string name="opennes_ra_game_account_unavailable">No emulator account</string>
+    <string name="opennes_ra_game_tracking_pending">Your account is saved, but gameplay unlocks are not enabled in this build.</string>
+    <string name="opennes_ra_game_signin_hint">Connect an emulator account in Settings. Live unlocks are not enabled in this build.</string>
+    <string name="opennes_ra_game_match_short">Matched game #%1$d</string>
+    <string name="opennes_ra_game_match_unavailable">Game lookup unavailable</string>
+    <string name="opennes_ra_game_match_unknown">No RetroAchievements match found</string>
 </resources>
