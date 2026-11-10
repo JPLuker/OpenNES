@@ -184,6 +184,16 @@ class BaseGameScreenViewModel(
         return touchControls.getTouchControlsSettings(density, insets, portraitWidthDp, landscapeHeightDp)
     }
 
+    fun getLandscapeTouchControlsSettings(
+        density: Density,
+        insets: WindowInsets,
+    ): Flow<TouchControllerSettingsManager.Settings> =
+        touchControls.getLandscapeTouchControlsSettings(density, insets)
+
+    fun updateLandscapeTouchControllerSettings(settings: TouchControllerSettingsManager.Settings) {
+        touchControls.updateLandscapeTouchControllerSettings(settings)
+    }
+
     fun getTouchHapticFeedbackMode(): Flow<HapticFeedbackMode> {
         return touchControls.getTouchHapticFeedbackMode()
     }

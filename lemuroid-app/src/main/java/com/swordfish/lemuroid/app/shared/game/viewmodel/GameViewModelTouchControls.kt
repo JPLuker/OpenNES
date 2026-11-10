@@ -100,6 +100,29 @@ class GameViewModelTouchControls(
             }
     }
 
+    /** Landscape presentation can be selected while onboarding is in portrait. */
+    fun getLandscapeTouchControlsSettings(
+        density: Density,
+        insets: WindowInsets,
+    ): Flow<TouchControllerSettingsManager.Settings> =
+        touchControllerSettingsManager.observeSettings(
+            touchControlId.value,
+            TouchControllerSettingsManager.Orientation.LANDSCAPE,
+            density,
+            insets,
+        )
+
+    fun updateLandscapeTouchControllerSettings(settings: TouchControllerSettingsManager.Settings) {
+        val controller = touchControlId.value
+        scope.launch {
+            touchControllerSettingsManager.storeSettings(
+                controller,
+                TouchControllerSettingsManager.Orientation.LANDSCAPE,
+                settings,
+            )
+        }
+    }
+
     fun getTouchHapticFeedbackMode(): Flow<HapticFeedbackMode> {
         return hapticFeedbackMode
     }

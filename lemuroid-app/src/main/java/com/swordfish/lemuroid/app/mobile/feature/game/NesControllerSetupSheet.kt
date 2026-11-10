@@ -70,6 +70,8 @@ internal class NesControllerOnboardingStore(context: Context) {
 internal fun NesControllerSetupSheet(
     currentPresetId: String,
     currentPalette: NesControllerPalette,
+    selectedLandscapeStyle: NesLandscapeStyle,
+    onSelectLandscapeStyle: (NesLandscapeStyle) -> Unit,
     onChoosePreset: (String) -> Unit,
     onChooseColor: (NesColorPart, String) -> Unit,
     onCustomizeLayout: () -> Unit,
@@ -103,6 +105,13 @@ internal fun NesControllerSetupSheet(
                 Text(stringResource(R.string.opennes_setup_explanation))
                 Text(stringResource(R.string.opennes_setup_preview))
                 ControllerAppearancePreview(currentPalette)
+                Text(stringResource(R.string.opennes_landscape_style_title))
+                Text(stringResource(R.string.opennes_setup_landscape_hint))
+                NesLandscapeStylePicker(
+                    selected = selectedLandscapeStyle,
+                    palette = currentPalette,
+                    onSelect = onSelectLandscapeStyle,
+                )
 
                 // Each choice immediately updates the shared live controller preview.
                 // Show housing, D-pad and A/B swatches, not just an action-button dot.

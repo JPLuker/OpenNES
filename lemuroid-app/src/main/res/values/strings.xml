@@ -519,5 +519,10 @@
     <string name="opennes_landscape_overlay_name">Overlay</string>
     <string name="opennes_landscape_framed_name">Framed</string>
     <string name="opennes_landscape_handheld_name">NES Handheld</string>
+    <string name="opennes_setup_landscape_hint">Choose how the game and controls look when your phone is turned sideways.</string>
+    <string name="opennes_landscape_overlay_description">Full-size game with controls over its edges.</string>
+    <string name="opennes_landscape_framed_description">Game between two separate controller panels.</string>
+    <string name="opennes_landscape_handheld_description">Compact NES-inspired console surrounding the game.</string>
+    <string name="opennes_landscape_style_preview_hint">Landscape selection is saved separately from portrait.</string>
     <string name="opennes_landscape_handheld_help">A classic NES-inspired handheld shell wraps around the game, with the D-pad and A/B beside the screen. Your current controller colors apply here too.</string>
 </resources>
