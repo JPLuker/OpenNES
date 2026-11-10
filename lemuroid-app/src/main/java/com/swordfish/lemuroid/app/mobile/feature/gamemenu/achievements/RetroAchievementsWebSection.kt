@@ -135,30 +135,32 @@ internal fun RetroAchievementsWebSection(
             }
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!accountOnly) Button(
-                    enabled = !busy && romMd5 != null && console != null,
-                    onClick = {
-                        val hash = romMd5
-                        val selectedConsole = console
-                        if (hash != null && selectedConsole != null) {
-                            run {
-                                val account =
-                                    withContext(Dispatchers.IO) {
-                                        store.load() ?: error("Missing website account")
-                                    }
-                                progress = api.lookupProgress(account, hash, selectedConsole)
-                                statusId =
-                                    if (progress == null) {
-                                        R.string.opennes_ra_web_no_match
-                                    } else {
-                                        R.string.opennes_ra_web_loaded
-                                    }
+                if (!accountOnly) {
+                    Button(
+                        enabled = !busy && romMd5 != null && console != null,
+                        onClick = {
+                            val hash = romMd5
+                            val selectedConsole = console
+                            if (hash != null && selectedConsole != null) {
+                                run {
+                                    val account =
+                                        withContext(Dispatchers.IO) {
+                                            store.load() ?: error("Missing website account")
+                                        }
+                                    progress = api.lookupProgress(account, hash, selectedConsole)
+                                    statusId =
+                                        if (progress == null) {
+                                            R.string.opennes_ra_web_no_match
+                                        } else {
+                                            R.string.opennes_ra_web_loaded
+                                        }
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.opennes_ra_web_refresh))
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.opennes_ra_web_refresh))
+                    }
                 }
                 OutlinedButton(
                     enabled = !busy,
