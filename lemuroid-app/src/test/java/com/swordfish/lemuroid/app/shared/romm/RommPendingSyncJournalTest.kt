@@ -8,6 +8,9 @@ import java.io.File
 import java.nio.file.Files
 
 class RommPendingSyncJournalTest {
+    private val serverA = "a".repeat(64)
+    private val serverB = "b".repeat(64)
+
     private fun snapshot(letter: String) = RommSaveSyncPlanner.Snapshot(letter.repeat(64), 128L)
 
     @Test
@@ -21,6 +24,7 @@ class RommPendingSyncJournalTest {
                     RommSaveSyncPlanner.Direction.UPLOAD,
                     snapshot("b"),
                     snapshot("a"),
+                    serverA,
                 ),
             )
             assertFalse(
@@ -29,40 +33,51 @@ class RommPendingSyncJournalTest {
                     RommSaveSyncPlanner.Direction.DOWNLOAD,
                     snapshot("b"),
                     snapshot("a"),
+                    serverA,
                 ),
             )
-            val afterRestart = RommPendingSyncJournal(folder)
-            val entry = (afterRestart.list() as RommPendingSyncJournal.ReadResult.Entries).pending.single()
+            val reloaded = RommPendingSyncJournal(folder)
+            val entry = (reloaded.list() as RommPendingSyncJournal.ReadResult.Entries).pending.single()
             assertEquals(42, entry.romId)
+            assertEquals(serverA, entry.serverFingerprint)
             assertEquals(RommSaveSyncPlanner.Direction.UPLOAD, entry.direction)
-            assertTrue(afterRestart.discard(entry.id))
-            assertTrue((afterRestart.list() as RommPendingSyncJournal.ReadResult.Entries).pending.isEmpty())
+            assertTrue(reloaded.discard(entry.id))
+            assertTrue((reloaded.list() as RommPendingSyncJournal.ReadResult.Entries).pending.isEmpty())
         } finally {
             folder.deleteRecursively()
         }
     }
 
     @Test
-    fun corruptedJournalBlocksQueueMutationInsteadOfAutoReplaying() {
+    fun corruptOrLegacyUnscopedJournalsCannotBeEnqueuedOrReplayed() {
         val folder = Files.createTempDirectory("romm-corrupt-").toFile()
         try {
             val journal = RommPendingSyncJournal(folder)
-            assertTrue(journal.enqueue(7, RommSaveSyncPlanner.Direction.DOWNLOAD, snapshot("a"), snapshot("b")))
-            val file = File(folder, "romm-pending-sync-v1.json")
-            file.writeText(file.readText().replace("UPLOAD", "DOWNLOAD").replace("sha256", "broken"))
+            assertTrue(journal.enqueue(7, RommSaveSyncPlanner.Direction.DOWNLOAD, snapshot("a"), snapshot("b"), serverA))
+            val file = File(folder, "romm-pending-sync-v2.json")
+            file.writeText(file.readText().replace(serverA, serverB))
             assertEquals(RommPendingSyncJournal.ReadResult.Corrupt, journal.list())
-            assertFalse(journal.enqueue(8, RommSaveSyncPlanner.Direction.UPLOAD, snapshot("b"), snapshot("a")))
+            assertFalse(journal.enqueue(8, RommSaveSyncPlanner.Direction.UPLOAD, snapshot("b"), snapshot("a"), serverA))
         } finally {
             folder.deleteRecursively()
+        }
+
+        val legacy = Files.createTempDirectory("romm-legacy-").toFile()
+        try {
+            File(legacy, "romm-pending-sync-v1.json").writeText("{}")
+            assertEquals(RommPendingSyncJournal.ReadResult.Corrupt, RommPendingSyncJournal(legacy).list())
+        } finally {
+            legacy.deleteRecursively()
         }
     }
 
     @Test
-    fun pendingOfflineIntentNeverBypassesFreshHashesOrApproval() {
+    fun pendingIntentRequiresSameServerAndFreshHashesAndApproval() {
         val folder = Files.createTempDirectory("romm-recheck-").toFile()
         try {
             val journal = RommPendingSyncJournal(folder)
-            assertTrue(journal.enqueue(5, RommSaveSyncPlanner.Direction.UPLOAD, snapshot("b"), snapshot("a")))
+            assertFalse(journal.enqueue(5, RommSaveSyncPlanner.Direction.UPLOAD, snapshot("b"), snapshot("a"), "bad"))
+            assertTrue(journal.enqueue(5, RommSaveSyncPlanner.Direction.UPLOAD, snapshot("b"), snapshot("a"), serverA))
             val entry = (journal.list() as RommPendingSyncJournal.ReadResult.Entries).pending.single()
             val valid =
                 RommSaveSyncPlanner.Request(
@@ -79,18 +94,22 @@ class RommPendingSyncJournalTest {
                     versionedBackupVerified = true,
                 )
             assertEquals(
+                RommSaveSyncPlanner.Decision.UnverifiedIdentity,
+                journal.evaluate(entry, valid, serverB),
+            )
+            assertEquals(
                 RommSaveSyncPlanner.Decision.Conflict,
-                journal.evaluate(entry, valid.copy(local = snapshot("c"))),
+                journal.evaluate(entry, valid.copy(local = snapshot("c")), serverA),
             )
             assertEquals(
                 RommSaveSyncPlanner.Decision.RevalidateWhenOnline,
-                journal.evaluate(entry, valid.copy(online = false)),
+                journal.evaluate(entry, valid.copy(online = false), serverA),
             )
             assertEquals(
                 RommSaveSyncPlanner.Decision.ExplicitApprovalRequired,
-                journal.evaluate(entry, valid.copy(approvedThisOperation = false)),
+                journal.evaluate(entry, valid.copy(approvedThisOperation = false), serverA),
             )
-            assertTrue(journal.evaluate(entry, valid) is RommSaveSyncPlanner.Decision.UploadCopy)
+            assertTrue(journal.evaluate(entry, valid, serverA) is RommSaveSyncPlanner.Decision.UploadCopy)
         } finally {
             folder.deleteRecursively()
         }

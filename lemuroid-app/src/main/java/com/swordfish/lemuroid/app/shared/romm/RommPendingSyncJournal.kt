@@ -18,6 +18,7 @@ import java.util.UUID
 internal class RommPendingSyncJournal(private val directory: File) {
     data class Pending(
         val id: String,
+        val serverFingerprint: String,
         val romId: Int,
         val direction: RommSaveSyncPlanner.Direction,
         val observedLocal: RommSaveSyncPlanner.Snapshot,
@@ -33,6 +34,9 @@ internal class RommPendingSyncJournal(private val directory: File) {
 
     @Synchronized
     fun list(): ReadResult {
+        // V1 entries have no source-server binding and may not be migrated
+        // into executable future work. Fail closed rather than hide them.
+        if (File(directory, LEGACY_FILE_NAME).exists()) return ReadResult.Corrupt
         val file = File(directory, FILE_NAME)
         if (!file.exists()) return ReadResult.Entries(emptyList())
         if (!file.isFile || file.length() !in 1..MAX_FILE_BYTES.toLong()) return ReadResult.Corrupt
@@ -49,17 +53,20 @@ internal class RommPendingSyncJournal(private val directory: File) {
             for (i in 0 until array.length()) {
                 val item = array.getJSONObject(i)
                 val id = item.getString("id")
+                val serverFingerprint = item.getString("serverFingerprint")
                 val romId = item.getInt("romId")
                 val direction = RommSaveSyncPlanner.Direction.valueOf(item.getString("direction"))
                 val observedLocal = snapshot(item.getJSONObject("local"))
                 val observedRemote = snapshot(item.getJSONObject("remote"))
                 val timestamp = item.getLong("requestedAtMillis")
-                if (!id.matches(ID_PATTERN) || !ids.add(id) || romId <= 0 ||
+                if (!id.matches(ID_PATTERN) ||
+                    !RommServerIdentity.validFingerprint(serverFingerprint) ||
+                    !ids.add(id) || romId <= 0 ||
                     !games.add(romId) || direction == RommSaveSyncPlanner.Direction.NONE || timestamp <= 0L
                 ) {
                     return ReadResult.Corrupt
                 }
-                entries += Pending(id, romId, direction, observedLocal, observedRemote, timestamp)
+                entries += Pending(id, serverFingerprint, romId, direction, observedLocal, observedRemote, timestamp)
             }
             ReadResult.Entries(entries)
         } catch (_: Exception) {
@@ -77,13 +84,19 @@ internal class RommPendingSyncJournal(private val directory: File) {
         direction: RommSaveSyncPlanner.Direction,
         local: RommSaveSyncPlanner.Snapshot,
         remote: RommSaveSyncPlanner.Snapshot,
+        serverFingerprint: String,
     ): Boolean {
-        if (romId <= 0 || direction == RommSaveSyncPlanner.Direction.NONE) return false
+        if (!RommServerIdentity.validFingerprint(serverFingerprint) ||
+            romId <= 0 || direction == RommSaveSyncPlanner.Direction.NONE
+        ) {
+            return false
+        }
         val current = (list() as? ReadResult.Entries)?.pending ?: return false
         if (current.size >= MAX_PENDING || current.any { it.romId == romId }) return false
         val addition =
             Pending(
                 id = UUID.randomUUID().toString(),
+                serverFingerprint = serverFingerprint,
                 romId = romId,
                 direction = direction,
                 observedLocal = local,
@@ -104,7 +117,13 @@ internal class RommPendingSyncJournal(private val directory: File) {
     fun evaluate(
         pending: Pending,
         request: RommSaveSyncPlanner.Request,
+        serverFingerprint: String,
     ): RommSaveSyncPlanner.Decision {
+        if (!RommServerIdentity.validFingerprint(serverFingerprint) ||
+            pending.serverFingerprint != serverFingerprint
+        ) {
+            return RommSaveSyncPlanner.Decision.UnverifiedIdentity
+        }
         if (pending.romId != request.romId ||
             pending.direction != request.direction ||
             pending.observedLocal != request.local ||
@@ -122,6 +141,7 @@ internal class RommPendingSyncJournal(private val directory: File) {
             values.put(
                 JSONObject()
                     .put("id", item.id)
+                    .put("serverFingerprint", item.serverFingerprint)
                     .put("romId", item.romId)
                     .put("direction", item.direction.name)
                     .put("local", serialize(item.observedLocal))
@@ -164,8 +184,9 @@ internal class RommPendingSyncJournal(private val directory: File) {
             .joinToString("") { (it.toInt() and 255).toString(16).padStart(2, '0') }
 
     companion object {
-        private const val FILE_NAME = "romm-pending-sync-v1.json"
-        private const val VERSION = 1
+        private const val FILE_NAME = "romm-pending-sync-v2.json"
+        private const val LEGACY_FILE_NAME = "romm-pending-sync-v1.json"
+        private const val VERSION = 2
         private const val MAX_PENDING = 32
         private const val MAX_FILE_BYTES = 64 * 1024
         private val ID_PATTERN = Regex("[0-9a-f-]{36}")

@@ -128,7 +128,7 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
                         ?.takeIf { it > 0 } ?: return@mapNotNull null
                 if (romId != null && archiveRomId != romId) return@mapNotNull null
                 val manifest = File(directory, file.name + MANIFEST_SUFFIX)
-                if (!manifest.isFile || manifest.length() !in 1..128) return@mapNotNull null
+                if (!manifest.isFile || manifest.length() !in 1..200) return@mapNotNull null
                 val fields =
                     runCatching { manifest.readText(Charsets.US_ASCII).trim().split(" ") }
                         .getOrNull() ?: return@mapNotNull null
