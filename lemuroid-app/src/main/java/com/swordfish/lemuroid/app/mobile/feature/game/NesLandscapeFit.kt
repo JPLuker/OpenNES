@@ -20,11 +20,12 @@ internal object NesLandscapeFit {
             } else {
                 TouchControllerSettingsManager.LANDSCAPE_MIN_GAME_WIDTH_DP
             }
-        val dialFactor = if (handheld) 0.72f else 1f
+        // Handheld assigns each cluster a whole side zone, with no wasted
+        // fixed gutter. The actual PadKit dials are no longer shrunk to 72%.
         val required =
             minimumGameWidth +
-                TouchControllerSettingsManager.LANDSCAPE_HORIZONTAL_RESERVE_DP +
-                (leftDialWidthDp + rightDialWidthDp) * dialFactor
+                (leftDialWidthDp + rightDialWidthDp) +
+                (if (handheld) 0f else TouchControllerSettingsManager.LANDSCAPE_HORIZONTAL_RESERVE_DP)
         return if (handheld) required else maxOf(640f, required)
     }
 }
