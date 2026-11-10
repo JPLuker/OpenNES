@@ -512,6 +512,10 @@
     <string name="opennes_ra_verified_list_title">Game achievements</string>
     <string name="opennes_ra_rich_presence_title">RICH PRESENCE</string>
     <string name="opennes_ra_leaderboards_title">Leaderboards</string>
+    <string name="opennes_ra_show_all_leaderboards">Show all leaderboards</string>
+    <string name="opennes_ra_show_more_achievements">Show %1$d more achievements</string>
+    <string name="opennes_ra_show_compatibility_notices">Emulator compatibility notice (details)</string>
+    <string name="opennes_ra_hide_compatibility_notices">Hide compatibility details</string>
     <string name="opennes_ra_signed_in_as">Signed in as %1$s</string>
     <string name="opennes_ra_completion">%1$d / %2$d unlocked</string>
     <string name="opennes_ra_points">%1$d pts</string>

@@ -64,6 +64,8 @@ fun GameMenuAchievementsScreen(
 ) {
     var advancedExpanded by remember { mutableStateOf(false) }
     var websiteExpanded by remember { mutableStateOf(false) }
+    var compatibilityExpanded by remember(game.id) { mutableStateOf(false) }
+    var showAllLeaderboards by remember(game.id) { mutableStateOf(false) }
     var savedEmulatorUsername by remember { mutableStateOf<String?>(null) }
     var identification by remember(game.id, game.fileUri) {
         mutableStateOf<LocalIdentification>(LocalIdentification.Checking)
@@ -136,7 +138,7 @@ fun GameMenuAchievementsScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            NesBoxArtwork(game = game, modifier = Modifier.width(76.dp))
+            NesBoxArtwork(game = game, modifier = Modifier.width(64.dp))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = stringResource(R.string.opennes_ra_game_label),
@@ -149,7 +151,7 @@ fun GameMenuAchievementsScreen(
                     text = game.displayName(),
                     color = GameMenuStyle.foreground,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -224,12 +226,30 @@ fun GameMenuAchievementsScreen(
                         fontSize = 12.sp,
                     )
                 }
-                activeSession?.compatibilityNotices?.forEach { notice ->
-                    Text(
-                        text = notice,
-                        color = GameMenuStyle.muted,
-                        fontSize = 12.sp,
-                    )
+                val notices = activeSession?.compatibilityNotices.orEmpty()
+                if (notices.isNotEmpty()) {
+                    TextButton(
+                        onClick = { compatibilityExpanded = !compatibilityExpanded },
+                    ) {
+                        Text(
+                            stringResource(
+                                if (compatibilityExpanded) {
+                                    R.string.opennes_ra_hide_compatibility_notices
+                                } else {
+                                    R.string.opennes_ra_show_compatibility_notices
+                                },
+                            ),
+                        )
+                    }
+                    if (compatibilityExpanded) {
+                        notices.forEach { notice ->
+                            Text(
+                                text = notice,
+                                color = GameMenuStyle.muted,
+                                fontSize = 12.sp,
+                            )
+                        }
+                    }
                 }
                 if (activeSession == null) {
                     Text(
@@ -294,7 +314,9 @@ fun GameMenuAchievementsScreen(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                 )
-                sessionData.leaderboards.forEach { board ->
+                val displayedBoards =
+                    if (showAllLeaderboards) sessionData.leaderboards else sessionData.leaderboards.take(8)
+                displayedBoards.forEach { board ->
                     Surface(
                         color = GameMenuStyle.surface,
                         shape = RoundedCornerShape(12.dp),
@@ -316,6 +338,11 @@ fun GameMenuAchievementsScreen(
                                 Text(text = tracker, color = GameMenuStyle.red, fontSize = 12.sp)
                             }
                         }
+                    }
+                }
+                if (!showAllLeaderboards && sessionData.leaderboards.size > displayedBoards.size) {
+                    TextButton(onClick = { showAllLeaderboards = true }) {
+                        Text(stringResource(R.string.opennes_ra_show_all_leaderboards))
                     }
                 }
             }

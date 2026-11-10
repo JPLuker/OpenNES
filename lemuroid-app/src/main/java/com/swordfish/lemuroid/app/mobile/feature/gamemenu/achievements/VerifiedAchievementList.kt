@@ -17,6 +17,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +51,10 @@ internal fun VerifiedAchievementList(
     achievements: List<VerifiedAchievement>,
     readOnlyWeb: Boolean = false,
 ) {
-    var filter by remember(romMd5, username) { mutableStateOf(AchievementFilter.ALL) }
+    var filter by remember(romMd5, username, readOnlyWeb) { mutableStateOf(AchievementFilter.ALL) }
+    var displayedLimit by remember(romMd5, username, readOnlyWeb, filter) {
+        mutableStateOf(AchievementPageWindow.PAGE_SIZE)
+    }
     val total = achievements.size
     val unlocked = achievements.count { it.unlocked }
     val unlockedPoints = achievements.filter { it.unlocked }.sumOf { it.points.coerceAtLeast(0) }
@@ -141,7 +145,8 @@ internal fun VerifiedAchievementList(
                 fontSize = 13.sp,
             )
         }
-        filtered.forEach { achievement ->
+        val window = filtered.take(AchievementPageWindow.limit(filtered.size, displayedLimit))
+        window.forEach { achievement ->
             Surface(
                 color = GameMenuStyle.surface,
                 border = BorderStroke(1.dp, GameMenuStyle.border),
@@ -195,6 +200,17 @@ internal fun VerifiedAchievementList(
                     }
                     // Points are shown below the description so long titles can wrap.
                 }
+            }
+        }
+        val additional = AchievementPageWindow.more(filtered.size, window.size)
+        if (additional > 0) {
+            TextButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    displayedLimit = AchievementPageWindow.next(filtered.size, displayedLimit)
+                },
+            ) {
+                Text(stringResource(R.string.opennes_ra_show_more_achievements, additional))
             }
         }
     }
