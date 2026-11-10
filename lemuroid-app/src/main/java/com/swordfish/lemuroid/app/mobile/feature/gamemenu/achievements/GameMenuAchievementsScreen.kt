@@ -181,6 +181,7 @@ fun GameMenuAchievementsScreen(
         RetroAchievementsWebSection(
             romMd5 = (identification as? LocalIdentification.Identified)?.identity?.md5,
         )
+        NativeBridgeDiagnostics()
 
         Text(
             text = stringResource(R.string.opennes_ra_rom_identification),

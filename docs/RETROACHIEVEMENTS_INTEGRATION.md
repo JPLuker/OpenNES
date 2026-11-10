@@ -51,6 +51,12 @@
 - CI verifies explicit JNI exports for core memory snapshots, emulated frame count and rcheevos preflight in every packaged ABI.
 - **Not yet implemented:** real emulator user login/token, rc_client memory mapping callbacks, HTTPS server transport, native game activation, unlock events, hardcore restrictions and live overlays. Linking the library is not proof of accurate achievements.
 
+## Debug-only real-device native acceptance tool
+
+- Open Pause → Achievements → **Native bridge diagnostics (debug only)**, then Start probe, resume NES gameplay, reopen and Refresh. Expect observed frames to advance and mapped memory to be nonzero for a supported FCEUmm game. Stop probe afterward.
+- This manually arms the dormant `rc_client` runtime to exercise the official NES memory-region map; it does **not** create a user session, submit requests, or award achievements. Diagnostic controls are hidden in non-debug APKs.
+- Test against real NES gameplay and save/load, fast-forward and rotation, and verify stopping clears the native mapping safely. Compiling these hooks is not a substitute for on-device testing.
+
 ## Next source implementation gates
 
 1. Vendor or fork LibretroDroid under source control and expose a compatible emulation-thread memory bridge and per-emulated-frame callback. Inspect the exact *pinned dependency version* before changing the renderer. Make sure the bridge never reads destroyed/changed cores. Do not mix prebuilt native libraries and incompatible Java interfaces.
