@@ -12,6 +12,19 @@ internal object RetroAchievementsNative {
     external fun preflight(): Boolean
 
     /**
+     * Encode and parse public game-hash resolution through pinned rcheevos.
+     * This does not authenticate a player, start a native game session,
+     * or award achievements.
+     */
+    external fun prepareGameResolveRequest(md5: String): String?
+
+    /** Official API response parsing; zero means no verified game match. */
+    external fun parseGameResolveResponse(
+        jsonBytes: ByteArray,
+        httpStatus: Int,
+    ): Int
+
+    /**
      * Native diagnostic only. No account, ROM identification, network, awards
      * or leaderboard submission occurs while this probe is active.
      * Must be stopped before any future authenticated native session starts.
