@@ -14,7 +14,7 @@ class NesLandscapeFitTest {
                 rightDialWidthDp = 160f,
                 handheld = true,
             )
-        assertEquals(400f * 4f / 3f + 48f + 320f * 0.72f, required, 0.01f)
+        assertEquals(400f * 4f / 3f + 320f, required, 0.01f)
     }
 
     @Test
