@@ -23,20 +23,13 @@ import kotlin.coroutines.coroutineContext
  *
  * This transport is not connected to JNI yet and cannot earn awards alone.
  */
-internal class RetroAchievementsNativeHttpTransport {
+internal class RetroAchievementsNativeHttpTransport(
+    private val client: OkHttpClient = createClient(),
+) {
     data class Reply(
         val statusCode: Int,
         val body: ByteArray,
     )
-
-    private val client =
-        OkHttpClient.Builder()
-            .connectTimeout(8, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .callTimeout(45, TimeUnit.SECONDS)
-            .followRedirects(false)
-            .followSslRedirects(false)
-            .build()
 
     suspend fun execute(
         rawUrl: String,
@@ -82,6 +75,15 @@ internal class RetroAchievementsNativeHttpTransport {
         }
 
     companion object {
+        private fun createClient() =
+            OkHttpClient.Builder()
+                .connectTimeout(8, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .callTimeout(45, TimeUnit.SECONDS)
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build()
+
         private const val MAX_RESPONSE_BYTES = 2 * 1024 * 1024
         private const val MAX_POST_CHARACTERS = 64 * 1024
         private val FORM_CONTENT_TYPE = "application/x-www-form-urlencoded".toMediaType()
