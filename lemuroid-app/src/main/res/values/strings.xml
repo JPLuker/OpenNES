@@ -461,7 +461,7 @@
     <string name="opennes_ra_menu_subtitle">RetroAchievements</string>
     <string name="opennes_ra_game_label">CURRENT GAME</string>
     <string name="opennes_ra_runtime_unavailable">Not connected</string>
-    <string name="opennes_ra_runtime_explanation">Native emulator sign-in and automatic achievement unlocks are not available yet. Optional website progress shown below is view-only and cannot award new achievements.</string>
+    <string name="opennes_ra_runtime_explanation">Live NES achievements require an authenticated native game session and an officially recognized ROM. Gameplay tracking is experimental. Website progress below remains view-only.</string>
     <string name="opennes_ra_no_progress">No unlock count, points or completion percentage is shown until verified achievement data is available.</string>
     <string name="opennes_ra_rom_identification">Game identification</string>
     <string name="opennes_ra_identifying">Identifying local ROM…</string>
@@ -473,6 +473,8 @@
     <string name="opennes_ra_runtime_connecting">Connecting to RetroAchievements</string>
     <string name="opennes_ra_runtime_no_match">Game not recognized</string>
     <string name="opennes_ra_runtime_hash_mismatch">Game identification mismatch</string>
+    <string name="opennes_ra_fds_unavailable">FDS achievements unavailable</string>
+    <string name="opennes_ra_fds_explanation">Famicom Disk System games remain playable, but live achievements are disabled until the memory map is validated.</string>
     <string name="opennes_ra_no_match_explanation">The signed-in RetroAchievements session did not match this game. No awards or progress will be displayed.</string>
     <string name="opennes_ra_verified_list_title">Game achievements</string>
     <string name="opennes_ra_signed_in_as">Signed in as %1$s</string>
@@ -594,8 +596,8 @@
     <string name="opennes_ra_account_signout_failed">Could not sign out on this device. Try again.</string>
     <string name="opennes_ra_game_account_saved">Signed in as %1$s</string>
     <string name="opennes_ra_game_account_unavailable">No emulator account</string>
-    <string name="opennes_ra_game_tracking_pending">Your account is saved, but gameplay unlocks are not enabled in this build.</string>
-    <string name="opennes_ra_game_signin_hint">Connect an emulator account in Settings. Live unlocks are not enabled in this build.</string>
+    <string name="opennes_ra_game_tracking_pending">Your emulator account is saved. A recognized NES game must start and connect before live progress can appear.</string>
+    <string name="opennes_ra_game_signin_hint">Sign in with a RetroAchievements emulator account in Settings to enable experimental live NES tracking.</string>
     <string name="opennes_ra_game_match_short">Matched game #%1$d</string>
     <string name="opennes_ra_game_match_unavailable">Game lookup unavailable</string>
     <string name="opennes_ra_game_match_unknown">No RetroAchievements match found</string>

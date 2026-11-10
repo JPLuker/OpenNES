@@ -108,6 +108,9 @@ fun GameMenuAchievementsScreen(
     // previous ROM can never make an unrelated title look unlocked.
     val runtime by RetroAchievementsGameStateStore.snapshots.collectAsState()
     val currentHash = (identification as? LocalIdentification.Identified)?.identity?.md5
+    val isFdsRom =
+        (identification as? LocalIdentification.Identified)?.identity?.console ==
+            NesRetroAchievementsHash.Console.FDS
     val visibleSession =
         if (currentHash != null && runtime.romMd5.equals(currentHash, ignoreCase = true)) {
             runtime.state
@@ -116,7 +119,7 @@ fun GameMenuAchievementsScreen(
         }
     val activeSession =
         (visibleSession as? RetroAchievementsDisplayState.Active)?.takeIf { active ->
-            currentHash != null && active.romMd5.equals(currentHash, ignoreCase = true)
+            !isFdsRom && currentHash != null && active.romMd5.equals(currentHash, ignoreCase = true)
         }
 
     Column(
@@ -172,6 +175,7 @@ fun GameMenuAchievementsScreen(
                     val statusTitle =
                         when {
                             activeSession != null -> R.string.opennes_ra_runtime_ready
+                            isFdsRom -> R.string.opennes_ra_fds_unavailable
                             visibleSession is RetroAchievementsDisplayState.Connecting ->
                                 R.string.opennes_ra_runtime_connecting
                             visibleSession is RetroAchievementsDisplayState.NoMatchingGame ->
@@ -201,7 +205,9 @@ fun GameMenuAchievementsScreen(
                     Text(
                         text =
                             stringResource(
-                                if (visibleSession is RetroAchievementsDisplayState.NoMatchingGame) {
+                                if (isFdsRom) {
+                                    R.string.opennes_ra_fds_explanation
+                                } else if (visibleSession is RetroAchievementsDisplayState.NoMatchingGame) {
                                     R.string.opennes_ra_no_match_explanation
                                 } else if (savedEmulatorUsername != null) {
                                     R.string.opennes_ra_game_tracking_pending

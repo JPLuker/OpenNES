@@ -1,8 +1,9 @@
 package com.swordfish.lemuroid.app.shared.achievements
 
 /**
- * Library-link smoke check, NOT an emulator login or award engine.
- * Remains unused by the player UI until native authentication is implemented.
+ * JNI boundary for the pinned rcheevos runtime. Token verification and game
+ * identification are distinct from the game-owned authenticated session.
+ * A compiled APK does not prove server award delivery on a physical phone.
  */
 internal object RetroAchievementsNative {
     init {

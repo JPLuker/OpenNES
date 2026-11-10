@@ -2,8 +2,9 @@ package com.swordfish.lemuroid.app.shared.achievements
 
 /**
  * Screen-ready data contract for authenticated, verified rc_client game sessions.
- * The current emulator never emits Active until the native runtime exists.
- * Neither HTTP-only metadata nor local MD5 by themselves may create Active.
+ * Only the game-owned native session may emit Active after authenticated
+ * game loading and a readable emulator memory map. HTTP-only metadata and
+ * a local ROM fingerprint cannot create an active award session.
  */
 sealed interface RetroAchievementsDisplayState {
     data object NotConnected : RetroAchievementsDisplayState

@@ -24,8 +24,8 @@ import kotlin.coroutines.resumeWithException
  * responses are never logged, and cancelled game sessions cancel the actual
  * OkHttp call instead of leaving a blocking request alive.
  *
- * This remains a *transport component*: JNI rc_client server callbacks are
- * not wired to it yet, so it cannot authenticate or award achievements.
+ * Game-owned JNI rc_client callbacks and short-lived token verification use
+ * this transport. It never creates client-side achievement awards.
  */
 internal class RetroAchievementsNativeHttpTransport(
     private val client: OkHttpClient = createClient(),

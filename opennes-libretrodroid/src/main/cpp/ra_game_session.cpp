@@ -398,6 +398,9 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_idle
             sessionState = -2;
             return;
         }
+        // A game response may arrive before the first core frame maps RAM.
+        // Never evaluate paused-game conditions against unreadable zeroes.
+        if (sessionState == 3) return;
         frameReadingSessionId = static_cast<uint64_t>(session);
         rc_client_idle(gameClient);
         frameReadingSessionId = 0;
