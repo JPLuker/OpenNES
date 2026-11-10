@@ -68,12 +68,13 @@ class RetroAchievementsNativeGameResolverTest {
     fun rejectsInsecureOrForeignEndpointsWithoutNetwork() {
         runBlocking {
             var called = false
-            val forbidden = listOf(
-                "http://retroachievements.org/dorequest.php",
-                "https://example.org/dorequest.php",
-                "https://retroachievements.org/login.php",
-                "https://retroachievements.org/dorequest.php?r=gameid",
-            )
+            val forbidden =
+                listOf(
+                    "http://retroachievements.org/dorequest.php",
+                    "https://example.org/dorequest.php",
+                    "https://retroachievements.org/login.php",
+                    "https://retroachievements.org/dorequest.php?r=gameid",
+                )
             for (url in forbidden) {
                 val result =
                     resolver(
@@ -95,7 +96,12 @@ class RetroAchievementsNativeGameResolverTest {
             var called = false
             val result =
                 resolver(
-                    encoder = { arrayOf("https://retroachievements.org/dorequest.php", "r=gameid&m=" + "a".repeat(32)) },
+                    encoder = {
+                        arrayOf(
+                            "https://retroachievements.org/dorequest.php",
+                            "r=gameid&m=" + "a".repeat(32),
+                        )
+                    },
                     request = { _, _ ->
                         called = true
                         RetroAchievementsNativeHttpTransport.Reply(200, ByteArray(0))
