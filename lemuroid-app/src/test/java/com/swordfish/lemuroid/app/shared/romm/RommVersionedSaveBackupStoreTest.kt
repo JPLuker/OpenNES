@@ -1,6 +1,7 @@
 package com.swordfish.lemuroid.app.shared.romm
 
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
@@ -39,6 +40,40 @@ class RommVersionedSaveBackupStoreTest {
         backup.file.writeBytes("after".toByteArray())
         assertFalse(store.verify(backup))
         assertArrayEquals("before".toByteArray(), original.readBytes())
+    }
+
+    @Test
+    fun verifiedArchiveSurvivesReopeningStoreAndFiltersByRomId() {
+        val source = temporary.newFile("remote.sav")
+        source.writeBytes(ByteArray(200) { it.toByte() })
+        val folder = temporary.newFolder("versions")
+        val first = RommVersionedSaveBackupStore(folder)
+        val backup = first.createVerifiedBackup(45, source)
+        first.createVerifiedBackup(88, source)
+
+        val reloaded = RommVersionedSaveBackupStore(folder)
+        val entries = reloaded.listVerifiedBackups(45)
+        assertEquals(1, entries.size)
+        assertEquals(backup.sha256, entries.single().sha256)
+        assertEquals(backup.bytes, entries.single().bytes)
+        assertEquals(2, reloaded.listVerifiedBackups().size)
+    }
+
+    @Test
+    fun corruptedArchiveAndManifestCannotAppearAsVerified() {
+        val source = temporary.newFile("remote.sav")
+        source.writeBytes(ByteArray(80) { 7 })
+        val folder = temporary.newFolder("versions")
+        val store = RommVersionedSaveBackupStore(folder)
+        val first = store.createVerifiedBackup(45, source)
+        assertEquals(1, store.listVerifiedBackups(45).size)
+        first.file.writeBytes(ByteArray(80) { 9 })
+        assertTrue(store.listVerifiedBackups(45).isEmpty())
+
+        val second = store.createVerifiedBackup(45, source)
+        val manifest = java.io.File(folder, second.file.name + ".sha256")
+        manifest.writeText("0".repeat(64) + " 80\\n")
+        assertTrue(store.listVerifiedBackups(45).isEmpty())
     }
 
     @Test
