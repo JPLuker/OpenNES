@@ -404,6 +404,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     leftBounds = leftPadBounds.value,
                     rightBounds = rightPadBounds.value,
                     settings = touchControllerSettings,
+                    landscapeSidePanels = isLandscape && !allowTouchOverlay,
                     onPreview = viewModel::previewTouchControllerSettings,
                     onCommit = viewModel::updateTouchControllerSettings,
                     onDone = { viewModel.setDragEditMode(false) },
