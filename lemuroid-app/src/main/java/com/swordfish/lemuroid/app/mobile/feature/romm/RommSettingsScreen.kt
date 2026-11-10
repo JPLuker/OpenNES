@@ -36,6 +36,7 @@ import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
 import com.swordfish.lemuroid.app.shared.romm.RommPendingSyncJournal
 import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncPlanner
+import com.swordfish.lemuroid.app.shared.romm.RommServerIdentity
 import com.swordfish.lemuroid.app.shared.romm.RommVersionedSaveBackupStore
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.CancellationException
@@ -83,6 +84,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     var pendingArchive by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
     var pendingArchiveDeletion by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
     var pendingArchiveComparison by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
+    var prepareArchive by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
+    var pendingTransferDocument by remember {
+        mutableStateOf<Pair<RommVersionedSaveBackupStore.Backup, RommSaveSyncPlanner.Direction>?>(null)
+    }
     var pendingIntentDeletion by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
     var archivedSaves by remember { mutableStateOf<List<RommVersionedSaveBackupStore.Backup>>(emptyList()) }
     var syncQueue by remember {
@@ -140,6 +145,36 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                 perform("Exporting local backup") {
                     client.exportOfflineSaveBackup(context, selected, destination)
                     status = context.getString(R.string.opennes_romm_save_exported)
+                }
+            }
+        }
+
+    val transferPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument(),
+        ) { document ->
+            val request = pendingTransferDocument
+            pendingTransferDocument = null
+            if (document != null && request != null) {
+                perform("Preparing offline transfer request") {
+                    val prepared =
+                        client.prepareOfflineSaveTransfer(
+                            context = context,
+                            backup = request.first,
+                            localDocument = document,
+                            direction = request.second,
+                            serverUrl = store.configuredServer(),
+                            journal = syncJournal,
+                        )
+                    syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
+                    status =
+                        context.getString(
+                            if (prepared) {
+                                R.string.opennes_romm_pending_prepared
+                            } else {
+                                R.string.opennes_romm_pending_prepare_failed
+                            },
+                        )
                 }
             }
         }
@@ -441,6 +476,17 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                 onClick = { pendingArchiveDeletion = backup },
                             ) { Text(stringResource(R.string.opennes_romm_archive_delete)) }
                         }
+                        val source = RommServerIdentity.fingerprint(store.configuredServer())
+                        if (backup.sourceServerFingerprint == null) {
+                            Text(stringResource(R.string.opennes_romm_pending_legacy_archive))
+                        } else if (backup.sourceServerFingerprint != source) {
+                            Text(stringResource(R.string.opennes_romm_pending_other_server))
+                        } else {
+                            TextButton(
+                                enabled = !busy,
+                                onClick = { prepareArchive = backup },
+                            ) { Text(stringResource(R.string.opennes_romm_pending_prepare)) }
+                        }
                     }
                 }
             }
@@ -504,6 +550,38 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    prepareArchive?.let { selected ->
+        AlertDialog(
+            onDismissRequest = { prepareArchive = null },
+            title = { Text(stringResource(R.string.opennes_romm_pending_prepare)) },
+            text = { Text(stringResource(R.string.opennes_romm_pending_prepare_explanation)) },
+            confirmButton = {
+                TextButton(
+                    enabled = !busy,
+                    onClick = {
+                        prepareArchive = null
+                        pendingTransferDocument = selected to RommSaveSyncPlanner.Direction.UPLOAD
+                        transferPicker.launch(arrayOf("*/*"))
+                    },
+                ) { Text(stringResource(R.string.opennes_romm_pending_request_upload)) }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        enabled = !busy,
+                        onClick = {
+                            prepareArchive = null
+                            pendingTransferDocument = selected to RommSaveSyncPlanner.Direction.DOWNLOAD
+                            transferPicker.launch(arrayOf("*/*"))
+                        },
+                    ) { Text(stringResource(R.string.opennes_romm_pending_request_download)) }
+                    TextButton(onClick = { prepareArchive = null }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            },
+        )
+    }
     pendingArchiveDeletion?.let { selected ->
         AlertDialog(
             onDismissRequest = { pendingArchiveDeletion = null },

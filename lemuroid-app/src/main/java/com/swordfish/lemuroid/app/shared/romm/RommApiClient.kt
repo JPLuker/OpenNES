@@ -288,6 +288,43 @@ class RommApiClient {
         }
 
     /**
+     * Record a non-executing offline transfer request. A verified archived
+     * backup MUST originate from the currently configured HTTPS server.
+     * No tokens, selected-file URIs, save contents or approval are persisted.
+     * The user will have to reselect and reverify the local save later.
+     */
+    internal suspend fun prepareOfflineSaveTransfer(
+        context: Context,
+        backup: RommVersionedSaveBackupStore.Backup,
+        localDocument: Uri,
+        direction: RommSaveSyncPlanner.Direction,
+        serverUrl: String?,
+        journal: RommPendingSyncJournal,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            val serverFingerprint = RommServerIdentity.fingerprint(serverUrl) ?: return@withContext false
+            if (backup.sourceServerFingerprint != serverFingerprint ||
+                direction == RommSaveSyncPlanner.Direction.NONE
+            ) {
+                return@withContext false
+            }
+            val backups = privateBackupStore(context)
+            if (!backups.verify(backup)) return@withContext false
+            val local =
+                RommSaveSnapshotter.fromReopenableStream {
+                    context.contentResolver.openInputStream(localDocument)
+                }
+            if (!backups.verify(backup)) return@withContext false
+            journal.enqueue(
+                romId = backup.romId,
+                direction = direction,
+                local = local,
+                remote = RommSaveSyncPlanner.Snapshot(backup.sha256, backup.bytes),
+                serverFingerprint = serverFingerprint,
+            )
+        }
+
+    /**
      * Compare a user-selected local document against an immutable archived
      * RomM save. The comparison never reads or modifies live emulator state,
      * and does not imply that merging or replacing saves would be safe.

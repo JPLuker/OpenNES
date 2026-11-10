@@ -53,7 +53,9 @@ class RommPendingSyncJournalTest {
         val folder = Files.createTempDirectory("romm-corrupt-").toFile()
         try {
             val journal = RommPendingSyncJournal(folder)
-            assertTrue(journal.enqueue(7, RommSaveSyncPlanner.Direction.DOWNLOAD, snapshot("a"), snapshot("b"), serverA))
+            assertTrue(
+                journal.enqueue(7, RommSaveSyncPlanner.Direction.DOWNLOAD, snapshot("a"), snapshot("b"), serverA),
+            )
             val file = File(folder, "romm-pending-sync-v2.json")
             file.writeText(file.readText().replace(serverA, serverB))
             assertEquals(RommPendingSyncJournal.ReadResult.Corrupt, journal.list())

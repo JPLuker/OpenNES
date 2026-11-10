@@ -596,6 +596,14 @@
     <string name="opennes_romm_archive_delete_failed">This backup could not be safely deleted. Refresh the archive and try again.</string>
     <string name="opennes_romm_pending_title">Pending save synchronization</string>
     <string name="opennes_romm_pending_description">Review offline transfer requests here. Nothing is uploaded, restored, or replayed automatically. Every transfer will require fresh verification and approval when two-way sync is supported.</string>
+    <string name="opennes_romm_pending_prepare">Prepare offline sync request</string>
+    <string name="opennes_romm_pending_prepare_explanation">Choose upload or download intent, then select a local save document. OpenNES only records current fingerprints: it does not copy, upload, download, approve, or remember the selected local document. Revalidation and a new approval will be required.</string>
+    <string name="opennes_romm_pending_request_upload">Request upload</string>
+    <string name="opennes_romm_pending_request_download">Request download</string>
+    <string name="opennes_romm_pending_prepared">Offline transfer request saved. No transfer will run automatically.</string>
+    <string name="opennes_romm_pending_prepare_failed">Could not prepare the request. Check server identity, backup integrity, duplicates or journal capacity.</string>
+    <string name="opennes_romm_pending_legacy_archive">Legacy offline copy: export or compare it, or make a new server-bound backup before preparing sync.</string>
+    <string name="opennes_romm_pending_other_server">This backup came from another RomM server. Synchronization is unavailable for this server.</string>
     <string name="opennes_romm_pending_refresh">Refresh requests</string>
     <string name="opennes_romm_pending_refreshed">Pending requests rechecked.</string>
     <string name="opennes_romm_pending_empty">No pending save transfers.</string>
