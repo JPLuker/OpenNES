@@ -48,10 +48,15 @@ uint32_t RC_CCONV readMappedMemory(
 }
 }
 
+extern "C" bool OpenNESIsAchievementSessionActive();
+
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startFrameProbe(
     JNIEnv*, jobject
 ) {
+    // The diagnostic and real achievement evaluator share one observer.
+    // Never let the probe silently replace active game processing.
+    if (OpenNESIsAchievementSessionActive()) return JNI_FALSE;
     std::lock_guard<std::mutex> guard(probeMutex);
     // A core teardown removes the observer but does not call this JNI's
     // stop method. Always detach and reset before arming again, even if a
