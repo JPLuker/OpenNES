@@ -205,6 +205,32 @@ private fun OpenNesLibrary(
     onSetDirectoryClicked: () -> Unit,
     onRescanClicked: () -> Unit,
 ) {
+    if (!state.libraryReady) {
+        Box(
+            modifier = modifier.fillMaxSize().background(LibraryColors.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Text(
+                    text = "OpenNES",
+                    color = LibraryColors.foreground,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 30.sp,
+                )
+                CircularProgressIndicator(color = LibraryColors.red)
+                Text(
+                    text = stringResource(R.string.opennes_library_loading),
+                    color = LibraryColors.muted,
+                    fontSize = 13.sp,
+                )
+            }
+        }
+        return
+    }
+
     Column(
         modifier =
             modifier
@@ -1331,6 +1357,9 @@ fun GameCover(
         // Preserve the full printed artwork instead of cropping its edges.
         modifier = modifier.aspectRatio(NES_BOX_ART_ASPECT_RATIO),
         contentScale = ContentScale.Fit,
+        // While a remote box is loading, never show a featureless black
+        // rectangle: the recognizable title placeholder remains visible.
+        placeholder = fallbackPainter,
         fallback = fallbackPainter,
         error = fallbackPainter,
     )
