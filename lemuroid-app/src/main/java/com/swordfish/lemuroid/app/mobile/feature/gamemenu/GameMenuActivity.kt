@@ -302,7 +302,11 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     Button(
                         onClick = { onResult { } },
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = GameMenuStyle.red),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = GameMenuStyle.red,
+                                contentColor = androidx.compose.ui.graphics.Color.White,
+                            ),
                     ) {
                         Text(stringResource(R.string.game_context_menu_resume))
                     }
