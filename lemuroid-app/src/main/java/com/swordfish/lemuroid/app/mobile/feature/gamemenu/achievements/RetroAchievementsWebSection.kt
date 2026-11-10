@@ -197,14 +197,17 @@ internal fun RetroAchievementsWebSection(
                 fontSize = 12.sp,
             )
         }
+        val expectedSystem =
+            when (console) {
+                NesRetroAchievementsHash.Console.NES -> 7
+                NesRetroAchievementsHash.Console.FDS -> 81
+                null -> null
+            }
         progress?.takeIf {
-            romMd5 != null && console != null &&
+            romMd5 != null &&
+                expectedSystem != null &&
                 it.romMd5.equals(romMd5, ignoreCase = true) &&
-                it.systemId ==
-                when (console) {
-                    NesRetroAchievementsHash.Console.NES -> 7
-                    NesRetroAchievementsHash.Console.FDS -> 81
-                }
+                it.systemId == expectedSystem
         }
             ?.let { value ->
                 VerifiedAchievementList(
