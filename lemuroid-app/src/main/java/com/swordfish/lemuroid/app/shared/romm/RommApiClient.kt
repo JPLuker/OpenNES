@@ -170,40 +170,8 @@ class RommApiClient {
         require(save.id > 0 && save.romId > 0 && safeAttachmentFileName(save.fileName)) {
             "Invalid RomM save metadata"
         }
-        val temporary = File.createTempFile("opennes-romm-save-", ".part", context.cacheDir)
+        val temporary = downloadVerifiedRemoteSave(context, connection, save)
         try {
-            val request =
-                Request.Builder()
-                    .url(buildUrl(connection, listOf("api", "saves", save.id.toString(), "content")))
-                    .get()
-                    .header("Authorization", "Bearer " + connection.token)
-                    .header("User-Agent", "OpenNES/0.1 RomM backup export")
-                    .build()
-            http.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) throw httpError(response.code)
-                val body = response.body ?: throw IOException("Empty RomM save response")
-                if (body.contentLength() > MAX_SAVE_BYTES) {
-                    throw IOException("RomM save exceeds supported backup size")
-                }
-                var total = 0L
-                body.byteStream().use { input ->
-                    temporary.outputStream().use { output ->
-                        val buffer = ByteArray(16 * 1024)
-                        while (true) {
-                            coroutineContext.ensureActive()
-                            val count = readProgressing(input, buffer)
-                            if (count < 0) break
-                            total += count
-                            if (total > MAX_SAVE_BYTES) {
-                                throw IOException("RomM save exceeds supported backup size")
-                            }
-                            output.write(buffer, 0, count)
-                        }
-                    }
-                }
-                if (total == 0L) throw IOException("RomM returned an empty save")
-                RommDownloadVerification.checkRemoteSaveHash(temporary, save.contentHash)
-            }
             coroutineContext.ensureActive()
             val output =
                 context.contentResolver.openOutputStream(destination, "w")
@@ -224,6 +192,114 @@ class RommApiClient {
             temporary.delete()
         }
     }
+
+    /**
+     * One shared, bounded save-download path for user exports and private
+     * archives. It verifies the optional RomM content hash before returning
+     * a temporary file, deleting partial downloads on any exception.
+     */
+    private suspend fun downloadVerifiedRemoteSave(
+        context: Context,
+        connection: RommConnection,
+        save: RemoteSave,
+    ): File =
+        withContext(Dispatchers.IO) {
+            require(save.id > 0 && save.romId > 0 && safeAttachmentFileName(save.fileName)) {
+                "Invalid RomM save metadata"
+            }
+            val temporary = File.createTempFile("opennes-romm-save-", ".part", context.cacheDir)
+            try {
+                val request =
+                    Request.Builder()
+                        .url(buildUrl(connection, listOf("api", "saves", save.id.toString(), "content")))
+                        .get()
+                        .header("Authorization", "Bearer " + connection.token)
+                        .header("User-Agent", "OpenNES/0.1 RomM backup export")
+                        .build()
+                http.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) throw httpError(response.code)
+                    val body = response.body ?: throw IOException("Empty RomM save response")
+                    if (body.contentLength() > MAX_SAVE_BYTES) {
+                        throw IOException("RomM save exceeds supported backup size")
+                    }
+                    var total = 0L
+                    body.byteStream().use { input ->
+                        temporary.outputStream().use { output ->
+                            val buffer = ByteArray(16 * 1024)
+                            while (true) {
+                                coroutineContext.ensureActive()
+                                val count = readProgressing(input, buffer)
+                                if (count < 0) break
+                                total += count
+                                if (total > MAX_SAVE_BYTES) {
+                                    throw IOException("RomM save exceeds supported backup size")
+                                }
+                                output.write(buffer, 0, count)
+                            }
+                        }
+                    }
+                    if (total == 0L) throw IOException("RomM returned an empty save")
+                    RommDownloadVerification.checkRemoteSaveHash(temporary, save.contentHash)
+                }
+                coroutineContext.ensureActive()
+                temporary
+            } catch (e: Exception) {
+                temporary.delete()
+                throw e
+            }
+        }
+
+    /** Save a user-selected remote save into an immutable app-private archive. */
+    suspend fun keepRemoteSaveBackup(
+        context: Context,
+        connection: RommConnection,
+        save: RemoteSave,
+    ): RommVersionedSaveBackupStore.Backup =
+        withContext(Dispatchers.IO) {
+            val temporary = downloadVerifiedRemoteSave(context, connection, save)
+            try {
+                privateBackupStore(context).createVerifiedBackup(save.romId, temporary)
+            } finally {
+                temporary.delete()
+            }
+        }
+
+    suspend fun listOfflineSaveBackups(
+        context: Context,
+        romId: Int,
+    ): List<RommVersionedSaveBackupStore.Backup> =
+        withContext(Dispatchers.IO) {
+            privateBackupStore(context).listVerifiedBackups(romId)
+        }
+
+    /** User-chosen SAF destination; never replaces emulator SRAM/state files. */
+    suspend fun exportOfflineSaveBackup(
+        context: Context,
+        backup: RommVersionedSaveBackupStore.Backup,
+        destination: Uri,
+    ) = withContext(Dispatchers.IO) {
+        val store = privateBackupStore(context)
+        if (!store.verify(backup)) throw IOException("Local save backup failed integrity verification")
+        val output =
+            context.contentResolver.openOutputStream(destination, "w")
+                ?: throw IOException("Cannot write selected export document")
+        output.use { sink ->
+            backup.file.inputStream().buffered().use { source ->
+                val buffer = ByteArray(16 * 1024)
+                while (true) {
+                    coroutineContext.ensureActive()
+                    val length = readProgressing(source, buffer)
+                    if (length < 0) break
+                    sink.write(buffer, 0, length)
+                }
+                sink.flush()
+            }
+        }
+        if (!store.verify(backup)) throw IOException("Local backup changed during export")
+    }
+
+    private fun privateBackupStore(context: Context): RommVersionedSaveBackupStore =
+        RommVersionedSaveBackupStore(File(context.noBackupFilesDir, "romm-save-archive-v1"))
 
     /** A RomM import never overwrites an existing local file or save. */
     suspend fun importIntoSelectedNesFolder(
