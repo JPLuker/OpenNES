@@ -61,9 +61,9 @@ class RommDeviceSyncProtocolTest {
         )
         val unknown =
             response(
-            """{"action":"execute","rom_id":1,"file_name":"x.srm"}""",
-            """"total_upload":0,"total_download":0,"total_conflict":0,"total_delete":0,"total_no_op":1""",
-        )
+                """{"action":"execute","rom_id":1,"file_name":"x.srm"}""",
+                """"total_upload":0,"total_download":0,"total_conflict":0,"total_delete":0,"total_no_op":1""",
+            )
         assertEquals(
             RommDeviceSyncProtocol.ParseResult.Rejected(RommDeviceSyncProtocol.Rejection.UNSUPPORTED_SCHEMA),
             RommDeviceSyncProtocol.parseNegotiation(unknown, setOf(1)),
@@ -76,27 +76,27 @@ class RommDeviceSyncProtocolTest {
             """"total_upload":0,"total_download":1,"total_conflict":0,"total_delete":0,"total_no_op":0"""
         val unsafe =
             response(
-            """{"action":"download","rom_id":1,"save_id":88,"file_name":"../save.srm"}""",
-            counts,
-        )
+                """{"action":"download","rom_id":1,"save_id":88,"file_name":"../save.srm"}""",
+                counts,
+            )
         val unsafeResult =
             RommDeviceSyncProtocol.parseNegotiation(unsafe, setOf(1))
                 as RommDeviceSyncProtocol.ParseResult.Rejected
         assertEquals(RommDeviceSyncProtocol.Rejection.INVALID_FILE_NAME, unsafeResult.reason)
         val foreign =
             response(
-            """{"action":"download","rom_id":99,"save_id":88,"file_name":"save.srm"}""",
-            counts,
-        )
+                """{"action":"download","rom_id":99,"save_id":88,"file_name":"save.srm"}""",
+                counts,
+            )
         val foreignResult =
             RommDeviceSyncProtocol.parseNegotiation(foreign, setOf(1))
                 as RommDeviceSyncProtocol.ParseResult.Rejected
         assertEquals(RommDeviceSyncProtocol.Rejection.UNVERIFIED_ROM, foreignResult.reason)
         val missingSave =
             response(
-            """{"action":"download","rom_id":1,"save_id":null,"file_name":"save.srm"}""",
-            counts,
-        )
+                """{"action":"download","rom_id":1,"save_id":null,"file_name":"save.srm"}""",
+                counts,
+            )
         assertTrue(
             RommDeviceSyncProtocol.parseNegotiation(missingSave, setOf(1)) is
                 RommDeviceSyncProtocol.ParseResult.Rejected,
