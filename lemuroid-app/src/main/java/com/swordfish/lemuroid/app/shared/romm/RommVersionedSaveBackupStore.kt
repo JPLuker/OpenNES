@@ -19,13 +19,21 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
         val romId: Int,
         val sha256: String,
         val bytes: Long,
+        val sourceServerFingerprint: String? = null,
     )
 
     fun createVerifiedBackup(
         romId: Int,
         original: File,
+        sourceServerFingerprint: String? = null,
     ): Backup {
         require(romId > 0) { "Verified RomM ROM ID required" }
+        require(
+            sourceServerFingerprint == null ||
+                RommServerIdentity.validFingerprint(sourceServerFingerprint)
+        ) {
+            "Invalid source-server fingerprint"
+        }
         if (!original.isFile) throw IOException("Save source unavailable")
         if (!directory.isDirectory && !directory.mkdirs()) {
             throw IOException("Cannot initialize backup directory")
@@ -72,7 +80,7 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
                 throw IOException("Cannot commit a new versioned backup")
             }
             committed = destination
-            val record = Backup(destination, romId, fingerprint, total)
+            val record = Backup(destination, romId, fingerprint, total, sourceServerFingerprint)
             if (!verify(record)) throw IOException("Versioned backup failed SHA-256 verification")
 
             // The manifest makes integrity verification possible after an
@@ -82,7 +90,8 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             val stagingManifest = File.createTempFile("opennes-manifest-", ".partial", directory)
             try {
                 FileOutputStream(stagingManifest).use { output ->
-                    output.write(("$fingerprint $total\n").toByteArray(Charsets.US_ASCII))
+                    val provenance = sourceServerFingerprint?.let { " $it" }.orEmpty()
+                    output.write(("$fingerprint $total$provenance\n").toByteArray(Charsets.US_ASCII))
                     output.fd.sync()
                 }
                 if (manifest.exists() || !stagingManifest.renameTo(manifest)) {
@@ -123,9 +132,15 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
                 val fields =
                     runCatching { manifest.readText(Charsets.US_ASCII).trim().split(" ") }
                         .getOrNull() ?: return@mapNotNull null
-                if (fields.size != 2 || !fields[0].matches(SHA256_PATTERN)) return@mapNotNull null
+                if (fields.size !in 2..3 || !fields[0].matches(SHA256_PATTERN)) {
+                    return@mapNotNull null
+                }
                 val size = fields[1].toLongOrNull() ?: return@mapNotNull null
-                val record = Backup(file, archiveRomId, fields[0], size)
+                val origin = fields.getOrNull(2)
+                if (origin != null && !RommServerIdentity.validFingerprint(origin)) {
+                    return@mapNotNull null
+                }
+                val record = Backup(file, archiveRomId, fields[0], size, origin)
                 if (runCatching { verify(record) }.getOrDefault(false)) record else null
             }
             .sortedByDescending { it.file.name }
@@ -146,7 +161,8 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             listVerifiedBackups(backup.romId).firstOrNull {
                 it.file.canonicalFile == backup.file.canonicalFile &&
                     it.sha256 == backup.sha256 &&
-                    it.bytes == backup.bytes
+                    it.bytes == backup.bytes &&
+                    it.sourceServerFingerprint == backup.sourceServerFingerprint
             } ?: return false
         if (!verify(current)) return false
         val manifest = File(directory, current.file.name + MANIFEST_SUFFIX)

@@ -258,7 +258,10 @@ class RommApiClient {
         withContext(Dispatchers.IO) {
             val temporary = downloadVerifiedRemoteSave(context, connection, save)
             try {
-                privateBackupStore(context).createVerifiedBackup(save.romId, temporary)
+                val fingerprint =
+                    RommServerIdentity.fingerprint(connection.serverUrl)
+                        ?: throw IOException("Invalid RomM server identity")
+                privateBackupStore(context).createVerifiedBackup(save.romId, temporary, fingerprint)
             } finally {
                 temporary.delete()
             }

@@ -92,6 +92,24 @@ class RommVersionedSaveBackupStoreTest {
     }
 
     @Test
+    fun boundArchivesRetainServerIdentityWhileLegacyExportsRemainUsable() {
+        val source = temporary.newFile("source.sav")
+        source.writeBytes(ByteArray(200) { it.toByte() })
+        val folder = temporary.newFolder("versions")
+        val store = RommVersionedSaveBackupStore(folder)
+        val server = RommServerIdentity.fingerprint("https://romm.example.com")
+        val bound = store.createVerifiedBackup(34, source, server)
+        val legacy = store.createVerifiedBackup(34, source)
+        val reopened = RommVersionedSaveBackupStore(folder).listVerifiedBackups(34)
+        assertEquals(2, reopened.size)
+        assertEquals(server, reopened.first { it.file == bound.file }.sourceServerFingerprint)
+        assertEquals(null, reopened.first { it.file == legacy.file }.sourceServerFingerprint)
+        assertFalse(store.deleteVerifiedBackup(bound.copy(sourceServerFingerprint = null)))
+        assertTrue(store.deleteVerifiedBackup(bound))
+        assertTrue(store.verify(legacy))
+    }
+
+    @Test
     fun confirmedDeletionRemovesOnlySelectedArchiveAndManifest() {
         val original = temporary.newFile("live.sav")
         val payload = ByteArray(256) { it.toByte() }
