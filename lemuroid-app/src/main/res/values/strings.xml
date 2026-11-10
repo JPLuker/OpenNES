@@ -531,4 +531,5 @@
     <string name="opennes_ra_settings_native_pending">Live sign-in, unlock notifications, Hardcore Mode, and earning achievements are not available yet. Saving a web API key does not activate them.</string>
     <string name="opennes_library_loading">Preparing your NES library…</string>
     <string name="opennes_library_loading_covers">Loading game covers</string>
+    <string name="opennes_ra_settings_connected_hint">Web account saved. You can view your existing achievement history from a game’s pause menu. Live earning is not yet active.</string>
 </resources>
