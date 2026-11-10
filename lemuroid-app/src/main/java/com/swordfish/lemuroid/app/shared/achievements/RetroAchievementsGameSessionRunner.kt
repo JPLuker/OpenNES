@@ -61,6 +61,7 @@ internal class RetroAchievementsGameSessionRunner(
                     }
                 }
             } catch (e: CancellationException) {
+                outcome = SessionEnd.GameStopped
                 throw e
             } catch (_: Exception) {
                 // Do not expose raw HTTP forms, tokens or server messages.
@@ -102,10 +103,14 @@ internal class RetroAchievementsGameSessionRunner(
         while (true) {
             val available = loadCredentials(accountStore)
             if (available == null) observedSignOut = true
-            if (available != null &&
-                (previous == null || observedSignOut ||
-                    !sameCredentials(available, previous) ||
-                    RetroAchievementsGameStateStore.retryVersion(md5) != retryVersion)
+            if (
+                available != null &&
+                (
+                    previous == null ||
+                        observedSignOut ||
+                        !sameCredentials(available, previous) ||
+                        RetroAchievementsGameStateStore.retryVersion(md5) != retryVersion
+                )
             ) {
                 return available
             }
@@ -268,8 +273,12 @@ internal class RetroAchievementsGameSessionRunner(
     }
 
     companion object {
-        internal fun sameCredentials(first: NativeCredentials, second: NativeCredentials): Boolean =
-            first.username == second.username && first.token == second.token
+        internal fun sameCredentials(
+            first: NativeCredentials,
+            second: NativeCredentials,
+        ): Boolean {
+            return first.username == second.username && first.token == second.token
+        }
 
         internal fun supportsNativeGame(identity: NesRetroAchievementsHash.Identity): Boolean =
             identity.console == NesRetroAchievementsHash.Console.NES

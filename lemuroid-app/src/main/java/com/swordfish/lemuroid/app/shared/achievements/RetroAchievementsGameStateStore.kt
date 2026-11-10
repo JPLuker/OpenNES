@@ -70,8 +70,7 @@ internal object RetroAchievementsGameStateStore {
     }
 
     @Synchronized
-    fun retryVersion(romMd5: String): Long =
-        if (retryRomHash == romMd5) retrySequence else 0L
+    fun retryVersion(romMd5: String): Long = if (retryRomHash == romMd5) retrySequence else 0L
 
     @Synchronized
     fun clear(ticket: Long) {
