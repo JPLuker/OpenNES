@@ -110,6 +110,22 @@ class RommVersionedSaveBackupStoreTest {
     }
 
     @Test
+    fun transferPreparationCannotTrustStaleOrForgedArchiveProvenance() {
+        val source = temporary.newFile("remote.sav")
+        source.writeBytes(ByteArray(128) { it.toByte() })
+        val folder = temporary.newFolder("versions")
+        val store = RommVersionedSaveBackupStore(folder)
+        val server = RommServerIdentity.fingerprint("https://romm.example.com")
+        val backup = store.createVerifiedBackup(9, source, server)
+        assertTrue(store.isCurrentlyArchived(backup))
+        assertFalse(store.isCurrentlyArchived(backup.copy(sourceServerFingerprint = null)))
+        assertFalse(store.isCurrentlyArchived(backup.copy(romId = 10)))
+        java.io.File(folder, backup.file.name + ".sha256").writeText("tampered")
+        assertFalse(store.isCurrentlyArchived(backup))
+        assertTrue(backup.file.exists())
+    }
+
+    @Test
     fun confirmedDeletionRemovesOnlySelectedArchiveAndManifest() {
         val original = temporary.newFile("live.sav")
         val payload = ByteArray(256) { it.toByte() }

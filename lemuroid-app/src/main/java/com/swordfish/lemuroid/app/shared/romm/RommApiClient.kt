@@ -309,12 +309,12 @@ class RommApiClient {
                 return@withContext false
             }
             val backups = privateBackupStore(context)
-            if (!backups.verify(backup)) return@withContext false
+            if (!backups.isCurrentlyArchived(backup)) return@withContext false
             val local =
                 RommSaveSnapshotter.fromReopenableStream {
                     context.contentResolver.openInputStream(localDocument)
                 }
-            if (!backups.verify(backup)) return@withContext false
+            if (!backups.isCurrentlyArchived(backup)) return@withContext false
             journal.enqueue(
                 romId = backup.romId,
                 direction = direction,

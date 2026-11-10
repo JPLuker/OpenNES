@@ -147,6 +147,17 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             .toList()
     }
 
+    /** Recheck the current manifest, expected server and content on disk. */
+    fun isCurrentlyArchived(backup: Backup): Boolean {
+        if (backup.romId <= 0) return false
+        return listVerifiedBackups(backup.romId).any { entry ->
+            entry.file.canonicalFile == backup.file.canonicalFile &&
+                entry.sha256 == backup.sha256 &&
+                entry.bytes == backup.bytes &&
+                entry.sourceServerFingerprint == backup.sourceServerFingerprint
+        }
+    }
+
     /**
      * Delete only a currently verified app-private archive and its manifest.
      * A supplied File reference is never sufficient authorization: validate
