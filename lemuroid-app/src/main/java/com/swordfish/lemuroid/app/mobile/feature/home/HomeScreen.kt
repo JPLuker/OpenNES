@@ -953,6 +953,229 @@ private fun GameDetailsSheet(
     }
 }
 
+/**
+ * Plex-style Fix Match: suggest verified NES candidates, allow title/year
+ * refinement, preview the full editorial metadata, then require a separate
+ * explicit Apply action. Nothing is changed when a search or preview fails.
+ */
+@Composable
+private fun FixMatchSection(
+    game: Game,
+    onSearch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Unit,
+    onResolve: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onApply: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
+    onGameUpdated: (Game) -> Unit,
+    onCancel: () -> Unit,
+) {
+    var titleQuery by remember(game.id) { mutableStateOf(game.displayName()) }
+    var yearQuery by remember(game.id) { mutableStateOf("") }
+    var candidates by remember(game.id) { mutableStateOf(emptyList<WikidataNesMetadataSource.Candidate>()) }
+    var selected by remember(game.id) { mutableStateOf<WikidataNesMetadataSource.Candidate?>(null) }
+    var preview by remember(game.id) { mutableStateOf<WikidataNesMetadataSource.Result.Match?>(null) }
+    var searching by remember(game.id) { mutableStateOf(false) }
+    var resolving by remember(game.id) { mutableStateOf(false) }
+    var applying by remember(game.id) { mutableStateOf(false) }
+    var status by remember(game.id) { mutableStateOf<Int?>(null) }
+    var searchVersion by remember(game.id) { mutableStateOf(0) }
+
+    val startSearch: () -> Unit = {
+        if (!searching && titleQuery.trim().length in 3..120) {
+            searchVersion++
+            val currentVersion = searchVersion
+            searching = true
+            selected = null
+            preview = null
+            candidates = emptyList()
+            status = null
+            onSearch(titleQuery.trim()) { results ->
+                if (searchVersion == currentVersion) {
+                    searching = false
+                    when (results) {
+                        is WikidataNesMetadataSource.CandidateResults.Found -> candidates = results.candidates
+                        WikidataNesMetadataSource.CandidateResults.NoMatch ->
+                            status = R.string.opennes_fix_match_none
+                        WikidataNesMetadataSource.CandidateResults.Unavailable ->
+                            status = R.string.opennes_online_unavailable
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(game.id) {
+        startSearch()
+    }
+
+    Surface(
+        color = LibraryColors.surface,
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, LibraryColors.border),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.opennes_fix_match),
+                color = LibraryColors.foreground,
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
+            )
+            Text(
+                text = stringResource(R.string.opennes_fix_match_explanation),
+                color = LibraryColors.muted,
+                fontSize = 12.sp,
+            )
+            OutlinedTextField(
+                value = titleQuery,
+                onValueChange = { titleQuery = it.take(120) },
+                label = { Text(stringResource(R.string.opennes_fix_match_title)) },
+                singleLine = true,
+                enabled = !searching && !resolving && !applying,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = yearQuery,
+                onValueChange = { yearQuery = it.filter(Char::isDigit).take(4) },
+                label = { Text(stringResource(R.string.opennes_fix_match_year)) },
+                singleLine = true,
+                enabled = !searching && !resolving && !applying,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Button(
+                onClick = startSearch,
+                enabled = !searching && !resolving && !applying && titleQuery.trim().length >= 3,
+                colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.opennes_fix_match_search))
+            }
+            if (searching || resolving || applying) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    Text(
+                        text = stringResource(R.string.opennes_fix_match_working),
+                        color = LibraryColors.muted,
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+            status?.let {
+                Text(stringResource(it), color = LibraryColors.muted, fontSize = 12.sp)
+            }
+            val year = yearQuery.toIntOrNull()
+            val filtered =
+                if (year == null) candidates else candidates.filter { it.releaseYear == year }
+            if (!searching && candidates.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.opennes_fix_match_results),
+                    color = LibraryColors.foreground,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                if (filtered.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.opennes_fix_match_year_none),
+                        color = LibraryColors.muted,
+                        fontSize = 12.sp,
+                    )
+                }
+                filtered.forEach { candidate ->
+                    OutlinedButton(
+                        onClick = {
+                            selected = candidate
+                            preview = null
+                            resolving = true
+                            status = null
+                            onResolve(candidate.entityId) { resolved ->
+                                if (selected?.entityId == candidate.entityId) {
+                                    resolving = false
+                                    when (resolved) {
+                                        is WikidataNesMetadataSource.Result.Match -> preview = resolved
+                                        WikidataNesMetadataSource.Result.NoMatch ->
+                                            status = R.string.opennes_fix_match_none
+                                        WikidataNesMetadataSource.Result.Unavailable ->
+                                            status = R.string.opennes_online_unavailable
+                                    }
+                                }
+                            }
+                        },
+                        enabled = !searching && !resolving && !applying,
+                        border = BorderStroke(1.dp, LibraryColors.border),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = LibraryColors.foreground),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                text = listOfNotNull(candidate.title, candidate.releaseYear?.toString()).joinToString(" · "),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            candidate.shortDescription?.let {
+                                Text(text = it, color = LibraryColors.muted, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+            val resolved = preview
+            val chosen = selected
+            if (resolved != null && chosen != null) {
+                Text(
+                    text = stringResource(R.string.opennes_fix_match_preview, chosen.title),
+                    color = LibraryColors.foreground,
+                    fontWeight = FontWeight.Bold,
+                )
+                resolved.description?.let {
+                    GameDetailField(stringResource(R.string.opennes_game_description), it)
+                }
+                resolved.genre?.let {
+                    GameDetailField(stringResource(R.string.opennes_game_genre), it)
+                }
+                resolved.releaseYear?.let {
+                    GameDetailField(stringResource(R.string.opennes_game_release_year), it.toString())
+                }
+                Text(
+                    text = stringResource(R.string.opennes_fix_match_confirm_notice),
+                    color = LibraryColors.muted,
+                    fontSize = 12.sp,
+                )
+                Button(
+                    onClick = {
+                        applying = true
+                        status = null
+                        onApply(resolved) { updated ->
+                            applying = false
+                            if (updated == null) {
+                                status = R.string.opennes_online_apply_failed
+                            } else {
+                                onGameUpdated(updated)
+                            }
+                        }
+                    },
+                    enabled = !applying && !resolving,
+                    colors = ButtonDefaults.buttonColors(containerColor = LibraryColors.red),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.opennes_fix_match_apply))
+                }
+            }
+            OutlinedButton(
+                onClick = onCancel,
+                enabled = !applying,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    }
+}
+
 @Composable
 private fun WikidataLookupSection(
     game: Game,
