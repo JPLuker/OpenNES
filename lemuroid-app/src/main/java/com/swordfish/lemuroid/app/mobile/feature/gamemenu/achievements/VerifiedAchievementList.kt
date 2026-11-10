@@ -176,6 +176,11 @@ internal fun VerifiedAchievementList(
                             color = GameMenuStyle.muted,
                             fontSize = 12.sp,
                         )
+                        Text(
+                            text = stringResource(R.string.opennes_ra_points, achievement.points.coerceAtLeast(0)),
+                            color = GameMenuStyle.muted,
+                            fontSize = 12.sp,
+                        )
                         if (!achievement.unlocked && achievement.progressPercent != null) {
                             Text(
                                 text =
@@ -188,11 +193,7 @@ internal fun VerifiedAchievementList(
                             )
                         }
                     }
-                    Text(
-                        text = stringResource(R.string.opennes_ra_points, achievement.points.coerceAtLeast(0)),
-                        color = GameMenuStyle.foreground,
-                        fontSize = 12.sp,
-                    )
+                    // Points are shown below the description so long titles can wrap.
                 }
             }
         }

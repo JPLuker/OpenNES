@@ -85,7 +85,14 @@ internal fun RetroAchievementsWebSection(
             fontSize = 17.sp,
         )
         Text(
-            text = stringResource(R.string.opennes_ra_web_explanation),
+            text =
+                stringResource(
+                    if (configured) {
+                        R.string.opennes_ra_web_connected_hint
+                    } else {
+                        R.string.opennes_ra_web_explanation
+                    },
+                ),
             color = GameMenuStyle.muted,
             fontSize = 12.sp,
         )

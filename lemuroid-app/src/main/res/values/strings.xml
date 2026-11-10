@@ -511,4 +511,8 @@
     <string name="opennes_ra_debug_frames">Emulated frames observed: %1$d</string>
     <string name="opennes_ra_debug_mapped">Mapped NES memory: %1$d bytes</string>
     <string name="opennes_ra_debug_reads">Verified zero-page RAM reads: %1$d</string>
+    <string name="opennes_ra_native_short">Live unlocks aren’t connected yet. Website achievements below are view-only.</string>
+    <string name="opennes_ra_advanced_show">Advanced: ROM identification &amp; diagnostics</string>
+    <string name="opennes_ra_advanced_hide">Hide ROM identification &amp; diagnostics</string>
+    <string name="opennes_ra_web_connected_hint">Existing RetroAchievements history, view-only. Refresh to check this game.</string>
 </resources>

@@ -16,10 +16,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,6 +54,7 @@ fun GameMenuAchievementsScreen(
     game: Game,
     session: RetroAchievementsDisplayState = RetroAchievementsDisplayState.NotConnected,
 ) {
+    var advancedExpanded by remember { mutableStateOf(false) }
     var identification by remember(game.id, game.fileUri) {
         mutableStateOf<LocalIdentification>(LocalIdentification.Checking)
     }
@@ -154,17 +155,11 @@ fun GameMenuAchievementsScreen(
                                 if (session is RetroAchievementsDisplayState.NoMatchingGame) {
                                     R.string.opennes_ra_no_match_explanation
                                 } else {
-                                    R.string.opennes_ra_runtime_explanation
+                                    R.string.opennes_ra_native_short
                                 },
                             ),
                         color = GameMenuStyle.muted,
                         fontSize = 13.sp,
-                    )
-                    HorizontalDivider(color = GameMenuStyle.border)
-                    Text(
-                        text = stringResource(R.string.opennes_ra_no_progress),
-                        color = GameMenuStyle.muted,
-                        fontSize = 12.sp,
                     )
                 }
             }
@@ -182,7 +177,19 @@ fun GameMenuAchievementsScreen(
             romMd5 = (identification as? LocalIdentification.Identified)?.identity?.md5,
             console = (identification as? LocalIdentification.Identified)?.identity?.console,
         )
-        NativeBridgeDiagnostics()
+        TextButton(onClick = { advancedExpanded = !advancedExpanded }) {
+            Text(
+                stringResource(
+                    if (advancedExpanded) {
+                        R.string.opennes_ra_advanced_hide
+                    } else {
+                        R.string.opennes_ra_advanced_show
+                    },
+                ),
+            )
+        }
+        if (advancedExpanded) {
+            NativeBridgeDiagnostics()
 
         Text(
             text = stringResource(R.string.opennes_ra_rom_identification),
@@ -261,6 +268,7 @@ fun GameMenuAchievementsScreen(
                     fontSize = 12.sp,
                 )
             }
+        }
         }
     }
 }

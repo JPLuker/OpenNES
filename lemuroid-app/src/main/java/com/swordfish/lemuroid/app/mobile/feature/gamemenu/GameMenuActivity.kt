@@ -15,6 +15,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -28,6 +29,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -46,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -183,12 +187,13 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     ?.let { GameMenuRoute.findByRoute(it) }
                     ?: GameMenuRoute.HOME
 
-            SideMenu {
+            SideMenu(fullscreen = currentRoute == GameMenuRoute.ACHIEVEMENTS) {
                 TopAppBar(
                     title = {
                         Text(
                             text = stringResource(currentRoute.titleId),
                             color = GameMenuStyle.foreground,
+                            fontSize = if (currentRoute == GameMenuRoute.ACHIEVEMENTS) 19.sp else 22.sp,
                         )
                     },
                     colors =
@@ -220,7 +225,8 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                 NavHost(
                     modifier =
                         Modifier
-                            .fillMaxSize(),
+                            .weight(1f)
+                            .fillMaxWidth(),
                     navController = navController,
                     startDestination = GameMenuRoute.HOME.route,
                     enterTransition = { fadeIn() },
@@ -291,12 +297,24 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                         )
                     }
                 }
+                if (currentRoute == GameMenuRoute.ACHIEVEMENTS) {
+                    Button(
+                        onClick = { onResult { } },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = GameMenuStyle.red),
+                    ) {
+                        Text(stringResource(R.string.game_context_menu_resume))
+                    }
+                }
             }
         }
     }
 
     @Composable
-    private fun SideMenu(content: @Composable () -> Unit) {
+    private fun SideMenu(
+        fullscreen: Boolean = false,
+        content: @Composable () -> Unit,
+    ) {
         BoxWithConstraints(
             modifier =
                 Modifier
@@ -306,7 +324,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         ) {
             val panelWidth =
                 remember(maxWidth) {
-                    minOf(maxWidth * 0.92f, 460.dp)
+                    if (fullscreen) maxWidth else minOf(maxWidth * 0.92f, 460.dp)
                 }
 
             Surface(
@@ -315,7 +333,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                         .fillMaxHeight()
                         .width(panelWidth),
                 color = GameMenuStyle.background,
-                shape = RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp),
+                shape = if (fullscreen) RoundedCornerShape(0.dp) else RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp),
                 border = BorderStroke(1.dp, GameMenuStyle.border),
             ) {
                 // Keep the side panel's background edge-to-edge while its
