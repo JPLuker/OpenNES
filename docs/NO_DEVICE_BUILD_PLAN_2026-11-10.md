@@ -15,7 +15,7 @@
 | M3 — Portrait controller | NES visual shell, layout onboarding, independent theme and button geometry implemented | Device ergonomics, simultaneous touch, orientation persistence |
 | M4 — Landscape controller | Separate Overlay/Framed/Handheld, dedicated full-grip PadKit controls, centered video, shared editor travel geometry implemented | Real phone camera notch, editor touch bounds, persisted offsets and fallback layout |
 | M5 — Gameplay | Save/restore/lifecycle and gamepad event hardening implemented | Real audio, frame pacing, SRAM/save state, suspend/resume and reconnect tests |
-| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, real official emulator `login2` sign-in with encrypted confirmed token, generation-safe session coordinator, cancellable HTTPS transport, read-only web progress and offline tests | Wire native rc_client HTTP callbacks, token-based game session, real unlocks, rich presence and notifications; verify real account login on device |
+| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, official `login2` encrypted sign-in, native HTTP POST game-ID recognition, generation-safe coordinator, cancellable HTTPS and tests | Wire native `rc_client` callbacks and token-based game activation, verify real unlocks and notifications; test login and lookup on device |
 | M7 — RomM | HTTPS token storage, browse/import, manual remote-save archiving and SAF export, persisted verified SHA-256 manifests, recovery staging, snapshots, conflict planner | Real RomM server validation and explicit opt-in upload/conflict UI remain; no sync or replacement of emulator saves is enabled |
 | M8 — Release | Development CI and partial signing/attribution groundwork | License/security audits, official signing, final device sign-off; M7 acceptance required |
 
@@ -57,6 +57,13 @@
 - Inventory unused legacy console/TV/Leanback assets, JNI/ABI dependencies and source-level licenses; remove unused code only after dependency tracing.
 - Review app permissions, private key storage, network redirect behavior, crash-report privacy, APK certificate migration, and reproducibility.
 - Preserve the single `master` debug APK process; do not create new APK branches or manual publishing channels.
+
+## Native game ID lookup (new M6 batch)
+
+- `rcheevos` now provides the **actual** `r=gameid` / `m=<md5>` POST request and parses `GameID` natively. A Kotlin boundary pins the HTTPS endpoint and rejects requests containing any different ROM hash.
+- The in-game Achievements screen can display a verified public game ID independently of the account login and award engine. A recognized game must **not** turn on achievement earning or falsely show unlocks.
+- Automated tests distinguish a verified no-match from a malformed/unavailable response and reject foreign endpoints, bad hashes and interrupted requests.
+- Device acceptance: launch a known NES ROM with internet, confirm a plausible official game ID; then test offline, unknown ROM, paused/reopened page, and a different game. The next M6 step remains full asynchronous `rc_client` native authentication and achievement event processing.
 
 ## Newly added acceptance scenarios
 
