@@ -92,6 +92,51 @@ class RommVersionedSaveBackupStoreTest {
     }
 
     @Test
+    fun confirmedDeletionRemovesOnlySelectedArchiveAndManifest() {
+        val original = temporary.newFile("live.sav")
+        val payload = ByteArray(256) { it.toByte() }
+        original.writeBytes(payload)
+        val folder = temporary.newFolder("versions")
+        val store = RommVersionedSaveBackupStore(folder)
+        val first = store.createVerifiedBackup(7, original)
+        val second = store.createVerifiedBackup(7, original)
+        val another = store.createVerifiedBackup(8, original)
+
+        assertTrue(store.deleteVerifiedBackup(first))
+        assertFalse(first.file.exists())
+        assertFalse(java.io.File(folder, first.file.name + ".sha256").exists())
+        assertFalse(store.deleteVerifiedBackup(first))
+        assertTrue(store.verify(second))
+        assertTrue(store.verify(another))
+        assertEquals(2, store.listVerifiedBackups().size)
+        assertArrayEquals(payload, original.readBytes())
+    }
+
+    @Test
+    fun deletionRefusesStaleCorruptAndExternalBackups() {
+        val original = temporary.newFile("live.sav")
+        original.writeBytes(byteArrayOf(1, 2, 3))
+        val folder = temporary.newFolder("versions")
+        val store = RommVersionedSaveBackupStore(folder)
+        val archive = store.createVerifiedBackup(12, original)
+        val external =
+            RommVersionedSaveBackupStore.Backup(
+                original,
+                archive.romId,
+                archive.sha256,
+                archive.bytes,
+            )
+        assertFalse(store.deleteVerifiedBackup(external))
+        assertTrue(original.exists())
+        val forged = archive.copy(sha256 = "0".repeat(64))
+        assertFalse(store.deleteVerifiedBackup(forged))
+        archive.file.writeBytes(byteArrayOf(0, 0, 0))
+        assertFalse(store.deleteVerifiedBackup(archive))
+        assertTrue(archive.file.exists())
+        assertTrue(original.exists())
+    }
+
+    @Test
     fun rejectsUnverifiedRomIdentifiersAndExistingBackupsAsSources() {
         val original = temporary.newFile("local.sav")
         original.writeBytes(byteArrayOf(1))

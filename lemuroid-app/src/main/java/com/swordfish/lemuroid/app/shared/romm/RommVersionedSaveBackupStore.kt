@@ -132,6 +132,28 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             .toList()
     }
 
+    /**
+     * Delete only a currently verified app-private archive and its manifest.
+     * A supplied File reference is never sufficient authorization: validate
+     * canonical containment, filename, ROM ID, manifest and current digest.
+     *
+     * The manifest is removed first so an interrupted deletion cannot leave
+     * an unverified copy listed as safe to restore or export.
+     */
+    @Synchronized
+    fun deleteVerifiedBackup(backup: Backup): Boolean {
+        val current =
+            listVerifiedBackups(backup.romId).firstOrNull {
+                it.file.canonicalFile == backup.file.canonicalFile &&
+                    it.sha256 == backup.sha256 &&
+                    it.bytes == backup.bytes
+            } ?: return false
+        if (!verify(current)) return false
+        val manifest = File(directory, current.file.name + MANIFEST_SUFFIX)
+        if (!manifest.isFile || !manifest.delete()) return false
+        return current.file.delete()
+    }
+
     /** Revalidate before using a stored backup. A prior verification is not permanent. */
     fun verify(backup: Backup): Boolean {
         if (backup.romId <= 0 || backup.bytes <= 0 || backup.bytes > MAX_SAVE_BYTES) return false

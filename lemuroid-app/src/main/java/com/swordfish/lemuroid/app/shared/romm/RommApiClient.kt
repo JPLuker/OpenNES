@@ -272,6 +272,18 @@ class RommApiClient {
             privateBackupStore(context).listVerifiedBackups(romId)
         }
 
+    /**
+     * Explicit local cleanup only. Never touches live OpenNES saves or
+     * makes an HTTP request, and never deletes an unverified archive.
+     */
+    internal suspend fun deleteOfflineSaveBackup(
+        context: Context,
+        backup: RommVersionedSaveBackupStore.Backup,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            privateBackupStore(context).deleteVerifiedBackup(backup)
+        }
+
     /** User-chosen SAF destination; never replaces emulator SRAM/state files. */
     internal suspend fun exportOfflineSaveBackup(
         context: Context,
