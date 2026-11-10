@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameSessionRunner
 import com.swordfish.lemuroid.app.mobile.feature.game.GameService
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelInput
@@ -207,6 +208,22 @@ class BaseGameScreenViewModel(
         viewModelScope.launch {
             gameData.quickSaveData?.let {
                 saves.restoreAutoSaveAsync(it)
+            }
+        }
+        // A real core is only available after the GL surface and NES ROM have
+        // loaded. SurfaceCreated is replayed by GLRetroView, so a late
+        // subscription cannot accidentally attach to an uninitialized core.
+        // This coroutine owns the native client for the ViewModel lifetime;
+        // cancellation on game exit detaches the observer and destroys it.
+        viewModelScope.launch {
+            try {
+                retroGameView.waitGLEvent<GLRetroView.GLRetroEvents.SurfaceCreated>()
+                RetroAchievementsGameSessionRunner(appContext).run(gameData.game)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Authentication is optional. Never block or crash gameplay
+                // when a ROM hash, network request or session is unavailable.
             }
         }
         return result
