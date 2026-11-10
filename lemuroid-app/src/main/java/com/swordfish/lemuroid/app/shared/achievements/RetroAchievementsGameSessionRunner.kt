@@ -139,6 +139,8 @@ internal class RetroAchievementsGameSessionRunner(
         var lastRefresh = 0L
         var lastIdle = 0L
         var lastAccountCheck = 0L
+        var lastLeaderboardRefresh = 0L
+        var leaderboards = emptyList<VerifiedLeaderboard>()
         val started = System.nanoTime()
         while (true) {
             val now = System.nanoTime()
@@ -207,6 +209,7 @@ internal class RetroAchievementsGameSessionRunner(
                         NativeGameEvent.Reconnected -> {
                             connection.observe(event)
                             lastRefresh = 0L
+                            lastLeaderboardRefresh = 0L
                         }
                         is NativeGameEvent.Unlock -> {
                             if (connection.observe(event)) {
@@ -231,6 +234,19 @@ internal class RetroAchievementsGameSessionRunner(
                         val rows = RetroAchievementsNative.gameAchievementRows(session)?.toList().orEmpty()
                         val achievements = rows.mapNotNull(::decodeAchievementRow)
                         val notices = rows.mapNotNull(::decodeCompatibilityNotice).distinct().take(3)
+                        if (lastLeaderboardRefresh == 0L ||
+                            elapsedMillis(lastLeaderboardRefresh, now) >= 5_000L
+                        ) {
+                            leaderboards =
+                                RetroAchievementsNative.gameLeaderboardRows(session)
+                                    ?.mapNotNull(::decodeLeaderboardRow)
+                                    ?: emptyList()
+                            lastLeaderboardRefresh = now
+                        }
+                        val presence =
+                            RetroAchievementsNative.gameRichPresence(session)
+                                ?.trim()
+                                ?.takeIf { it.isNotEmpty() && it.none(Char::isISOControl) }
                         RetroAchievementsGameStateStore.publish(
                             ticket,
                             md5,
@@ -239,6 +255,8 @@ internal class RetroAchievementsGameSessionRunner(
                                 credentials.username,
                                 achievements,
                                 compatibilityNotices = notices,
+                                richPresence = presence,
+                                leaderboards = leaderboards,
                             ),
                         )
                         lastRefresh = now
@@ -321,6 +339,29 @@ internal class RetroAchievementsGameSessionRunner(
             } catch (_: IllegalArgumentException) {
                 false
             }
+
+        internal fun decodeLeaderboardRow(raw: String): VerifiedLeaderboard? {
+            val fields = raw.split('\t', limit = 5)
+            if (fields.size != 5) return null
+            val id = fields[0].toIntOrNull()?.takeIf { it > 0 } ?: return null
+            val state = fields[1].toIntOrNull()?.takeIf { it in 0..3 } ?: return null
+            val title = fields[2].trim().takeIf { it.isNotEmpty() } ?: return null
+            val description = fields[3].trim()
+            val tracker = fields[4].trim().takeIf { it.isNotEmpty() }
+            if (title.any(Char::isISOControl) ||
+                description.any(Char::isISOControl) ||
+                tracker?.any(Char::isISOControl) == true
+            ) {
+                return null
+            }
+            return VerifiedLeaderboard(
+                id = id,
+                title = title.take(220),
+                description = description.take(640),
+                state = state,
+                trackerValue = tracker?.take(64),
+            )
+        }
 
         // rcheevos reserves IDs >= 101000001 for client-generated notices,
         // such as "Warning: Unknown Emulator". They never count as awards.

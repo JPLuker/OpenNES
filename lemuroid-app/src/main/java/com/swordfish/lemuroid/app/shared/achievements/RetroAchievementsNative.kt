@@ -85,6 +85,12 @@ internal object RetroAchievementsNative {
     /** Tab-separated, bounded rows from official rc_client achievements. */
     external fun gameAchievementRows(session: Long): Array<String>?
 
+    /** Official client Rich Presence, bounded and available only in an active session. */
+    external fun gameRichPresence(session: Long): String?
+
+    /** Official leaderboards for this loaded game; never synthetic rankings. */
+    external fun gameLeaderboardRows(session: Long): Array<String>?
+
     /** A genuine native event, never a client-side simulated unlock. */
     external fun takeGameEvent(session: Long): String?
 

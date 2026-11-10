@@ -83,6 +83,22 @@ class RetroAchievementsGameSessionRunnerTest {
     }
 
     @Test
+    fun nativeLeaderboardRowsRejectMalformedRankedData() {
+        val board =
+            RetroAchievementsGameSessionRunner.decodeLeaderboardRow(
+                "199\t2\tFastest run\tClear the stage quickly\t00:42.15",
+            )
+        assertNotNull(board)
+        assertEquals(199, board?.id)
+        assertEquals(2, board?.state)
+        assertEquals("00:42.15", board?.trackerValue)
+        assertEquals(null, RetroAchievementsGameSessionRunner.decodeLeaderboardRow("0\t2\tBad\tInvalid\t"))
+        assertEquals(null, RetroAchievementsGameSessionRunner.decodeLeaderboardRow("199\t9\tBad\tInvalid\t"))
+        assertEquals(null, RetroAchievementsGameSessionRunner.decodeLeaderboardRow("199\t2\t\tMissing title\t"))
+        assertEquals(null, RetroAchievementsGameSessionRunner.decodeLeaderboardRow("199\t2\tBad\nline\tBad\t"))
+    }
+
+    @Test
     fun clientEmulatorWarningsNeverCountTowardRealAwards() {
         val warning = "notice\tWarning: Unknown Emulator\tHardcore unlocks cannot be earned using this emulator."
         assertEquals(

@@ -241,11 +241,63 @@ fun GameMenuAchievementsScreen(
         }
 
         activeSession?.let { sessionData ->
+            sessionData.richPresence?.let { presence ->
+                Surface(
+                    color = GameMenuStyle.surface,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, GameMenuStyle.border),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.opennes_ra_rich_presence_title),
+                            color = GameMenuStyle.red,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(text = presence, color = GameMenuStyle.foreground, fontSize = 14.sp)
+                    }
+                }
+            }
             VerifiedAchievementList(
                 username = sessionData.username,
                 romMd5 = sessionData.romMd5,
                 achievements = sessionData.achievements,
             )
+            if (sessionData.leaderboards.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.opennes_ra_leaderboards_title),
+                    color = GameMenuStyle.foreground,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+                sessionData.leaderboards.forEach { board ->
+                    Surface(
+                        color = GameMenuStyle.surface,
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, GameMenuStyle.border),
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                        ) {
+                            Text(
+                                text = board.title,
+                                color = GameMenuStyle.foreground,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            if (board.description.isNotBlank()) {
+                                Text(text = board.description, color = GameMenuStyle.muted, fontSize = 12.sp)
+                            }
+                            board.trackerValue?.let { tracker ->
+                                Text(text = tracker, color = GameMenuStyle.red, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         if (activeSession == null) {

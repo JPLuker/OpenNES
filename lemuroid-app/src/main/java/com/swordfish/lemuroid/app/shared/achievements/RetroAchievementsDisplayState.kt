@@ -20,6 +20,8 @@ sealed interface RetroAchievementsDisplayState {
         val username: String,
         val achievements: List<VerifiedAchievement>,
         val compatibilityNotices: List<String> = emptyList(),
+        val richPresence: String? = null,
+        val leaderboards: List<VerifiedLeaderboard> = emptyList(),
     ) : RetroAchievementsDisplayState
 }
 
@@ -30,4 +32,12 @@ data class VerifiedAchievement(
     val points: Int,
     val unlocked: Boolean,
     val progressPercent: Int? = null,
+)
+
+data class VerifiedLeaderboard(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val state: Int,
+    val trackerValue: String?,
 )

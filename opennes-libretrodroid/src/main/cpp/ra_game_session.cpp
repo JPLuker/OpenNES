@@ -9,6 +9,7 @@
 #include <deque>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -428,6 +429,51 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_load
         sessionState != 2 || !gameClient) return 0;
     const rc_client_game_t* game = rc_client_get_game_info(gameClient);
     return game && game->id > 0 && game->id <= INT32_MAX ? static_cast<jint>(game->id) : 0;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameRichPresence(
+    JNIEnv* env, jobject, jlong session
+) {
+    std::lock_guard<std::recursive_mutex> lock(clientMutex);
+    if (session <= 0 || activeId.load() != static_cast<uint64_t>(session) ||
+        sessionState != 2 || !gameClient || !rc_client_has_rich_presence(gameClient))
+        return nullptr;
+    char buffer[513]{};
+    rc_client_get_rich_presence_message(gameClient, buffer, sizeof(buffer));
+    const std::string message = safeLabel(buffer, 512);
+    return message.empty() ? nullptr : env->NewStringUTF(message.c_str());
+}
+
+extern "C" JNIEXPORT jobjectArray JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameLeaderboardRows(
+    JNIEnv* env, jobject, jlong session
+) {
+    std::lock_guard<std::recursive_mutex> lock(clientMutex);
+    if (session <= 0 || activeId.load() != static_cast<uint64_t>(session) ||
+        sessionState != 2 || !gameClient) return nullptr;
+    rc_client_leaderboard_list_t* list = rc_client_create_leaderboard_list(
+        gameClient, RC_CLIENT_LEADERBOARD_LIST_GROUPING_NONE
+    );
+    if (!list) return nullptr;
+    std::set<uint32_t> seen;
+    std::vector<std::string> rows;
+    for (uint32_t b = 0; b < list->num_buckets && rows.size() < 128; ++b) {
+        const rc_client_leaderboard_bucket_t& bucket = list->buckets[b];
+        for (uint32_t i = 0; i < bucket.num_leaderboards && rows.size() < 128; ++i) {
+            const rc_client_leaderboard_t* item = bucket.leaderboards[i];
+            if (!item || item->id == 0 || !seen.insert(item->id).second) continue;
+            rows.push_back(
+                std::to_string(item->id) + "\t" +
+                std::to_string(item->state) + "\t" +
+                safeLabel(item->title, 220) + "\t" +
+                safeLabel(item->description, 640) + "\t" +
+                safeLabel(item->tracker_value, 64)
+            );
+        }
+    }
+    rc_client_destroy_leaderboard_list(list);
+    return stringArray(env, rows);
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL
