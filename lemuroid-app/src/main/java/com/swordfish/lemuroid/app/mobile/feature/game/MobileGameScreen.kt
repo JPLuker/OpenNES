@@ -201,7 +201,9 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         val requestedHandheld = touchControllerSettings?.landscapeHandheld == true
         val minimumGameWidth =
             if (requestedHandheld) {
-                maxOf(TouchControllerSettingsManager.LANDSCAPE_MIN_GAME_WIDTH_DP, maxHeight.value * 1.24f)
+                // A 4:3 NES viewport should use the available landscape
+                // height, rather than being squeezed between large dials.
+                maxOf(TouchControllerSettingsManager.LANDSCAPE_MIN_GAME_WIDTH_DP, maxHeight.value * 4f / 3f)
             } else {
                 TouchControllerSettingsManager.LANDSCAPE_MIN_GAME_WIDTH_DP
             }
@@ -210,7 +212,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 TouchControllerSettingsManager.LANDSCAPE_HORIZONTAL_RESERVE_DP +
                 (leftDialWidth + rightDialWidth) * (if (requestedHandheld) 0.72f else 1f)
         val compactLandscape =
-            isLandscape && maxWidth.value < maxOf(640f, minimumSidePanelWidth)
+            isLandscape &&
+                maxWidth.value < maxOf(
+                    if (requestedHandheld) 0f else 640f,
+                    minimumSidePanelWidth,
+                )
         // Handheld preserves the real non-overlay viewport when there is
         // room for both touch controls and a readable 4:3 NES picture.
         // Compact phones safely fall back to overlay without losing choice.
