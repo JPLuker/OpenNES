@@ -1,5 +1,7 @@
 package com.swordfish.lemuroid.app.shared.cheats
 
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.libretrodroid.LibretroDroid
 
 /**
@@ -35,6 +37,11 @@ internal object NesCheatSession {
         definitions: List<NesCheatDefinition>,
         requested: Set<String>,
     ): Boolean {
+        if (requested.isNotEmpty() &&
+            !HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.CHEATS)
+        ) {
+            return false
+        }
         if (this.romUri != romUri || definitions.size > NesCheatRepository.MAX_CHEATS ||
             definitions.map { it.id }.distinct().size != definitions.size ||
             !definitions.map { it.id }.containsAll(requested) ||

@@ -3,6 +3,8 @@ package com.swordfish.lemuroid.app.shared.game.viewmodel
 import android.content.Context
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.lemuroid.common.graphics.GraphicsUtils
 import com.swordfish.lemuroid.common.graphics.takeScreenshot
 import com.swordfish.lemuroid.lib.library.GameSystem
@@ -61,6 +63,10 @@ class GameViewModelSaves(
     }
 
     suspend fun loadSlot(index: Int) {
+        if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE)) {
+            sideEffects.showToast(appContext.getString(R.string.opennes_hardcore_state_blocked))
+            return
+        }
         try {
             val state = statesManager.getSlotSave(game, systemCoreConfig.coreID, index)
             if (state == null) {
@@ -108,6 +114,7 @@ class GameViewModelSaves(
 
     // On some cores unserialize fails with no reason. So we need to try multiple times.
     suspend fun restoreAutoSaveAsync(saveState: SaveState) {
+        if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE)) return
         // PPSSPP and Mupen64 initialize some state while rendering the first frame, so we have to wait before restoring
         // the autosave. Do not change thread here. Stick to the GL one to avoid issues with PPSSPP.
         if (!isAutoSaveEnabled()) return
@@ -169,6 +176,9 @@ class GameViewModelSaves(
     }
 
     private fun loadSaveState(saveState: SaveState): Boolean {
+        // Guard the final native state restore, not merely menu buttons:
+        // a new caller cannot bypass Hardcore by skipping the UI.
+        if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE)) return false
         val retroGameView = retroGameView.retroGameView ?: return false
 
         if (systemCoreConfig.statesVersion != saveState.metadata.version) {
@@ -201,6 +211,10 @@ class GameViewModelSaves(
     }
 
     fun loadQuickSave() {
+        if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE)) {
+            sideEffects.showToast(appContext.getString(R.string.opennes_hardcore_state_blocked))
+            return
+        }
         val state = currentQuickSave
         if (state == null) {
             sideEffects.showToast(appContext.getString(R.string.opennes_quick_save_missing))

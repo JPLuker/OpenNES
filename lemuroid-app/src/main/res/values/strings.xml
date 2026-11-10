@@ -459,6 +459,7 @@
     <string name="opennes_controller_colors_wheel_hint">Tap a color swatch to open the wheel, or type a HEX value.</string>
     <string name="opennes_ra_menu_title">Achievements</string>
     <string name="opennes_cheats_title">Cheats</string>
+    <string name="opennes_hardcore_state_blocked">Loading save states is unavailable in Hardcore mode.</string>
     <string name="opennes_cheats_subtitle">Game Genie and raw codes</string>
     <string name="opennes_cheats_explanation">Saved codes stay off until you enable them for this game session. Cheats are for Casual mode only.</string>
     <string name="opennes_cheats_add">Add cheat</string>
