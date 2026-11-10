@@ -169,8 +169,8 @@ private fun safeClusterOffset(
     setting: Float,
 ): Dp {
     val room = ((width - dialSize) / 2f - 3.dp).coerceAtLeast(0.dp)
-    return minOf(room, TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp) *
-        setting.coerceIn(-1f, 1f)
+    val maximumOffset = minOf(room, TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp)
+    return maximumOffset * setting.coerceIn(-1f, 1f)
 }
 
 private fun safeVerticalOffset(
@@ -179,8 +179,8 @@ private fun safeVerticalOffset(
     setting: Float,
 ): Dp {
     val room = ((height - dialSize) / 2f - 48.dp).coerceAtLeast(0.dp)
-    return minOf(room, TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp) *
-        setting.coerceIn(-1f, 1f)
+    val maximumOffset = minOf(room, TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp)
+    return maximumOffset * setting.coerceIn(-1f, 1f)
 }
 
 context(PadKitScope)
@@ -194,14 +194,12 @@ private fun NESLandscapeSecondaryButton(
     sideHeight: Dp,
     above: Boolean,
 ) {
-    val buttonWidth =
-        minOf(
-            sideWidth * 0.60f,
-            112.dp,
-        ) * geometry.size.coerceIn(
+    val buttonScale =
+        geometry.size.coerceIn(
             TouchControllerSettingsManager.MIN_BUTTON_SIZE,
             TouchControllerSettingsManager.MAX_BUTTON_SIZE,
         )
+    val buttonWidth = minOf(sideWidth * 0.60f, 112.dp) * buttonScale
     val buttonHeight = 46.dp
     val centerOffset = sideHeight * (if (above) -0.34f else 0.34f)
     val offsetX =
