@@ -8,11 +8,24 @@ package com.swordfish.lemuroid.app.mobile.feature.gamemenu.achievements
 internal object AchievementPageWindow {
     const val PAGE_SIZE = 20
 
-    fun limit(total: Int, requested: Int): Int = requested.coerceIn(0, total.coerceAtLeast(0))
+    fun limit(
+        total: Int,
+        requested: Int,
+    ): Int {
+        return requested.coerceIn(0, total.coerceAtLeast(0))
+    }
 
-    fun more(total: Int, displayed: Int): Int =
-        (total.coerceAtLeast(0) - displayed.coerceAtLeast(0)).coerceIn(0, PAGE_SIZE)
+    fun more(
+        total: Int,
+        displayed: Int,
+    ): Int {
+        return (total.coerceAtLeast(0) - displayed.coerceAtLeast(0)).coerceIn(0, PAGE_SIZE)
+    }
 
-    fun next(total: Int, displayed: Int): Int =
-        limit(total, displayed.coerceAtLeast(0) + PAGE_SIZE)
+    fun next(
+        total: Int,
+        displayed: Int,
+    ): Int {
+        return limit(total, displayed.coerceAtLeast(0) + PAGE_SIZE)
+    }
 }

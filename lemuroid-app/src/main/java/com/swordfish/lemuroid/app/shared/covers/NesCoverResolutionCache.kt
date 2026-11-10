@@ -13,8 +13,11 @@ internal object NesCoverResolutionCache {
     private const val MAX_ITEMS = 256
     private val successful =
         object : LinkedHashMap<String, String>(MAX_ITEMS, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean =
-                size > MAX_ITEMS
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<String, String>?,
+            ): Boolean {
+                return size > MAX_ITEMS
+            }
         }
 
     @Synchronized
@@ -41,6 +44,10 @@ internal object NesCoverResolutionCache {
         successful[key(catalogueUrl, alternateUrl)] = decodedUrl
     }
 
-    private fun key(catalogueUrl: String, alternateUrl: String): String =
-        "${catalogueUrl.length}:$catalogueUrl:${alternateUrl.length}:$alternateUrl"
+    private fun key(
+        catalogueUrl: String,
+        alternateUrl: String,
+    ): String {
+        return "${catalogueUrl.length}:$catalogueUrl:${alternateUrl.length}:$alternateUrl"
+    }
 }
