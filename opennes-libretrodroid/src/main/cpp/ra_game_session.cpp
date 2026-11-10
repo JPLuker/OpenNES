@@ -3,6 +3,7 @@
 #include <jni.h>
 #include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <cstdint>
 #include <cstring>
 #include <deque>
