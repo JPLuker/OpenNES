@@ -1,9 +1,9 @@
 package com.swordfish.lemuroid.app.mobile.feature.game
 
+import com.swordfish.touchinput.radial.layouts.NesLandscapeDragLimits
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import com.swordfish.touchinput.radial.layouts.NesLandscapeDragLimits
 import org.junit.Test
 
 class NesLandscapeFitTest {
