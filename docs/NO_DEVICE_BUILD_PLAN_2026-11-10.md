@@ -15,8 +15,8 @@
 | M3 — Portrait controller | NES visual shell, layout onboarding, independent theme and button geometry implemented | Device ergonomics, simultaneous touch, orientation persistence |
 | M4 — Landscape controller | Separate Overlay/Framed/Handheld, dedicated full-grip PadKit controls, centered video, shared editor travel geometry implemented | Real phone camera notch, editor touch bounds, persisted offsets and fallback layout |
 | M5 — Gameplay | Save/restore/lifecycle and gamepad event hardening implemented | Real audio, frame pacing, SRAM/save state, suspend/resume and reconnect tests |
-| M6 — RetroAchievements | Native memory/frame diagnostics, pinned rcheevos and read-only web progress UI; offline hash regression suite | Actual rc_client authentication, verified game activation, unlocks, rich presence and notifications |
-| M7 — RomM | HTTPS token storage, browse/import, integrity checks, manual save export | Real server protocol/security acceptance; any opted-in two-way sync needs versioned backups/conflict UI |
+| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, separate encrypted native token store, generation-safe state coordinator, cancellable official-host HTTPS transport, read-only web progress and offline tests | Wire native rc_client HTTP callbacks and real game/award lifecycle; actual authenticated unlocks, rich presence and notifications |
+| M7 — RomM | HTTPS token storage, browse/import, integrity checks, manual export, versioned immutable backups, verified recovery staging, double-checked SHA-256 snapshots and conflict planner | None of the backup/sync foundations performs an upload or changes live saves; real server acceptance and an opt-in conflict UI are still required |
 | M8 — Release | Development CI and partial signing/attribution groundwork | License/security audits, official signing, final device sign-off; M7 acceptance required |
 
 ## Build order while human testing is unavailable
@@ -28,6 +28,13 @@
 - Verify Fix Match query lifecycle: text never gets hidden behind IME; the user may edit during a remote request; stale callbacks cannot replace newer results.
 - Keep developer- or region-qualified ROM titles searchable with safe fallback; use only verified NES entity IDs before applying a match.
 - Do not silently rewrite existing descriptions or a user's ROM/game state without explicit confirmation.
+
+### Latest source hardening (November 10)
+
+- Native RetroAchievements transport now cancels the real OkHttp call when its coroutine ends, with 2 MB response limits and a pinned official HTTPS host. This is not yet called from the C++ `rc_client` runtime.
+- RomM backup recovery stages a separate verified file and refuses a corrupted source; it cannot overwrite an emulated save.
+- RomM local snapshotting hashes file contents twice, with strict nonempty/16 MB constraints, so a timestamp-only comparison cannot silently approve synchronization.
+- Regression tests cover cancellation, backup recovery and snapshot bounds. Both integrations are still blocked on native/session and real-server acceptance.
 
 ### Batch B — native achievements foundation
 
