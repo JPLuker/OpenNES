@@ -1,5 +1,7 @@
 package com.swordfish.lemuroid.app.mobile.feature.gamemenu.cheats
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -29,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,9 +45,13 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatCodes
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatDefinition
+import com.swordfish.lemuroid.app.shared.cheats.NesCheatExchange
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatRepository
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Offline cheat manager. Saved definitions do not activate on their own:
@@ -57,17 +65,72 @@ internal fun GameMenuCheatsScreen(game: Game) {
     var definitions by remember(uri) { mutableStateOf(repository.load(uri)) }
     var enabled by remember(uri) { mutableStateOf(NesCheatSession.enabledFor(uri)) }
     var error by remember(uri) { mutableStateOf<Int?>(null) }
+    var status by remember(uri) { mutableStateOf<Int?>(null) }
     var editorOpen by remember(uri) { mutableStateOf(false) }
     var editing by remember(uri) { mutableStateOf<NesCheatDefinition?>(null) }
     var name by remember(uri) { mutableStateOf("") }
     var code by remember(uri) { mutableStateOf("") }
     var deleteTarget by remember(uri) { mutableStateOf<NesCheatDefinition?>(null) }
+    val scope = rememberCoroutineScope()
+
+    val importDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { document ->
+            if (document != null) {
+                scope.launch {
+                    val imported =
+                        withContext(Dispatchers.IO) {
+                            runCatching {
+                                val bytes =
+                                    context.contentResolver.openInputStream(document)?.use {
+                                        NesCheatExchange.readBounded(it)
+                                    } ?: return@runCatching null
+                                val entries = NesCheatExchange.decode(bytes) ?: return@runCatching null
+                                val merged = NesCheatExchange.merge(definitions, entries)
+                                    ?: return@runCatching null
+                                if (repository.save(uri, merged)) merged else null
+                            }.getOrNull()
+                        }
+                    if (imported == null) {
+                        error = R.string.opennes_cheats_import_failed
+                    } else {
+                        definitions = imported
+                        error = null
+                        status = R.string.opennes_cheats_import_success
+                    }
+                }
+            }
+        }
+    val exportDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { document ->
+            if (document != null) {
+                scope.launch {
+                    val exported =
+                        withContext(Dispatchers.IO) {
+                            runCatching {
+                                val bytes = NesCheatExchange.encode(definitions)
+                                context.contentResolver.openOutputStream(document)?.use { output ->
+                                    output.write(bytes)
+                                    output.flush()
+                                    true
+                                } ?: false
+                            }.getOrDefault(false)
+                        }
+                    if (exported) {
+                        error = null
+                        status = R.string.opennes_cheats_export_success
+                    } else {
+                        error = R.string.opennes_cheats_export_failed
+                    }
+                }
+            }
+        }
 
     fun openEditor(entry: NesCheatDefinition?) {
         editing = entry
         name = entry?.name.orEmpty()
         code = entry?.code.orEmpty()
         error = null
+        status = null
         editorOpen = true
     }
 
@@ -104,6 +167,34 @@ internal fun GameMenuCheatsScreen(game: Game) {
         )
         error?.let { message ->
             Text(text = stringResource(message), color = GameMenuStyle.red, fontSize = 13.sp)
+        }
+        status?.let { message ->
+            Text(text = stringResource(message), color = GameMenuStyle.muted, fontSize = 13.sp)
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            OutlinedButton(
+                onClick = {
+                    status = null
+                    importDocument.launch(arrayOf("application/json", "text/plain"))
+                },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.opennes_cheats_import))
+            }
+            OutlinedButton(
+                onClick = {
+                    status = null
+                    val title = game.displayName().replace(Regex("[^A-Za-z0-9._-]"), "_").take(40)
+                    exportDocument.launch("OpenNES-$title-cheats.json")
+                },
+                modifier = Modifier.weight(1f),
+                enabled = definitions.isNotEmpty(),
+            ) {
+                Text(stringResource(R.string.opennes_cheats_export))
+            }
         }
         Button(
             onClick = { openEditor(null) },

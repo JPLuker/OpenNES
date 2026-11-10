@@ -475,6 +475,12 @@
     <string name="opennes_cheats_disable_all">Disable all cheats</string>
     <string name="opennes_cheats_apply_failed">Could not apply cheats to the running NES game. Active cheats have been cleared where possible.</string>
     <string name="opennes_cheats_save_failed">Could not save this cheat. Check the storage and try again.</string>
+    <string name="opennes_cheats_import">Import JSON</string>
+    <string name="opennes_cheats_export">Export JSON</string>
+    <string name="opennes_cheats_import_failed">Could not import that cheat file. Check the format, size, and available space.</string>
+    <string name="opennes_cheats_export_failed">Could not write the cheat file to the selected location.</string>
+    <string name="opennes_cheats_import_success">Cheat codes imported. Newly imported codes remain disabled.</string>
+    <string name="opennes_cheats_export_success">Cheat codes exported successfully.</string>
     <string name="opennes_ra_menu_subtitle">RetroAchievements</string>
     <string name="opennes_ra_game_label">CURRENT GAME</string>
     <string name="opennes_ra_runtime_unavailable">Not connected</string>
