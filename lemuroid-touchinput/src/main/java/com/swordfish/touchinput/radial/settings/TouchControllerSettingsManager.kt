@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -79,6 +81,11 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
     }
 
     private val cachedSettings = mutableMapOf<String, MutableStateFlow<Settings?>>()
+
+    // Drag commits, appearance changes, and Reset can arrive close together.
+    // Serialize persistence so a slower older write cannot restore a layout
+    // after a newer change or reset. The UI cache is still updated immediately.
+    private val settingsWriteMutex = Mutex()
 
     fun observeSettings(
         touchControllerID: TouchControllerID,
@@ -183,12 +190,14 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
     ) {
         Timber.d("Updating touch settings for $touchControllerID at $orientation to $settings")
         updateCachedSettings(touchControllerID, orientation, settings)
-        withContext(Dispatchers.IO) {
-            sharedPreferences.edit {
-                putString(
-                    getPreferenceString(touchControllerID, orientation),
-                    Json.encodeToString(Settings.serializer(), settings),
-                )
+        settingsWriteMutex.withLock {
+            withContext(Dispatchers.IO) {
+                sharedPreferences.edit {
+                    putString(
+                        getPreferenceString(touchControllerID, orientation),
+                        Json.encodeToString(Settings.serializer(), settings),
+                    )
+                }
             }
         }
     }
@@ -208,9 +217,11 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         orientation: Orientation,
     ) {
         updateCachedSettings(touchControllerID, orientation, null)
-        withContext(Dispatchers.IO) {
-            sharedPreferences.edit {
-                remove(getPreferenceString(touchControllerID, orientation))
+        settingsWriteMutex.withLock {
+            withContext(Dispatchers.IO) {
+                sharedPreferences.edit {
+                    remove(getPreferenceString(touchControllerID, orientation))
+                }
             }
         }
     }
