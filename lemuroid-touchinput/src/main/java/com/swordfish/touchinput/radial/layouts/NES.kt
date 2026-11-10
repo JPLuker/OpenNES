@@ -135,7 +135,12 @@ context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings) {
     val handheld = LocalNesLandscapeHandheld.current
-    val scale = if (handheld) 0.90f else if (LocalNesPortraitLayout.current) 1.15f else 1.05f
+    val scale =
+        when {
+            handheld -> 0.90f
+            LocalNesPortraitLayout.current -> 1.15f
+            else -> 1.05f
+        }
     val geometry = settings.selectButton
     val buttonScale =
         geometry.size.coerceIn(
@@ -161,7 +166,12 @@ context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings) {
     val handheld = LocalNesLandscapeHandheld.current
-    val scale = if (handheld) 0.90f else if (LocalNesPortraitLayout.current) 1.15f else 1.05f
+    val scale =
+        when {
+            handheld -> 0.90f
+            LocalNesPortraitLayout.current -> 1.15f
+            else -> 1.05f
+        }
     val geometry = settings.startButton
     val buttonScale =
         geometry.size.coerceIn(
@@ -188,6 +198,12 @@ context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) {
     val handheld = LocalNesLandscapeHandheld.current
+    val scale =
+        when {
+            handheld -> 0.90f
+            LocalNesPortraitLayout.current -> 1.15f
+            else -> 1.05f
+        }
     val geometry = settings.menuButton
     val buttonScale =
         geometry.size.coerceIn(
@@ -201,10 +217,7 @@ private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) 
                     (if (handheld) -120f else -60f) +
                         2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
                 )
-                .radialScale(
-                    (if (handheld) 0.90f else if (LocalNesPortraitLayout.current) 1.15f else 1.05f) *
-                        buttonScale,
-                )
+                .radialScale(scale * buttonScale)
                 .offset(
                     x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
                     y = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f)).dp,
