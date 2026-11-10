@@ -1717,10 +1717,22 @@ fun GameCover(
     val artworkUrl =
         if (primaryArtwork.isNullOrBlank() || usingRomArtwork) romArtwork ?: primaryArtwork else primaryArtwork
 
+    val hasKnownArtwork = !artworkUrl.isNullOrBlank()
     AsyncImage(
         model =
             ImageRequest.Builder(LocalContext.current)
                 .data(artworkUrl)
+                .apply {
+                    if (hasKnownArtwork) {
+                        // The same key is used by the library prefetcher and
+                        // every other cover surface. On screen recreation,
+                        // use the previous decoded cover as the placeholder
+                        // rather than briefly painting a generated title card.
+                        val key = CoverUtils.coverMemoryKey(artworkUrl!!)
+                        memoryCacheKey(key)
+                        placeholderMemoryCacheKey(key)
+                    }
+                }
                 .listener(
                     onError = { _, _ ->
                         if (!usingRomArtwork && romArtwork != null && artworkUrl != romArtwork) {
@@ -1730,15 +1742,15 @@ fun GameCover(
                 )
                 .build(),
         contentDescription = game.displayName(),
-        // Original NES retail boxes measure approximately 5 by 7.125 inches.
-        // Preserve the full printed artwork instead of cropping its edges.
+        // Preserve the full printed NES carton rather than cropping it.
         modifier = modifier.aspectRatio(NES_BOX_ART_ASPECT_RATIO),
         contentScale = ContentScale.Fit,
-        // While a remote box is loading, never show a featureless black
-        // rectangle: the recognizable title placeholder remains visible.
-        placeholder = fallbackPainter,
+        // Only titles genuinely missing cover data should show a title
+        // placeholder. Known URLs display the previous cached artwork or
+        // the neutral box surface while loading, without a title-card flash.
+        placeholder = if (hasKnownArtwork) null else fallbackPainter,
         fallback = fallbackPainter,
-        error = fallbackPainter,
+        error = if (romArtwork != null && artworkUrl != romArtwork) null else fallbackPainter,
     )
 }
 
