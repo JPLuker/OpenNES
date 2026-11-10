@@ -82,6 +82,8 @@ import com.swordfish.touchinput.radial.NesControllerPresets
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
+import com.swordfish.touchinput.radial.layouts.NESLandscapeLeft
+import com.swordfish.touchinput.radial.layouts.NESLandscapeRight
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
@@ -180,55 +182,28 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
 
         val landscapeOverlaySelected =
             touchControllerSettings?.landscapeOverlay ?: currentControllerConfig?.allowTouchOverlay ?: true
-        // Side-panel mode needs enough width for both control clusters
-        // and a readable NES 4:3 gameplay viewport. Small devices fall
-        // back visually to overlay while retaining the saved mode choice.
-        val dialWidthDp = TouchControllerSettingsManager.BASE_DIAL_SIZE_DP
-        val minScale = TouchControllerSettingsManager.MIN_SCALE
-        val scaleSpan = TouchControllerSettingsManager.MAX_SCALE - minScale
-        val leftDialWidth =
-            dialWidthDp * (
-                minScale + scaleSpan *
-                    (touchControllerSettings?.leftScale ?: touchControllerSettings?.scale ?: 0f).coerceIn(0f, 1f)
-            )
-        val rightDialWidth =
-            dialWidthDp * (
-                minScale + scaleSpan *
-                    (touchControllerSettings?.rightScale ?: touchControllerSettings?.scale ?: 0f).coerceIn(0f, 1f)
-            )
-        // Fall back only when the real scaled controls would crowd a
-        // readable game viewport. Keep the saved landscape mode intact.
         val requestedHandheld = touchControllerSettings?.landscapeHandheld == true
+        val requestedSidePanels = requestedHandheld || !landscapeOverlaySelected
+        // The previous implementation used PadKit's radial layout for
+        // framed panels and gave the left/right grips different intrinsic
+        // widths. That shrank the controls AND shifted gameplay right.
+        // Both side-panel styles now use the same centered 4:3 viewport.
         val compactLandscape =
             isLandscape &&
-                maxWidth.value <
-                NesLandscapeFit.minimumRequiredWidthDp(
-                    screenHeightDp = maxHeight.value,
-                    leftDialWidthDp = leftDialWidth,
-                    rightDialWidthDp = rightDialWidth,
-                    handheld = requestedHandheld,
-                )
-        // Handheld preserves the real non-overlay viewport when there is
-        // room for both touch controls and a readable 4:3 NES picture.
-        // Compact phones safely fall back to overlay without losing choice.
-        val handheldActive =
-            isLandscape &&
-                showTouchPads &&
-                touchControllerSettings?.landscapeHandheld == true &&
-                !compactLandscape
-        // Equal side widths keep the actual viewport centered rather than
-        // relying on different left/right dial intrinsic dimensions.
-        val handheldSideWidthDp =
-            if (handheldActive) {
-                (maxWidth.value - maxHeight.value * 4f / 3f).coerceAtLeast(0f) / 2f
-            } else {
-                null
-            }
+                requestedSidePanels &&
+                !NesLandscapeFit.canShowSideControls(maxWidth.value, maxHeight.value)
+        val handheldActive = isLandscape && showTouchPads && requestedHandheld && !compactLandscape
         val allowTouchOverlay =
             when {
-                handheldActive -> false
                 compactLandscape -> true
+                handheldActive -> false
                 else -> landscapeOverlaySelected
+            }
+        val sidePanelWidthDp =
+            if (isLandscape && showTouchPads && !allowTouchOverlay) {
+                NesLandscapeFit.sideWidthDp(maxWidth.value, maxHeight.value)
+            } else {
+                null
             }
 
         // The editing overlay must never outlive the virtual controls.
@@ -303,7 +278,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         isLandscape,
                         allowTouchOverlay,
                         showTouchPads,
-                        handheldSideWidthDp,
+                        sidePanelWidthDp,
                     ),
             ) {
                 Box(
@@ -363,20 +338,40 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             )
                         }
 
-                        leftGamePad?.invoke(
-                            this,
-                            Modifier
-                                .layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD)
-                                .onGloballyPositioned { leftPadBounds.value = it.boundsInRoot() },
-                            touchControllerSettings,
-                        )
-                        rightGamePad?.invoke(
-                            this,
-                            Modifier
-                                .layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD)
-                                .onGloballyPositioned { rightPadBounds.value = it.boundsInRoot() },
-                            touchControllerSettings,
-                        )
+                        if (isLandscape && !allowTouchOverlay) {
+                            // Independent PadKit control surfaces use the
+                            // ENTIRE equal-width grips. Secondary buttons
+                            // no longer shrink the D-pad and A/B dial.
+                            NESLandscapeLeft(
+                                modifier =
+                                    Modifier
+                                        .layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD)
+                                        .onGloballyPositioned { leftPadBounds.value = it.boundsInRoot() },
+                                settings = touchControllerSettings,
+                            )
+                            NESLandscapeRight(
+                                modifier =
+                                    Modifier
+                                        .layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD)
+                                        .onGloballyPositioned { rightPadBounds.value = it.boundsInRoot() },
+                                settings = touchControllerSettings,
+                            )
+                        } else {
+                            leftGamePad?.invoke(
+                                this,
+                                Modifier
+                                    .layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD)
+                                    .onGloballyPositioned { leftPadBounds.value = it.boundsInRoot() },
+                                touchControllerSettings,
+                            )
+                            rightGamePad?.invoke(
+                                this,
+                                Modifier
+                                    .layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD)
+                                    .onGloballyPositioned { rightPadBounds.value = it.boundsInRoot() },
+                                touchControllerSettings,
+                            )
+                        }
 
                         GameScreenRunningCentralMenu(
                             modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_GAME_CONTAINER),
