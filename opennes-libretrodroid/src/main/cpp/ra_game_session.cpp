@@ -209,7 +209,17 @@ void onEmulatedFrame(uint64_t id) {
     if (!memoryMapped) {
         // Console 7 is NES in pinned rcheevos; this is the tested memory map
         // used by the previous frame probe. Do not guess RAM addresses.
-        if (!rc_libretro_memory_init(&regions, nullptr, coreRegion, 7)) {
+        if (!rc_libretro_memory_init(&regions, nullptr, coreRegion, 7) ||
+            regions.total_size == 0) {
+            rc_libretro_memory_destroy(&regions);
+            sessionState = -1;
+            return;
+        }
+        uint8_t firstByte = 0;
+        if (rc_libretro_memory_read(&regions, 0, &firstByte, 1) != 1) {
+            // Never process a frame against an unreadable map. Conditions
+            // reading implicit zeroes could otherwise trigger false awards.
+            rc_libretro_memory_destroy(&regions);
             sessionState = -1;
             return;
         }
