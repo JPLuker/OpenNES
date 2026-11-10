@@ -72,7 +72,7 @@ internal object RetroAchievementsNative {
         body: ByteArray,
     ): Boolean
 
-    /** -2=closed, -1=error, 0=sign-in, 1=game loading, 2=live. */
+    /** -2=closed, -1=error, 0=sign-in, 1=loading, 3=validating RAM, 2=live. */
     external fun gameSessionStatus(session: Long): Int
 
     /** Positive official game ID only after rc_client completes game load. */

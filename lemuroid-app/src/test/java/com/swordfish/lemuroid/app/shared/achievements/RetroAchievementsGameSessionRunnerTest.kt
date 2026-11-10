@@ -83,6 +83,40 @@ class RetroAchievementsGameSessionRunnerTest {
     }
 
     @Test
+    fun nativeEventsRejectMalformedAwardsAndReportConnectionChanges() {
+        val decode = RetroAchievementsGameSessionRunner::decodeNativeEvent
+        assertEquals(
+            RetroAchievementsGameSessionRunner.NativeGameEvent.Unlock(125, "Defeat an enemy"),
+            decode("unlock\t125\t5\tDefeat an enemy"),
+        )
+        assertEquals(
+            RetroAchievementsGameSessionRunner.NativeGameEvent.Disconnected,
+            decode("disconnected"),
+        )
+        assertEquals(
+            RetroAchievementsGameSessionRunner.NativeGameEvent.Reconnected,
+            decode("reconnected"),
+        )
+        assertEquals(null, decode("unlock\t0\t5\tInvalid ID"))
+        assertEquals(null, decode("unlock\t125\t501\tInvalid points"))
+        assertEquals(null, decode("unlock\t125\t5\t"))
+        assertEquals(null, decode("unlock\t125\t5\tUnexpected\nnewline"))
+        assertEquals(null, decode("disconnected\twrong"))
+    }
+
+    @Test
+    fun connectionGateDoesNotResumeAwardsUntilNativeReconnect() {
+        val gate = RetroAchievementsGameSessionRunner.NativeConnectionGate()
+        val event = RetroAchievementsGameSessionRunner.NativeGameEvent
+        assertTrue(gate.isConnected)
+        assertFalse(gate.observe(event.Disconnected))
+        assertFalse(gate.observe(event.Unlock(125, "Offline trigger")))
+        assertFalse(gate.isConnected)
+        assertTrue(gate.observe(event.Reconnected))
+        assertTrue(gate.observe(event.Unlock(125, "Connected trigger")))
+    }
+
+    @Test
     fun lateGameSessionCannotOverwriteNewRomAchievements() {
         val gameA = "a".repeat(32)
         val gameB = "b".repeat(32)

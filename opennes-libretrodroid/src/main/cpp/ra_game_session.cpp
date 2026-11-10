@@ -31,7 +31,7 @@ rc_client_t* gameClient = nullptr;
 rc_libretro_memory_regions_t regions{};
 uint64_t coreGeneration = 0;
 std::string expectedHash;
-int sessionState = -2; // 0=login, 1=load, 2=active, -1=failure, -2=closed
+int sessionState = -2; // 0=login, 1=load, 3=map pending, 2=active, -1=failure, -2=closed
 bool disposing = false;
 bool memoryMapped = false;
 
@@ -165,7 +165,9 @@ void RC_CCONV onLoaded(int result, const char*, rc_client_t* client, void*) {
         sessionState = -1;
         return;
     }
-    sessionState = 2;
+    // A successful game response is not yet proof that the emulator RAM map
+    // works. Only the next actual core frame can validate memory reads.
+    sessionState = 3;
 }
 
 void RC_CCONV onLogin(int result, const char*, rc_client_t* client, void*) {
@@ -205,7 +207,7 @@ void onEmulatedFrame(uint64_t id) {
         sessionState = -2;
         return;
     }
-    if (sessionState != 2) return;
+    if (sessionState != 2 && sessionState != 3) return;
     if (!memoryMapped) {
         // Console 7 is NES in pinned rcheevos; this is the tested memory map
         // used by the previous frame probe. Do not guess RAM addresses.
@@ -224,6 +226,9 @@ void onEmulatedFrame(uint64_t id) {
             return;
         }
         memoryMapped = true;
+        // Never expose an Active session to Kotlin until the first NES RAM
+        // read succeeded on the matching emulation core generation.
+        sessionState = 2;
     }
     rc_client_do_frame(gameClient);
 }

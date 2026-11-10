@@ -76,6 +76,7 @@ internal class RetroAchievementsGameSessionRunner(
         username: String,
     ) {
         var active = false
+        val connection = NativeConnectionGate()
         var lastRefresh = 0L
         val started = System.nanoTime()
         while (true) {
@@ -113,36 +114,54 @@ internal class RetroAchievementsGameSessionRunner(
             }
 
             if (active) {
-                val now = System.nanoTime()
-                if (lastRefresh == 0L || elapsedMillis(lastRefresh, now) >= 1_000L) {
-                    val achievements =
-                        RetroAchievementsNative.gameAchievementRows(session)
-                            ?.mapNotNull(::decodeAchievementRow)
-                            ?: emptyList()
-                    RetroAchievementsGameStateStore.publish(
-                        ticket,
-                        md5,
-                        RetroAchievementsDisplayState.Active(md5, username, achievements),
-                    )
-                    lastRefresh = now
-                }
+                // Process network events *before* publishing an Active
+                // snapshot. Once the official client reports a disconnect,
+                // hide active awards until it explicitly reports reconnection.
                 while (true) {
-                    val event = RetroAchievementsNative.takeGameEvent(session) ?: break
-                    if (event.startsWith("unlock\t")) {
-                        val fields = event.split('\t', limit = 4)
-                        if (fields.size == 4 && fields[1].toIntOrNull()?.let { it > 0 } == true) {
-                            val title = fields[3].take(220)
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.opennes_ra_live_unlock_toast, title),
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            }
-                            // Reread native data after the real frame event,
-                            // rather than inventing client-side unlock state.
+                    val raw = RetroAchievementsNative.takeGameEvent(session) ?: break
+                    when (val event = decodeNativeEvent(raw)) {
+                        NativeGameEvent.Disconnected -> {
+                            connection.observe(event)
+                            RetroAchievementsGameStateStore.publish(
+                                ticket,
+                                md5,
+                                RetroAchievementsDisplayState.NotConnected,
+                            )
+                        }
+                        NativeGameEvent.Reconnected -> {
+                            connection.observe(event)
                             lastRefresh = 0L
                         }
+                        is NativeGameEvent.Unlock -> {
+                            if (connection.observe(event)) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.opennes_ra_live_unlock_toast, event.title),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                            }
+                            // Refresh actual native state after a frame event;
+                            // never synthesize an unlock from an event string.
+                            lastRefresh = 0L
+                        }
+                        null -> Unit
+                    }
+                }
+                if (connection.isConnected) {
+                    val now = System.nanoTime()
+                    if (lastRefresh == 0L || elapsedMillis(lastRefresh, now) >= 1_000L) {
+                        val achievements =
+                            RetroAchievementsNative.gameAchievementRows(session)
+                                ?.mapNotNull(::decodeAchievementRow)
+                                ?: emptyList()
+                        RetroAchievementsGameStateStore.publish(
+                            ticket,
+                            md5,
+                            RetroAchievementsDisplayState.Active(md5, username, achievements),
+                        )
+                        lastRefresh = now
                     }
                 }
             }
@@ -150,7 +169,42 @@ internal class RetroAchievementsGameSessionRunner(
         }
     }
 
+    internal sealed interface NativeGameEvent {
+        data class Unlock(val id: Int, val title: String) : NativeGameEvent
+
+        data object Disconnected : NativeGameEvent
+
+        data object Reconnected : NativeGameEvent
+    }
+
+    /** The client must explicitly reconnect before its progress is displayed again. */
+    internal class NativeConnectionGate {
+        var isConnected = true
+            private set
+
+        fun observe(event: NativeGameEvent): Boolean {
+            when (event) {
+                NativeGameEvent.Disconnected -> isConnected = false
+                NativeGameEvent.Reconnected -> isConnected = true
+                is NativeGameEvent.Unlock -> Unit
+            }
+            return isConnected
+        }
+    }
+
     companion object {
+        internal fun decodeNativeEvent(raw: String): NativeGameEvent? {
+            if (raw == "disconnected") return NativeGameEvent.Disconnected
+            if (raw == "reconnected") return NativeGameEvent.Reconnected
+            val fields = raw.split('\t', limit = 4)
+            if (fields.size != 4 || fields[0] != "unlock") return null
+            val id = fields[1].toIntOrNull()?.takeIf { it > 0 } ?: return null
+            if (fields[2].toIntOrNull()?.let { it in 0..500 } != true) return null
+            val title = fields[3].trim().takeIf { it.isNotEmpty() } ?: return null
+            if (title.any { it.isISOControl() }) return null
+            return NativeGameEvent.Unlock(id, title.take(220))
+        }
+
         private fun elapsedSeconds(started: Long): Long = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)
 
         private fun elapsedMillis(
