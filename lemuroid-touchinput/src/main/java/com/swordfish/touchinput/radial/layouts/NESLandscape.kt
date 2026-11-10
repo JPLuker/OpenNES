@@ -11,6 +11,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.swordfish.touchinput.radial.controls.LemuroidControlCross
@@ -43,6 +46,7 @@ context(PadKitScope)
 fun NESLandscapeLeft(
     modifier: Modifier = Modifier,
     settings: TouchControllerSettingsManager.Settings,
+    onPrimaryBounds: ((Rect) -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val sideWidth = maxWidth
@@ -52,7 +56,11 @@ fun NESLandscapeLeft(
         val y = safeVerticalOffset(sideHeight, dialSize, settings.leftOffsetY)
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             LemuroidControlCross(
-                modifier = Modifier.size(dialSize).offset(x = x, y = y),
+                modifier =
+                    Modifier
+                        .size(dialSize)
+                        .offset(x = x, y = y)
+                        .onGloballyPositioned { onPrimaryBounds?.invoke(it.boundsInRoot()) },
                 id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
                 allowDiagonals = true,
                 expandedTouchArea = true,
@@ -77,6 +85,7 @@ context(PadKitScope)
 fun NESLandscapeRight(
     modifier: Modifier = Modifier,
     settings: TouchControllerSettingsManager.Settings,
+    onPrimaryBounds: ((Rect) -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val sideWidth = maxWidth
@@ -104,7 +113,11 @@ fun NESLandscapeRight(
 
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             LemuroidControlFaceButtons(
-                modifier = Modifier.size(dialSize).offset(x = x, y = y),
+                modifier =
+                    Modifier
+                        .size(dialSize)
+                        .offset(x = x, y = y)
+                        .onGloballyPositioned { onPrimaryBounds?.invoke(it.boundsInRoot()) },
                 primaryAnchors = primaryAnchors,
                 compositeAnchors = compositeAnchors,
                 trackPointers = true,
