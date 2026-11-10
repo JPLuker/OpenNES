@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.lemuroid.app.shared.achievements.NesRetroAchievementsHash
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsDisplayState
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameStateStore
@@ -201,6 +203,25 @@ fun GameMenuAchievementsScreen(
                         color = GameMenuStyle.foreground,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
+                    )
+                }
+                Text(
+                    text =
+                        stringResource(
+                            if (HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE) {
+                                R.string.opennes_ra_mode_hardcore
+                            } else {
+                                R.string.opennes_ra_mode_casual
+                            },
+                        ),
+                    color = GameMenuStyle.muted,
+                    fontSize = 12.sp,
+                )
+                if (!HardcoreRuntime.hardcoreAvailable()) {
+                    Text(
+                        text = stringResource(R.string.opennes_ra_hardcore_not_approved),
+                        color = GameMenuStyle.muted,
+                        fontSize = 12.sp,
                     )
                 }
                 activeSession?.compatibilityNotices?.forEach { notice ->

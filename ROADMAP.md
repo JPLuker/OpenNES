@@ -180,9 +180,9 @@
 - [ ] Carefully manage network outages, retries, and session state; do not falsely display unearned or unverified unlocks.
 - [ ] Restrict Hardcore actions appropriately and follow official approval/compliance requirements before promising competitive Hardcore credit.
 
-### M6-H — Hardcore RetroAchievements (planned; NOT enabled)
+### M6-H — Hardcore RetroAchievements (fail-closed policy in source; NOT enabled)
 
-**Goal:** Add an actual policy-enforced **Casual / Hardcore** selection, not merely a visual toggle. The current game-owned native `rc_client` deliberately runs in Casual mode. Complete and verify a genuine Casual award first.
+**Goal:** Add a policy-enforced **Casual / Hardcore** selection, not merely a visual toggle. A fail-closed policy and entry-point guards are now in source for manual/quick/automatic state loading, cheat application, Game Genie core options and Android suspend/resume. The native `rc_client` still runs in Casual mode; both emulator recognition and native-mode readiness are explicitly false in the production build. No UI can enable Hardcore. Complete and verify a genuine Casual award and compliance work first.
 
 - [ ] Review the current [RetroAchievements Hardcore Compliance Requirements](https://docs.retroachievements.org/general/hardcore-compliance-requirements.html) and seek the applicable emulator integration/recognition review. **Do not claim official Hardcore award eligibility until recognized/authorized.**
 - [ ] Provide an explicit mode selector during game launch and in RetroAchievements settings, with visible in-game Hardcore/Casual status and a clear explanation of restrictions.
