@@ -4,7 +4,7 @@
 
 **Real-device M6 evidence (2026-11-10):** The user has confirmed native RetroAchievements sessions listing actual game achievements and historical unlock progress for Zelda and RoboCop. A newly triggered, server-persisted award is **not** yet confirmed. The most recent M6 source batch repairs late sign-in/reconnect/retry and separates client-generated emulator warnings from genuine achievement totals; it requires final CI plus device acceptance.
 
-**Next planned feature tracks:** M5-C NES cheat manager and M6-H RetroAchievements Hardcore mode. Neither is implemented in the current APK. Cheats are Casual-only; Hardcore must enforce official restrictions on states, cheats, speed controls and suspended sessions, with emulator recognition/approval as an external gate.
+**Next feature tracks:** M5-C NES cheat manager is **source implemented and CI verified** (run 42886631595), with a per-ROM editor, raw and Game Genie validation, session-only opt-in toggles and native FCEUmm cheat calls. Device behavior and code persistence still need acceptance; import/export and atomic replacement hardening remain. M6-H RetroAchievements Hardcore mode is **not implemented**. Cheats are Casual-only; Hardcore must enforce official restrictions on states, cheats, speed controls and suspended sessions, with emulator recognition/approval as an external gate.
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -136,19 +136,19 @@
 - [ ] Add in-app diagnostics for crashes/loading failures, with privacy-preserving logs.
 - [ ] Test battery drain, suspend/resume, calls, audio focus, background/foreground, and configuration changes.
 
-### M5-C — NES cheats (planned; NOT implemented in OpenNES)
+### M5-C — NES cheats (source implemented; device acceptance open)
 
-**Goal:** A native-feeling, optional cheat manager in the in-game pause menu, separate from normal gameplay and RetroAchievements account settings. FCEUmm supports Libretro/native cheats, but OpenNES currently has no supported cheat-entry, persistence, toggle, or import UI.
+**Goal:** A native-feeling, optional cheat manager in the in-game pause menu, separate from normal gameplay and RetroAchievements account settings. The initial Cheat editor, per-ROM persistence, session-only toggles and LibretroDroid native calls are implemented and CI-built. Real hardware acceptance remains open.
 
-- [ ] Expose the pinned FCEUmm core's supported cheat API through the source-built LibretroDroid bridge; verify Game Genie and other advertised formats against the actual pinned core before listing them in the UI.
-- [ ] Add **Pause → Cheats** with manual code entry, an editable friendly name, enable/disable toggle, deletion, per-game saved lists, and clear unsupported/invalid-code feedback.
-- [ ] Keep cheats **off by default**; never apply a saved cheat automatically without a user-enabled setting. Avoid putting cheat values, ROM data or user secrets in logs.
+- [x] Use source-built LibretroDroid's already exposed `setCheat`/`resetCheat` for pinned FCEUmm; validated Game Genie (6/8 characters) and raw hex formats, while rejecting unverified PAR variants.
+- [x] Add **Pause → Cheats** with code entry, editable friendly name, enable/disable toggle, deletion, per-ROM saved lists and invalid/duplicate-code feedback.
+- [x] Keep cheats **off by default**; saved code definitions never auto-activate. Enabled selections are in-memory per running game. Do not log codes or ROM data.
 - [ ] Apply changes on the emulator/core thread with safe lifecycle teardown and no cross-ROM leakage; support turning all cheats off and verify the core actually clears them.
 - [ ] Provide optional local import/export of codes only after strict input validation; do not depend on a third-party cheat catalog to ship the basic editor.
 - [ ] Integrate with the RetroAchievements mode policy: built-in cheats, Game Genie hardware/cartridge emulation, external cheat files and memory editing must be blocked while Hardcore is active; attempting to enable them requires an explicit downgrade to Casual.
 - [ ] Test code activation, save/restart, ROM switching, disabled defaults, broken codes, and cheat-free gameplay on a real phone.
 
-**Cheat feature acceptance:** A user can safely enter, save, toggle, remove and verify a real NES cheat in Casual mode without changing unrelated games. This track is planned, not yet built.
+**Cheat feature acceptance:** Source is CI-built; a user must still verify that a real NES cheat can be entered, saved, toggled and removed on the device without affecting another ROM. Not officially accepted yet.
 
 **Exit criteria:** NES gameplay is stable across representative titles and Android device configurations. The [M0–M5 real-device test matrix](docs/M5_FINAL_TESTING.md) must pass; CI alone is insufficient.
 

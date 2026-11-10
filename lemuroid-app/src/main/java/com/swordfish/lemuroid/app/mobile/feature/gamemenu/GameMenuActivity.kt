@@ -334,7 +334,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
             contentAlignment = Alignment.CenterEnd,
         ) {
             val panelWidth =
-                remember(maxWidth) {
+                remember(maxWidth, fullscreen) {
                     if (fullscreen) maxWidth else minOf(maxWidth * 0.92f, 460.dp)
                 }
 

@@ -249,10 +249,13 @@ internal fun GameMenuCheatsScreen(game: Game) {
                                         enabled
                                     }
                                 definitions = next
-                                if (keepEnabled != enabled) {
-                                    updateEnabled(keepEnabled)
-                                }
-                                error = null
+                                val applied =
+                                    if (keepEnabled != enabled) {
+                                        updateEnabled(keepEnabled)
+                                    } else {
+                                        true
+                                    }
+                                if (applied) error = null
                                 editorOpen = false
                             } else {
                                 error = R.string.opennes_cheats_save_failed
@@ -284,10 +287,13 @@ internal fun GameMenuCheatsScreen(game: Game) {
                         if (repository.save(uri, next)) {
                             val remaining = enabled - target.id
                             definitions = next
-                            if (remaining != enabled) {
-                                updateEnabled(remaining)
-                            }
-                            error = null
+                            val applied =
+                                if (remaining != enabled) {
+                                    updateEnabled(remaining)
+                                } else {
+                                    true
+                                }
+                            if (applied) error = null
                         } else {
                             error = R.string.opennes_cheats_save_failed
                         }
