@@ -4,7 +4,9 @@
 
 **Real-device M6 evidence (2026-11-10):** The user has confirmed native RetroAchievements sessions listing actual game achievements and historical unlock progress for Zelda and RoboCop. A newly triggered, server-persisted award is **not** yet confirmed. The most recent M6 source batch repairs late sign-in/reconnect/retry and separates client-generated emulator warnings from genuine achievement totals; it requires final CI plus device acceptance.
 
-**Next feature tracks:** M5-C NES cheat manager is **source implemented and CI verified** (run 42886631595), with a per-ROM editor, raw and Game Genie validation, session-only opt-in toggles and native FCEUmm cheat calls. Device behavior and code persistence still need acceptance; import/export and atomic replacement hardening remain. M6-H RetroAchievements Hardcore mode is **not implemented**. Cheats are Casual-only; Hardcore must enforce official restrictions on states, cheats, speed controls and suspended sessions, with emulator recognition/approval as an external gate.
+**CI baseline:** [run 42890671021](https://github.com/JPLuker/OpenNES/actions/runs/42890671021) passed Kotlin lint, offline JVM regressions, native Android build, NES-only APK inspection and rolling release for the full code feature batch. Source acceptance does not equal device/server verification.
+
+**Next feature tracks:** M5-C NES cheat manager is **source implemented and CI verified** (run 42886631595), with a per-ROM editor, raw and Game Genie validation, session-only opt-in toggles and native FCEUmm cheat calls. Device behavior and code persistence still need acceptance; bounded local JSON import/export is source implemented with Android document pickers and non-activating imports. Atomic native cheat replacement and real-device acceptance remain. M6-H RetroAchievements Hardcore mode is **not implemented**. Cheats are Casual-only; Hardcore must enforce official restrictions on states, cheats, speed controls and suspended sessions, with emulator recognition/approval as an external gate.
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
@@ -15,7 +17,7 @@
 
 1. **M2/M4: stabilize the most recent test feedback.** Finalize the keyboard-aware Fix Match dialog and its alternate-title search, keep active search fields visible above the IME, preserve game metadata and saves on application, and test off-screen drag constraints with normalized touch coordinates. Once CI passes, freeze speculative controller design changes until physical-device feedback returns.
 2. **M6: verify native achievements on hardware.** The separate game-owned `rc_client` now authenticates a saved emulator token, loads an officially recognized NES ROM, validates the core RAM map, evaluates every emulated frame and emits native unlock/network events. It pumps idle callbacks while paused with emulator memory protected by the same core lock. FDS awards fail closed. **Next critical step:** verify a real NES unlock on the device and confirm server-side persistence. Test offline, pause, reset, rotation, fast-forward, sign-out and restart before acceptance.
-3. **M7: harden RomM integration.** The Settings page now supports user-requested remote save downloads into an app-private, versioned SHA-256 archive, with integrity-checked offline listings and explicit SAF export. Existing local backup, recovery, snapshot and fail-closed conflict-planning infrastructure remains non-destructive; **nothing uploads to RomM or modifies live saves automatically**. Two-way sync still requires verified RomM account/server identities, remote snapshots, conflict decisions, opt-in and live-server acceptance.
+3. **M7: harden RomM integration.** The Settings page now supports user-requested remote save downloads into an app-private, versioned SHA-256 archive, with integrity-checked offline listings and explicit SAF export. Existing local backup, recovery, snapshot and fail-closed conflict-planning infrastructure remains non-destructive; **nothing uploads to RomM or modifies live saves automatically**. Two-way sync still requires verified RomM account/server identities, remote snapshots, conflict decisions, opt-in and live-server acceptance. A persistent **non-executing** sync-intent journal now records bounded offline requests and fails closed on corruption or changed hashes; no uploads or live-save overwrites are enabled.
 4. **M1/M8: cleanup and release engineering.** Audit remaining non-NES resources/dependencies, upstream licenses and native artifacts, build reproducibility and production signing. Preserve migration paths and saved user data.
 5. **When physical testing resumes:** execute the [M0–M5 acceptance matrix](docs/M5_FINAL_TESTING.md), including the newly reported keyboard/notch issues; then perform genuine RetroAchievements and RomM server acceptance. Do not mark a device gate completed because lint or compilation passed.
 
@@ -144,7 +146,7 @@
 - [x] Add **Pause → Cheats** with code entry, editable friendly name, enable/disable toggle, deletion, per-ROM saved lists and invalid/duplicate-code feedback.
 - [x] Keep cheats **off by default**; saved code definitions never auto-activate. Enabled selections are in-memory per running game. Do not log codes or ROM data.
 - [ ] Apply changes on the emulator/core thread with safe lifecycle teardown and no cross-ROM leakage; support turning all cheats off and verify the core actually clears them.
-- [ ] Provide optional local import/export of codes only after strict input validation; do not depend on a third-party cheat catalog to ship the basic editor.
+- [x] Add versioned local JSON import/export through Android document pickers. Validate file size, schema, names, codes, duplicates and capacity; imports never activate codes.
 - [ ] Integrate with the RetroAchievements mode policy: built-in cheats, Game Genie hardware/cartridge emulation, external cheat files and memory editing must be blocked while Hardcore is active; attempting to enable them requires an explicit downgrade to Casual.
 - [ ] Test code activation, save/restart, ROM switching, disabled defaults, broken codes, and cheat-free gameplay on a real phone.
 
@@ -174,7 +176,7 @@
 - [ ] Implement official ROM hashing/game identification and supported game lookup.
 - [ ] Show per-game achievement lists, locked/unlocked state, completion progress and points in a **Steam-inspired Achievements view directly inside the in-game pause menu**, without leaving gameplay.
 - [ ] Add small in-game achievement popups with optional sound/haptics and accessibility support.
-- [ ] Implement game rich presence and leaderboards where supported.
+- [x] Display native game Rich Presence messages and official leaderboard definitions/trackers when provided by the authenticated client. Actual leaderboard scoring and hardware presentation remain acceptance gates.
 - [ ] Carefully manage network outages, retries, and session state; do not falsely display unearned or unverified unlocks.
 - [ ] Restrict Hardcore actions appropriately and follow official approval/compliance requirements before promising competitive Hardcore credit.
 

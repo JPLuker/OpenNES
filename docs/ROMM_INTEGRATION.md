@@ -42,3 +42,11 @@
 ### Versioned local backup writer (source implemented, not connected to sync)
 
 `RommVersionedSaveBackupStore` copies a local save into an app-private directory under a new per-ROM version name. It streams and SHA-256 hashes the content with a 16 MiB cap, syncs the staged file to disk, renames it to a unique `.savebak` filename, and re-reads the result to verify the digest. The original save is never modified. Incomplete/corrupt backups are discarded; callers may reverify a stored snapshot before using it. A separate opt-in executor is still needed to connect this backup to the `RommSaveSyncPlanner` decision and any RomM API write. No remote mutations are enabled.
+
+### Offline pending-sync journal (source and CI verified; NOT a transfer executor)
+
+`RommPendingSyncJournal` writes a versioned, checksummed app-private file with at most 32 outstanding per-ROM intents. Only ROM ID, requested upload/download direction, observed local/remote SHA-256 snapshots and an informational timestamp are persisted. It contains **no token, save payload, network endpoint, user approval, or automatic-replay capability**. A corrupt journal is reported as corrupt and prevents queue changes. Duplicate requests cannot overwrite older pending intents.
+
+A future executor must obtain fresh local and remote snapshots, verify RomM account/server and ROM identity, re-run `RommSaveSyncPlanner`, create and verify required versioned backups, and secure explicit approval for that exact operation. Any changed snapshot rejects the old intent for user review. Until real-server validation and an explicit executor exist, this journal **cannot upload, download into live saves, or replay offline writes**.
+
+CI: https://github.com/JPLuker/OpenNES/actions/runs/42890671021
