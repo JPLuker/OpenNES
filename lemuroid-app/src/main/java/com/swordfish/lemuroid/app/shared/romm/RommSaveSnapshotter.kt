@@ -2,6 +2,7 @@ package com.swordfish.lemuroid.app.shared.romm
 
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.security.MessageDigest
 
 /**
@@ -19,6 +20,38 @@ internal object RommSaveSnapshotter {
         val second = fingerprint(file)
         if (first != second) throw IOException("Save changed while being fingerprinted")
         return first
+    }
+
+    /**
+     * Android document-picker files may not have a filesystem path. Open two
+     * independent streams and reject mutation between reads. Never copy the
+     * selected document or give it to an automatic synchronization executor.
+     */
+    fun fromReopenableStream(open: () -> InputStream?): RommSaveSyncPlanner.Snapshot {
+        val first = open()?.use(::fingerprintStream) ?: throw IOException("Save document unavailable")
+        val second = open()?.use(::fingerprintStream) ?: throw IOException("Save document unavailable")
+        if (first != second) throw IOException("Save document changed during comparison")
+        return first
+    }
+
+    private fun fingerprintStream(input: InputStream): RommSaveSyncPlanner.Snapshot {
+        val digest = MessageDigest.getInstance("SHA-256")
+        var total = 0L
+        val buffer = ByteArray(16 * 1024)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            if (read == 0) continue
+            total += read
+            if (total > MAX_SAVE_BYTES) throw IOException("Save document exceeds safe size")
+            digest.update(buffer, 0, read)
+        }
+        if (total <= 0L) throw IOException("Save document is empty")
+        val checksum =
+            digest.digest().joinToString("") { byte ->
+                (byte.toInt() and 255).toString(16).padStart(2, '0')
+            }
+        return RommSaveSyncPlanner.Snapshot(checksum, total)
     }
 
     private fun fingerprint(file: File): RommSaveSyncPlanner.Snapshot {

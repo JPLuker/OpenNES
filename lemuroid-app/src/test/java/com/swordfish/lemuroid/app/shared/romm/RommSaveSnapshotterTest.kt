@@ -7,6 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.security.MessageDigest
 
@@ -41,6 +42,68 @@ class RommSaveSnapshotterTest {
         file.writeBytes(ByteArray(128) { 2 })
         val after = RommSaveSnapshotter.fromFile(file)
         assertNotEquals(before, after)
+    }
+
+    @Test
+    fun documentStreamComparisonUsesTwoIndependentContentFingerprints() {
+        val saved = ByteArray(512) { (it * 7).toByte() }
+        val source = folder.newFile("archived.sav")
+        source.writeBytes(saved)
+        var opens = 0
+        val selected =
+            RommSaveSnapshotter.fromReopenableStream {
+                opens += 1
+                ByteArrayInputStream(saved)
+            }
+        assertEquals(2, opens)
+        assertEquals(RommSaveSnapshotter.fromFile(source), selected)
+    }
+
+    @Test
+    fun changedOrUnavailableDocumentFailsClosed() {
+        var opens = 0
+        assertThrows(IOException::class.java) {
+            RommSaveSnapshotter.fromReopenableStream {
+                opens += 1
+                ByteArrayInputStream(ByteArray(32) { opens.toByte() })
+            }
+        }
+        assertEquals(2, opens)
+        assertThrows(IOException::class.java) {
+            RommSaveSnapshotter.fromReopenableStream { null }
+        }
+        assertThrows(IOException::class.java) {
+            RommSaveSnapshotter.fromReopenableStream { ByteArrayInputStream(byteArrayOf()) }
+        }
+    }
+
+    @Test
+    fun streamEnforcesTheSameSixteenMibSizeLimitAsRegularSnapshots() {
+        assertThrows(IOException::class.java) {
+            RommSaveSnapshotter.fromReopenableStream {
+                object : java.io.InputStream() {
+                    private var remaining = 16 * 1024 * 1024 + 1
+
+                    override fun read(): Int {
+                        if (remaining <= 0) return -1
+                        remaining -= 1
+                        return 0
+                    }
+
+                    override fun read(
+                        bytes: ByteArray,
+                        offset: Int,
+                        length: Int,
+                    ): Int {
+                        if (remaining <= 0) return -1
+                        val count = minOf(length, remaining)
+                        java.util.Arrays.fill(bytes, offset, offset + count, 0.toByte())
+                        remaining -= count
+                        return count
+                    }
+                }
+            }
+        }
     }
 
     @Test

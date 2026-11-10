@@ -284,6 +284,27 @@ class RommApiClient {
             privateBackupStore(context).deleteVerifiedBackup(backup)
         }
 
+    /**
+     * Compare a user-selected local document against an immutable archived
+     * RomM save. The comparison never reads or modifies live emulator state,
+     * and does not imply that merging or replacing saves would be safe.
+     */
+    internal suspend fun compareOfflineSaveBackup(
+        context: Context,
+        backup: RommVersionedSaveBackupStore.Backup,
+        localDocument: Uri,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            val backups = privateBackupStore(context)
+            if (!backups.verify(backup)) throw IOException("Archive failed integrity check")
+            val local =
+                RommSaveSnapshotter.fromReopenableStream {
+                    context.contentResolver.openInputStream(localDocument)
+                }
+            if (!backups.verify(backup)) throw IOException("Archive changed during comparison")
+            local.bytes == backup.bytes && local.sha256 == backup.sha256
+        }
+
     /** User-chosen SAF destination; never replaces emulator SRAM/state files. */
     internal suspend fun exportOfflineSaveBackup(
         context: Context,
