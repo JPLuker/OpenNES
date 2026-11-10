@@ -100,6 +100,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
+import com.swordfish.lemuroid.app.shared.covers.NesCoverResolutionCache
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
@@ -636,6 +637,7 @@ private fun GameDetailsSheet(
     var searchResults by remember(game.id) { mutableStateOf(emptyList<GameMetadata>()) }
     var searched by remember(game.id) { mutableStateOf(false) }
     var searching by remember(game.id) { mutableStateOf(false) }
+    var catalogueSearchVersion by remember(game.id) { mutableStateOf(0) }
     var applying by remember(game.id) { mutableStateOf(false) }
     var matchFailed by remember(game.id) { mutableStateOf(false) }
     val detailsScroll = rememberScrollState()
@@ -837,7 +839,11 @@ private fun GameDetailsSheet(
                             value = searchText,
                             onValueChange = {
                                 searchText = it
+                                catalogueSearchVersion++
+                                searching = false
                                 searched = false
+                                searchResults = emptyList()
+                                matchFailed = false
                             },
                             label = { Text(stringResource(R.string.opennes_search_game_hint)) },
                             singleLine = true,
@@ -845,12 +851,19 @@ private fun GameDetailsSheet(
                         )
                         Button(
                             onClick = {
+                                catalogueSearchVersion++
+                                val requestVersion = catalogueSearchVersion
                                 searching = true
                                 searched = false
-                                onSearchMetadata(searchText) { matches ->
-                                    searchResults = matches
-                                    searched = true
-                                    searching = false
+                                onSearchMetadata(searchText.trim()) { matches ->
+                                    // A slow search may return after the user
+                                    // has edited the title or chosen another
+                                    // query. Never show stale results.
+                                    if (catalogueSearchVersion == requestVersion) {
+                                        searchResults = matches
+                                        searched = true
+                                        searching = false
+                                    }
                                 }
                             },
                             enabled = !searching && searchText.trim().length >= 3,
@@ -1759,7 +1772,10 @@ fun GameCover(
         remember(game.fileName, game.systemId, game.customCoverUri) {
             NesBoxArtUrls.romFilenameFallback(game)
         }
-    var usingRomArtwork by remember(game.id, primaryArtwork, romArtwork) { mutableStateOf(false) }
+    val preferredArtwork = NesCoverResolutionCache.preferred(primaryArtwork, romArtwork)
+    var usingRomArtwork by remember(game.id, primaryArtwork, romArtwork) {
+        mutableStateOf(preferredArtwork == romArtwork && romArtwork != primaryArtwork)
+    }
     val artworkUrl =
         if (primaryArtwork.isNullOrBlank() || usingRomArtwork) romArtwork ?: primaryArtwork else primaryArtwork
 
@@ -1780,6 +1796,9 @@ fun GameCover(
                     }
                 }
                 .listener(
+                    onSuccess = { _, _ ->
+                        NesCoverResolutionCache.recordSuccess(primaryArtwork, romArtwork, artworkUrl)
+                    },
                     onError = { _, _ ->
                         if (!usingRomArtwork && romArtwork != null && artworkUrl != romArtwork) {
                             usingRomArtwork = true

@@ -134,7 +134,15 @@ class HomeViewModel(
                         }
                     }
                 }
-            onComplete(matches)
+            // OpenNES is NES-only. Duplicate catalogue rows should not
+            // crowd the user's "Find details" results or offer non-NES art.
+            onComplete(
+                matches
+                    .asSequence()
+                    .filter { it.system == SystemID.NES.dbname }
+                    .distinctBy { Triple(it.name?.trim()?.lowercase(), it.developer, it.thumbnail) }
+                    .toList(),
+            )
         }
     }
 
