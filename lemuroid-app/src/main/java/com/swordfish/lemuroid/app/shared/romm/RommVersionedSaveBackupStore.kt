@@ -36,6 +36,7 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
 
         val staging = File.createTempFile("opennes-romm-", ".partial", directory)
         var committed: File? = null
+        var manifest: File? = null
         try {
             val digest = MessageDigest.getInstance("SHA-256")
             var total = 0L
@@ -73,13 +74,61 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             committed = destination
             val record = Backup(destination, romId, fingerprint, total)
             if (!verify(record)) throw IOException("Versioned backup failed SHA-256 verification")
+
+            // The manifest makes integrity verification possible after an
+            // Android process restart. A hash computed only at listing time
+            // cannot detect corruption of the original immutable snapshot.
+            manifest = File(directory, filename + MANIFEST_SUFFIX)
+            val stagingManifest = File.createTempFile("opennes-manifest-", ".partial", directory)
+            try {
+                FileOutputStream(stagingManifest).use { output ->
+                    output.write(("$fingerprint $total\n").toByteArray(Charsets.US_ASCII))
+                    output.fd.sync()
+                }
+                if (manifest.exists() || !stagingManifest.renameTo(manifest)) {
+                    throw IOException("Cannot commit backup integrity manifest")
+                }
+            } finally {
+                stagingManifest.delete()
+            }
+            if (!verify(record)) throw IOException("Manifested backup failed verification")
             return record
         } catch (e: Exception) {
             committed?.delete()
+            manifest?.delete()
             throw e
         } finally {
             staging.delete()
         }
+    }
+
+    /**
+     * Enumerate only previously committed backups with matching immutable
+     * checksum manifests. Old unmanifested files remain untouched but cannot
+     * be mistaken for verified archive entries after process death.
+     */
+    fun listVerifiedBackups(romId: Int? = null): List<Backup> {
+        if (romId != null) require(romId > 0)
+        val files = directory.listFiles() ?: return emptyList()
+        return files.asSequence()
+            .filter { it.isFile && it.name.matches(ARCHIVE_FILE_PATTERN) }
+            .mapNotNull { file ->
+                val match = ARCHIVE_FILE_PATTERN.matchEntire(file.name) ?: return@mapNotNull null
+                val archiveRomId = match.groupValues[1].toIntOrNull()
+                    ?.takeIf { it > 0 } ?: return@mapNotNull null
+                if (romId != null && archiveRomId != romId) return@mapNotNull null
+                val manifest = File(directory, file.name + MANIFEST_SUFFIX)
+                if (!manifest.isFile || manifest.length() !in 1..128) return@mapNotNull null
+                val fields =
+                    runCatching { manifest.readText(Charsets.US_ASCII).trim().split(" ") }
+                        .getOrNull() ?: return@mapNotNull null
+                if (fields.size != 2 || !fields[0].matches(SHA256_PATTERN)) return@mapNotNull null
+                val size = fields[1].toLongOrNull() ?: return@mapNotNull null
+                val record = Backup(file, archiveRomId, fields[0], size)
+                if (runCatching { verify(record) }.getOrDefault(false)) record else null
+            }
+            .sortedByDescending { it.file.name }
+            .toList()
     }
 
     /** Revalidate before using a stored backup. A prior verification is not permanent. */
@@ -109,5 +158,9 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
 
     companion object {
         private const val MAX_SAVE_BYTES = 16L * 1024L * 1024L
+        private const val MANIFEST_SUFFIX = ".sha256"
+        private val SHA256_PATTERN = Regex("[0-9a-f]{64}")
+        private val ARCHIVE_FILE_PATTERN =
+            Regex("romm-([1-9][0-9]*)-[0-9]{13}-[0-9a-fA-F-]{36}\\.savebak")
     }
 }
