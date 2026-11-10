@@ -151,8 +151,7 @@ internal class RetroAchievementsGameSessionRunner(
     }
 
     companion object {
-        private fun elapsedSeconds(started: Long): Long =
-            TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)
+        private fun elapsedSeconds(started: Long): Long = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)
 
         private fun elapsedMillis(
             from: Long,
