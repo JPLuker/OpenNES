@@ -3,6 +3,7 @@ package com.swordfish.lemuroid.app.mobile.feature.game
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import com.swordfish.touchinput.radial.layouts.NesLandscapeDragLimits
 import org.junit.Test
 
 class NesLandscapeFitTest {
@@ -27,6 +28,20 @@ class NesLandscapeFitTest {
     fun narrowLandscapeFallsBackToOverlayWithoutBreakingVideo() {
         assertFalse(NesLandscapeFit.canShowSideControls(768f, 432f))
         assertEquals(96f, NesLandscapeFit.sideWidthDp(768f, 432f), 0.01f)
+    }
+
+    @Test
+    fun fullLandscapeGripTravelExceedsOld72DpDragLimit() {
+        val travel = NesLandscapeDragLimits.verticalTravelDp(sideHeightDp = 427f, dialHeightDp = 180f)
+        assertTrue(travel > 100f)
+        assertEquals(113.5f, travel, 0.01f)
+    }
+
+    @Test
+    fun dragRangeNeverMovesEntireDialOffScreen() {
+        assertEquals(5f, NesLandscapeDragLimits.horizontalTravelDp(210f, 180f), 0.01f)
+        assertEquals(0f, NesLandscapeDragLimits.horizontalTravelDp(120f, 180f), 0f)
+        assertEquals(0f, NesLandscapeDragLimits.verticalTravelDp(160f, 200f), 0f)
     }
 
     @Test
