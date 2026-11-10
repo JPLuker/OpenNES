@@ -23,7 +23,10 @@ internal class RetroAchievementsNativeTokenVerifier(
     },
 ) {
     internal interface NativeBridge {
-        fun start(username: String, token: String): Long
+        fun start(
+            username: String,
+            token: String,
+        ): Long
 
         fun take(session: Long): Array<String>?
 
@@ -42,8 +45,10 @@ internal class RetroAchievementsNativeTokenVerifier(
     }
 
     private object JniBridge : NativeBridge {
-        override fun start(username: String, token: String) =
-            RetroAchievementsNative.beginTokenValidation(username, token)
+        override fun start(
+            username: String,
+            token: String,
+        ) = RetroAchievementsNative.beginTokenValidation(username, token)
 
         override fun take(session: Long) = RetroAchievementsNative.takeValidationRequest(session)
 
@@ -139,7 +144,10 @@ internal class RetroAchievementsNativeTokenVerifier(
         // another caller's active rc_client pointer.
         private val validationMutex = Mutex()
 
-        internal fun isOfficialLoginRequest(url: String, form: String): Boolean =
+        internal fun isOfficialLoginRequest(
+            url: String,
+            form: String,
+        ): Boolean =
             try {
                 val endpoint = RetroAchievementsNativeHttpTransport.validatedEndpoint(url)
                 endpoint.encodedPath == "/dorequest.php" &&
