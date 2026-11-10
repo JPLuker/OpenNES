@@ -599,4 +599,5 @@
     <string name="opennes_ra_game_match_short">Matched game #%1$d</string>
     <string name="opennes_ra_game_match_unavailable">Game lookup unavailable</string>
     <string name="opennes_ra_game_match_unknown">No RetroAchievements match found</string>
+    <string name="opennes_ra_live_unlock_toast">Achievement triggered: %1$s</string>
 </resources>
