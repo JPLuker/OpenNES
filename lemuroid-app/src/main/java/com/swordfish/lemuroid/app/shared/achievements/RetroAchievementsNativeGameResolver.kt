@@ -47,7 +47,11 @@ internal class RetroAchievementsNativeGameResolver(
             val reply = fetch(url, form)
             if (reply.statusCode !in 200..299) return Result.Unavailable
             val id = decode(reply.body, reply.statusCode)
-            return if (id > 0) Result.VerifiedGame(id) else Result.NoMatch
+            return when {
+                id > 0 -> Result.VerifiedGame(id)
+                id == 0 -> Result.NoMatch
+                else -> Result.Unavailable
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
