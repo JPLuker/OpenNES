@@ -23,6 +23,7 @@ std::mutex probeMutex;
 rc_client_t* probeClient = nullptr;
 std::atomic<uint64_t> observedFrames{0};
 std::atomic<uint64_t> mappedMemoryBytes{0};
+std::atomic<uint64_t> observedGameGeneration{0};
 rc_libretro_memory_regions_t probeRegions{};
 
 void RC_CCONV coreRegion(uint32_t id, rc_libretro_core_memory_info_t* info) {
@@ -48,7 +49,15 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_star
     JNIEnv*, jobject
 ) {
     std::lock_guard<std::mutex> guard(probeMutex);
-    if (probeClient) return JNI_TRUE;
+    // A core teardown removes the observer but does not call this JNI's
+    // stop method. Always detach and reset before arming again, even if a
+    // previous probe client still exists. Detach waits for a live frame.
+    if (probeClient) {
+        libretrodroid::LibretroDroid::getInstance().setEmulatedFrameObserver(nullptr);
+        rc_client_destroy(probeClient);
+        probeClient = nullptr;
+        rc_libretro_memory_destroy(&probeRegions);
+    }
 
     auto* client = rc_client_create(readMappedMemory, nullptr);
     if (!client) return JNI_FALSE;
@@ -59,11 +68,22 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_star
     observedFrames.store(0, std::memory_order_relaxed);
     mappedMemoryBytes.store(0, std::memory_order_relaxed);
     rc_libretro_memory_destroy(&probeRegions);
+    const auto currentGeneration =
+        libretrodroid::LibretroDroid::getInstance().currentGameGeneration();
+    observedGameGeneration.store(currentGeneration, std::memory_order_release);
     rc_client_set_allow_background_memory_reads(client, 0);
     libretrodroid::LibretroDroid::getInstance().setEmulatedFrameObserver([client] {
-        // Lazily initialize mapping only after a real game has been loaded.
-        // Use rcheevos' official NES memory regions, not a guessed 2-KiB
-        // pointer layout. No map is retained across stop or core destroy.
+        // Called under the core lock after retro_run. When the ROM/core
+        // changes, discard the old RAM region addresses BEFORE reading.
+        const auto generation =
+            libretrodroid::LibretroDroid::getInstance().currentGameGeneration();
+        if (generation != observedGameGeneration.load(std::memory_order_acquire)) {
+            rc_libretro_memory_destroy(&probeRegions);
+            mappedMemoryBytes.store(0, std::memory_order_relaxed);
+            observedGameGeneration.store(generation, std::memory_order_release);
+        }
+
+        // Use rcheevos' NES memory mapping, not guessed RAM offsets.
         if (mappedMemoryBytes.load(std::memory_order_relaxed) == 0) {
             if (rc_libretro_memory_init(&probeRegions, nullptr, coreRegion, 7)) {
                 mappedMemoryBytes.store(
@@ -89,6 +109,7 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_stop
     rc_client_destroy(probeClient);
     rc_libretro_memory_destroy(&probeRegions);
     mappedMemoryBytes.store(0, std::memory_order_relaxed);
+    observedGameGeneration.store(0, std::memory_order_relaxed);
     probeClient = nullptr;
 }
 
@@ -103,5 +124,9 @@ extern "C" JNIEXPORT jlong JNICALL
 Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_mappedProbeBytes(
     JNIEnv*, jobject
 ) {
+    // A stopped/unloaded game must not display a stale positive memory map.
+    if (observedGameGeneration.load(std::memory_order_acquire) !=
+        libretrodroid::LibretroDroid::getInstance().currentGameGeneration())
+        return 0;
     return static_cast<jlong>(mappedMemoryBytes.load(std::memory_order_relaxed));
 }

@@ -101,7 +101,7 @@ target_link_libraries(libretrodroid
     )
     h = files[header]
     h = replace_once(
-        h, "#include <vector>", "#include <vector>\n#include <functional>\n#include <cstdint>",
+        h, "#include <vector>", "#include <vector>\n#include <functional>\n#include <cstdint>\n#include <atomic>",
         "libretrodroid.h includes",
     )
     h = replace_once(
@@ -113,6 +113,9 @@ target_link_libraries(libretrodroid
     // Never retain the pointer past the current emulated frame.
     std::pair<uint8_t*, size_t> coreMemoryRegionWhileLocked(unsigned memoryType);
     uint64_t emulatedFrameCount();
+    uint64_t currentGameGeneration() const {
+        return gameGeneration.load(std::memory_order_acquire);
+    }
     // Future rc_client hook runs synchronously after *every* retro_run().
     void setEmulatedFrameObserver(std::function<void()> callback);""",
         "libretrodroid.h bridge",
@@ -121,6 +124,8 @@ target_link_libraries(libretrodroid
         h, "    std::mutex coreLock;", """    std::mutex coreLock;
     bool achievementsGameLoaded = false;
     uint64_t frameCounter = 0;
+    // Never reset this counter: a new/removed core invalidates RAM pointers.
+    std::atomic<uint64_t> gameGeneration{0};
     std::function<void()> emulatedFrameObserver;""",
         "libretrodroid.h state",
     )
@@ -132,6 +137,7 @@ target_link_libraries(libretrodroid
         """void LibretroDroid::resetGlobalVariables() {
     achievementsGameLoaded = false;
     frameCounter = 0;
+    gameGeneration.fetch_add(1, std::memory_order_release);
     emulatedFrameObserver = nullptr;""",
         "libretrodroid.cpp reset",
     )
@@ -141,6 +147,7 @@ target_link_libraries(libretrodroid
     std::lock_guard<std::mutex> lock(coreLock);
     achievementsGameLoaded = false;
     frameCounter = 0;
+    gameGeneration.fetch_add(1, std::memory_order_release);
     emulatedFrameObserver = nullptr;""",
         "libretrodroid.cpp destroy",
     )
@@ -160,6 +167,7 @@ target_link_libraries(libretrodroid
     c = replace_once(
         c, "void LibretroDroid::afterGameLoad() {",
         """void LibretroDroid::afterGameLoad() {
+    gameGeneration.fetch_add(1, std::memory_order_release);
     achievementsGameLoaded = true;
     frameCounter = 0;""",
         "libretrodroid.cpp after load",
