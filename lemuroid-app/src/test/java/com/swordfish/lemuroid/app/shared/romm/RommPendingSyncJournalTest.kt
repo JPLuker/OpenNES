@@ -8,8 +8,7 @@ import java.io.File
 import java.nio.file.Files
 
 class RommPendingSyncJournalTest {
-    private fun snapshot(letter: String) =
-        RommSaveSyncPlanner.Snapshot(letter.repeat(64), 128L)
+    private fun snapshot(letter: String) = RommSaveSyncPlanner.Snapshot(letter.repeat(64), 128L)
 
     @Test
     fun journalSurvivesProcessRecreationWithoutStoringApproval() {
