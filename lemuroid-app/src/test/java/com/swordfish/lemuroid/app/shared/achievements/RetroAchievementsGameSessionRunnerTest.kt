@@ -156,6 +156,32 @@ class RetroAchievementsGameSessionRunnerTest {
     }
 
     @Test
+    fun failedSessionCanBeRetriedOnlyForItsCurrentRom() {
+        val gameA = "a".repeat(32)
+        val gameB = "b".repeat(32)
+        val oldTicket = RetroAchievementsGameStateStore.begin(gameA)
+        assertFalse(RetroAchievementsGameStateStore.requestRetry(gameA))
+        RetroAchievementsGameStateStore.finishFailed(oldTicket, gameA)
+        assertFalse(RetroAchievementsGameStateStore.requestRetry(gameB))
+        assertTrue(RetroAchievementsGameStateStore.requestRetry(gameA))
+        val requestedVersion = RetroAchievementsGameStateStore.retryVersion(gameA)
+        assertTrue(requestedVersion > 0L)
+        assertEquals(0L, RetroAchievementsGameStateStore.retryVersion(gameB))
+        val retryTicket = RetroAchievementsGameStateStore.begin(gameA)
+        assertEquals(0L, RetroAchievementsGameStateStore.retryVersion(gameA))
+        RetroAchievementsGameStateStore.finishFailed(retryTicket, gameA)
+    }
+
+    @Test
+    fun changingSavedAccountCanInvalidateActiveSession() {
+        val first = NativeCredentials("Tester", "a".repeat(32))
+        val same = NativeCredentials("Tester", "a".repeat(32))
+        val changed = NativeCredentials("Tester", "b".repeat(32))
+        assertTrue(RetroAchievementsGameSessionRunner.sameCredentials(first, same))
+        assertFalse(RetroAchievementsGameSessionRunner.sameCredentials(first, changed))
+    }
+
+    @Test
     fun failedNativeSessionRemainsVisibleWithoutLeakingToAnotherGame() {
         val gameA = "a".repeat(32)
         val gameB = "b".repeat(32)

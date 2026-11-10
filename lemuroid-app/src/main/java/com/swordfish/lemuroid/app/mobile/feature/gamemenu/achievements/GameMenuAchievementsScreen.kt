@@ -230,6 +230,13 @@ fun GameMenuAchievementsScreen(
                         fontSize = 13.sp,
                     )
                 }
+                if (visibleSession is RetroAchievementsDisplayState.Unavailable && currentHash != null) {
+                    TextButton(
+                        onClick = { RetroAchievementsGameStateStore.requestRetry(currentHash) },
+                    ) {
+                        Text(stringResource(R.string.opennes_ra_retry_connection))
+                    }
+                }
             }
         }
 

@@ -20,11 +20,14 @@ internal object RetroAchievementsGameStateStore {
     val snapshots: StateFlow<Snapshot> = mutable
     private var ticketCounter = 0L
     private var currentTicket = 0L
+    private var retrySequence = 0L
+    private var retryRomHash: String? = null
 
     @Synchronized
     fun begin(romMd5: String): Long {
         val ticket = ++ticketCounter
         currentTicket = ticket
+        retryRomHash = null
         mutable.value = Snapshot(romMd5, RetroAchievementsDisplayState.Connecting)
         return ticket
     }
@@ -52,6 +55,23 @@ internal object RetroAchievementsGameStateStore {
         currentTicket = 0L
         mutable.value = Snapshot(romMd5, RetroAchievementsDisplayState.Unavailable)
     }
+
+    /** Only the failed current ROM may request another connection attempt. */
+    @Synchronized
+    fun requestRetry(romMd5: String): Boolean {
+        if (mutable.value.romMd5 != romMd5 ||
+            mutable.value.state != RetroAchievementsDisplayState.Unavailable
+        ) {
+            return false
+        }
+        retryRomHash = romMd5
+        retrySequence += 1L
+        return true
+    }
+
+    @Synchronized
+    fun retryVersion(romMd5: String): Long =
+        if (retryRomHash == romMd5) retrySequence else 0L
 
     @Synchronized
     fun clear(ticket: Long) {

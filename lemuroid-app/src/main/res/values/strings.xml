@@ -472,6 +472,7 @@
     <string name="opennes_ra_runtime_ready">Achievements connected</string>
     <string name="opennes_ra_runtime_connecting">Connecting to RetroAchievements</string>
     <string name="opennes_ra_runtime_failed">Could not start live achievements</string>
+    <string name="opennes_ra_retry_connection">Retry connection</string>
     <string name="opennes_ra_runtime_failed_explanation">OpenNES could not establish a native achievement session for this game. Check the connection and emulator account; gameplay is unaffected.</string>
     <string name="opennes_ra_runtime_no_match">Game not recognized</string>
     <string name="opennes_ra_runtime_hash_mismatch">Game identification mismatch</string>

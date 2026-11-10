@@ -31,77 +31,109 @@ internal class RetroAchievementsGameSessionRunner(
             } catch (_: Exception) {
                 return
             }
-        // FCEUmm's FDS memory map is not yet validated. Never evaluate FDS
-        // achievements through the NES (console 7) RAM mapping.
+        // FDS memory has not been validated against the live core.
         if (!supportsNativeGame(identity)) return
-        // The game can start BEFORE the user signs in. Stay attached to this
-        // ViewModel's cancellation-bound job and accept a later sign-in
-        // without asking the user to restart their ROM.
-        val credentials = awaitCredentials()
+
         val md5 = identity.md5
-        val ticket = RetroAchievementsGameStateStore.begin(md5)
-        var session = 0L
-        var activationFailed = false
-        try {
-            withContext(Dispatchers.IO) {
-                session =
-                    RetroAchievementsNative.startGameSession(
-                        credentials.username,
-                        credentials.token,
-                        md5,
-                    )
-                activationFailed =
-                    if (session <= 0L) {
-                        true
-                    } else {
-                        pollGame(session, ticket, md5, credentials.username)
+        val accountStore = RetroAchievementsNativeAccountStore(context)
+        var previousCredentials: NativeCredentials? = null
+        var previousRetryVersion = 0L
+
+        // Bound to the game ViewModel: signing in, signing out, switching
+        // accounts and manually retrying can all happen without restarting
+        // an already running ROM. Failed native logins never auto-hammer the
+        // server: wait for changed credentials or an explicit Retry tap.
+        while (true) {
+            val credentials = awaitCredentials(accountStore, previousCredentials, md5, previousRetryVersion)
+            val ticket = RetroAchievementsGameStateStore.begin(md5)
+            var session = 0L
+            var outcome = SessionEnd.Failed
+            try {
+                withContext(Dispatchers.IO) {
+                    session =
+                        RetroAchievementsNative.startGameSession(
+                            credentials.username,
+                            credentials.token,
+                            md5,
+                        )
+                    if (session > 0L) {
+                        outcome = pollGame(session, ticket, md5, credentials, accountStore)
                     }
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            // Keep native/transport details private, but don't silently
-            // represent a failed session as if it were still connecting.
-            activationFailed = true
-        } finally {
-            withContext(NonCancellable + Dispatchers.IO) {
-                if (session > 0) RetroAchievementsNative.stopGameSession(session)
-                if (activationFailed) {
-                    RetroAchievementsGameStateStore.finishFailed(ticket, md5)
-                } else {
-                    RetroAchievementsGameStateStore.clear(ticket)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Do not expose raw HTTP forms, tokens or server messages.
+                outcome = SessionEnd.Failed
+            } finally {
+                withContext(NonCancellable + Dispatchers.IO) {
+                    if (session > 0L) RetroAchievementsNative.stopGameSession(session)
+                    if (outcome == SessionEnd.Failed) {
+                        RetroAchievementsGameStateStore.finishFailed(ticket, md5)
+                    } else {
+                        RetroAchievementsGameStateStore.clear(ticket)
+                    }
                 }
             }
+            if (outcome == SessionEnd.GameStopped) return
+            previousCredentials = credentials
+            previousRetryVersion = RetroAchievementsGameStateStore.retryVersion(md5)
         }
     }
 
-    private suspend fun awaitCredentials(): NativeCredentials {
-        val store = RetroAchievementsNativeAccountStore(context)
+    internal enum class SessionEnd {
+        Failed,
+        AccountChanged,
+        GameStopped,
+    }
+
+    /**
+     * Recheck saved credentials on a modest cadence. No JNI client, network
+     * connection or token verification is created while signed out. After a
+     * failure, identical credentials need an explicit Retry request.
+     */
+    private suspend fun awaitCredentials(
+        accountStore: RetroAchievementsNativeAccountStore,
+        previous: NativeCredentials?,
+        md5: String,
+        retryVersion: Long,
+    ): NativeCredentials {
+        var observedSignOut = false
         while (true) {
-            val credentials =
-                try {
-                    withContext(Dispatchers.IO) { store.load() }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: Exception) {
-                    null
-                }
-            if (credentials != null) return credentials
-            // No network or native client is created while signed out.
+            val available = loadCredentials(accountStore)
+            if (available == null) observedSignOut = true
+            if (available != null &&
+                (previous == null || observedSignOut ||
+                    !sameCredentials(available, previous) ||
+                    RetroAchievementsGameStateStore.retryVersion(md5) != retryVersion)
+            ) {
+                return available
+            }
             delay(2_000)
         }
     }
+
+    private suspend fun loadCredentials(store: RetroAchievementsNativeAccountStore): NativeCredentials? =
+        try {
+            withContext(Dispatchers.IO) { store.load() }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
 
     private suspend fun pollGame(
         session: Long,
         ticket: Long,
         md5: String,
-        username: String,
-    ): Boolean {
+        credentials: NativeCredentials,
+        accountStore: RetroAchievementsNativeAccountStore,
+    ): SessionEnd {
         var active = false
         val connection = NativeConnectionGate()
         var lastRefresh = 0L
         var lastIdle = 0L
+        var lastAccountCheck = 0L
         val started = System.nanoTime()
         while (true) {
             val now = System.nanoTime()
@@ -111,23 +143,30 @@ internal class RetroAchievementsGameSessionRunner(
                 RetroAchievementsNative.idleGameSession(session)
                 lastIdle = now
             }
+            if (lastAccountCheck == 0L || elapsedMillis(lastAccountCheck, now) >= 3_000L) {
+                val currentCredentials = loadCredentials(accountStore)
+                if (currentCredentials == null || !sameCredentials(currentCredentials, credentials)) {
+                    return SessionEnd.AccountChanged
+                }
+                lastAccountCheck = now
+            }
             val status = RetroAchievementsNative.gameSessionStatus(session)
             when (status) {
-                -2 -> return false // Session replaced or game exited.
-                -1 -> return true // Native login, game load or memory failure.
+                -2 -> return SessionEnd.GameStopped // Session replaced or game exited.
+                -1 -> return SessionEnd.Failed // Native login, game load or memory failure.
                 2 -> {
-                    if (RetroAchievementsNative.loadedGameId(session) <= 0) return true
+                    if (RetroAchievementsNative.loadedGameId(session) <= 0) return SessionEnd.Failed
                     active = true
                 }
             }
-            if (!active && elapsedSeconds(started) > 120) return true
+            if (!active && elapsedSeconds(started) > 120) return SessionEnd.Failed
 
             // Native callbacks are owned by this session. A cancelled or
             // superseded game cannot deliver a response to another client.
             val request = RetroAchievementsNative.takeGameRequest(session)
             if (request != null) {
                 val id = request.getOrNull(0)?.toLongOrNull()
-                if (request.size != 3 || id == null || id <= 0) return true
+                if (request.size != 3 || id == null || id <= 0) return SessionEnd.Failed
                 val reply =
                     try {
                         if (!isOfficialGameRequest(request[1], request[2])) {
@@ -141,7 +180,7 @@ internal class RetroAchievementsGameSessionRunner(
                         RetroAchievementsNativeHttpTransport.Reply(-1, ByteArray(0))
                     }
                 if (!RetroAchievementsNative.completeGameRequest(session, id, reply.statusCode, reply.body)) {
-                    return false // Stale response after a new ROM or teardown.
+                    return SessionEnd.GameStopped // Stale response after new ROM or teardown.
                 }
             }
 
@@ -192,7 +231,7 @@ internal class RetroAchievementsGameSessionRunner(
                             md5,
                             RetroAchievementsDisplayState.Active(
                                 md5,
-                                username,
+                                credentials.username,
                                 achievements,
                                 compatibilityNotices = notices,
                             ),
@@ -229,6 +268,9 @@ internal class RetroAchievementsGameSessionRunner(
     }
 
     companion object {
+        internal fun sameCredentials(first: NativeCredentials, second: NativeCredentials): Boolean =
+            first.username == second.username && first.token == second.token
+
         internal fun supportsNativeGame(identity: NesRetroAchievementsHash.Identity): Boolean =
             identity.console == NesRetroAchievementsHash.Console.NES
 
