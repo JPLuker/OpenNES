@@ -1,53 +1,39 @@
 package com.swordfish.lemuroid.app.mobile.feature.game
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NesLandscapeFitTest {
     @Test
-    fun handheldReservesFourByThreeVideoWidth() {
-        val required =
-            NesLandscapeFit.minimumRequiredWidthDp(
-                screenHeightDp = 400f,
-                leftDialWidthDp = 160f,
-                rightDialWidthDp = 160f,
-                handheld = true,
-            )
-        assertEquals(400f * 4f / 3f + 320f, required, 0.01f)
+    fun bothSidePanelsKeepFourByThreeVideoCentered() {
+        val width = 952f
+        val height = 427f
+        val grip = NesLandscapeFit.sideWidthDp(width, height)
+        val gameLeft = grip
+        val gameRight = width - grip
+        assertEquals(width / 2f, (gameLeft + gameRight) / 2f, 0.01f)
+        assertEquals(height * 4f / 3f, gameRight - gameLeft, 0.01f)
     }
 
     @Test
-    fun framedPreservesMinimumComfortWidth() {
-        val required =
-            NesLandscapeFit.minimumRequiredWidthDp(
-                screenHeightDp = 280f,
-                leftDialWidthDp = 120f,
-                rightDialWidthDp = 120f,
-                handheld = false,
-            )
-        assertEquals(640f, required, 0.01f)
+    fun typicalWidePhoneProvidesLargeGrips() {
+        assertTrue(NesLandscapeFit.canShowSideControls(952f, 427f))
+        assertTrue(NesLandscapeFit.sideWidthDp(952f, 427f) > 180f)
     }
 
     @Test
-    fun shortHandheldCanFitBelowOldArbitraryWidthThreshold() {
-        val required =
-            NesLandscapeFit.minimumRequiredWidthDp(
-                screenHeightDp = 200f,
-                leftDialWidthDp = 80f,
-                rightDialWidthDp = 80f,
-                handheld = true,
-            )
-        assertTrue(required < 640f)
-        assertTrue(required > 400f)
+    fun narrowLandscapeFallsBackToOverlayWithoutBreakingVideo() {
+        assertFalse(NesLandscapeFit.canShowSideControls(768f, 432f))
+        assertEquals(96f, NesLandscapeFit.sideWidthDp(768f, 432f), 0.01f)
     }
 
     @Test
-    fun largerHandheldDialsRequireMoreSpace() {
-        val compact =
-            NesLandscapeFit.minimumRequiredWidthDp(360f, 100f, 100f, handheld = true)
-        val enlarged =
-            NesLandscapeFit.minimumRequiredWidthDp(360f, 200f, 200f, handheld = true)
-        assertTrue(enlarged > compact)
+    fun invalidAndPortraitGeometryNeverEnablesSidePanels() {
+        assertFalse(NesLandscapeFit.canShowSideControls(400f, 800f))
+        assertFalse(NesLandscapeFit.canShowSideControls(0f, 400f))
+        assertFalse(NesLandscapeFit.canShowSideControls(Float.NaN, 400f))
+        assertEquals(0f, NesLandscapeFit.sideWidthDp(400f, 800f), 0f)
     }
 }
