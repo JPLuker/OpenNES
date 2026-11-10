@@ -80,6 +80,5 @@ class RommDownloadVerificationTest {
         return zip
     }
 
-    private fun nesBytes(): ByteArray =
-        byteArrayOf(0x4E, 0x45, 0x53, 0x1A) + ByteArray(16)
+    private fun nesBytes(): ByteArray = byteArrayOf(0x4E, 0x45, 0x53, 0x1A) + ByteArray(16)
 }
