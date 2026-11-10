@@ -82,6 +82,10 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             throw IOException("Refusing to back up an existing backup")
         }
 
+        // A future local-save backup must never silently capture bytes while
+        // SRAM is changing. Check the same source before and after staging;
+        // every copy must match the verified stable source fingerprint.
+        val sourceBefore = RommSaveSnapshotter.fromFile(original)
         val staging = File.createTempFile("opennes-romm-", ".partial", directory)
         var committed: File? = null
         var manifest: File? = null
@@ -105,6 +109,12 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             }
             if (total <= 0) throw IOException("Cannot back up empty save")
             val fingerprint = hex(digest.digest())
+            if (total != sourceBefore.bytes ||
+                fingerprint != sourceBefore.sha256 ||
+                RommSaveSnapshotter.fromFile(original) != sourceBefore
+            ) {
+                throw IOException("Save source changed while creating backup")
+            }
             val filename =
                 buildString {
                     append("romm-")

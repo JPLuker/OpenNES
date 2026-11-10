@@ -28,7 +28,9 @@ internal class RommSaveRecoveryStore(
         backup: RommVersionedSaveBackupStore.Backup,
         recoveryDirectory: File,
     ): Recovery {
-        if (!backups.verify(backup)) throw IOException("Save backup failed integrity verification")
+        if (!backups.isCurrentlyArchived(backup)) {
+            throw IOException("Save backup or its integrity manifest is no longer verified")
+        }
         if (!recoveryDirectory.isDirectory && !recoveryDirectory.mkdirs()) {
             throw IOException("Cannot initialize save recovery directory")
         }
@@ -56,7 +58,7 @@ internal class RommSaveRecoveryStore(
                 }
             }
             val sourceHash = hex(digest.digest())
-            if (bytes != backup.bytes || sourceHash != backup.sha256 || !backups.verify(backup)) {
+            if (bytes != backup.bytes || sourceHash != backup.sha256 || !backups.isCurrentlyArchived(backup)) {
                 throw IOException("Save backup changed during recovery")
             }
             val destination =

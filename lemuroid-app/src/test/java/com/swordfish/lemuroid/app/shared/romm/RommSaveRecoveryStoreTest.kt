@@ -49,6 +49,24 @@ class RommSaveRecoveryStoreTest {
     }
 
     @Test
+    fun missingOrModifiedIntegrityManifestPreventsRecovery() {
+        val live = folder.newFile("save.sav")
+        live.writeBytes(ByteArray(128) { 3 })
+        val archiveFolder = folder.newFolder("verified")
+        val backups = RommVersionedSaveBackupStore(archiveFolder)
+        val backup = backups.createVerifiedBackup(81, live)
+        val manifest = java.io.File(archiveFolder, backup.file.name + ".sha256")
+        assertTrue(manifest.delete())
+        val recovered = folder.newFolder("recovered")
+        assertThrows(IOException::class.java) {
+            RommSaveRecoveryStore(backups).stageRecovery(backup, recovered)
+        }
+        assertTrue(recovered.listFiles().isNullOrEmpty())
+        assertTrue(backup.file.exists())
+        assertTrue(live.exists())
+    }
+
+    @Test
     fun refusesToWriteNewRecoveryIntoBackupDirectory() {
         val live = folder.newFile("save.sav")
         live.writeBytes(ByteArray(32) { 1 })
