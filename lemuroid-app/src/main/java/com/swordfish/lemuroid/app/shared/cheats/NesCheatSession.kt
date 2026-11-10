@@ -27,8 +27,7 @@ internal object NesCheatSession {
     }
 
     @Synchronized
-    fun enabledFor(romUri: String): Set<String> =
-        if (this.romUri == romUri) enabledIds else emptySet()
+    fun enabledFor(romUri: String): Set<String> = if (this.romUri == romUri) enabledIds else emptySet()
 
     @Synchronized
     fun apply(

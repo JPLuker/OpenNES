@@ -73,10 +73,11 @@ internal class NesCheatRepository(context: Context) {
 
     private fun key(uri: String): String {
         val bytes = MessageDigest.getInstance("SHA-256").digest(uri.toByteArray(Charsets.UTF_8))
-        return "rom_" + bytes.joinToString("") { byte ->
-            val value = byte.toInt() and 0xFF
-            HEX[value ushr 4].toString() + HEX[value and 15]
-        }
+        return "rom_" +
+            bytes.joinToString("") { byte ->
+                val value = byte.toInt() and 0xFF
+                HEX[value ushr 4].toString() + HEX[value and 15]
+            }
     }
 
     companion object {
