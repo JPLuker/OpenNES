@@ -29,6 +29,7 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsEmulatorLogin
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeAccountStore
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeHttpTransport
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeTokenVerifier
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -83,6 +84,46 @@ fun RetroAchievementsSettingsScreen(modifier: Modifier = Modifier) {
                     Text(
                         text = stringResource(R.string.opennes_ra_native_signed_in, signedInAs.orEmpty()),
                         color = OpenNesSettingsColors.foreground,
+                    )
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            scope.launch {
+                                busy = true
+                                status = ""
+                                try {
+                                    val saved = withContext(Dispatchers.IO) { nativeStore.load() }
+                                    val result =
+                                        if (saved != null) {
+                                            RetroAchievementsNativeTokenVerifier().verify(saved)
+                                        } else {
+                                            RetroAchievementsNativeTokenVerifier.Result.Unavailable
+                                        }
+                                    status =
+                                        when (result) {
+                                            is RetroAchievementsNativeTokenVerifier.Result.Verified ->
+                                                context.getString(
+                                                    R.string.opennes_ra_native_session_verified,
+                                                    result.username,
+                                                )
+                                            RetroAchievementsNativeTokenVerifier.Result.Unavailable ->
+                                                context.getString(R.string.opennes_ra_native_session_failed)
+                                        }
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (_: Exception) {
+                                    status = context.getString(R.string.opennes_ra_native_session_failed)
+                                } finally {
+                                    busy = false
+                                }
+                            }
+                        },
+                    ) {
+                        Text(stringResource(R.string.opennes_ra_native_verify_session))
+                    }
+                    Text(
+                        text = stringResource(R.string.opennes_ra_native_session_explanation),
+                        color = OpenNesSettingsColors.muted,
                     )
                     OutlinedButton(
                         enabled = !busy,
