@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.game.GameService
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
+import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameSessionRunner
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelInput
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelRetroGameView
@@ -146,6 +147,7 @@ class BaseGameScreenViewModel(
             sideEffects,
         )
 
+    private val activeGameUri = game.fileUri
     val loadingState = MutableStateFlow(false)
     private val finishRequestPending = AtomicBoolean(false)
 
@@ -205,6 +207,9 @@ class BaseGameScreenViewModel(
         lifecycle: LifecycleOwner,
     ): GLRetroView {
         val (gameData, result) = retroGameView.createRetroView(context, lifecycle)
+        // The session opens with no active cheats on every new loaded core.
+        // Persisted code definitions are intentionally never auto-enabled.
+        NesCheatSession.begin(gameData.game.fileUri)
         viewModelScope.launch {
             gameData.quickSaveData?.let {
                 saves.restoreAutoSaveAsync(it)
@@ -398,5 +403,10 @@ class BaseGameScreenViewModel(
 
     fun sendMotionEvent(event: MotionEvent): Boolean {
         return inputs.sendMotionEvent(event)
+    }
+
+    override fun onCleared() {
+        NesCheatSession.end(activeGameUri)
+        super.onCleared()
     }
 }

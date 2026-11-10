@@ -57,6 +57,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.achievements.GameMenuAchievementsScreen
+import com.swordfish.lemuroid.app.mobile.feature.gamemenu.cheats.GameMenuCheatsScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.states.GameMenuStatesScreen
@@ -188,7 +189,9 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     ?.let { GameMenuRoute.findByRoute(it) }
                     ?: GameMenuRoute.HOME
 
-            SideMenu(fullscreen = currentRoute == GameMenuRoute.ACHIEVEMENTS) {
+            SideMenu(
+                fullscreen = currentRoute == GameMenuRoute.ACHIEVEMENTS || currentRoute == GameMenuRoute.CHEATS,
+            ) {
                 TopAppBar(
                     title = {
                         Text(
@@ -289,6 +292,9 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     composable(GameMenuRoute.ACHIEVEMENTS) {
                         GameMenuAchievementsScreen(gameMenuRequest.game)
                     }
+                    composable(GameMenuRoute.CHEATS) {
+                        GameMenuCheatsScreen(gameMenuRequest.game)
+                    }
                     composable(GameMenuRoute.OPTIONS) {
                         GameMenuCoreOptionsScreen(
                             viewModel(
@@ -298,7 +304,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                         )
                     }
                 }
-                if (currentRoute == GameMenuRoute.ACHIEVEMENTS) {
+                if (currentRoute == GameMenuRoute.ACHIEVEMENTS || currentRoute == GameMenuRoute.CHEATS) {
                     Button(
                         onClick = { onResult { } },
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),

@@ -141,6 +141,13 @@ fun GameMenuHomeScreen(
         )
 
         GameMenuAction(
+            title = stringResource(R.string.opennes_cheats_title),
+            icon = R.drawable.ic_menu_cheats,
+            detail = stringResource(R.string.opennes_cheats_subtitle),
+            onClick = { navController.navigateToRoute(GameMenuRoute.CHEATS) },
+        )
+
+        GameMenuAction(
             title = stringResource(R.string.game_menu_edit_touch_controls),
             icon = R.drawable.ic_menu_controls,
             onClick = {
