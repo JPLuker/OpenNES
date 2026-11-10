@@ -96,77 +96,77 @@ internal fun NesControllerSetupSheet(
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-            Text(stringResource(R.string.opennes_setup_explanation))
-            Text(stringResource(R.string.opennes_setup_preview))
-            ControllerAppearancePreview(currentPalette)
+                Text(stringResource(R.string.opennes_setup_explanation))
+                Text(stringResource(R.string.opennes_setup_preview))
+                ControllerAppearancePreview(currentPalette)
 
-            // Each choice immediately updates the shared live controller preview.
-            // Show housing, D-pad and A/B swatches, not just an action-button dot.
-            NesControllerPresets.all.chunked(2).forEach { pair ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    pair.forEach { preset ->
-                        val selected = preset.id == currentPresetId
-                        OutlinedButton(
-                            onClick = { onChoosePreset(preset.id) },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                // Each choice immediately updates the shared live controller preview.
+                // Show housing, D-pad and A/B swatches, not just an action-button dot.
+                NesControllerPresets.all.chunked(2).forEach { pair ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        pair.forEach { preset ->
+                            val selected = preset.id == currentPresetId
+                            OutlinedButton(
+                                onClick = { onChoosePreset(preset.id) },
+                                modifier = Modifier.weight(1f),
                             ) {
-                                listOf(
-                                    preset.palette.panel,
-                                    preset.palette.dpad,
-                                    preset.palette.action,
-                                ).forEach { swatch ->
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .size(12.dp)
-                                                .background(swatch, CircleShape),
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    listOf(
+                                        preset.palette.panel,
+                                        preset.palette.dpad,
+                                        preset.palette.action,
+                                    ).forEach { swatch ->
+                                        Box(
+                                            modifier =
+                                                Modifier
+                                                    .size(12.dp)
+                                                    .background(swatch, CircleShape),
+                                        )
+                                    }
+                                    Text(
+                                        text = if (selected) "✓ " + preset.title else preset.title,
+                                        maxLines = 2,
                                     )
                                 }
-                                Text(
-                                    text = if (selected) "✓ " + preset.title else preset.title,
-                                    maxLines = 2,
-                                )
                             }
                         }
                     }
                 }
-            }
-            OutlinedButton(
-                onClick = { colorsExpanded = !colorsExpanded },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.opennes_setup_custom_colors))
-            }
-            if (colorsExpanded) {
-                Text(stringResource(R.string.opennes_setup_color_hint))
-                NesColorPart.values().forEach { part ->
-                    TextButton(
-                        onClick = { selectedColorPart = part },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Row(
+                OutlinedButton(
+                    onClick = { colorsExpanded = !colorsExpanded },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.opennes_setup_custom_colors))
+                }
+                if (colorsExpanded) {
+                    Text(stringResource(R.string.opennes_setup_color_hint))
+                    NesColorPart.values().forEach { part ->
+                        TextButton(
+                            onClick = { selectedColorPart = part },
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .size(22.dp)
-                                        .background(currentPalette.color(part), CircleShape),
-                            )
-                            Text(part.label)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(22.dp)
+                                            .background(currentPalette.color(part), CircleShape),
+                                )
+                                Text(part.label)
+                            }
                         }
                     }
                 }
-            }
             }
             HorizontalDivider()
             Button(onClick = onUseDefaults, modifier = Modifier.fillMaxWidth()) {
