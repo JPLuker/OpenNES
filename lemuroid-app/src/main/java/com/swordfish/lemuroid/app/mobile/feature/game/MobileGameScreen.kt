@@ -358,18 +358,14 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             // ENTIRE equal-width grips. Secondary buttons
                             // no longer shrink the D-pad and A/B dial.
                             NESLandscapeLeft(
-                                modifier =
-                                    Modifier
-                                        .layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD)
-                                        .onGloballyPositioned { leftPadBounds.value = it.boundsInRoot() },
+                                modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD),
                                 settings = touchControllerSettings,
+                                onPrimaryBounds = { leftPadBounds.value = it },
                             )
                             NESLandscapeRight(
-                                modifier =
-                                    Modifier
-                                        .layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD)
-                                        .onGloballyPositioned { rightPadBounds.value = it.boundsInRoot() },
+                                modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD),
                                 settings = touchControllerSettings,
+                                onPrimaryBounds = { rightPadBounds.value = it },
                             )
                         } else {
                             leftGamePad?.invoke(
