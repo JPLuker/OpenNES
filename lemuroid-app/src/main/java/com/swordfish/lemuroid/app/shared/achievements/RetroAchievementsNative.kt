@@ -12,11 +12,10 @@ internal object RetroAchievementsNative {
     external fun preflight(): Boolean
 
     /**
-     * Encode and parse public game-hash resolution through pinned rcheevos.
-     * This does not authenticate a player, start a native game session,
-     * or award achievements.
+     * Encode public game-hash resolution through pinned rcheevos.
+     * Returns [HTTPS URL, URL-encoded POST form data].
+     * This does not authenticate or award achievements.
      */
-    /** Returns official [HTTPS URL, URL-encoded POST form data]. */
     external fun prepareGameResolveRequest(md5: String): Array<String>?
 
     /** Official API response parsing; zero means no verified game match. */
