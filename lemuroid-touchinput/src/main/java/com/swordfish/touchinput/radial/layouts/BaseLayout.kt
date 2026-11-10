@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
+import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import gg.padkit.PadKitScope
 import gg.padkit.layouts.radial.LayoutRadial
@@ -22,6 +23,7 @@ fun BaseLayoutLeft(
     primaryDial: @Composable () -> Unit,
     secondaryDials: @Composable LayoutRadialSecondaryDialsScope.() -> Unit,
 ) {
+    val handheldFactor = if (LocalNesLandscapeHandheld.current) 0.72f else 1f
     val interpolatedDialSize =
         remember(settings.leftScale, settings.scale) {
             lerp(
@@ -49,7 +51,8 @@ fun BaseLayoutLeft(
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
         secondaryDials = secondaryDials,
-        primaryDialMaxSize = TouchControllerSettingsManager.BASE_DIAL_SIZE_DP.dp * interpolatedDialSize,
+        primaryDialMaxSize =
+            TouchControllerSettingsManager.BASE_DIAL_SIZE_DP.dp * interpolatedDialSize * handheldFactor,
         secondaryDialsBaseRotationInDegrees = settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
 }
@@ -62,6 +65,7 @@ fun BaseLayoutRight(
     primaryDial: @Composable () -> Unit,
     secondaryDials: @Composable LayoutRadialSecondaryDialsScope.() -> Unit,
 ) {
+    val handheldFactor = if (LocalNesLandscapeHandheld.current) 0.72f else 1f
     LayoutRadial(
         modifier =
             modifier
@@ -86,7 +90,7 @@ fun BaseLayoutRight(
                     TouchControllerSettingsManager.MIN_SCALE,
                     TouchControllerSettingsManager.MAX_SCALE,
                     (settings.rightScale ?: settings.scale).coerceIn(0f, 1f),
-                ),
+                ) * handheldFactor,
         secondaryDialsBaseRotationInDegrees = -settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
 }
