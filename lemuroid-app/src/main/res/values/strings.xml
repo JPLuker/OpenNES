@@ -532,4 +532,16 @@
     <string name="opennes_library_loading">Preparing your NES library…</string>
     <string name="opennes_library_loading_covers">Loading game covers</string>
     <string name="opennes_ra_settings_connected_hint">Web account saved. You can view your existing achievement history from a game’s pause menu. Live earning is not yet active.</string>
+    <string name="opennes_fix_match">Fix Match…</string>
+    <string name="opennes_fix_match_explanation">Search for the correct NES game. Select a verified result, review its description, then apply it. OpenNES will not change your ROM, saves, cover art, or favorite status.</string>
+    <string name="opennes_fix_match_title">Game title</string>
+    <string name="opennes_fix_match_year">Release year (optional filter)</string>
+    <string name="opennes_fix_match_search">Search for matches</string>
+    <string name="opennes_fix_match_working">Checking NES game metadata…</string>
+    <string name="opennes_fix_match_none">No verified NES games found. Try a shorter or alternate title.</string>
+    <string name="opennes_fix_match_results">Select the correct game</string>
+    <string name="opennes_fix_match_year_none">No result matches that year. Clear the year filter to see other candidates.</string>
+    <string name="opennes_fix_match_preview">Review: %1$s</string>
+    <string name="opennes_fix_match_confirm_notice">Applying replaces available genre, release year, and description with the selected record. Existing values are kept if the record has no replacement. This cannot change your game ROM, title, artwork, or save data.</string>
+    <string name="opennes_fix_match_apply">Use this match</string>
 </resources>
