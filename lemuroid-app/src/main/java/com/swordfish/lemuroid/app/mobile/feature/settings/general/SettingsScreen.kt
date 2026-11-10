@@ -81,6 +81,11 @@ private fun MiscSettings(
             )
         }
         OpenNesSettingsLink(
+            title = { Text(text = stringResource(R.string.opennes_ra_settings_title)) },
+            subtitle = { Text(text = stringResource(R.string.opennes_ra_settings_subtitle)) },
+            onClick = { navController.navigateToRoute(MainRoute.SETTINGS_RETROACHIEVEMENTS) },
+        )
+        OpenNesSettingsLink(
             title = { Text(text = stringResource(id = R.string.opennes_romm_title)) },
             subtitle = { Text(text = stringResource(id = R.string.opennes_romm_settings_description)) },
             onClick = { navController.navigateToRoute(MainRoute.SETTINGS_ROMM) },
