@@ -222,7 +222,13 @@ fun NesPillButtonForeground(
             modifier =
                 Modifier
                     .fillMaxWidth(if (expanded) 0.94f else 0.90f)
-                    .height(if (large) 38.dp else if (expanded) 26.dp else 22.dp),
+                    .height(
+                        when {
+                            large -> 38.dp
+                            expanded -> 26.dp
+                            else -> 22.dp
+                        },
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -243,7 +249,12 @@ fun NesPillButtonForeground(
                 text = label,
                 color = palette.label.copy(alpha = opacity),
                 fontWeight = FontWeight.Bold,
-                fontSize = if (large) 11.sp else if (expanded) 9.sp else 8.sp,
+                fontSize =
+                    when {
+                        large -> 11.sp
+                        expanded -> 9.sp
+                        else -> 8.sp
+                    },
                 letterSpacing = 0.25.sp,
                 maxLines = 1,
             )
