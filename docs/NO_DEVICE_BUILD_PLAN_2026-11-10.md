@@ -15,8 +15,8 @@
 | M3 — Portrait controller | NES visual shell, layout onboarding, independent theme and button geometry implemented | Device ergonomics, simultaneous touch, orientation persistence |
 | M4 — Landscape controller | Separate Overlay/Framed/Handheld, dedicated full-grip PadKit controls, centered video, shared editor travel geometry implemented | Real phone camera notch, editor touch bounds, persisted offsets and fallback layout |
 | M5 — Gameplay | Save/restore/lifecycle and gamepad event hardening implemented | Real audio, frame pacing, SRAM/save state, suspend/resume and reconnect tests |
-| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, separate encrypted native token store, generation-safe state coordinator, cancellable official-host HTTPS transport, read-only web progress and offline tests | Wire native rc_client HTTP callbacks and real game/award lifecycle; actual authenticated unlocks, rich presence and notifications |
-| M7 — RomM | HTTPS token storage, browse/import, integrity checks, manual export, versioned immutable backups, verified recovery staging, double-checked SHA-256 snapshots and conflict planner | None of the backup/sync foundations performs an upload or changes live saves; real server acceptance and an opt-in conflict UI are still required |
+| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, real official emulator `login2` sign-in with encrypted confirmed token, generation-safe session coordinator, cancellable HTTPS transport, read-only web progress and offline tests | Wire native rc_client HTTP callbacks, token-based game session, real unlocks, rich presence and notifications; verify real account login on device |
+| M7 — RomM | HTTPS token storage, browse/import, manual remote-save archiving and SAF export, persisted verified SHA-256 manifests, recovery staging, snapshots, conflict planner | Real RomM server validation and explicit opt-in upload/conflict UI remain; no sync or replacement of emulator saves is enabled |
 | M8 — Release | Development CI and partial signing/attribution groundwork | License/security audits, official signing, final device sign-off; M7 acceptance required |
 
 ## Build order while human testing is unavailable
@@ -57,6 +57,13 @@
 - Inventory unused legacy console/TV/Leanback assets, JNI/ABI dependencies and source-level licenses; remove unused code only after dependency tracing.
 - Review app permissions, private key storage, network redirect behavior, crash-report privacy, APK certificate migration, and reproducibility.
 - Preserve the single `master` debug APK process; do not create new APK branches or manual publishing channels.
+
+## Newly added acceptance scenarios
+
+- **M6:** From Settings, sign in with valid and invalid RetroAchievements credentials; verify that a password is never remembered in the text field after submission, the confirmed account is displayed, a restart retains the encrypted token, and signing out disconnects locally. Confirm that no achievement earning is claimed before native `rc_client` activation.
+- **M7:** Browse remote saves, select **Keep offline**, disconnect from RomM, reopen Settings and export the verified local archive through Android's document picker. Corrupt or missing manifests must fail closed; repeated archival must produce separate versions without modifying emulator save files.
+- **M6 runtime (still not built):** Test verified in-game authentication, NES hash recognition, real-memory frame evaluation and actual award server confirmation after native `rc_client` wiring exists.
+- **M7 sync (still not built):** Test account/server identity, opt-in, conflict resolution, offline retries, backup restoration and remote write permissions after full server integration exists.
 
 ## Tests awaiting the next phone session
 
