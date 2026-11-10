@@ -121,7 +121,7 @@ fun RetroAchievementsSettingsScreen(modifier: Modifier = Modifier) {
                                         }
                                     nativeVerified =
                                         result is RetroAchievementsNativeTokenVerifier.Result.Verified &&
-                                            result.username.equals(saved?.username, ignoreCase = true)
+                                        result.username.equals(saved?.username, ignoreCase = true)
                                     status =
                                         if (nativeVerified) {
                                             context.getString(
@@ -233,7 +233,8 @@ fun RetroAchievementsSettingsScreen(modifier: Modifier = Modifier) {
                                         signedInAs =
                                             when (result) {
                                                 is RetroAchievementsLoginFlow.Result.Verified -> result.username
-                                                is RetroAchievementsLoginFlow.Result.SavedButUnverified -> result.username
+                                                is RetroAchievementsLoginFlow.Result.SavedButUnverified ->
+                                                    result.username
                                             }
                                         nativeVerified = result is RetroAchievementsLoginFlow.Result.Verified
                                         username = ""
