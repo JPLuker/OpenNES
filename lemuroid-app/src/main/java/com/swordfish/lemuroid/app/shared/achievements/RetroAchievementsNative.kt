@@ -52,6 +52,41 @@ internal object RetroAchievementsNative {
     external fun stopTokenValidation(session: Long)
 
     /**
+     * Separate game-owned rc_client. This starts real token login and game
+     * activation, and evaluates NES memory on actual emulated frames.
+     * Only a session matching the current core generation may process frames.
+     */
+    external fun startGameSession(
+        username: String,
+        token: String,
+        romMd5: String,
+    ): Long
+
+    /** One pending native request: [request ID, official URL, POST data]. */
+    external fun takeGameRequest(session: Long): Array<String>?
+
+    external fun completeGameRequest(
+        session: Long,
+        requestId: Long,
+        status: Int,
+        body: ByteArray,
+    ): Boolean
+
+    /** -2=closed, -1=error, 0=sign-in, 1=game loading, 2=live. */
+    external fun gameSessionStatus(session: Long): Int
+
+    /** Positive official game ID only after rc_client completes game load. */
+    external fun loadedGameId(session: Long): Int
+
+    /** Tab-separated, bounded rows from official rc_client achievements. */
+    external fun gameAchievementRows(session: Long): Array<String>?
+
+    /** A genuine native event, never a client-side simulated unlock. */
+    external fun takeGameEvent(session: Long): String?
+
+    external fun stopGameSession(session: Long)
+
+    /**
      * Native diagnostic only. No account, ROM identification, network, awards
      * or leaderboard submission occurs while this probe is active.
      * Must be stopped before any future authenticated native session starts.
