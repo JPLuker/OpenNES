@@ -74,6 +74,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     // The audio switch stays in the pause menu. Its selection is returned
     // when the player resumes, quits or closes the menu by system Back.
     private var pendingAudioEnabled: Boolean? = null
+    private var pendingFastForwardEnabled: Boolean? = null
 
     @Inject
     lateinit var inputDeviceManager: InputDeviceManager
@@ -101,12 +102,13 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState?.containsKey(PENDING_AUDIO_KEY) == true) {
-            val restoredAudio = savedInstanceState.getBoolean(PENDING_AUDIO_KEY)
-            pendingAudioEnabled = restoredAudio
-            setResult(
-                RESULT_OK,
-                Intent().putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, restoredAudio),
-            )
+            pendingAudioEnabled = savedInstanceState.getBoolean(PENDING_AUDIO_KEY)
+        }
+        if (savedInstanceState?.containsKey(PENDING_SPEED_KEY) == true) {
+            pendingFastForwardEnabled = savedInstanceState.getBoolean(PENDING_SPEED_KEY)
+        }
+        if (pendingAudioEnabled != null || pendingFastForwardEnabled != null) {
+            setResult(RESULT_OK, Intent().apply { putPendingSwitches() })
         }
 
         enableEdgeToEdge(
@@ -158,6 +160,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         pendingAudioEnabled?.let { outState.putBoolean(PENDING_AUDIO_KEY, it) }
+        pendingFastForwardEnabled?.let { outState.putBoolean(PENDING_SPEED_KEY, it) }
         super.onSaveInstanceState(outState)
     }
 
@@ -167,6 +170,9 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         AppTheme {
             var audioEnabled by rememberSaveable {
                 mutableStateOf(pendingAudioEnabled ?: gameMenuRequest.audioEnabled)
+            }
+            var fastForwardEnabled by rememberSaveable {
+                mutableStateOf(pendingFastForwardEnabled ?: gameMenuRequest.fastForwardEnabled)
             }
             val navController = rememberNavController()
             val navBackStackEntry = navController.currentBackStackEntryAsState()
@@ -228,10 +234,13 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                             onAudioChanged = { enabled ->
                                 audioEnabled = enabled
                                 pendingAudioEnabled = enabled
-                                setResult(
-                                    RESULT_OK,
-                                    Intent().putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, enabled),
-                                )
+                                setResult(RESULT_OK, Intent().apply { putPendingSwitches() })
+                            },
+                            fastForwardEnabled = fastForwardEnabled,
+                            onFastForwardChanged = { enabled ->
+                                fastForwardEnabled = enabled
+                                pendingFastForwardEnabled = enabled
+                                setResult(RESULT_OK, Intent().apply { putPendingSwitches() })
                             },
                             onResult = ::onResult,
                         )
@@ -331,15 +340,19 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     private fun onResult(block: Intent.() -> Unit) {
         val resultIntent = Intent()
         resultIntent.block()
-        pendingAudioEnabled?.let { enabled ->
-            resultIntent.putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, enabled)
-        }
+        resultIntent.putPendingSwitches()
         setResult(RESULT_OK, resultIntent)
         finish()
     }
 
+    private fun Intent.putPendingSwitches() {
+        pendingAudioEnabled?.let { putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, it) }
+        pendingFastForwardEnabled?.let { putExtra(GameMenuContract.RESULT_ENABLE_FAST_FORWARD, it) }
+    }
+
     companion object {
         private const val PENDING_AUDIO_KEY = "opennes_menu_pending_audio_enabled"
+        private const val PENDING_SPEED_KEY = "opennes_menu_pending_fast_forward_enabled"
     }
 
     @dagger.Module

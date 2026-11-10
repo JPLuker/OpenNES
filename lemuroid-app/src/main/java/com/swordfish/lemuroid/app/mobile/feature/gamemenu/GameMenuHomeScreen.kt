@@ -59,6 +59,8 @@ fun GameMenuHomeScreen(
     gameMenuRequest: GameMenuActivity.GameMenuRequest,
     audioEnabled: Boolean,
     onAudioChanged: (Boolean) -> Unit,
+    fastForwardEnabled: Boolean,
+    onFastForwardChanged: (Boolean) -> Unit,
     onResult: KFunction1<Intent.() -> Unit, Unit>,
 ) {
     var confirmation by remember { mutableStateOf<Confirmation?>(null) }
@@ -161,25 +163,10 @@ fun GameMenuHomeScreen(
         )
 
         if (gameMenuRequest.fastForwardSupported) {
-            GameMenuAction(
+            GameMenuSwitchAction(
                 title = stringResource(R.string.game_menu_fast_forward),
-                detail =
-                    stringResource(
-                        if (gameMenuRequest.fastForwardEnabled) {
-                            R.string.opennes_pause_fast_on
-                        } else {
-                            R.string.opennes_pause_fast_off
-                        },
-                    ),
-                icon = R.drawable.ic_menu_fast_forward,
-                onClick = {
-                    onResult {
-                        putExtra(
-                            GameMenuContract.RESULT_ENABLE_FAST_FORWARD,
-                            !gameMenuRequest.fastForwardEnabled,
-                        )
-                    }
-                },
+                checked = fastForwardEnabled,
+                onCheckedChange = onFastForwardChanged,
             )
         }
 

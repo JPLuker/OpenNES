@@ -74,7 +74,7 @@ internal fun NesControllerSetupSheet(
     onCustomizeLayout: () -> Unit,
     onUseDefaults: () -> Unit,
 ) {
-    val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.65f).dp
+    val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.78f).dp
     var colorsExpanded by remember { mutableStateOf(false) }
     var selectedColorPart by remember { mutableStateOf<NesColorPart?>(null) }
     ModalBottomSheet(onDismissRequest = onUseDefaults) {
@@ -83,11 +83,19 @@ internal fun NesControllerSetupSheet(
                 Modifier
                     .fillMaxWidth()
                     .heightIn(max = maxHeight)
-                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            Text(stringResource(R.string.opennes_setup_step), color = androidx.compose.ui.graphics.Color.Gray)
             Text(stringResource(R.string.opennes_setup_title))
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
             Text(stringResource(R.string.opennes_setup_explanation))
             Text(stringResource(R.string.opennes_setup_preview))
             ControllerAppearancePreview(currentPalette)
@@ -159,13 +167,19 @@ internal fun NesControllerSetupSheet(
                     }
                 }
             }
+            }
             HorizontalDivider()
-            Button(onClick = onCustomizeLayout, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onUseDefaults, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.opennes_setup_confirm))
+            }
+            OutlinedButton(onClick = onCustomizeLayout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.opennes_setup_customize))
             }
-            TextButton(onClick = onUseDefaults, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.opennes_setup_use_defaults))
-            }
+            Text(
+                text = stringResource(R.string.opennes_setup_change_later),
+                modifier = Modifier.fillMaxWidth(),
+                color = androidx.compose.ui.graphics.Color.Gray,
+            )
         }
     }
     selectedColorPart?.let { part ->
