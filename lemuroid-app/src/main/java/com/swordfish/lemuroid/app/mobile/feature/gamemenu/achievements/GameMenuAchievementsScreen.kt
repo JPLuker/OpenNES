@@ -191,84 +191,84 @@ fun GameMenuAchievementsScreen(
         if (advancedExpanded) {
             NativeBridgeDiagnostics()
 
-        Text(
-            text = stringResource(R.string.opennes_ra_rom_identification),
-            color = GameMenuStyle.foreground,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Surface(
-            color = GameMenuStyle.surface,
-            shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(1.dp, GameMenuStyle.border),
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+            Text(
+                text = stringResource(R.string.opennes_ra_rom_identification),
+                color = GameMenuStyle.foreground,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Surface(
+                color = GameMenuStyle.surface,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, GameMenuStyle.border),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Fingerprint,
-                        contentDescription = null,
-                        tint = GameMenuStyle.muted,
-                    )
-                    when (val state = identification) {
-                        LocalIdentification.Checking -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.width(18.dp),
-                                strokeWidth = 2.dp,
-                                color = GameMenuStyle.red,
-                            )
-                            Text(
-                                text = stringResource(R.string.opennes_ra_identifying),
-                                color = GameMenuStyle.muted,
-                            )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Fingerprint,
+                            contentDescription = null,
+                            tint = GameMenuStyle.muted,
+                        )
+                        when (val state = identification) {
+                            LocalIdentification.Checking -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.width(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = GameMenuStyle.red,
+                                )
+                                Text(
+                                    text = stringResource(R.string.opennes_ra_identifying),
+                                    color = GameMenuStyle.muted,
+                                )
+                            }
+                            LocalIdentification.Unavailable -> {
+                                Text(
+                                    text = stringResource(R.string.opennes_ra_identity_unavailable),
+                                    color = GameMenuStyle.muted,
+                                )
+                            }
+                            is LocalIdentification.Identified -> {
+                                Text(
+                                    text =
+                                        stringResource(
+                                            R.string.opennes_ra_identified,
+                                            state.identity.console.name,
+                                        ),
+                                    color = GameMenuStyle.foreground,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
                         }
-                        LocalIdentification.Unavailable -> {
+                    }
+                    val state = identification
+                    if (state is LocalIdentification.Identified) {
+                        Text(
+                            text = stringResource(R.string.opennes_ra_md5_label),
+                            color = GameMenuStyle.muted,
+                            fontSize = 12.sp,
+                        )
+                        SelectionContainer {
                             Text(
-                                text = stringResource(R.string.opennes_ra_identity_unavailable),
-                                color = GameMenuStyle.muted,
-                            )
-                        }
-                        is LocalIdentification.Identified -> {
-                            Text(
-                                text =
-                                    stringResource(
-                                        R.string.opennes_ra_identified,
-                                        state.identity.console.name,
-                                    ),
+                                text = state.identity.md5,
                                 color = GameMenuStyle.foreground,
-                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.sp,
                             )
                         }
                     }
-                }
-                val state = identification
-                if (state is LocalIdentification.Identified) {
                     Text(
-                        text = stringResource(R.string.opennes_ra_md5_label),
+                        text = stringResource(R.string.opennes_ra_local_hash_notice),
                         color = GameMenuStyle.muted,
                         fontSize = 12.sp,
                     )
-                    SelectionContainer {
-                        Text(
-                            text = state.identity.md5,
-                            color = GameMenuStyle.foreground,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                        )
-                    }
                 }
-                Text(
-                    text = stringResource(R.string.opennes_ra_local_hash_notice),
-                    color = GameMenuStyle.muted,
-                    fontSize = 12.sp,
-                )
             }
-        }
         }
     }
 }

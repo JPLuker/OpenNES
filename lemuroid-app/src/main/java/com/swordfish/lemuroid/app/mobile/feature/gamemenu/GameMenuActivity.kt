@@ -15,13 +15,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -333,7 +333,12 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                         .fillMaxHeight()
                         .width(panelWidth),
                 color = GameMenuStyle.background,
-                shape = if (fullscreen) RoundedCornerShape(0.dp) else RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp),
+                shape =
+                    if (fullscreen) {
+                        RoundedCornerShape(0.dp)
+                    } else {
+                        RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp)
+                    },
                 border = BorderStroke(1.dp, GameMenuStyle.border),
             ) {
                 // Keep the side panel's background edge-to-edge while its
