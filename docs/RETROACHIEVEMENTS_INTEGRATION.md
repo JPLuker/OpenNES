@@ -46,6 +46,7 @@
 
 - OpenNES pins official [rcheevos v12.5.0](https://github.com/RetroAchievements/rcheevos/releases/tag/v12.5.0) at commit `1433173220a7eaede6a9ed7a18e94117be1821e0` as a source submodule. The upstream `vendor/rcheevos/LICENSE` MIT notice is retained.
 - The native preparation script links the official C client, API parser, hash support and `rc_libretro` memory mapper into the **same source-built** LibretroDroid library. A dormant JNI `preflight` creates and destroys an unattached `rc_client` (no login or network).
+- The native **frame probe** uses `setEmulatedFrameObserver` to call `rc_client_do_frame` exactly once after each `retro_run` execution (including frames skipped by video and speed multiplier). It exposes start/stop and an observed-frame counter to internal Java diagnostics. `stopFrameProbe()` acquires the same `coreLock` as frame execution before destroying the client, preventing use-after-free. It does not run automatically or earn achievements; activating an actual authenticated game remains a separate milestone.
 - CI verifies explicit JNI exports for core memory snapshots, emulated frame count and rcheevos preflight in every packaged ABI.
 - **Not yet implemented:** real emulator user login/token, rc_client memory mapping callbacks, HTTPS server transport, native game activation, unlock events, hardcore restrictions and live overlays. Linking the library is not proof of accurate achievements.
 

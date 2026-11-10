@@ -10,4 +10,15 @@ internal object RetroAchievementsNative {
     }
 
     external fun preflight(): Boolean
+
+    /**
+     * Native diagnostic only. No account, ROM identification, network, awards
+     * or leaderboard submission occurs while this probe is active.
+     * Must be stopped before any future authenticated native session starts.
+     */
+    external fun startFrameProbe(): Boolean
+
+    external fun stopFrameProbe()
+
+    external fun observedProbeFrames(): Long
 }

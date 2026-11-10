@@ -86,6 +86,7 @@ target_sources(libretrodroid PRIVATE
 target_include_directories(libretrodroid PRIVATE
     "${OPENNES_RA_ROOT}/include"
     "${OPENNES_RA_ROOT}/src"
+    "${CMAKE_CURRENT_LIST_DIR}"
 )
 target_link_libraries(libretrodroid z)
 
