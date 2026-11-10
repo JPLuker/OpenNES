@@ -1,8 +1,8 @@
 # OpenNES — Development progress
 
-Updated: 2026-11-09
+Updated: 2026-11-10
 
-This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. [Commit `5dd2fac`](https://github.com/JPLuker/OpenNES/commit/5dd2fac586863858b6b1d1f71fa44a387bf10007) passed Kotlin lint, NES-only APK build/inspection and publication in [CI run 42703489576](https://github.com/JPLuker/OpenNES/actions/runs/42703489576). The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) remains unaccepted; M6–M8 are not complete.
+This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The latest completed successful APK before the November 10 keyboard fix was [commit `43a5cad9`](https://github.com/JPLuker/OpenNES/commit/43a5cad9c717013270bfaa83acd3591b91de4d51), [CI run 42824814453](https://github.com/JPLuker/OpenNES/actions/runs/42824814453). The latest keyboard/dialog and NES hash regression batch requires its **own** CI verdict and phone acceptance; an earlier successful build does not validate it. The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) is not accepted and M6–M8 remain incomplete. See the [no-device work plan](NO_DEVICE_BUILD_PLAN_2026-11-10.md).
 
 ## Milestones
 
@@ -19,6 +19,15 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M6 — RetroAchievements** | **ACTIVE — native diagnostics DEVICE-SAMPLED**: real phone observed 234 emulated frames, 65,536 mapped bytes and 234 successful NES zero-page reads; website history retrieved matching RoboCop set. Dormant native `rc_client` bridge is source-built; full login and new awards are NOT implemented | Test save/restart/fast-forward stress and complete native account/achievement lifecycle; do not equate diagnostic counters with authenticated award readiness |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
+
+## November 10 M2/M4 fixes and M6 regression work — pending exact-candidate CI
+
+- **Fix Match IME regression:** user's phone showed the keyboard covering the search field in the original game-details bottom sheet. Fix Match was moved to an independent, scrollable, keyboard-aware dialog; focused title/year fields request visibility, and Search/Done IME actions are wired. Source implemented, **physical accessibility not yet verified**.
+- **Fix Match stale searches:** text remains editable while a lookup runs; changing text invalidates pending results so late responses cannot replace a newer query.
+- **Fix Match recall:** verified online NES candidates can be queried by a shorter title when a parenthetical publisher or bracketed region qualifier produces no exact candidate. Added pure-JVM tests for common qualifiers. This is a controlled *search fallback*, not a claim that a game was matched correctly.
+- **Landscape editor:** side controls now use measured per-grip movement limits in both renderer/editor; Start/Select/Menu follow their group while remaining clamped inside the grip. Source built in previous CI, but notch and touch-zone acceptance are still pending.
+- **M6 NES ROM fingerprint tests:** new offline JUnit coverage exercises iNES/FDS header exclusions, headerless content, ZIP equivalence, multi-ROM ambiguity, empty and unsupported inputs. These tests do not implement native `rc_client` login or earn achievements.
+- **Status discipline:** No physical-device acceptance is possible during this development interval. New feature claims remain **source-only** until the exact newest CI run is green and, separately, the hardware scenarios pass.
 
 ## Latest controller visual overhaul — following M5 hardware feedback
 
