@@ -88,10 +88,10 @@ internal fun RetroAchievementsWebSection(
         Text(
             text =
                 stringResource(
-                    if (configured) {
-                        R.string.opennes_ra_web_connected_hint
-                    } else {
-                        R.string.opennes_ra_web_explanation
+                    when {
+                        configured && accountOnly -> R.string.opennes_ra_settings_connected_hint
+                        configured -> R.string.opennes_ra_web_connected_hint
+                        else -> R.string.opennes_ra_web_explanation
                     },
                 ),
             color = GameMenuStyle.muted,
