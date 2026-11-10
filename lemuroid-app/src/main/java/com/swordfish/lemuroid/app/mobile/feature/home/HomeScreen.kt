@@ -20,12 +20,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -1025,17 +1027,34 @@ private fun FixMatchSection(
     var applying by remember(game.id) { mutableStateOf(false) }
     var status by remember(game.id) { mutableStateOf<Int?>(null) }
     var searchVersion by remember(game.id) { mutableStateOf(0) }
+    var resolveVersion by remember(game.id) { mutableStateOf(0) }
+    var focusedField by remember(game.id) { mutableStateOf(0) }
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
     val titleBringIntoView = remember { BringIntoViewRequester() }
     val yearBringIntoView = remember { BringIntoViewRequester() }
 
+    // On some Android keyboards the focus event fires before the IME has
+    // resized the dialog. Scroll again when the keyboard becomes visible.
+    LaunchedEffect(imeVisible, focusedField) {
+        if (imeVisible) {
+            delay(80)
+            when (focusedField) {
+                1 -> titleBringIntoView.bringIntoView()
+                2 -> yearBringIntoView.bringIntoView()
+            }
+        }
+    }
+
     val startSearch: () -> Unit = {
         if (!searching && titleQuery.trim().length in 3..120) {
             searchVersion++
             val currentVersion = searchVersion
             searching = true
+            resolveVersion++
+            resolving = false
             selected = null
             preview = null
             candidates = emptyList()
@@ -1087,7 +1106,9 @@ private fun FixMatchSection(
                     // Ignore an earlier request after the user changes the
                     // query. Never let a slow response replace newer intent.
                     searchVersion++
+                    resolveVersion++
                     searching = false
+                    resolving = false
                     selected = null
                     preview = null
                     candidates = emptyList()
@@ -1111,16 +1132,31 @@ private fun FixMatchSection(
                         .bringIntoViewRequester(titleBringIntoView)
                         .onFocusChanged {
                             if (it.isFocused) {
+                                focusedField = 1
                                 scope.launch {
                                     delay(140)
                                     titleBringIntoView.bringIntoView()
                                 }
+                            } else if (focusedField == 1) {
+                                focusedField = 0
                             }
                         },
             )
             OutlinedTextField(
                 value = yearQuery,
-                onValueChange = { yearQuery = it.filter(Char::isDigit).take(4) },
+                onValueChange = { input ->
+                    val next = input.filter(Char::isDigit).take(4)
+                    if (next != yearQuery) {
+                        yearQuery = next
+                        // A previous preview is no longer necessarily in the
+                        // filtered results. Never apply a hidden old match.
+                        resolveVersion++
+                        selected = null
+                        preview = null
+                        resolving = false
+                        status = null
+                    }
+                },
                 label = { Text(stringResource(R.string.opennes_fix_match_year)) },
                 singleLine = true,
                 enabled = !resolving && !applying,
@@ -1142,10 +1178,13 @@ private fun FixMatchSection(
                         .bringIntoViewRequester(yearBringIntoView)
                         .onFocusChanged {
                             if (it.isFocused) {
+                                focusedField = 2
                                 scope.launch {
                                     delay(140)
                                     yearBringIntoView.bringIntoView()
                                 }
+                            } else if (focusedField == 2) {
+                                focusedField = 0
                             }
                         },
             )
@@ -1196,12 +1235,16 @@ private fun FixMatchSection(
                 filtered.forEach { candidate ->
                     OutlinedButton(
                         onClick = {
+                            resolveVersion++
+                            val currentResolveVersion = resolveVersion
                             selected = candidate
                             preview = null
                             resolving = true
                             status = null
                             onResolve(candidate.entityId) { resolved ->
-                                if (selected?.entityId == candidate.entityId) {
+                                if (resolveVersion == currentResolveVersion &&
+                                    selected?.entityId == candidate.entityId
+                                ) {
                                     resolving = false
                                     when (resolved) {
                                         is WikidataNesMetadataSource.Result.Match -> preview = resolved
@@ -1701,7 +1744,10 @@ fun GameCover(
     game: Game,
     modifier: Modifier = Modifier,
 ) {
-    val fallbackDrawable = remember(game.id, game.systemId) { CoverUtils.getFallbackDrawable(game) }
+    val fallbackDrawable =
+        remember(game.id, game.systemId, game.displayName()) {
+            CoverUtils.getFallbackDrawable(game)
+        }
     val fallbackPainter = rememberDrawablePainter(drawable = fallbackDrawable)
     val primaryArtwork = game.displayCoverUrl()
 

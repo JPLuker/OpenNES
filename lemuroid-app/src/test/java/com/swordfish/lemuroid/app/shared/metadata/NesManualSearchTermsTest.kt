@@ -16,6 +16,18 @@ class NesManualSearchTermsTest {
     }
 
     @Test
+    fun searchesMultipleTrailingQualifiersWithoutReorderingThem() {
+        assertEquals(
+            listOf("RoboCop (Data East) (USA)", "RoboCop (Data East)", "RoboCop"),
+            NesManualSearchTerms.fallbacks("RoboCop (Data East) (USA) [Rev 1]"),
+        )
+        assertEquals(
+            listOf("The Legend of Zelda (USA)", "The Legend of Zelda"),
+            NesManualSearchTerms.fallbacks("The Legend of Zelda (USA) [Rev A]"),
+        )
+    }
+
+    @Test
     fun preservesPlainTitlesAndShortUnknowns() {
         assertNull(NesManualSearchTerms.fallback("RoboCop"))
         assertNull(NesManualSearchTerms.fallback("X (J)"))

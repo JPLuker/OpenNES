@@ -67,12 +67,12 @@ class WikidataNesMetadataSource {
             val term = NesGameTitle.clean(query)
             if (term.length !in 3..120) return@withContext CandidateResults.NoMatch
             runCatching {
-                val first = findManualCandidates(term)
-                if (first is CandidateResults.NoMatch) {
-                    NesManualSearchTerms.fallback(term)?.let(::findManualCandidates) ?: first
-                } else {
-                    first
+                var result = findManualCandidates(term)
+                for (fallback in NesManualSearchTerms.fallbacks(term)) {
+                    if (result !is CandidateResults.NoMatch) break
+                    result = findManualCandidates(fallback)
                 }
+                result
             }.onFailure {
                 Timber.w(it, "Manual NES metadata candidate search unavailable")
             }.getOrElse { CandidateResults.Unavailable }
