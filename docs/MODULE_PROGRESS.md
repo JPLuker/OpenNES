@@ -2,7 +2,7 @@
 
 Updated: 2026-11-10
 
-This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The most recent verified source baseline is [commit `d05ffbf1`](https://github.com/JPLuker/OpenNES/commit/d05ffbf1d24fdf039ef03fa0eb0788ebbc144f62), [CI run 42902652152](https://github.com/JPLuker/OpenNES/actions/runs/42902652152). A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
+This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The most recent verified source baseline for the archive-management batch is [CI run 42911500306](https://github.com/JPLuker/OpenNES/actions/runs/42911500306). Subsequent server-bound intent staging is source committed but still awaiting a full CI verdict. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
 
 ## Milestones
 
@@ -19,8 +19,15 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M5-C — NES cheats** | **CI VERIFIED, HARDWARE TESTING OPEN**: per-ROM Game Genie and hex editor, session-only native toggles, bounded JSON import/export through SAF; new imports disabled | Test real cheat activation/removal, per-ROM reset, editor and import/export on phone; atomic native replacement is CI verified |
 | **M6-H — Hardcore mode** | **FOUNDATION CI VERIFIED, USER MODE UNAVAILABLE**: fail-closed mode policy, clean-reset eligibility tests, save-load/cheat/Game Genie restrictions and suspend downgrade are wired; native client explicitly Casual | Finish native session switching, in-game overlays, offline queue, all bypass audits, device validation and official recognition before enabling Hardcore |
 | **M6 — RetroAchievements** | **CI VERIFIED, DEVICE ACCEPTANCE OPEN**: authenticated native client, ROM/game identity, native achievements, unlock events, Rich Presence and leaderboard listings, connectivity and RAM validation; FDS awards disabled | Genuine new award/server persistence, leaderboard/overlay behavior and official recognition must be device-tested |
-| **M7 — RomM integration** | **ACTIVE**: read-only HTTPS browse/import, encrypted token, manual versioned save backups, verified SHA-256 snapshots, conflict planner and non-executing persistent sync-intent journal | Real server/permissions verification, actual upload/download executor, explicit conflict UI and two-way synchronization remain blocked pending acceptance |
+| **M7 — RomM integration** | **ACTIVE**: read-only HTTPS browse/import, protected token, verified save archives with delete/compare, server-bound offline request preparation and non-executing journal review/discard | Latest source still needs CI; real-server verification, remote writes, actual sync executor, conflict-resolution UI and safe live-save restoration remain unavailable |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
+
+## November 10 — offline RomM archive and server-bound sync preparation
+
+- **Verified archive management:** [CI 42911500306](https://github.com/JPLuker/OpenNES/actions/runs/42911500306) passed all lint, JVM, native Android and APK release gates. Local archive deletion verifies current SHA-256 manifest/canonical path and never deletes emulator saves. Read-only comparisons reopen a user-selected document twice and refuse changed, missing or oversized streams.
+- **Sync staging added after that baseline:** New offline save archives record a SHA-256 fingerprint of their normalized RomM HTTPS server URL. Older backups remain usable for export/deletion/comparison, but cannot be queued against an unverified server origin. The pending journal has a version-2 source binding, refuses legacy/unbound or corrupted journals, and rejects a different server on replay evaluation.
+- **User workflow:** A player may select a local save document, choose intended upload/download direction and persist an intent for a matching server-bound offline archive. The journal stores only fingerprints, ROM ID, direction and timestamp. It does **not** store save bytes, local document access, token or permission to execute. Duplicate or corrupt requests fail closed; users may inspect/discard requests in Settings → RomM.
+- **Remaining gates:** Final CI for the new source; on-phone UI acceptance; actual account/ROM verification, documented server API write contracts, immutable upload snapshots, conflict adjudication, backups and transactional restore. No remote save writes or local-save replacements are enabled.
 
 ## November 10 — Hardcore safety gates and atomic FCEUmm cheat replacement
 

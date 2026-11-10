@@ -1,6 +1,6 @@
 # OpenNES — RomM integration
 
-**Status (2026-11-09): M8 source work in progress.** A read-only HTTPS API client and Android Keystore-backed token store exist. No remote RomM instance or network behavior was tested.
+**Status (2026-11-10): M7 integration in progress.** A read-only HTTPS API client, Android Keystore-backed token store, manually verified offline backups, archive management and non-executing, server-bound intent staging exist in source. The archive-management APK passed CI 42911500306; the newer intent-staging source awaits its own CI. No real RomM server, Android UI acceptance or remote write behavior has been verified.
 
 ## Connection & security
 
@@ -30,14 +30,14 @@
 - Verify Android document-tree permissions, duplicate handling, interruption/cancellation, server failures, token revocation and offline behavior.
 - [x] Manual per-save backup export is available without modifying local progress.
 - Optional two-way remote save sync still requires explicit direction/conflict UI, versioning and a design that never overwrites existing saves by default.
-- Builds, CI validation and real-device testing remain paused.
+- [x] Source builds and automated tests are active; real-device and RomM server acceptance remain outstanding.
 
 ## November 10 no-device synchronization safety groundwork
 
 - Added `RommSaveSyncPlanner`: a **non-mutating** sync decision engine, deliberately **not wired to uploads or downloads**. It starts disabled, requires a confirmed RomM ROM ID, immutable local and remote SHA-256 save snapshots, a remembered pair of previous snapshots, a current online recheck, explicit upload/download direction, approval for that exact operation and an already verified versioned backup.
 - A save changed on both devices is a conflict even if one file has a later timestamp. Missing baselines require explicit initial pairing. Offline changes must be revalidated against the remote state on reconnect rather than blindly replayed. The planner returns expected hashes for a future executor to recheck before modifying a file.
 - JVM tests exercise opt-in, offline behavior, unverified identity, first pairing, diverged saves, required backups, explicit direction and no-op equality.
-- **Still absent:** encrypted persistent sync queue, remote create/update endpoint, immutable upload snapshot storage, transactional local replacement, conflict resolution UI and server/device validation. No code enables RomM remote writes or overwrites live saves. Build each layer separately, then require real-server testing before release signoff.
+- **Still absent:** an executable sync queue, remote create/update endpoint, immutable upload snapshot storage, transactional local replacement, full conflict resolution UI and server/device validation. No code enables RomM remote writes or overwrites live saves. Build each layer separately, then require real-server testing before release signoff.
 
 ### Versioned local backup writer (source implemented, not connected to sync)
 
@@ -50,3 +50,13 @@
 A future executor must obtain fresh local and remote snapshots, verify RomM account/server and ROM identity, re-run `RommSaveSyncPlanner`, create and verify required versioned backups, and secure explicit approval for that exact operation. Any changed snapshot rejects the old intent for user review. Until real-server validation and an explicit executor exist, this journal **cannot upload, download into live saves, or replay offline writes**.
 
 CI: https://github.com/JPLuker/OpenNES/actions/runs/42890671021
+
+### November 10 — Offline archive manager and server-bound pending request preparation
+
+The settings screen now supports deliberate deletion of individually verified offline backups (with confirmation), read-only SHA-256 comparison against a user-selected save document, and review/discard of pending requests. Android's document picker is used only for the immediate comparison or snapshot. The selected URI and its permission are **not** saved.
+
+Newly archived RomM saves record a non-secret SHA-256 fingerprint of the normalized HTTPS server origin in their checksum manifest. Existing legacy archives remain available for export and compare, but lack sufficient verified source provenance to prepare a transfer request. The pending request journal is upgraded to format v2 with the same fingerprint, and it refuses corrupt or legacy unbound v1 journals. Requests from another server cannot pass planner revalidation solely because their RomM game IDs happen to match.
+
+When a verified server-bound offline archive is present, the user can prepare a **non-executing** upload/download intent by explicitly choosing a direction and a local save document. The app hashes the selected document twice, revalidates the archive's manifest and content, and persists only local/remote fingerprints, ROM ID, server fingerprint, direction, and timestamp. No network write is scheduled; no local save is copied for upload, no URI is remembered, and no previously granted approval can be replayed. Future execution must reselect/reverify sources, confirm the current RomM account and ROM mapping, obtain a new approval, and create verified versioned backups before doing anything destructive.
+
+Baseline: https://github.com/JPLuker/OpenNES/actions/runs/42911500306 (archive management). The later server-bound request workflow requires a separate green CI build and actual phone/server tests before claiming acceptance.
