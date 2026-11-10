@@ -9,8 +9,12 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 
 class RommDeviceSyncProtocolTest {
-    private fun response(rows: String, counts: String): String =
-        """{"session_id":42,"operations":[$rows],$counts}"""
+    private fun response(
+        rows: String,
+        counts: String,
+    ): String {
+        return """{"session_id":42,"operations":[$rows],$counts}"""
+    }
 
     private val emptyCounts =
         """"total_upload":0,"total_download":0,"total_conflict":0,"total_delete":0,"total_no_op":0"""
@@ -55,7 +59,8 @@ class RommDeviceSyncProtocolTest {
             RommDeviceSyncProtocol.ParseResult.Rejected(RommDeviceSyncProtocol.Rejection.UNSUPPORTED_SCHEMA),
             RommDeviceSyncProtocol.parseNegotiation(legacy, setOf(1)),
         )
-        val unknown = response(
+        val unknown =
+            response(
             """{"action":"execute","rom_id":1,"file_name":"x.srm"}""",
             """"total_upload":0,"total_download":0,"total_conflict":0,"total_delete":0,"total_no_op":1""",
         )
@@ -69,25 +74,26 @@ class RommDeviceSyncProtocolTest {
     fun rejectsRemotePathsUnverifiedRomsAndMissingContentIdentifiers() {
         val counts =
             """"total_upload":0,"total_download":1,"total_conflict":0,"total_delete":0,"total_no_op":0"""
-        val unsafe = response(
+        val unsafe =
+            response(
             """{"action":"download","rom_id":1,"save_id":88,"file_name":"../save.srm"}""",
             counts,
         )
-        assertEquals(
-            RommDeviceSyncProtocol.Rejection.INVALID_FILE_NAME,
-            (RommDeviceSyncProtocol.parseNegotiation(unsafe, setOf(1)) as
-                RommDeviceSyncProtocol.ParseResult.Rejected).reason,
-        )
-        val foreign = response(
+        val unsafeResult =
+            RommDeviceSyncProtocol.parseNegotiation(unsafe, setOf(1))
+                as RommDeviceSyncProtocol.ParseResult.Rejected
+        assertEquals(RommDeviceSyncProtocol.Rejection.INVALID_FILE_NAME, unsafeResult.reason)
+        val foreign =
+            response(
             """{"action":"download","rom_id":99,"save_id":88,"file_name":"save.srm"}""",
             counts,
         )
-        assertEquals(
-            RommDeviceSyncProtocol.Rejection.UNVERIFIED_ROM,
-            (RommDeviceSyncProtocol.parseNegotiation(foreign, setOf(1)) as
-                RommDeviceSyncProtocol.ParseResult.Rejected).reason,
-        )
-        val missingSave = response(
+        val foreignResult =
+            RommDeviceSyncProtocol.parseNegotiation(foreign, setOf(1))
+                as RommDeviceSyncProtocol.ParseResult.Rejected
+        assertEquals(RommDeviceSyncProtocol.Rejection.UNVERIFIED_ROM, foreignResult.reason)
+        val missingSave =
+            response(
             """{"action":"download","rom_id":1,"save_id":null,"file_name":"save.srm"}""",
             counts,
         )
