@@ -574,4 +574,9 @@
     <string name="opennes_ra_native_session_explanation">Uses your saved emulator token to authenticate a temporary native rcheevos client. This checks the account connection only; earning achievements is not active yet.</string>
     <string name="opennes_ra_native_session_verified">Native emulator token verified for %1$s. Game achievements are not yet active.</string>
     <string name="opennes_ra_native_session_failed">Native emulator authentication could not be verified. Check your connection or sign in again.</string>
+    <string name="opennes_ra_native_sign_in_verify">Sign in and verify</string>
+    <string name="opennes_ra_native_signing_in">Signing in and checking the native emulator connection…</string>
+    <string name="opennes_ra_native_verified_state">Native emulator login verified in this session.</string>
+    <string name="opennes_ra_native_saved_state">Account saved securely. Native emulator login is not yet verified in this session.</string>
+    <string name="opennes_ra_native_saved_unverified">Your account was accepted and saved, but native emulator verification did not complete. Use Verify emulator connection to retry.</string>
 </resources>
