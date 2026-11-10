@@ -134,6 +134,8 @@ android {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    // Android's org.json classes are method stubs in local JVM unit tests.
+    testImplementation("org.json:json:20240303")
 
     implementation(project(":retrograde-util"))
     implementation(project(":retrograde-app-shared"))
