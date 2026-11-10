@@ -85,6 +85,10 @@ internal object RommSaveSyncPlanner {
         // looks newer, timestamps do not establish a safe sync ancestry.
         val previousLocal = request.previousLocal ?: return Decision.InitialPairingRequired
         val previousRemote = request.previousRemote ?: return Decision.InitialPairingRequired
+        // A common ancestor is mandatory before treating either side as
+        // changed independently. A divergent "baseline" is already a
+        // conflict, even if only one side changed after it was recorded.
+        if (previousLocal != previousRemote) return Decision.Conflict
         val localChanged = local != previousLocal
         val remoteChanged = remote != previousRemote
         if (localChanged == remoteChanged) return Decision.Conflict

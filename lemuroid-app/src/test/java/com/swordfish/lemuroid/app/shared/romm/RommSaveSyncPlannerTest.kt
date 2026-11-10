@@ -61,6 +61,35 @@ class RommSaveSyncPlannerTest {
     }
 
     @Test
+    fun differentPriorHashesCannotMasqueradeAsASharedSyncBaseline() {
+        // Even if the remote hash stayed unchanged, these two files never
+        // shared a confirmed common ancestor. No upload can be approved.
+        val differentBaseline =
+            request().copy(
+                previousLocal = a,
+                previousRemote = c,
+                local = b,
+                remote = c,
+                direction = RommSaveSyncPlanner.Direction.UPLOAD,
+                approvedThisOperation = true,
+                versionedBackupVerified = true,
+            )
+        assertEquals(
+            RommSaveSyncPlanner.Decision.Conflict,
+            RommSaveSyncPlanner.plan(differentBaseline),
+        )
+        assertEquals(
+            RommSaveSyncPlanner.Decision.Conflict,
+            RommSaveSyncPlanner.plan(
+                differentBaseline.copy(
+                    previousLocal = b,
+                    local = b,
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun simultaneousLocalAndRemoteChangesAreConflicts() {
         assertEquals(
             RommSaveSyncPlanner.Decision.Conflict,

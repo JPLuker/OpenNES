@@ -32,6 +32,15 @@ internal class RommPendingSyncJournal(private val directory: File) {
         data object Corrupt : ReadResult
     }
 
+    /** Read-only check; never approves or executes an offline request. */
+    enum class LocalReview {
+        MATCHES_OBSERVED,
+        CHANGED_SINCE_REQUEST,
+        DIFFERENT_SERVER,
+        REQUEST_CHANGED,
+        JOURNAL_CORRUPT,
+    }
+
     @Synchronized
     fun list(): ReadResult {
         // V1 entries have no source-server binding and may not be migrated
@@ -49,7 +58,7 @@ internal class RommPendingSyncJournal(private val directory: File) {
             if (array.length() > MAX_PENDING) return ReadResult.Corrupt
             val entries = ArrayList<Pending>()
             val ids = HashSet<String>()
-            val games = HashSet<Int>()
+            val games = HashSet<Pair<String, Int>>()
             for (i in 0 until array.length()) {
                 val item = array.getJSONObject(i)
                 val id = item.getString("id")
@@ -62,7 +71,8 @@ internal class RommPendingSyncJournal(private val directory: File) {
                 if (!id.matches(ID_PATTERN) ||
                     !RommServerIdentity.validFingerprint(serverFingerprint) ||
                     !ids.add(id) || romId <= 0 ||
-                    !games.add(romId) || direction == RommSaveSyncPlanner.Direction.NONE || timestamp <= 0L
+                    !games.add(serverFingerprint to romId) ||
+                    direction == RommSaveSyncPlanner.Direction.NONE || timestamp <= 0L
                 ) {
                     return ReadResult.Corrupt
                 }
@@ -92,7 +102,11 @@ internal class RommPendingSyncJournal(private val directory: File) {
             return false
         }
         val current = (list() as? ReadResult.Entries)?.pending ?: return false
-        if (current.size >= MAX_PENDING || current.any { it.romId == romId }) return false
+        if (current.size >= MAX_PENDING ||
+            current.any { it.romId == romId && it.serverFingerprint == serverFingerprint }
+        ) {
+            return false
+        }
         val addition =
             Pending(
                 id = UUID.randomUUID().toString(),
@@ -111,6 +125,38 @@ internal class RommPendingSyncJournal(private val directory: File) {
         val current = (list() as? ReadResult.Entries)?.pending ?: return false
         if (current.none { it.id == id }) return false
         return persist(current.filterNot { it.id == id })
+    }
+
+    /**
+     * Compare a freshly fingerprinted user-selected local document to a
+     * CURRENT queued intent. The journal is reloaded before comparison so a
+     * stale UI selection cannot be mistaken for a current request.
+     *
+     * A match means "unchanged since recording", never safe to synchronize:
+     * remote state, identity, common ancestry and approval are not checked.
+     */
+    @Synchronized
+    fun reviewLocal(
+        pending: Pending,
+        currentServerFingerprint: String?,
+        currentLocal: RommSaveSyncPlanner.Snapshot,
+    ): LocalReview {
+        if (!RommServerIdentity.validFingerprint(currentServerFingerprint.orEmpty()) ||
+            pending.serverFingerprint != currentServerFingerprint
+        ) {
+            return LocalReview.DIFFERENT_SERVER
+        }
+        val state = list()
+        if (state is ReadResult.Corrupt) return LocalReview.JOURNAL_CORRUPT
+        val live =
+            (state as ReadResult.Entries).pending.firstOrNull { it.id == pending.id }
+                ?: return LocalReview.REQUEST_CHANGED
+        if (live != pending) return LocalReview.REQUEST_CHANGED
+        return if (live.observedLocal == currentLocal) {
+            LocalReview.MATCHES_OBSERVED
+        } else {
+            LocalReview.CHANGED_SINCE_REQUEST
+        }
     }
 
     /** Revalidation only; no copy/upload method is exposed by this journal. */

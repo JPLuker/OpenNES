@@ -49,6 +49,82 @@ class RommPendingSyncJournalTest {
     }
 
     @Test
+    fun separateServersCanQueueSameGameIdWithoutCrossServerCollision() {
+        val folder = Files.createTempDirectory("romm-multi-server-").toFile()
+        try {
+            val journal = RommPendingSyncJournal(folder)
+            assertTrue(
+                journal.enqueue(
+                    51,
+                    RommSaveSyncPlanner.Direction.UPLOAD,
+                    snapshot("a"),
+                    snapshot("b"),
+                    serverA,
+                ),
+            )
+            assertTrue(
+                journal.enqueue(
+                    51,
+                    RommSaveSyncPlanner.Direction.DOWNLOAD,
+                    snapshot("b"),
+                    snapshot("a"),
+                    serverB,
+                ),
+            )
+            val restored = (journal.list() as RommPendingSyncJournal.ReadResult.Entries).pending
+            assertEquals(2, restored.size)
+            assertFalse(
+                journal.enqueue(
+                    51,
+                    RommSaveSyncPlanner.Direction.DOWNLOAD,
+                    snapshot("b"),
+                    snapshot("a"),
+                    serverA,
+                ),
+            )
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun localReviewNeverConvertsAnObservedHashIntoTransferApproval() {
+        val folder = Files.createTempDirectory("romm-local-review-").toFile()
+        try {
+            val journal = RommPendingSyncJournal(folder)
+            assertTrue(
+                journal.enqueue(
+                    72,
+                    RommSaveSyncPlanner.Direction.UPLOAD,
+                    snapshot("b"),
+                    snapshot("a"),
+                    serverA,
+                ),
+            )
+            val pending = (journal.list() as RommPendingSyncJournal.ReadResult.Entries).pending.single()
+            assertEquals(
+                RommPendingSyncJournal.LocalReview.MATCHES_OBSERVED,
+                journal.reviewLocal(pending, serverA, snapshot("b")),
+            )
+            assertEquals(
+                RommPendingSyncJournal.LocalReview.CHANGED_SINCE_REQUEST,
+                journal.reviewLocal(pending, serverA, snapshot("c")),
+            )
+            assertEquals(
+                RommPendingSyncJournal.LocalReview.DIFFERENT_SERVER,
+                journal.reviewLocal(pending, serverB, snapshot("b")),
+            )
+            assertTrue(journal.discard(pending.id))
+            assertEquals(
+                RommPendingSyncJournal.LocalReview.REQUEST_CHANGED,
+                journal.reviewLocal(pending, serverA, snapshot("b")),
+            )
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
     fun corruptOrLegacyUnscopedJournalsCannotBeEnqueuedOrReplayed() {
         val folder = Files.createTempDirectory("romm-corrupt-").toFile()
         try {
