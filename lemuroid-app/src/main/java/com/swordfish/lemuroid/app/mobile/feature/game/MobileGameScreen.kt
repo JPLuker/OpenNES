@@ -197,8 +197,16 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 leftDialWidth + rightDialWidth
         val compactLandscape =
             isLandscape && maxWidth.value < maxOf(640f, minimumSidePanelWidth)
+        // Handheld preserves the real non-overlay viewport when there is
+        // room for both touch controls and a readable 4:3 NES picture.
+        // Compact phones safely fall back to overlay without losing choice.
+        val handheldActive =
+            isLandscape &&
+                showTouchPads &&
+                touchControllerSettings?.landscapeHandheld == true &&
+                !compactLandscape
         val allowTouchOverlay =
-            if (compactLandscape) true else landscapeOverlaySelected
+            if (handheldActive) false else if (compactLandscape) true else landscapeOverlaySelected
 
         // The editing overlay must never outlive the virtual controls.
         // A physical gamepad can become active mid-drag and hide PadKit.
@@ -304,6 +312,21 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_BOTTOM_CONTAINER),
                                 portrait = true,
                             )
+                        } else if (handheldActive) {
+                            val full = fullScreenPosition.value
+                            val view = viewportPosition.value
+                            val viewport =
+                                if (full != null && view != null) {
+                                    Rect(
+                                        view.left - full.left,
+                                        view.top - full.top,
+                                        view.right - full.left,
+                                        view.bottom - full.top,
+                                    )
+                                } else {
+                                    null
+                                }
+                            NesHandheldShell(modifier = Modifier.fillMaxSize(), viewport = viewport)
                         } else if (!allowTouchOverlay) {
                             PadContainer(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_LEFT_CONTAINER),
@@ -735,24 +758,45 @@ private fun MenuEditTouchControls(
                         }
                     }
                     if (isLandscape) {
-                        val sidePanelsEnabled =
-                            touchControllerSettings.landscapeOverlay?.not()
-                                ?: !controllerConfig.allowTouchOverlay
+                        val overlaySelected =
+                            touchControllerSettings.landscapeOverlay ?: controllerConfig.allowTouchOverlay
+                        val landscapeMode =
+                            when {
+                                touchControllerSettings.landscapeHandheld -> 2
+                                !overlaySelected -> 1
+                                else -> 0
+                            }
+                        Text(
+                            stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_style_title),
+                            fontWeight = FontWeight.Bold,
+                        )
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            listOf(
+                                com.swordfish.lemuroid.R.string.opennes_landscape_overlay_name,
+                                com.swordfish.lemuroid.R.string.opennes_landscape_framed_name,
+                                com.swordfish.lemuroid.R.string.opennes_landscape_handheld_name,
+                            ).forEachIndexed { index, title ->
+                                FilterChip(
+                                    selected = landscapeMode == index,
+                                    onClick = {
+                                        viewModel.updateTouchControllerSettings(
+                                            touchControllerSettings.copy(
+                                                landscapeOverlay = index == 0,
+                                                landscapeHandheld = index == 2,
+                                            ),
+                                        )
+                                    },
+                                    label = { Text(stringResource(title)) },
+                                )
+                            }
+                        }
+                        if (landscapeMode == 2) {
                             Text(
-                                stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_side_panels),
-                                modifier = Modifier.weight(1f),
-                            )
-                            Switch(
-                                checked = sidePanelsEnabled,
-                                onCheckedChange = {
-                                    viewModel.updateTouchControllerSettings(
-                                        touchControllerSettings.copy(landscapeOverlay = !it),
-                                    )
-                                },
+                                stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_handheld_help),
+                                fontSize = 12.sp,
                             )
                         }
                         Row(
@@ -772,7 +816,7 @@ private fun MenuEditTouchControls(
                                 },
                             )
                         }
-                        if (compactLandscape && touchControllerSettings.landscapeOverlay == false) {
+                        if (compactLandscape && landscapeMode != 0) {
                             Text(
                                 stringResource(com.swordfish.lemuroid.R.string.opennes_editor_compact_hint),
                                 fontSize = 12.sp,

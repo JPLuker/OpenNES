@@ -515,4 +515,9 @@
     <string name="opennes_ra_advanced_show">Advanced: ROM identification &amp; diagnostics</string>
     <string name="opennes_ra_advanced_hide">Hide ROM identification &amp; diagnostics</string>
     <string name="opennes_ra_web_connected_hint">Existing RetroAchievements history, view-only. Refresh to check this game.</string>
+    <string name="opennes_landscape_style_title">Landscape controller style</string>
+    <string name="opennes_landscape_overlay_name">Overlay</string>
+    <string name="opennes_landscape_framed_name">Framed</string>
+    <string name="opennes_landscape_handheld_name">NES Handheld</string>
+    <string name="opennes_landscape_handheld_help">A classic NES-inspired handheld shell wraps around the game, with the D-pad and A/B beside the screen. Your current controller colors apply here too.</string>
 </resources>

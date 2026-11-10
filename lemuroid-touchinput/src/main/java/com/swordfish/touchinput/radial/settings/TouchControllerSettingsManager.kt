@@ -46,6 +46,9 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val landscapeOverlay: Boolean? = null,
         // Visual-only minimal mode for overlaid landscape controls.
         val landscapeMinimal: Boolean = false,
+        // A third landscape presentation: one NES-colored integrated shell
+        // surrounding the real game viewport, preserving all PadKit inputs.
+        val landscapeHandheld: Boolean = false,
         // Null per-side scale preserves existing saved shared scale on upgrade.
         val leftScale: Float? = null,
         val rightScale: Float? = null,
