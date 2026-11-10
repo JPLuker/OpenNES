@@ -544,4 +544,13 @@
     <string name="opennes_fix_match_preview">Review: %1$s</string>
     <string name="opennes_fix_match_confirm_notice">Applying replaces available genre, release year, and description with the selected record. Existing values are kept if the record has no replacement. This cannot change your game ROM, title, artwork, or save data.</string>
     <string name="opennes_fix_match_apply">Use this match</string>
+    <string name="opennes_romm_archive_title">Offline save archive</string>
+    <string name="opennes_romm_archive_description">Backups saved here are private, versioned copies verified with SHA-256. They are available offline and are never imported into gameplay or uploaded to RomM automatically.</string>
+    <string name="opennes_romm_archive_keep">Keep offline</string>
+    <string name="opennes_romm_archive_saved">A verified private copy of this save was archived.</string>
+    <string name="opennes_romm_archive_checked">Offline archive verified.</string>
+    <string name="opennes_romm_archive_refresh">Verify archived saves</string>
+    <string name="opennes_romm_archive_empty">No verified offline saves archived yet.</string>
+    <string name="opennes_romm_archive_entry">RomM game #%1$d</string>
+    <string name="opennes_romm_archive_size">%1$d bytes · Verified</string>
 </resources>
