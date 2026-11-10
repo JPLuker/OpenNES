@@ -2,6 +2,7 @@ package com.swordfish.lemuroid.app.shared.achievements
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -75,6 +76,8 @@ internal class RetroAchievementsNativeTokenVerifier(
                     withTimeout(60_000L) {
                         processSession(session)
                     }
+                } catch (_: TimeoutCancellationException) {
+                    Result.Unavailable
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
