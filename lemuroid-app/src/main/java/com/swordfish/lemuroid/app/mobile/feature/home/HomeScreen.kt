@@ -188,6 +188,15 @@ fun HomeScreen(
             onApplyOnline = { match, onApplied ->
                 viewModel.applyWikidata(game.id, match, onApplied)
             },
+            onSearchFixMatch = { query, onResult ->
+                viewModel.searchFixMatch(query, onResult)
+            },
+            onResolveFixMatch = { candidateId, onResult ->
+                viewModel.resolveFixMatch(candidateId, onResult)
+            },
+            onApplyFixMatch = { match, onApplied ->
+                viewModel.applyFixMatch(game.id, match, onApplied)
+            },
         )
     }
 }
@@ -597,7 +606,11 @@ private fun GameDetailsSheet(
     onSaveProfile: (String?, Int?, String?, (Game?) -> Unit) -> Unit,
     onLookupOnline: ((WikidataNesMetadataSource.Result) -> Unit) -> Unit,
     onApplyOnline: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
+    onSearchFixMatch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Unit,
+    onResolveFixMatch: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onApplyFixMatch: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
 ) {
+    var fixMatchExpanded by remember(game.id) { mutableStateOf(false) }
     var searchExpanded by remember(game.id) { mutableStateOf(false) }
     var onlineExpanded by remember(game.id) { mutableStateOf(false) }
     var editingProfile by remember(game.id) { mutableStateOf(false) }
@@ -656,6 +669,7 @@ private fun GameDetailsSheet(
                             editingProfile = true
                             onlineExpanded = false
                             searchExpanded = false
+                            fixMatchExpanded = false
                         },
                     )
                     DropdownMenuItem(
@@ -665,6 +679,7 @@ private fun GameDetailsSheet(
                             onlineExpanded = true
                             editingProfile = false
                             searchExpanded = false
+                            fixMatchExpanded = false
                         },
                     )
                     DropdownMenuItem(
@@ -674,6 +689,17 @@ private fun GameDetailsSheet(
                             searchExpanded = true
                             editingProfile = false
                             onlineExpanded = false
+                            fixMatchExpanded = false
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.opennes_fix_match)) },
+                        onClick = {
+                            menuExpanded = false
+                            fixMatchExpanded = true
+                            editingProfile = false
+                            onlineExpanded = false
+                            searchExpanded = false
                         },
                     )
                     DropdownMenuItem(
@@ -714,8 +740,8 @@ private fun GameDetailsSheet(
         }
     }
 
-    LaunchedEffect(editingProfile, onlineExpanded, searchExpanded) {
-        if (editingProfile || onlineExpanded || searchExpanded) detailsScroll.scrollTo(0)
+    LaunchedEffect(editingProfile, onlineExpanded, searchExpanded, fixMatchExpanded) {
+        if (editingProfile || onlineExpanded || searchExpanded || fixMatchExpanded) detailsScroll.scrollTo(0)
     }
 
     ModalBottomSheet(
@@ -777,6 +803,20 @@ private fun GameDetailsSheet(
 
                 if (compactGameDetails) {
                     gameActions()
+                }
+
+                if (fixMatchExpanded) {
+                    FixMatchSection(
+                        game = game,
+                        onSearch = onSearchFixMatch,
+                        onResolve = onResolveFixMatch,
+                        onApply = onApplyFixMatch,
+                        onGameUpdated = { updated ->
+                            onGameUpdated(updated)
+                            fixMatchExpanded = false
+                        },
+                        onCancel = { fixMatchExpanded = false },
+                    )
                 }
 
                 if (onlineExpanded) {
