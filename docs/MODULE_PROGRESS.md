@@ -418,3 +418,11 @@ The final source batch added full-row screen-reader/keyboard switch controls for
 - Do not equate a commit or a green CI run with device testing.
 - Do not delete shared emulator infrastructure without identifying its actual consumers.
 - No bundled copyrighted commercial ROMs or unapproved RetroAchievements claims.
+
+## November 10 no-device M6/M7 implementation batch
+
+**Source staged for exact-commit CI, hardware and server acceptance still open.**
+
+- **M6:** generation-scoped RetroAchievements native session gate with strict ROM/game identity and confirmed unlock rules; separate AES-GCM native login token storage; redirect-disabled and byte-bounded official-host HTTPS transport for later rc_client callbacks. These pieces are currently **not wired into JNI authentication or awards**. New JVM tests cover stale events, network loss, login-token validation, POST transport and response bounds.
+- **M7:** non-mutating save synchronization planner with opt-in, authenticated RomM ID binding, immutable SHA-256 snapshots, previous-sync baselines, explicit direction/approval, verified versioned backups and conflict/offline refusal. The app still performs only the previously existing read-only RomM browsing/import and manual backup export. **No remote write or automatic restore is enabled**.
+- **Next:** validate this combined source batch with lint, unit tests, APK inspection and publication. Build the native callback dispatcher and RomM transactional executor behind disabled switches, then schedule actual hardware/server acceptance when testing resumes.

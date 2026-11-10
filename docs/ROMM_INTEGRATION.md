@@ -31,3 +31,10 @@
 - [x] Manual per-save backup export is available without modifying local progress.
 - Optional two-way remote save sync still requires explicit direction/conflict UI, versioning and a design that never overwrites existing saves by default.
 - Builds, CI validation and real-device testing remain paused.
+
+## November 10 no-device synchronization safety groundwork
+
+- Added `RommSaveSyncPlanner`: a **non-mutating** sync decision engine, deliberately **not wired to uploads or downloads**. It starts disabled, requires a confirmed RomM ROM ID, immutable local and remote SHA-256 save snapshots, a remembered pair of previous snapshots, a current online recheck, explicit upload/download direction, approval for that exact operation and an already verified versioned backup.
+- A save changed on both devices is a conflict even if one file has a later timestamp. Missing baselines require explicit initial pairing. Offline changes must be revalidated against the remote state on reconnect rather than blindly replayed. The planner returns expected hashes for a future executor to recheck before modifying a file.
+- JVM tests exercise opt-in, offline behavior, unverified identity, first pairing, diverged saves, required backups, explicit direction and no-op equality.
+- **Still absent:** encrypted persistent sync queue, remote create/update endpoint, immutable upload snapshot storage, transactional local replacement, conflict resolution UI and server/device validation. No code enables RomM remote writes or overwrites live saves. Build each layer separately, then require real-server testing before release signoff.

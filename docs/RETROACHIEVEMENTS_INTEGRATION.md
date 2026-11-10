@@ -79,3 +79,11 @@
 - Developer ROMs and test accounts should be owned by the user; do not bundle copyrighted commercial ROMs or real credentials.
 
 Sources: https://github.com/RetroAchievements/rcheevos, https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration, https://docs.retroachievements.org/developer-docs/game-identification.html, https://docs.libretro.com/guides/memorymonitoring/
+
+## November 10 no-device native lifecycle / transport groundwork
+
+- The new `RetroAchievementsSessionCoordinator` provides a fail-closed staging boundary for **future native rc_client callback events**. It uses a fresh game-generation ticket per ROM, rejects delayed callbacks, mismatching ROM hashes and game IDs, and refuses unlocks for unrecognized achievement IDs. Network loss hides active progress until reauthentication. **It has no JNI caller and does not earn awards yet.**
+- `RetroAchievementsNativeAccountStore` is dedicated to the emulator's confirmed login token, separate from the existing website API key. It writes an AES-GCM encrypted record to Android no-backup storage under a distinct Keystore alias and rejects invalid token inputs. Passwords are never persisted. This store is not connected to a login screen yet.
+- `RetroAchievementsNativeHttpTransport` provides a bounded, redirect-disabled, HTTPS-only transport restricted to the official `retroachievements.org` host, with a versioned OpenNES user-agent. It will be invoked only after implementing a safe native callback dispatcher. The rc_client C runtime still does not call this transport.
+- JVM unit tests cover session generations, invalid hashes, no-match, outage/relogin, explicit unlock evidence, token validation/redaction, host validation, POST behavior and large-response rejection. Passing these tests **does not** confirm native runtime integration or hardware operation.
+- **Next native implementation:** implement the C/JNI asynchronous request bridge without holding the emulation core lock during network calls; associate callbacks with a generation token; connect rc_client token login and verified game activation to the coordinator; enforce an explicit Casual-only policy until hardcore approval and save-state restrictions are in place. Test JNI lifecycle, reset, paused idle, fast-forwarded frames and true unlock confirmation on real hardware before enabling player-facing awards.
