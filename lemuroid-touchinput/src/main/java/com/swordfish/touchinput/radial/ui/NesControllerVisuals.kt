@@ -213,6 +213,7 @@ fun NesPillButtonForeground(
     pressed: State<Boolean>,
     label: String,
     expanded: Boolean = false,
+    large: Boolean = false,
 ) {
     val palette = LocalNesControllerPalette.current
     val opacity = LocalLemuroidPadTheme.current.opacity
@@ -221,7 +222,7 @@ fun NesPillButtonForeground(
             modifier =
                 Modifier
                     .fillMaxWidth(if (expanded) 0.94f else 0.90f)
-                    .height(if (expanded) 26.dp else 22.dp),
+                    .height(if (large) 38.dp else if (expanded) 26.dp else 22.dp),
             contentAlignment = Alignment.Center,
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -242,7 +243,7 @@ fun NesPillButtonForeground(
                 text = label,
                 color = palette.label.copy(alpha = opacity),
                 fontWeight = FontWeight.Bold,
-                fontSize = if (expanded) 9.sp else 8.sp,
+                fontSize = if (large) 11.sp else if (expanded) 9.sp else 8.sp,
                 letterSpacing = 0.25.sp,
                 maxLines = 1,
             )
