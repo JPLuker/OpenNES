@@ -30,7 +30,7 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
         require(romId > 0) { "Verified RomM ROM ID required" }
         require(
             sourceServerFingerprint == null ||
-                RommServerIdentity.validFingerprint(sourceServerFingerprint)
+                RommServerIdentity.validFingerprint(sourceServerFingerprint),
         ) {
             "Invalid source-server fingerprint"
         }
