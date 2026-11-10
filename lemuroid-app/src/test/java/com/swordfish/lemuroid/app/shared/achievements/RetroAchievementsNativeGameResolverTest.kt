@@ -55,6 +55,16 @@ class RetroAchievementsNativeGameResolverTest {
     }
 
     @Test
+    fun malformedNativeResponseIsUnavailableNotNoMatch() {
+        runBlocking {
+            assertEquals(
+                RetroAchievementsNativeGameResolver.Result.Unavailable,
+                resolver(parser = { _, _ -> -1 }).resolve(identity),
+            )
+        }
+    }
+
+    @Test
     fun rejectsInsecureOrForeignEndpointsWithoutNetwork() {
         runBlocking {
             var called = false
