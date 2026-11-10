@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -111,7 +112,7 @@ fun NESLandscapeRight(
                 background = {},
                 showCompositeForeground = false,
                 idsForegrounds =
-                    persistentMapOf(
+                    persistentMapOf<Id.Key, @Composable (State<Boolean>) -> Unit>(
                         aId to { pressed -> NesFaceButtonForeground(pressed = pressed, label = "A") },
                         bId to { pressed -> NesFaceButtonForeground(pressed = pressed, label = "B") },
                     ),
