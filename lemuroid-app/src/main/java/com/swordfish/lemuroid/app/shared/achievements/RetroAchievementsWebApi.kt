@@ -42,7 +42,7 @@ class RetroAchievementsWebApi(context: Context) {
     private val cacheDir = context.applicationContext.cacheDir
 
     private fun indexFile(systemId: Int): AtomicFile =
-        AtomicFile(File(cacheDir, "opennes-ra-system-${systemId}-hashes-v1.json"))
+        AtomicFile(File(cacheDir, "opennes-ra-system-$systemId-hashes-v1.json"))
 
     private val http =
         OkHttpClient.Builder()
