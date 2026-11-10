@@ -216,6 +216,14 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 showTouchPads &&
                 touchControllerSettings?.landscapeHandheld == true &&
                 !compactLandscape
+        // Equal side widths keep the actual viewport centered rather than
+        // relying on different left/right dial intrinsic dimensions.
+        val handheldSideWidthDp =
+            if (handheldActive) {
+                (maxWidth.value - maxHeight.value * 4f / 3f).coerceAtLeast(0f) / 2f
+            } else {
+                null
+            }
         val allowTouchOverlay =
             when {
                 handheldActive -> false
@@ -295,6 +303,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         isLandscape,
                         allowTouchOverlay,
                         showTouchPads,
+                        handheldSideWidthDp,
                     ),
             ) {
                 Box(
