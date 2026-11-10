@@ -1,6 +1,10 @@
 package com.swordfish.lemuroid.app.shared.achievements
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -9,6 +13,9 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import java.io.IOException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class RetroAchievementsNativeHttpTransportTest {
     @Test
@@ -65,6 +72,49 @@ class RetroAchievementsNativeHttpTransportTest {
             assertEquals("{}", String(response.body))
             assertEquals("POST", seenMethod)
             assertEquals(true, seenAgent.startsWith("OpenNES/0.1.0"))
+        }
+    }
+
+    @Test
+    fun cancellingSessionCancelsItsInFlightHttpCall() {
+        runBlocking {
+            val started = CountDownLatch(1)
+            val release = CountDownLatch(1)
+            val cancelledCall = CountDownLatch(1)
+            val fake =
+                OkHttpClient.Builder()
+                    .addInterceptor { chain ->
+                        started.countDown()
+                        release.await(5, TimeUnit.SECONDS)
+                        if (chain.call().isCanceled()) {
+                            cancelledCall.countDown()
+                            throw IOException("interrupted")
+                        }
+                        Response.Builder()
+                            .request(chain.request())
+                            .protocol(Protocol.HTTP_1_1)
+                            .code(200)
+                            .message("OK")
+                            .body("{}".toResponseBody())
+                            .build()
+                    }
+                    .build()
+            val work =
+                async(Dispatchers.Default) {
+                    RetroAchievementsNativeHttpTransport(fake).execute(
+                        "https://retroachievements.org/dorequest.php",
+                        "r=startsession",
+                    )
+                }
+            try {
+                assertEquals(true, withContext(Dispatchers.IO) { started.await(5, TimeUnit.SECONDS) })
+                work.cancelAndJoin()
+                release.countDown()
+                assertEquals(true, withContext(Dispatchers.IO) { cancelledCall.await(5, TimeUnit.SECONDS) })
+            } finally {
+                release.countDown()
+                fake.dispatcher.executorService.shutdown()
+            }
         }
     }
 
