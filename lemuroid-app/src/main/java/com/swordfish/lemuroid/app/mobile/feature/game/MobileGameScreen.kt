@@ -302,9 +302,12 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             .layoutId(GameScreenLayout.CONSTRAINTS_GAME_VIEW)
                             .windowInsetsPadding(
                                 WindowInsets.displayCutout.only(
-                                    if (isLandscape) {
+                                    if (isLandscape && allowTouchOverlay) {
                                         WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                                     } else {
+                                        // Side-panel controls separate gameplay
+                                        // from cutouts. Do not shift the centered
+                                        // NES picture for a left-side camera hole.
                                         WindowInsetsSides.Top
                                     },
                                 ),
