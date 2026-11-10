@@ -84,6 +84,7 @@ target_sources(libretrodroid PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/ra_preflight.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/ra_token_session.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/ra_game_session.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/nes_cheats.cpp"
 )
 target_include_directories(libretrodroid PRIVATE
     "${OPENNES_RA_ROOT}/include"
@@ -122,7 +123,9 @@ target_link_libraries(libretrodroid
     void setEmulatedFrameObserver(std::function<void()> callback);
     // Use this for idle native client calls that may read emulator RAM.
     // The callback always holds coreLock and must acquire clientMutex second.
-    void withCoreLock(const std::function<void(bool)>& callback);""",
+    void withCoreLock(const std::function<void(bool)>& callback);
+    // Replace ALL active codes under one core lock, with a generation lease.
+    bool replaceCoreCheats(const std::vector<std::string>& codes, uint64_t expectedGeneration);""",
         "libretrodroid.h bridge",
     )
     h = replace_once(
@@ -217,6 +220,23 @@ void LibretroDroid::setEmulatedFrameObserver(std::function<void()> callback) {
 void LibretroDroid::withCoreLock(const std::function<void(bool)>& callback) {
     std::lock_guard<std::mutex> lock(coreLock);
     callback(achievementsGameLoaded && core != nullptr);
+}
+
+bool LibretroDroid::replaceCoreCheats(
+    const std::vector<std::string>& codes, uint64_t expectedGeneration
+) {
+    std::lock_guard<std::mutex> lock(coreLock);
+    // Never apply to a previous game's native core, or before load.
+    if (expectedGeneration == 0 || !achievementsGameLoaded || !core ||
+        gameGeneration.load(std::memory_order_acquire) != expectedGeneration ||
+        codes.size() > 64) return false;
+    // FCEUmm ignores per-code enabled flags. A single locked replacement
+    // prevents emulation frames from observing a partially applied list.
+    core->retro_cheat_reset();
+    for (size_t i = 0; i < codes.size(); ++i) {
+        core->retro_cheat_set(static_cast<unsigned>(i), true, codes[i].c_str());
+    }
+    return true;
 }
 
 void LibretroDroid::step() {""",
