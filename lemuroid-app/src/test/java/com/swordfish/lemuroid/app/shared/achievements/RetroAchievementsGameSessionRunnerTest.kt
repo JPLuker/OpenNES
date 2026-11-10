@@ -84,7 +84,8 @@ class RetroAchievementsGameSessionRunnerTest {
 
     @Test
     fun nativeEventsRejectMalformedAwardsAndReportConnectionChanges() {
-        val decode = RetroAchievementsGameSessionRunner::decodeNativeEvent
+        val decode: (String) -> RetroAchievementsGameSessionRunner.NativeGameEvent? =
+            { RetroAchievementsGameSessionRunner.decodeNativeEvent(it) }
         assertEquals(
             RetroAchievementsGameSessionRunner.NativeGameEvent.Unlock(125, "Defeat an enemy"),
             decode("unlock\t125\t5\tDefeat an enemy"),
@@ -107,13 +108,12 @@ class RetroAchievementsGameSessionRunnerTest {
     @Test
     fun connectionGateDoesNotResumeAwardsUntilNativeReconnect() {
         val gate = RetroAchievementsGameSessionRunner.NativeConnectionGate()
-        val event = RetroAchievementsGameSessionRunner.NativeGameEvent
         assertTrue(gate.isConnected)
-        assertFalse(gate.observe(event.Disconnected))
-        assertFalse(gate.observe(event.Unlock(125, "Offline trigger")))
+        assertFalse(gate.observe(RetroAchievementsGameSessionRunner.NativeGameEvent.Disconnected))
+        assertFalse(gate.observe(RetroAchievementsGameSessionRunner.NativeGameEvent.Unlock(125, "Offline trigger")))
         assertFalse(gate.isConnected)
-        assertTrue(gate.observe(event.Reconnected))
-        assertTrue(gate.observe(event.Unlock(125, "Connected trigger")))
+        assertTrue(gate.observe(RetroAchievementsGameSessionRunner.NativeGameEvent.Reconnected))
+        assertTrue(gate.observe(RetroAchievementsGameSessionRunner.NativeGameEvent.Unlock(125, "Connected trigger")))
     }
 
     @Test
