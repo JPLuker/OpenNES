@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +33,7 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
+import com.swordfish.lemuroid.app.shared.romm.RommVersionedSaveBackupStore
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +72,8 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     var remoteSaves by remember { mutableStateOf<List<RommApiClient.RemoteSave>?>(null) }
     var selectedSaveGame by remember { mutableStateOf<RommApiClient.Rom?>(null) }
     var pendingSave by remember { mutableStateOf<RommApiClient.RemoteSave?>(null) }
+    var pendingArchive by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
+    var archivedSaves by remember { mutableStateOf<List<RommVersionedSaveBackupStore.Backup>>(emptyList()) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var operation by remember { mutableStateOf("") }
@@ -111,6 +115,26 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
+
+    val archivePicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/octet-stream"),
+        ) { destination ->
+            val selected = pendingArchive
+            pendingArchive = null
+            if (destination != null && selected != null) {
+                perform("Exporting local backup") {
+                    client.exportOfflineSaveBackup(context, selected, destination)
+                    status = context.getString(R.string.opennes_romm_save_exported)
+                }
+            }
+        }
+
+    // Archives are local-only and must remain accessible without network,
+    // connected RomM credentials, or an online save-list request.
+    LaunchedEffect(context) {
+        archivedSaves = client.listOfflineSaveBackups(context)
+    }
 
     val browse: (Int) -> Unit = { offset ->
         perform("Browsing NES games") {
@@ -304,7 +328,69 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                             ) {
                                 Text(stringResource(R.string.opennes_romm_export_save))
                             }
+                            TextButton(
+                                enabled = !busy,
+                                onClick = {
+                                    perform("Saving private offline backup") {
+                                        client.keepRemoteSaveBackup(
+                                            context,
+                                            withContext(Dispatchers.IO) {
+                                                store.load() ?: error("Reconnect to RomM")
+                                            },
+                                            save,
+                                        )
+                                        archivedSaves = client.listOfflineSaveBackups(context)
+                                        status = context.getString(R.string.opennes_romm_archive_saved)
+                                    }
+                                },
+                            ) {
+                                Text(stringResource(R.string.opennes_romm_archive_keep))
+                            }
                         }
+                    }
+                }
+            }
+        }
+
+        OpenNesSettingsGroup(
+            title = { Text(stringResource(R.string.opennes_romm_archive_title)) },
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text(stringResource(R.string.opennes_romm_archive_description))
+                OutlinedButton(
+                    enabled = !busy,
+                    onClick = {
+                        perform("Checking offline save backups") {
+                            archivedSaves = client.listOfflineSaveBackups(context)
+                            status = context.getString(R.string.opennes_romm_archive_checked)
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.opennes_romm_archive_refresh))
+                }
+                if (archivedSaves.isEmpty()) {
+                    Text(stringResource(R.string.opennes_romm_archive_empty))
+                }
+                archivedSaves.forEach { backup ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.opennes_romm_archive_entry, backup.romId))
+                            Text(stringResource(R.string.opennes_romm_archive_size, backup.bytes))
+                        }
+                        TextButton(
+                            enabled = !busy,
+                            onClick = {
+                                pendingArchive = backup
+                                archivePicker.launch("romm-${backup.romId}.savebak")
+                            },
+                        ) { Text(stringResource(R.string.opennes_romm_export_save)) }
                     }
                 }
             }
