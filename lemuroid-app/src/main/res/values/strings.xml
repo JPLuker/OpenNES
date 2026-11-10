@@ -570,4 +570,8 @@
     <string name="opennes_ra_lookup_not_found">RetroAchievements has no matching game for this ROM hash.</string>
     <string name="opennes_ra_lookup_offline">Game identification unavailable. Check your connection and try reopening Achievements.</string>
     <string name="opennes_ra_lookup_notice">Official game recognition does not activate achievements. Native game sessions and real unlocks are still under development.</string>
+    <string name="opennes_ra_native_verify_session">Verify emulator connection</string>
+    <string name="opennes_ra_native_session_explanation">Uses your saved emulator token to authenticate a temporary native rcheevos client. This checks the account connection only; earning achievements is not active yet.</string>
+    <string name="opennes_ra_native_session_verified">Native emulator token verified for %1$s. Game achievements are not yet active.</string>
+    <string name="opennes_ra_native_session_failed">Native emulator authentication could not be verified. Check your connection or sign in again.</string>
 </resources>
