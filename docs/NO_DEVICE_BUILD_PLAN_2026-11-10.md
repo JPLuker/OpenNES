@@ -15,7 +15,7 @@
 | M3 — Portrait controller | NES visual shell, layout onboarding, independent theme and button geometry implemented | Device ergonomics, simultaneous touch, orientation persistence |
 | M4 — Landscape controller | Separate Overlay/Framed/Handheld, dedicated full-grip PadKit controls, centered video, shared editor travel geometry implemented | Real phone camera notch, editor touch bounds, persisted offsets and fallback layout |
 | M5 — Gameplay | Save/restore/lifecycle and gamepad event hardening implemented | Real audio, frame pacing, SRAM/save state, suspend/resume and reconnect tests |
-| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, official `login2` encrypted sign-in, native HTTP POST game-ID recognition, generation-safe coordinator, cancellable HTTPS and tests | Wire native `rc_client` callbacks and token-based game activation, verify real unlocks and notifications; test login and lookup on device |
+| M6 — RetroAchievements | Native frame/memory diagnostics, pinned rcheevos, encrypted `login2` sign-in, native game-ID recognition, isolated real `rc_client` token-verification HTTP queue, cancellation and tests | Implement distinct game-owned `rc_client` with authenticated load, native frame/event evaluation and awards; validate native token check and real unlock on device |
 | M7 — RomM | HTTPS token storage, browse/import, manual remote-save archiving and SAF export, persisted verified SHA-256 manifests, recovery staging, snapshots, conflict planner | Real RomM server validation and explicit opt-in upload/conflict UI remain; no sync or replacement of emulator saves is enabled |
 | M8 — Release | Development CI and partial signing/attribution groundwork | License/security audits, official signing, final device sign-off; M7 acceptance required |
 
@@ -57,6 +57,14 @@
 - Inventory unused legacy console/TV/Leanback assets, JNI/ABI dependencies and source-level licenses; remove unused code only after dependency tracing.
 - Review app permissions, private key storage, network redirect behavior, crash-report privacy, APK certificate migration, and reproducibility.
 - Preserve the single `master` debug APK process; do not create new APK branches or manual publishing channels.
+
+## Native rc_client token-validation transport (new M6 batch)
+
+- `Verify emulator connection` in RetroAchievements Settings invokes a **temporary real native `rc_client_begin_login_with_token`** client against the already encrypted account token. No plaintext password is persisted or re-requested.
+- Native `rc_client` server callbacks queue exact URL/form requests under a session ID; Kotlin checks the official HTTPS host/path, denies password-form requests, and completes the callbacks from bounded cancellable OkHttp results.
+- The native session has no game, no memory callback and no award handler. Cancellation, timeout and Settings exit dispose the client. This test **does not authorize claiming working achievements**.
+- Offline tests exercise safe request forwarding, unsafe host rejection, and cancellation cleanup. Live account verification needs a future device test.
+- Remaining work: bind a different game-owned native client to verified ROM generation, official game activation, exact emulated frames and real events/awards.
 
 ## Native game ID lookup (new M6 batch)
 
