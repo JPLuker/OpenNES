@@ -159,7 +159,11 @@ internal class RommPendingSyncJournal(private val directory: File) {
         }
     }
 
-    /** Revalidation only; no copy/upload method is exposed by this journal. */
+    /**
+     * Revalidate a current persisted intent, never an unattached or stale
+     * object passed by a UI callback. This function still cannot write files.
+     */
+    @Synchronized
     fun evaluate(
         pending: Pending,
         request: RommSaveSyncPlanner.Request,
@@ -170,6 +174,8 @@ internal class RommPendingSyncJournal(private val directory: File) {
         ) {
             return RommSaveSyncPlanner.Decision.UnverifiedIdentity
         }
+        val fresh = (list() as? ReadResult.Entries)?.pending ?: return RommSaveSyncPlanner.Decision.Conflict
+        if (fresh.none { it == pending }) return RommSaveSyncPlanner.Decision.Conflict
         if (pending.romId != request.romId ||
             pending.direction != request.direction ||
             pending.observedLocal != request.local ||

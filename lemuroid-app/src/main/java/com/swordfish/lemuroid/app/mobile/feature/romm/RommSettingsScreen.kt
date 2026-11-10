@@ -89,6 +89,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
         mutableStateOf<Pair<RommVersionedSaveBackupStore.Backup, RommSaveSyncPlanner.Direction>?>(null)
     }
     var pendingIntentDeletion by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
+    var pendingIntentReview by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
+    var localReviews by remember {
+        mutableStateOf<Map<String, RommPendingSyncJournal.LocalReview>>(emptyMap())
+    }
     var archivedSaves by remember { mutableStateOf<List<RommVersionedSaveBackupStore.Backup>>(emptyList()) }
     var syncQueue by remember {
         mutableStateOf<RommPendingSyncJournal.ReadResult>(RommPendingSyncJournal.ReadResult.Entries(emptyList()))
@@ -175,6 +179,29 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                 R.string.opennes_romm_pending_prepare_failed
                             },
                         )
+                }
+            }
+        }
+
+    val reviewPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument(),
+        ) { localDocument ->
+            val pending = pendingIntentReview
+            pendingIntentReview = null
+            if (localDocument != null && pending != null) {
+                perform("Reviewing local save fingerprint") {
+                    val result =
+                        client.reviewPendingLocalSave(
+                            context = context,
+                            pending = pending,
+                            localDocument = localDocument,
+                            serverUrl = store.configuredServer(),
+                            journal = syncJournal,
+                        )
+                    localReviews = localReviews + (pending.id to result)
+                    syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
+                    status = context.getString(R.string.opennes_romm_pending_local_reviewed)
                 }
             }
         }
@@ -505,6 +532,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                     onClick = {
                         perform("Reviewing pending transfers") {
                             syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
+                            localReviews = emptyMap()
                             status = context.getString(R.string.opennes_romm_pending_refreshed)
                         }
                     },
@@ -516,32 +544,60 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                         if (result.pending.isEmpty()) {
                             Text(stringResource(R.string.opennes_romm_pending_empty))
                         }
+                        val currentServer = RommServerIdentity.fingerprint(store.configuredServer())
                         result.pending.forEach { pending ->
-                            Row(
+                            Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(3.dp),
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    val direction =
-                                        if (pending.direction == RommSaveSyncPlanner.Direction.UPLOAD) {
-                                            stringResource(R.string.opennes_romm_pending_upload)
-                                        } else {
-                                            stringResource(R.string.opennes_romm_pending_download)
-                                        }
-                                    Text(
-                                        stringResource(
-                                            R.string.opennes_romm_pending_entry,
-                                            pending.romId,
-                                            direction,
-                                        ),
-                                    )
-                                    Text(stringResource(R.string.opennes_romm_pending_unapproved))
+                                val direction =
+                                    if (pending.direction == RommSaveSyncPlanner.Direction.UPLOAD) {
+                                        stringResource(R.string.opennes_romm_pending_upload)
+                                    } else {
+                                        stringResource(R.string.opennes_romm_pending_download)
+                                    }
+                                Text(
+                                    stringResource(
+                                        R.string.opennes_romm_pending_entry,
+                                        pending.romId,
+                                        direction,
+                                    ),
+                                )
+                                Text(stringResource(R.string.opennes_romm_pending_unapproved))
+                                if (currentServer == null || pending.serverFingerprint != currentServer) {
+                                    Text(stringResource(R.string.opennes_romm_pending_other_server))
                                 }
-                                TextButton(
-                                    enabled = !busy,
-                                    onClick = { pendingIntentDeletion = pending },
-                                ) { Text(stringResource(R.string.opennes_romm_pending_discard)) }
+                                localReviews[pending.id]?.let { review ->
+                                    val label =
+                                        when (review) {
+                                            RommPendingSyncJournal.LocalReview.MATCHES_OBSERVED ->
+                                                R.string.opennes_romm_pending_local_same
+                                            RommPendingSyncJournal.LocalReview.CHANGED_SINCE_REQUEST ->
+                                                R.string.opennes_romm_pending_local_changed
+                                            RommPendingSyncJournal.LocalReview.DIFFERENT_SERVER ->
+                                                R.string.opennes_romm_pending_other_server
+                                            RommPendingSyncJournal.LocalReview.REQUEST_CHANGED ->
+                                                R.string.opennes_romm_pending_request_stale
+                                            RommPendingSyncJournal.LocalReview.JOURNAL_CORRUPT ->
+                                                R.string.opennes_romm_pending_corrupt
+                                        }
+                                    Text(stringResource(label))
+                                }
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    if (currentServer != null && pending.serverFingerprint == currentServer) {
+                                        TextButton(
+                                            enabled = !busy,
+                                            onClick = {
+                                                pendingIntentReview = pending
+                                                reviewPicker.launch(arrayOf("*/*"))
+                                            },
+                                        ) { Text(stringResource(R.string.opennes_romm_pending_recheck_local)) }
+                                    }
+                                    TextButton(
+                                        enabled = !busy,
+                                        onClick = { pendingIntentDeletion = pending },
+                                    ) { Text(stringResource(R.string.opennes_romm_pending_discard)) }
+                                }
                             }
                         }
                     }
@@ -634,6 +690,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                     syncJournal.discard(selected.id)
                                 }
                             syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
+                            localReviews = localReviews - selected.id
                             status =
                                 context.getString(
                                     if (discarded) {

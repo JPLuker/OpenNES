@@ -188,6 +188,11 @@ class RommPendingSyncJournalTest {
                 journal.evaluate(entry, valid.copy(approvedThisOperation = false), serverA),
             )
             assertTrue(journal.evaluate(entry, valid, serverA) is RommSaveSyncPlanner.Decision.UploadCopy)
+            assertTrue(journal.discard(entry.id))
+            assertEquals(
+                RommSaveSyncPlanner.Decision.Conflict,
+                journal.evaluate(entry, valid, serverA),
+            )
         } finally {
             folder.deleteRecursively()
         }

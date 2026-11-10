@@ -325,6 +325,31 @@ class RommApiClient {
         }
 
     /**
+     * Recheck only the local half of a pending offline intent. The picker
+     * grants access for this read, not for future uploads or restoration.
+     * A matching hash is NOT transfer approval: the remote save and server
+     * permissions have not been revalidated.
+     */
+    internal suspend fun reviewPendingLocalSave(
+        context: Context,
+        pending: RommPendingSyncJournal.Pending,
+        localDocument: Uri,
+        serverUrl: String?,
+        journal: RommPendingSyncJournal,
+    ): RommPendingSyncJournal.LocalReview =
+        withContext(Dispatchers.IO) {
+            val serverFingerprint = RommServerIdentity.fingerprint(serverUrl)
+            if (serverFingerprint == null || serverFingerprint != pending.serverFingerprint) {
+                return@withContext RommPendingSyncJournal.LocalReview.DIFFERENT_SERVER
+            }
+            val local =
+                RommSaveSnapshotter.fromReopenableStream {
+                    context.contentResolver.openInputStream(localDocument)
+                }
+            journal.reviewLocal(pending, serverFingerprint, local)
+        }
+
+    /**
      * Compare a user-selected local document against an immutable archived
      * RomM save. The comparison never reads or modifies live emulator state,
      * and does not imply that merging or replacing saves would be safe.

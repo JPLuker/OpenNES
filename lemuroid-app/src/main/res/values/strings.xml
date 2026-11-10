@@ -619,6 +619,11 @@
     <string name="opennes_romm_pending_download">Download</string>
     <string name="opennes_romm_pending_entry">RomM game #%1$d · %2$s requested</string>
     <string name="opennes_romm_pending_unapproved">Not approved or executed</string>
+    <string name="opennes_romm_pending_recheck_local">Recheck local save</string>
+    <string name="opennes_romm_pending_local_reviewed">Local save checked. Remote status and transfer approval are still unverified.</string>
+    <string name="opennes_romm_pending_local_same">Local file matches the recorded fingerprint. Nothing was uploaded or restored.</string>
+    <string name="opennes_romm_pending_local_changed">Local file differs from the request. Discard and prepare a fresh request before future synchronization.</string>
+    <string name="opennes_romm_pending_request_stale">This request has changed or been discarded. Refresh the pending list.</string>
     <string name="opennes_romm_pending_discard">Discard</string>
     <string name="opennes_romm_pending_discard_confirm">Discard the offline transfer request for RomM game #%1$d? This does not delete a save file.</string>
     <string name="opennes_romm_pending_discarded">Pending transfer request discarded.</string>
