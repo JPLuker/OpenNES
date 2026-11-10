@@ -1,11 +1,19 @@
 # OpenNES — Development Roadmap
 
-**Status (2026-11-09):** M0 and the single rolling NES-only APK pipeline are CI-verified; M1 NES-only cleanup is mostly complete; M2 UI, M3 portrait and M4 landscape controller source implementations are substantially complete but still require on-device acceptance. The onboarding preview, six themes, per-part HSV wheel and HEX picker, swatch palette icons, and Up/Down pressed-effect correction are implemented. **M5 is the current final-testing gate** for saves, audio, touch, rotation and resume. M6 native RetroAchievements is not yet functional; **M7 RomM integration must pass acceptance before M8 public release**. The [current implementation tracker](docs/MODULE_PROGRESS.md) distinguishes source work, successful CI and outstanding device tests.
+**Status (2026-11-10):** M0 has one CI-verified NES-only rolling debug APK; M1 debloat remains partially incomplete. M2/M3/M4 UI source is extensive, with a dedicated keyboard-aware Fix Match dialog, verified NES candidate search, alternate-title fallback, independent portrait/landscape controls, and wider landscape drag limits. **The latest M2 UI and M6 regression additions are still awaiting CI verification and device acceptance.** M5 audio/saves/input remain manual-test gates. M6 RetroAchievements has native memory/frame diagnostics and new hashing tests, **but no live authenticated achievements or unlocks**. M7 RomM read-only import and backup features exist, but real-server acceptance and any two-way save synchronization are outstanding. **M7 acceptance precedes M8 public release**. See [module progress](docs/MODULE_PROGRESS.md) and the [without-device build plan](docs/NO_DEVICE_BUILD_PLAN_2026-11-10.md).
 **Platform:** Native Android  
 **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
 **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
 **Primary emulator:** FCEUmm via LibretroDroid  
 **Product:** A dedicated open-source NES/Famicom emulator with a wholly redesigned UI, premium NES-controller-inspired mobile gameplay, and native RetroAchievements.
+
+## Near-term execution while phone testing is unavailable (November 2026)
+
+1. **M2/M4: stabilize the most recent test feedback.** Finalize the keyboard-aware Fix Match dialog and its alternate-title search, keep active search fields visible above the IME, preserve game metadata and saves on application, and test off-screen drag constraints with normalized touch coordinates. Once CI passes, freeze speculative controller design changes until physical-device feedback returns.
+2. **M6: complete a real RetroAchievements runtime, not only its interface.** Pin official client and emulator API contracts; connect `rc_client` to guarded FCEUmm memory and *emulated* frame callbacks; design and implement authenticated, securely stored sessions and HTTP transport; report only verified game identification/unlocks; then add accessible notifications and network-state recovery. Offline NES/FDS/ZIP hash tests are groundwork, not evidence of functional awards.
+3. **M7: harden RomM integration.** Continue schema/permissions review, offline/error behavior, test fixtures and safe imports. Any future two-way save synchronization requires versioned local backups, immutable remote snapshots, explicit conflict decisions, and a clear opt-in. Real-server acceptance is non-negotiable.
+4. **M1/M8: cleanup and release engineering.** Audit remaining non-NES resources/dependencies, upstream licenses and native artifacts, build reproducibility and production signing. Preserve migration paths and saved user data.
+5. **When physical testing resumes:** execute the [M0–M5 acceptance matrix](docs/M5_FINAL_TESTING.md), including the newly reported keyboard/notch issues; then perform genuine RetroAchievements and RomM server acceptance. Do not mark a device gate completed because lint or compilation passed.
 
 ## Non-negotiable product direction
 
@@ -130,6 +138,13 @@
 
 - [x] Capture immutable gamepad key/motion data before asynchronous processing, avoiding recycled Android event objects and ignoring unsupported generic input.
 - [ ] Validate hardware controller reconnects, held buttons, joystick motion and virtual A/B combinations on a real phone.
+
+## November 10 feedback fixes — source submitted for verification
+
+- **Keyboard:** Fix Match used to render deep inside game details while the IME covered its title field. It now uses a separate scrollable dialog with keyboard insets, focus visibility requests, and Search/Done IME actions.
+- **Metadata:** Fix Match uses explicit selection/preview/Apply and verifies candidates are NES games. When an exact candidate search returns none, it can retry after stripping only a final publisher/region qualifier (for example, `RoboCop (Data East)` → `RoboCop`).
+- **Controller:** Landscape editor drag limits and actual rendered control offsets now use the same grip geometry. Secondary buttons follow their control group and clamp independently to visible space. **Real camera-notch behavior is not yet accepted.**
+- **Automated tests:** Introduced tests for manual title-query fallback and NES/FDS/ZIP RetroAchievements hashes, supplementing existing controller geometry and RomM ZIP tests. Test success depends on the exact CI candidate, not merely this checklist.
 
 ## M6 — RetroAchievements integration
 
