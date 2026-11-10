@@ -1082,10 +1082,20 @@ private fun FixMatchSection(
             )
             OutlinedTextField(
                 value = titleQuery,
-                onValueChange = { titleQuery = it.take(120) },
+                onValueChange = {
+                    titleQuery = it.take(120)
+                    // Ignore an earlier request after the user changes the
+                    // query. Never let a slow response replace newer intent.
+                    searchVersion++
+                    searching = false
+                    selected = null
+                    preview = null
+                    candidates = emptyList()
+                    status = null
+                },
                 label = { Text(stringResource(R.string.opennes_fix_match_title)) },
                 singleLine = true,
-                enabled = !searching && !resolving && !applying,
+                enabled = !resolving && !applying,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions =
                     KeyboardActions(
@@ -1113,7 +1123,7 @@ private fun FixMatchSection(
                 onValueChange = { yearQuery = it.filter(Char::isDigit).take(4) },
                 label = { Text(stringResource(R.string.opennes_fix_match_year)) },
                 singleLine = true,
-                enabled = !searching && !resolving && !applying,
+                enabled = !resolving && !applying,
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Number,
