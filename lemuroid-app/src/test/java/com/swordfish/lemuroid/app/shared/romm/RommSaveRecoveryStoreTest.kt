@@ -58,7 +58,9 @@ class RommSaveRecoveryStoreTest {
         assertThrows(IOException::class.java) {
             RommSaveRecoveryStore(backups).stageRecovery(backup, immutable)
         }
-        assertEquals(1, immutable.listFiles()?.size)
+        // A committed backup now has two immutable files: data + SHA-256 manifest.
+        assertEquals(2, immutable.listFiles()?.size)
+        assertTrue(java.io.File(immutable, backup.file.name + ".sha256").isFile)
     }
 
     @Test
