@@ -40,6 +40,7 @@ import com.swordfish.lemuroid.app.mobile.feature.settings.advanced.AdvancedSetti
 import com.swordfish.lemuroid.app.mobile.feature.settings.advanced.AdvancedSettingsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.ControllerAppearanceScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.LibraryMaintenanceScreen
+import com.swordfish.lemuroid.app.mobile.feature.settings.general.RetroAchievementsSettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.inputdevices.InputDevicesSettingsScreen
@@ -292,6 +293,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                     }
                     composable(MainRoute.SETTINGS_ROMM) {
                         RommSettingsScreen(modifier = Modifier.padding(padding))
+                    }
+                    composable(MainRoute.SETTINGS_RETROACHIEVEMENTS) {
+                        RetroAchievementsSettingsScreen(modifier = Modifier.padding(padding))
                     }
                 }
             }
