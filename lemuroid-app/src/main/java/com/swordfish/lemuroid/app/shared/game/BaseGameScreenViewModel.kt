@@ -210,14 +210,14 @@ class BaseGameScreenViewModel(
                 saves.restoreAutoSaveAsync(it)
             }
         }
-        // A real core is only available after the GL surface and NES ROM have
-        // loaded. SurfaceCreated is replayed by GLRetroView, so a late
-        // subscription cannot accidentally attach to an uninitialized core.
-        // This coroutine owns the native client for the ViewModel lifetime;
-        // cancellation on game exit detaches the observer and destroys it.
+        // Attach after an actual rendered frame, not a one-time surface
+        // event that can be replaced in GLRetroView's single replay slot
+        // before this coroutine subscribes. Frames keep arriving and the
+        // first one guarantees the core and NES ROM are initialized.
+        // Cancellation on game exit detaches and destroys the native client.
         viewModelScope.launch {
             try {
-                retroGameView.waitGLEvent<GLRetroView.GLRetroEvents.SurfaceCreated>()
+                retroGameView.waitGLEvent<GLRetroView.GLRetroEvents.FrameRendered>()
                 RetroAchievementsGameSessionRunner(appContext).run(gameData.game)
             } catch (e: CancellationException) {
                 throw e
