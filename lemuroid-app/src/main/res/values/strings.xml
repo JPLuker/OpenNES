@@ -553,4 +553,16 @@
     <string name="opennes_romm_archive_empty">No verified offline saves archived yet.</string>
     <string name="opennes_romm_archive_entry">RomM game #%1$d</string>
     <string name="opennes_romm_archive_size">%1$d bytes · Verified</string>
+    <string name="opennes_ra_native_login_title">Emulator account</string>
+    <string name="opennes_ra_native_login_explanation">Sign in with your RetroAchievements username and password. OpenNES sends them once to the official secure service and stores only the confirmed emulator token in Android Keystore-protected storage.</string>
+    <string name="opennes_ra_native_username">RetroAchievements username</string>
+    <string name="opennes_ra_native_password">RetroAchievements password</string>
+    <string name="opennes_ra_native_sign_in">Sign in</string>
+    <string name="opennes_ra_native_sign_out">Sign out</string>
+    <string name="opennes_ra_native_signed_in">Emulator account: %1$s</string>
+    <string name="opennes_ra_native_checking">Checking saved emulator account…</string>
+    <string name="opennes_ra_native_connected">Account credentials verified and saved securely. Earning achievements is not active until the native game session is completed.</string>
+    <string name="opennes_ra_native_disconnected">Emulator account signed out on this device.</string>
+    <string name="opennes_ra_native_reconnect">Saved credentials could not be read. Sign in again to refresh the account.</string>
+    <string name="opennes_ra_native_login_failed">Sign-in failed. Check your connection and credentials.</string>
 </resources>
