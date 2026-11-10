@@ -118,8 +118,9 @@ class WikidataNesMetadataSource {
                 val id = item.optString("id")
                 val entity = entities.optJSONObject(id) ?: return@mapNotNull null
                 if (!isVerifiedNesVideoGame(entity)) return@mapNotNull null
-                val label = item.optString("label").trim().takeIf { it.isNotBlank() }
-                    ?: return@mapNotNull null
+                val label =
+                    item.optString("label").trim().takeIf { it.isNotBlank() }
+                        ?: return@mapNotNull null
                 val claims = entity.optJSONObject("claims")
                 val year =
                     claims?.let { gameClaims ->
