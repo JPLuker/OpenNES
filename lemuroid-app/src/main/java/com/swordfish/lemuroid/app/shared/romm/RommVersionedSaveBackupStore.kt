@@ -56,8 +56,16 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
             }
             if (total <= 0) throw IOException("Cannot back up empty save")
             val fingerprint = hex(digest.digest())
-            val filename = "romm-" + romId + "-" + System.currentTimeMillis() + "-" +
-                UUID.randomUUID().toString() + ".savebak"
+            val filename =
+                buildString {
+                    append("romm-")
+                    append(romId)
+                    append("-")
+                    append(System.currentTimeMillis())
+                    append("-")
+                    append(UUID.randomUUID().toString())
+                    append(".savebak")
+                }
             val destination = File(directory, filename)
             if (destination.exists() || !staging.renameTo(destination)) {
                 throw IOException("Cannot commit a new versioned backup")

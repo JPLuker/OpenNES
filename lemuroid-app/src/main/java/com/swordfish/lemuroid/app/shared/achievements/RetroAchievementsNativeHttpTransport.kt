@@ -90,8 +90,9 @@ internal class RetroAchievementsNativeHttpTransport(
 
         /** Reject unsafe URLs before a native callback can send secrets. */
         fun validatedEndpoint(raw: String): HttpUrl {
-            val url = raw.toHttpUrlOrNull()
-                ?: throw IllegalArgumentException("Invalid RetroAchievements endpoint")
+            val url =
+                raw.toHttpUrlOrNull()
+                    ?: throw IllegalArgumentException("Invalid RetroAchievements endpoint")
             require(
                 url.scheme == "https" &&
                     url.host == "retroachievements.org" &&
