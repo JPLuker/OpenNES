@@ -206,7 +206,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 touchControllerSettings?.landscapeHandheld == true &&
                 !compactLandscape
         val allowTouchOverlay =
-            if (handheldActive) false else if (compactLandscape) true else landscapeOverlaySelected
+            when {
+                handheldActive -> false
+                compactLandscape -> true
+                else -> landscapeOverlaySelected
+            }
 
         // The editing overlay must never outlive the virtual controls.
         // A physical gamepad can become active mid-drag and hide PadKit.
