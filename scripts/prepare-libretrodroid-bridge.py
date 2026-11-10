@@ -83,6 +83,7 @@ target_sources(libretrodroid PRIVATE
     ${OPENNES_RA_RUNTIME_SOURCES}
     "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/ra_preflight.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/ra_token_session.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../../../../../opennes-libretrodroid/src/main/cpp/ra_game_session.cpp"
 )
 target_include_directories(libretrodroid PRIVATE
     "${OPENNES_RA_ROOT}/include"
