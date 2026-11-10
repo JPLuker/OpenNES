@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +20,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -34,6 +39,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.game.NesControllerOnboardingStore
+import com.swordfish.lemuroid.app.mobile.feature.game.NesLandscapeStyle
+import com.swordfish.lemuroid.app.mobile.feature.game.NesLandscapeStylePicker
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.NesColorWheelDialog
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsColors
@@ -43,6 +50,10 @@ import com.swordfish.touchinput.radial.NesColorPart
 import com.swordfish.touchinput.radial.NesControllerAppearanceStore
 import com.swordfish.touchinput.radial.NesControllerPresets
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
+import com.swordfish.touchinput.radial.settings.TouchControllerID
+import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
+import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
+import kotlinx.coroutines.launch
 
 /**
  * Accessible directly from Settings, without loading a ROM.
@@ -56,6 +67,22 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
     val setupStore = remember(context) { NesControllerOnboardingStore(context) }
     var setupRequested by remember { mutableStateOf(false) }
     var colorWheelPart by remember { mutableStateOf<NesColorPart?>(null) }
+    val landscapeManager =
+        remember(context) {
+            TouchControllerSettingsManager(SharedPreferencesHelper.getSharedPreferences(context))
+        }
+    val density = LocalDensity.current
+    val insets = WindowInsets.displayCutout
+    val landscapeSettings =
+        remember(landscapeManager, density, insets) {
+            landscapeManager.observeSettings(
+                TouchControllerID.NES,
+                TouchControllerSettingsManager.Orientation.LANDSCAPE,
+                density,
+                insets,
+            )
+        }.collectAsState(null).value
+    val scope = rememberCoroutineScope()
 
     OpenNesSettingsPage(modifier = modifier) {
         OpenNesSettingsGroup(
@@ -84,6 +111,33 @@ fun ControllerAppearanceScreen(modifier: Modifier = Modifier) {
                 Text(
                     text = stringResource(R.string.opennes_controller_position_hint),
                     color = OpenNesSettingsColors.muted,
+                )
+            }
+        }
+        OpenNesSettingsGroup(
+            title = { Text(stringResource(R.string.opennes_landscape_style_title)) },
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.opennes_setup_landscape_hint),
+                    color = OpenNesSettingsColors.muted,
+                )
+                NesLandscapeStylePicker(
+                    selected = NesLandscapeStyle.fromSettings(landscapeSettings),
+                    palette = appearance.palette,
+                    onSelect = { style ->
+                        val current = landscapeSettings ?: TouchControllerSettingsManager.Settings()
+                        scope.launch {
+                            landscapeManager.storeSettings(
+                                TouchControllerID.NES,
+                                TouchControllerSettingsManager.Orientation.LANDSCAPE,
+                                style.apply(current),
+                            )
+                        }
+                    },
                 )
             }
         }
