@@ -7,8 +7,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import okhttp3.HttpUrl
-import java.io.IOException
 
 /**
  * Drives the pinned rc_client's actual token-login callbacks over HTTPS.
