@@ -23,6 +23,7 @@ std::mutex probeMutex;
 rc_client_t* probeClient = nullptr;
 std::atomic<uint64_t> observedFrames{0};
 std::atomic<uint64_t> mappedMemoryBytes{0};
+std::atomic<uint64_t> successfulMemorySamples{0};
 std::atomic<uint64_t> observedGameGeneration{0};
 rc_libretro_memory_regions_t probeRegions{};
 
@@ -67,6 +68,7 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_star
     // in-progress emulated frame before that client can be destroyed.
     observedFrames.store(0, std::memory_order_relaxed);
     mappedMemoryBytes.store(0, std::memory_order_relaxed);
+    successfulMemorySamples.store(0, std::memory_order_relaxed);
     rc_libretro_memory_destroy(&probeRegions);
     const auto currentGeneration =
         libretrodroid::LibretroDroid::getInstance().currentGameGeneration();
@@ -80,6 +82,7 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_star
         if (generation != observedGameGeneration.load(std::memory_order_acquire)) {
             rc_libretro_memory_destroy(&probeRegions);
             mappedMemoryBytes.store(0, std::memory_order_relaxed);
+            successfulMemorySamples.store(0, std::memory_order_relaxed);
             observedGameGeneration.store(generation, std::memory_order_release);
         }
 
@@ -91,6 +94,14 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_star
                     std::memory_order_relaxed
                 );
             }
+        }
+        // A successful mapping is not enough; verify that a byte at the
+        // NES runtime's zero-page address is actually readable. Never
+        // expose the value or send it over the network.
+        if (mappedMemoryBytes.load(std::memory_order_relaxed) != 0) {
+            uint8_t sample = 0;
+            if (rc_libretro_memory_read(&probeRegions, 0, &sample, 1) == 1)
+                successfulMemorySamples.fetch_add(1, std::memory_order_relaxed);
         }
         rc_client_do_frame(client);
         observedFrames.fetch_add(1, std::memory_order_relaxed);
@@ -129,4 +140,14 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_mapp
         libretrodroid::LibretroDroid::getInstance().currentGameGeneration())
         return 0;
     return static_cast<jlong>(mappedMemoryBytes.load(std::memory_order_relaxed));
+}
+
+extern "C" JNIEXPORT jlong JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_successfulMemorySamples(
+    JNIEnv*, jobject
+) {
+    if (observedGameGeneration.load(std::memory_order_acquire) !=
+        libretrodroid::LibretroDroid::getInstance().currentGameGeneration())
+        return 0;
+    return static_cast<jlong>(successfulMemorySamples.load(std::memory_order_relaxed));
 }

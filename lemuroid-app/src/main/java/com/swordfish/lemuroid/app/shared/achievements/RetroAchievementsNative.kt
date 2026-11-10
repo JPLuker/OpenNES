@@ -24,4 +24,7 @@ internal object RetroAchievementsNative {
 
     /** Bytes in official NES memory mapping; zero until a core is available. */
     external fun mappedProbeBytes(): Long
+
+    /** Actual safe 1-byte RAM reads on emulated frames, not just map size. */
+    external fun successfulMemorySamples(): Long
 }

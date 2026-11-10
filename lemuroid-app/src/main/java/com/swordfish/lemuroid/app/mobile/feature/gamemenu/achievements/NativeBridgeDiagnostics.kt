@@ -34,6 +34,7 @@ internal fun NativeBridgeDiagnostics() {
     var expanded by remember { mutableStateOf(false) }
     var observed by remember { mutableStateOf<Long?>(null) }
     var mappedBytes by remember { mutableStateOf<Long?>(null) }
+    var successfulSamples by remember { mutableStateOf<Long?>(null) }
     var status by remember { mutableStateOf<Int?>(null) }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -67,6 +68,7 @@ internal fun NativeBridgeDiagnostics() {
                     try {
                         observed = RetroAchievementsNative.observedProbeFrames()
                         mappedBytes = RetroAchievementsNative.mappedProbeBytes()
+                        successfulSamples = RetroAchievementsNative.successfulMemorySamples()
                         status = R.string.opennes_ra_debug_refreshed
                     } catch (_: Throwable) {
                         status = R.string.opennes_ra_debug_failed
@@ -79,6 +81,7 @@ internal fun NativeBridgeDiagnostics() {
                 try {
                     observed = RetroAchievementsNative.observedProbeFrames()
                     mappedBytes = RetroAchievementsNative.mappedProbeBytes()
+                    successfulSamples = RetroAchievementsNative.successfulMemorySamples()
                     RetroAchievementsNative.stopFrameProbe()
                     status = R.string.opennes_ra_debug_stopped
                 } catch (_: Throwable) {
@@ -97,6 +100,13 @@ internal fun NativeBridgeDiagnostics() {
         mappedBytes?.let { count ->
             Text(
                 text = stringResource(R.string.opennes_ra_debug_mapped, count),
+                color = GameMenuStyle.foreground,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+        successfulSamples?.let { count ->
+            Text(
+                text = stringResource(R.string.opennes_ra_debug_reads, count),
                 color = GameMenuStyle.foreground,
                 fontWeight = FontWeight.SemiBold,
             )

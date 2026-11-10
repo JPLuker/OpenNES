@@ -59,7 +59,7 @@
 
 ## Debug-only real-device native acceptance tool
 
-- Open Pause → Achievements → **Native bridge diagnostics (debug only)**, then Start probe, resume NES gameplay, reopen and Refresh. Expect observed frames to advance and mapped memory to be nonzero for a supported FCEUmm game. Stop probe afterward.
+- Open Pause → Achievements → **Native bridge diagnostics (debug only)**, then Start probe, resume NES gameplay, reopen and Refresh. Expect observed frames **and successful 1-byte NES zero-page RAM reads** to advance, with mapped memory nonzero. No memory values are exposed. Stop probe afterward.
 - This manually arms the dormant `rc_client` runtime to exercise the official NES memory-region map; it does **not** create a user session, submit requests, or award achievements. Diagnostic controls are hidden in non-debug APKs.
 - Test against real NES gameplay and save/load, fast-forward and rotation, and verify stopping clears the native mapping safely. Compiling these hooks is not a substitute for on-device testing.
 

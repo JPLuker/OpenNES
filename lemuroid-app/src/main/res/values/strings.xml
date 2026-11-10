@@ -497,7 +497,7 @@
     <string name="opennes_ra_web_progress_list_title">Website achievement history</string>
     <string name="opennes_ra_web_progress_account">Viewing website progress for %1$s</string>
     <string name="opennes_ra_debug_title">Native bridge diagnostics (debug only)</string>
-    <string name="opennes_ra_debug_instructions">Tap Start, close this menu, play for several seconds, then reopen Achievements and tap Refresh. Frame count should increase, and mapped NES memory should be greater than zero. Stop the probe when finished. This does not earn achievements.</string>
+    <string name="opennes_ra_debug_instructions">Tap Start, close this menu, play for several seconds, then reopen Achievements and tap Refresh. Frame count and verified RAM reads should increase, and mapped NES memory should be greater than zero. Stop the probe when finished. This does not earn achievements.</string>
     <string name="opennes_ra_debug_start">Start probe</string>
     <string name="opennes_ra_debug_refresh">Refresh</string>
     <string name="opennes_ra_debug_stop">Stop probe</string>
@@ -507,4 +507,5 @@
     <string name="opennes_ra_debug_stopped">Probe stopped.</string>
     <string name="opennes_ra_debug_frames">Emulated frames observed: %1$d</string>
     <string name="opennes_ra_debug_mapped">Mapped NES memory: %1$d bytes</string>
+    <string name="opennes_ra_debug_reads">Verified zero-page RAM reads: %1$d</string>
 </resources>
