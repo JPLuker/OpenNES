@@ -266,7 +266,7 @@ class RommApiClient {
 
     suspend fun listOfflineSaveBackups(
         context: Context,
-        romId: Int,
+        romId: Int? = null,
     ): List<RommVersionedSaveBackupStore.Backup> =
         withContext(Dispatchers.IO) {
             privateBackupStore(context).listVerifiedBackups(romId)
