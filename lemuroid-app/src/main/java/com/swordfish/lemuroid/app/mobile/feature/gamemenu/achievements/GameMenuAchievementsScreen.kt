@@ -39,6 +39,7 @@ import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.achievements.NesRetroAchievementsHash
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsDisplayState
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeGameResolver
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
@@ -59,8 +60,12 @@ fun GameMenuAchievementsScreen(
         mutableStateOf<LocalIdentification>(LocalIdentification.Checking)
     }
     val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    var recognizedGame by remember(game.id, game.fileUri) {
+        mutableStateOf<RetroAchievementsNativeGameResolver.Result?>(null)
+    }
     LaunchedEffect(game.id, game.fileUri) {
         identification = LocalIdentification.Checking
+        recognizedGame = null
         identification =
             try {
                 LocalIdentification.Identified(NesRetroAchievementsHash.forGame(context, game))
@@ -70,6 +75,12 @@ fun GameMenuAchievementsScreen(
                 // Do not log ROM paths or tokens in a user-visible status.
                 Timber.w("RetroAchievements ROM identification unavailable: %s", e.javaClass.simpleName)
                 LocalIdentification.Unavailable
+            }
+        recognizedGame =
+            when (val local = identification) {
+                is LocalIdentification.Identified ->
+                    RetroAchievementsNativeGameResolver().resolve(local.identity)
+                else -> RetroAchievementsNativeGameResolver.Result.Unavailable
             }
     }
 
@@ -171,6 +182,51 @@ fun GameMenuAchievementsScreen(
                 romMd5 = sessionData.romMd5,
                 achievements = sessionData.achievements,
             )
+        }
+
+        Surface(
+            color = GameMenuStyle.surface,
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.dp, GameMenuStyle.border),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.opennes_ra_lookup_heading),
+                    color = GameMenuStyle.foreground,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                when (val resolved = recognizedGame) {
+                    null ->
+                        CircularProgressIndicator(
+                            modifier = Modifier.width(18.dp),
+                            color = GameMenuStyle.red,
+                            strokeWidth = 2.dp,
+                        )
+                    is RetroAchievementsNativeGameResolver.Result.VerifiedGame ->
+                        Text(
+                            text = stringResource(R.string.opennes_ra_lookup_match, resolved.id),
+                            color = GameMenuStyle.foreground,
+                        )
+                    RetroAchievementsNativeGameResolver.Result.NoMatch ->
+                        Text(
+                            text = stringResource(R.string.opennes_ra_lookup_not_found),
+                            color = GameMenuStyle.muted,
+                        )
+                    RetroAchievementsNativeGameResolver.Result.Unavailable ->
+                        Text(
+                            text = stringResource(R.string.opennes_ra_lookup_offline),
+                            color = GameMenuStyle.muted,
+                        )
+                }
+                Text(
+                    text = stringResource(R.string.opennes_ra_lookup_notice),
+                    color = GameMenuStyle.muted,
+                    fontSize = 12.sp,
+                )
+            }
         }
 
         RetroAchievementsWebSection(
