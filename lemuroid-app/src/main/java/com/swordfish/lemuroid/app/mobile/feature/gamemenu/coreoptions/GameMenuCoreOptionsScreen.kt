@@ -15,6 +15,8 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSwitch
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.lemuroid.app.shared.coreoptions.CoreOptionsPreferenceHelper
 import com.swordfish.lemuroid.app.shared.coreoptions.LemuroidCoreOption
 import com.swordfish.lemuroid.app.shared.settings.ControllerConfigsManager
@@ -50,7 +52,14 @@ private fun CoreOptions(
     coreOptions: List<LemuroidCoreOption>,
     context: Context,
 ) {
-    val validOptions = coreOptions.filter { it.getEntriesValues().isNotEmpty() }
+    val validOptions =
+        coreOptions.filter { option ->
+            option.getEntriesValues().isNotEmpty() &&
+                (
+                    option.getKey() != "fceumm_game_genie" ||
+                        HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.GAME_GENIE_DEVICE)
+                )
+        }
     if (validOptions.isEmpty()) return
 
     OpenNesSettingsGroup(

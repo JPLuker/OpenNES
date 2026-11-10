@@ -44,6 +44,8 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.tilt.TiltConfigurationMenuEntry
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.GameMenuContract
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsList
 import kotlin.reflect.KFunction1
 
@@ -64,6 +66,7 @@ fun GameMenuHomeScreen(
     onResult: KFunction1<Intent.() -> Unit, Unit>,
 ) {
     var confirmation by remember { mutableStateOf<Confirmation?>(null) }
+    val hardcoreActive = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
 
     Column(
         modifier =
@@ -124,12 +127,14 @@ fun GameMenuHomeScreen(
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigateToRoute(GameMenuRoute.SAVE) },
                 )
-                GameMenuQuickAction(
-                    label = stringResource(R.string.game_menu_load),
-                    icon = R.drawable.ic_menu_load,
-                    modifier = Modifier.weight(1f),
-                    onClick = { navController.navigateToRoute(GameMenuRoute.LOAD) },
-                )
+                if (!hardcoreActive) {
+                    GameMenuQuickAction(
+                        label = stringResource(R.string.game_menu_load),
+                        icon = R.drawable.ic_menu_load,
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigateToRoute(GameMenuRoute.LOAD) },
+                    )
+                }
             }
         }
 
@@ -140,12 +145,14 @@ fun GameMenuHomeScreen(
             onClick = { navController.navigateToRoute(GameMenuRoute.ACHIEVEMENTS) },
         )
 
-        GameMenuAction(
-            title = stringResource(R.string.opennes_cheats_title),
-            icon = R.drawable.ic_menu_cheats,
-            detail = stringResource(R.string.opennes_cheats_subtitle),
-            onClick = { navController.navigateToRoute(GameMenuRoute.CHEATS) },
-        )
+        if (!hardcoreActive) {
+            GameMenuAction(
+                title = stringResource(R.string.opennes_cheats_title),
+                icon = R.drawable.ic_menu_cheats,
+                detail = stringResource(R.string.opennes_cheats_subtitle),
+                onClick = { navController.navigateToRoute(GameMenuRoute.CHEATS) },
+            )
+        }
 
         GameMenuAction(
             title = stringResource(R.string.game_menu_edit_touch_controls),

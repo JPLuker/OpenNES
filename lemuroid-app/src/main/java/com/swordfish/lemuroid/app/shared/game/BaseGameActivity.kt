@@ -18,6 +18,7 @@ import com.swordfish.lemuroid.app.mobile.feature.game.GameService
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.AppTheme
 import com.swordfish.lemuroid.app.shared.GameMenuContract
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.ImmersiveActivity
 import com.swordfish.lemuroid.app.shared.coreoptions.CoreOption
 import com.swordfish.lemuroid.app.shared.coreoptions.LemuroidCoreOption
@@ -372,6 +373,10 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     override fun onStop() {
+        // Even a quick-resumed or backgrounded emulator must downgrade to
+        // Casual. Pausing for the menu may also trigger this conservative
+        // transition; remaining Hardcore in that case is not essential.
+        if (::game.isInitialized) HardcoreRuntime.onSuspended(game.fileUri)
         if (!finishTriggered && !isFinishing && !isChangingConfigurations) {
             baseGameScreenViewModel.requestBackgroundSave()
         }
