@@ -224,6 +224,9 @@ class BaseGameScreenViewModel(
         viewModelScope.launch {
             try {
                 retroGameView.waitGLEvent<GLRetroView.GLRetroEvents.FrameRendered>()
+                // The newly loaded NES core must start with no cheat codes.
+                // This precedes the first authenticated achievement session.
+                NesCheatSession.clearAtGameStart(gameData.game.fileUri)
                 RetroAchievementsGameSessionRunner(appContext).run(gameData.game)
             } catch (e: CancellationException) {
                 throw e
