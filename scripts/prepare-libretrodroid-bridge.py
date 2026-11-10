@@ -119,7 +119,10 @@ target_link_libraries(libretrodroid
         return gameGeneration.load(std::memory_order_acquire);
     }
     // Future rc_client hook runs synchronously after *every* retro_run().
-    void setEmulatedFrameObserver(std::function<void()> callback);""",
+    void setEmulatedFrameObserver(std::function<void()> callback);
+    // Use this for idle native client calls that may read emulator RAM.
+    // The callback always holds coreLock and must acquire clientMutex second.
+    void withCoreLock(const std::function<void(bool)>& callback);""",
         "libretrodroid.h bridge",
     )
     h = replace_once(
@@ -209,6 +212,11 @@ uint64_t LibretroDroid::emulatedFrameCount() {
 void LibretroDroid::setEmulatedFrameObserver(std::function<void()> callback) {
     std::lock_guard<std::mutex> lock(coreLock);
     emulatedFrameObserver = std::move(callback);
+}
+
+void LibretroDroid::withCoreLock(const std::function<void(bool)>& callback) {
+    std::lock_guard<std::mutex> lock(coreLock);
+    callback(achievementsGameLoaded && core != nullptr);
 }
 
 void LibretroDroid::step() {""",

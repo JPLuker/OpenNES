@@ -386,16 +386,22 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_idleGameSession(
     JNIEnv*, jobject, jlong session
 ) {
-    std::lock_guard<std::recursive_mutex> lock(clientMutex);
-    if (session <= 0 || activeId.load() != static_cast<uint64_t>(session) ||
-        !gameClient || disposing || sessionState < 0) return;
-    if (libretrodroid::LibretroDroid::getInstance().currentGameGeneration() != coreGeneration) {
-        sessionState = -2;
-        return;
-    }
-    // rc_client's timers and callbacks must keep progressing even when
-    // Android pauses the renderer. The RAM callback is frame-thread gated.
-    rc_client_idle(gameClient);
+    // Lock ordering matches the per-frame observer and client teardown:
+    // emulator coreLock, then clientMutex. rc_client_idle is allowed to
+    // inspect RAM, so serializing *only* on clientMutex would be unsafe.
+    auto& emulator = libretrodroid::LibretroDroid::getInstance();
+    emulator.withCoreLock([&](bool coreReady) {
+        std::lock_guard<std::recursive_mutex> lock(clientMutex);
+        if (session <= 0 || activeId.load() != static_cast<uint64_t>(session) ||
+            !gameClient || disposing || sessionState < 0) return;
+        if (!coreReady || emulator.currentGameGeneration() != coreGeneration) {
+            sessionState = -2;
+            return;
+        }
+        frameReadingSessionId = static_cast<uint64_t>(session);
+        rc_client_idle(gameClient);
+        frameReadingSessionId = 0;
+    });
 }
 
 extern "C" JNIEXPORT jint JNICALL
