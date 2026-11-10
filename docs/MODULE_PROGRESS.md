@@ -2,7 +2,7 @@
 
 Updated: 2026-11-10
 
-This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The latest completed successful APK before the November 10 keyboard fix was [commit `43a5cad9`](https://github.com/JPLuker/OpenNES/commit/43a5cad9c717013270bfaa83acd3591b91de4d51), [CI run 42824814453](https://github.com/JPLuker/OpenNES/actions/runs/42824814453). The latest keyboard/dialog and NES hash regression batch requires its **own** CI verdict and phone acceptance; an earlier successful build does not validate it. The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) is not accepted and M6–M8 remain incomplete. See the [no-device work plan](NO_DEVICE_BUILD_PLAN_2026-11-10.md).
+This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The last verified baseline was [commit `2f5c8910`](https://github.com/JPLuker/OpenNES/commit/2f5c8910cef12d5d5edb60d2278b8985f8247b64), [CI run 42834742270](https://github.com/JPLuker/OpenNES/actions/runs/42834742270). Later changes to cancellable M6 HTTP and M7 recovery/snapshot utilities need a separate green CI verdict. The [M0–M5 manual test matrix](M5_FINAL_TESTING.md) remains unaccepted; M6 native authenticated awards and M7 real-server sync are **not implemented**. See the [no-device work plan](NO_DEVICE_BUILD_PLAN_2026-11-10.md).
 
 ## Milestones
 
@@ -19,6 +19,13 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M6 — RetroAchievements** | **ACTIVE — native diagnostics DEVICE-SAMPLED**: real phone observed 234 emulated frames, 65,536 mapped bytes and 234 successful NES zero-page reads; website history retrieved matching RoboCop set. Dormant native `rc_client` bridge is source-built; full login and new awards are NOT implemented | Test save/restart/fast-forward stress and complete native account/achievement lifecycle; do not equate diagnostic counters with authenticated award readiness |
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS client, Android Keystore-protected token, NES-only browse/import UI, collision-safe ROM download into chosen local folder and automatic rescan implemented in source | Required before public release: verify server schema/permissions, import pipeline and offline behavior; save sync/conflicts remain unimplemented |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
+
+## November 10 — M6 cancellable transport / M7 safe recovery and snapshots
+
+- **M6 source-only:** The official-host-only HTTPS transport now uses cancellable OkHttp requests. Cancelling a game/session coroutine cancels the associated socket; responses remain size-bounded and URL/secret contents are never logged. A cancellation regression test was added. **This transport is not connected to native `rc_client` server callbacks**; there is no functional in-app native login or earned awards yet.
+- **M7 source-only:** Added a recovery helper that copies a previously verified, versioned local backup into a **new verified recovery file**; it does not replace active saves, upload anything to RomM, or auto-restore. Added tests for corruption, immutability and repeat recovery.
+- **M7 source-only:** Added a file-based SHA-256 snapshotter that fingerprints a save twice and refuses empty/oversized/changing files. These snapshots are the inputs expected by the existing fail-closed sync planner, but no upload/download executor is enabled.
+- **Verification discipline:** Kotlin tests and debug APK CI are not a substitute for actual Android device and real RomM/RetroAchievements account testing. This batch is not a finished M6 or M7 feature.
 
 ## November 10 M2/M4 fixes and M6 regression work — pending exact-candidate CI
 
