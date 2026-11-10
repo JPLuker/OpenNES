@@ -1113,7 +1113,11 @@ private fun FixMatchSection(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Text(
-                                text = listOfNotNull(candidate.title, candidate.releaseYear?.toString()).joinToString(" · "),
+                                text =
+                                    listOfNotNull(
+                                        candidate.title,
+                                        candidate.releaseYear?.toString(),
+                                    ).joinToString(" · "),
                                 fontWeight = FontWeight.SemiBold,
                             )
                             candidate.shortDescription?.let {
