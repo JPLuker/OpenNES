@@ -31,7 +31,8 @@ class NesCheatExchangeTest {
                 "{}",
                 """{"format":"OpenNES-cheats-v1","entries":[{"name":"Bad","code":"FFFF:XX"}]}""",
                 """{"format":"OpenNES-cheats-v1","entries":[{"name":"Bad","code":"APZLGI","enabled":true}]}""",
-                """{"format":"OpenNES-cheats-v1","entries":[{"name":"A","code":"APZLGI"},{"name":"B","code":"APZLGI"}]}""",
+                """{"format":"OpenNES-cheats-v1","entries":[""" +
+                    """{"name":"A","code":"APZLGI"},{"name":"B","code":"APZLGI"}]}""",
                 """{"format":"another-format","entries":[]}""",
             )
         invalid.forEach { assertNull(NesCheatExchange.decode(it.toByteArray())) }
