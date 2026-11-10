@@ -63,6 +63,9 @@ def main() -> int:
             b"Java_com_swordfish_libretrodroid_LibretroDroid_copyCoreMemory",
             b"Java_com_swordfish_libretrodroid_LibretroDroid_emulatedFrameCount",
             b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_preflight",
+            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startFrameProbe",
+            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_stopFrameProbe",
+            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_observedProbeFrames",
         )
         with zipfile.ZipFile(args.apk) as archive:
             for lib in libs:
