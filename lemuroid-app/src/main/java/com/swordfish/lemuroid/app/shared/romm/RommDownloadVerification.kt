@@ -61,13 +61,39 @@ object RommDownloadVerification {
                     val ext = entry.name.substringAfterLast('.', "").lowercase(Locale.ROOT)
                     if (ext == "nes" || ext == "fds") roms++
                     if (roms > 1) throw IOException("NES ZIP contains multiple ROMs")
+                    // A .nes filename alone is not proof of a valid ROM.
+                    // Verify the embedded iNES header while streaming rather
+                    // than accepting a renamed or truncated archive entry.
+                    val header = ByteArray(4)
+                    var headerLength = 0
+                    var entryLength = 0L
                     while (true) {
                         val count = archive.read(buffer)
                         if (count < 0) break
+                        if (count == 0) continue
+                        if (headerLength < header.size) {
+                            val bytes = minOf(header.size - headerLength, count)
+                            buffer.copyInto(header, headerLength, 0, bytes)
+                            headerLength += bytes
+                        }
+                        entryLength += count
                         total += count
                         if (total > MAX_ROM_UNCOMPRESSED) {
                             throw IOException("NES ZIP expands beyond safe size limit")
                         }
+                    }
+                    if (ext == "nes" && (
+                            headerLength != 4 ||
+                                header[0] != 0x4E.toByte() ||
+                                header[1] != 0x45.toByte() ||
+                                header[2] != 0x53.toByte() ||
+                                header[3] != 0x1A.toByte()
+                        )
+                    ) {
+                        throw IOException("NES ZIP contains an invalid iNES header")
+                    }
+                    if (ext == "fds" && entryLength < 128L) {
+                        throw IOException("NES ZIP contains a truncated FDS file")
                     }
                 }
                 archive.closeEntry()
