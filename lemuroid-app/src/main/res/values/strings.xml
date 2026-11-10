@@ -565,4 +565,9 @@
     <string name="opennes_ra_native_disconnected">Emulator account signed out on this device.</string>
     <string name="opennes_ra_native_reconnect">Saved credentials could not be read. Sign in again to refresh the account.</string>
     <string name="opennes_ra_native_login_failed">Sign-in failed. Check your connection and credentials.</string>
+    <string name="opennes_ra_lookup_heading">Official game identification</string>
+    <string name="opennes_ra_lookup_match">Recognized RetroAchievements game #%1$d</string>
+    <string name="opennes_ra_lookup_not_found">RetroAchievements has no matching game for this ROM hash.</string>
+    <string name="opennes_ra_lookup_offline">Game identification unavailable. Check your connection and try reopening Achievements.</string>
+    <string name="opennes_ra_lookup_notice">Official game recognition does not activate achievements. Native game sessions and real unlocks are still under development.</string>
 </resources>
