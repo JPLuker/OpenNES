@@ -259,7 +259,7 @@ fun GameMenuAchievementsScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
-                            text = stringResource(R.string.opennes_ra_lookup_heading),
+                        text = stringResource(R.string.opennes_ra_lookup_heading),
                         color = GameMenuStyle.foreground,
                         fontWeight = FontWeight.SemiBold,
                     )
