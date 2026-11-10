@@ -39,6 +39,7 @@ class NesCoverPrefetcher(context: Context) {
                             ImageRequest.Builder(appContext)
                                 .data(url)
                                 .size(320, 440)
+                                .memoryCacheKey(CoverUtils.coverMemoryKey(url))
                                 .build(),
                         )
                     }.onFailure {
