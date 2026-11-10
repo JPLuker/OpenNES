@@ -9,6 +9,8 @@ import androidx.lifecycle.LifecycleOwner
 import com.swordfish.lemuroid.BuildConfig
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.lemuroid.app.shared.game.ShaderChooser
 import com.swordfish.lemuroid.app.shared.rumble.RumbleManager
 import com.swordfish.lemuroid.app.shared.settings.HDModeQuality
@@ -112,7 +114,8 @@ class GameViewModelRetroGameView(
             gameLoader.load(
                 applicationContext,
                 game,
-                requestLoadSave && autoSaveEnabled,
+                requestLoadSave && autoSaveEnabled &&
+                    HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE),
                 systemCoreConfig,
                 directLoad,
             )
@@ -233,7 +236,12 @@ class GameViewModelRetroGameView(
 
             systemDirectory = gameData.systemDirectory.absolutePath
             savesDirectory = gameData.savesDirectory.absolutePath
-            variables = gameData.coreVariables.map { Variable(it.key, it.value) }.toTypedArray()
+            variables =
+                gameData.coreVariables.map { option ->
+                    // FCEUmm's Game Genie device is a distinct core option,
+                    // separate from codes in the Cheat editor.
+                    Variable(option.key, safeCoreOptionValue(option.key, option.value))
+                }.toTypedArray()
             saveRAMState = gameData.saveRAMData
             shader =
                 ShaderChooser.getShaderForSystem(
@@ -331,7 +339,7 @@ class GameViewModelRetroGameView(
 
     private fun updateCoreVariables(options: List<CoreVariable>) {
         val updatedVariables =
-            options.map { Variable(it.key, it.value) }
+            options.map { Variable(it.key, safeCoreOptionValue(it.key, it.value)) }
                 .toTypedArray()
 
         updatedVariables.forEach {
@@ -339,6 +347,18 @@ class GameViewModelRetroGameView(
         }
 
         retroGameView?.updateVariables(*updatedVariables)
+    }
+
+    private fun safeCoreOptionValue(
+        key: String,
+        value: String,
+    ): String {
+        if (key == "fceumm_game_genie" &&
+            !HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.GAME_GENIE_DEVICE)
+        ) {
+            return "disabled"
+        }
+        return value
     }
 
     private fun handleRetroViewError(errorCode: Int) {

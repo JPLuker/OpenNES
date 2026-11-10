@@ -15,6 +15,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.game.GameService
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameSessionRunner
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelInput
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelRetroGameView
@@ -242,6 +243,9 @@ class BaseGameScreenViewModel(
         requestLoadSave: Boolean,
     ) {
         Timber.i("Calling load game: $game")
+        // Each ROM starts in Casual; approved Hardcore can only be activated
+        // after a clean reset and verified native session in a future build.
+        HardcoreRuntime.begin(game.fileUri)
         retroGameView.initialize(applicationContext, game, systemCoreConfig, gameLoader, requestLoadSave)
     }
 
@@ -407,6 +411,7 @@ class BaseGameScreenViewModel(
 
     override fun onCleared() {
         NesCheatSession.end(activeGameUri)
+        HardcoreRuntime.end(activeGameUri)
         super.onCleared()
     }
 }
