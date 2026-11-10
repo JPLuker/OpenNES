@@ -51,8 +51,12 @@ fun PadKitScope.NESLandscapeLeft(
         val sideWidth = maxWidth
         val sideHeight = maxHeight
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.leftScale ?: settings.scale)
-        val x = safeClusterOffset(sideWidth, dialSize, settings.leftOffsetX)
-        val y = safeVerticalOffset(sideHeight, dialSize, settings.leftOffsetY)
+        val x =
+            NesLandscapeDragLimits.horizontalTravelDp(sideWidth.value, dialSize.value).dp *
+                settings.leftOffsetX.coerceIn(-1f, 1f)
+        val y =
+            NesLandscapeDragLimits.verticalTravelDp(sideHeight.value, dialSize.value).dp *
+                settings.leftOffsetY.coerceIn(-1f, 1f)
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             LemuroidControlCross(
                 modifier =
@@ -74,6 +78,8 @@ fun PadKitScope.NESLandscapeLeft(
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
                 above = true,
+                clusterOffsetX = x,
+                clusterOffsetY = y,
             )
         }
     }
@@ -89,8 +95,12 @@ fun PadKitScope.NESLandscapeRight(
         val sideWidth = maxWidth
         val sideHeight = maxHeight
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.rightScale ?: settings.scale)
-        val x = safeClusterOffset(sideWidth, dialSize, settings.rightOffsetX)
-        val y = safeVerticalOffset(sideHeight, dialSize, settings.rightOffsetY)
+        val x =
+            NesLandscapeDragLimits.horizontalTravelDp(sideWidth.value, dialSize.value).dp *
+                settings.rightOffsetX.coerceIn(-1f, 1f)
+        val y =
+            NesLandscapeDragLimits.verticalTravelDp(sideHeight.value, dialSize.value).dp *
+                settings.rightOffsetY.coerceIn(-1f, 1f)
         val aId = remember { Id.Key(KeyEvent.KEYCODE_BUTTON_A) }
         val bId = remember { Id.Key(KeyEvent.KEYCODE_BUTTON_B) }
         val primaryAnchors =
@@ -136,6 +146,8 @@ fun PadKitScope.NESLandscapeRight(
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
                 above = true,
+                clusterOffsetX = x,
+                clusterOffsetY = y,
             )
             NESLandscapeSecondaryButton(
                 modifier = Modifier.align(Alignment.Center),
@@ -145,6 +157,8 @@ fun PadKitScope.NESLandscapeRight(
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
                 above = false,
+                clusterOffsetX = x,
+                clusterOffsetY = y,
             )
         }
     }
@@ -161,26 +175,6 @@ private fun landscapeDialSize(
     return minOf(available * multiplier, width * 0.96f, height * 0.72f)
 }
 
-private fun safeClusterOffset(
-    width: Dp,
-    dialSize: Dp,
-    setting: Float,
-): Dp {
-    val room = ((width - dialSize) / 2f - 3.dp).coerceAtLeast(0.dp)
-    val maximumOffset = minOf(room, TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X.dp)
-    return maximumOffset * setting.coerceIn(-1f, 1f)
-}
-
-private fun safeVerticalOffset(
-    height: Dp,
-    dialSize: Dp,
-    setting: Float,
-): Dp {
-    val room = ((height - dialSize) / 2f - 48.dp).coerceAtLeast(0.dp)
-    val maximumOffset = minOf(room, TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y.dp)
-    return maximumOffset * setting.coerceIn(-1f, 1f)
-}
-
 @Composable
 private fun PadKitScope.NESLandscapeSecondaryButton(
     modifier: Modifier,
@@ -190,6 +184,8 @@ private fun PadKitScope.NESLandscapeSecondaryButton(
     sideWidth: Dp,
     sideHeight: Dp,
     above: Boolean,
+    clusterOffsetX: Dp,
+    clusterOffsetY: Dp,
 ) {
     val buttonScale =
         geometry.size.coerceIn(
@@ -205,10 +201,20 @@ private fun PadKitScope.NESLandscapeSecondaryButton(
     val offsetY =
         TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y.dp *
             geometry.offsetY.coerceIn(-1f, 1f)
+    // Secondary controls follow their group when it is dragged, but clamp
+    // individually so Start/Select/Menu remain reachable at the grip edges.
+    val safeX = (sideWidth - buttonWidth).coerceAtLeast(0.dp) / 2f - 6.dp
+    val safeY = (sideHeight - buttonHeight).coerceAtLeast(0.dp) / 2f - 6.dp
+    val positionedX = (clusterOffsetX + offsetX).coerceIn(-safeX.coerceAtLeast(0.dp), safeX.coerceAtLeast(0.dp))
+    val positionedY =
+        (centerOffset + clusterOffsetY + offsetY).coerceIn(
+            -safeY.coerceAtLeast(0.dp),
+            safeY.coerceAtLeast(0.dp),
+        )
     ControlButton(
         modifier =
             modifier
-                .offset(x = offsetX, y = centerOffset + offsetY)
+                .offset(x = positionedX, y = positionedY)
                 .size(buttonWidth, buttonHeight),
         id = Id.Key(keyCode),
         background = {},
