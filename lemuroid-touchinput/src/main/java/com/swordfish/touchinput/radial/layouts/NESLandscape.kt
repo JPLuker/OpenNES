@@ -41,9 +41,8 @@ import kotlinx.collections.immutable.persistentSetOf
  * Used in BOTH Framed and NES Handheld presentations. Saved portrait geometry
  * and the existing overlay style remain untouched.
  */
-context(PadKitScope)
 @Composable
-fun NESLandscapeLeft(
+fun PadKitScope.NESLandscapeLeft(
     modifier: Modifier = Modifier,
     settings: TouchControllerSettingsManager.Settings,
     onPrimaryBounds: ((Rect) -> Unit)? = null,
@@ -80,9 +79,8 @@ fun NESLandscapeLeft(
     }
 }
 
-context(PadKitScope)
 @Composable
-fun NESLandscapeRight(
+fun PadKitScope.NESLandscapeRight(
     modifier: Modifier = Modifier,
     settings: TouchControllerSettingsManager.Settings,
     onPrimaryBounds: ((Rect) -> Unit)? = null,
@@ -183,9 +181,8 @@ private fun safeVerticalOffset(
     return maximumOffset * setting.coerceIn(-1f, 1f)
 }
 
-context(PadKitScope)
 @Composable
-private fun NESLandscapeSecondaryButton(
+private fun PadKitScope.NESLandscapeSecondaryButton(
     modifier: Modifier,
     keyCode: Int,
     label: String,
