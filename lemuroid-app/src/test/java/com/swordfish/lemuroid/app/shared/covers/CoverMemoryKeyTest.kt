@@ -7,7 +7,9 @@ import org.junit.Test
 class CoverMemoryKeyTest {
     @Test
     fun stableAcrossSurfacesAndThumbnailSizes() {
-        val url = "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Game.png"
+        val url =
+            "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/" +
+                "Named_Boxarts/Game.png"
         val shelfKey = CoverUtils.coverMemoryKey(url)
         val gameDetailsKey = CoverUtils.coverMemoryKey(url)
         val pausedGameKey = CoverUtils.coverMemoryKey(url)
