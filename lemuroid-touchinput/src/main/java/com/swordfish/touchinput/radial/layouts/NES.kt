@@ -32,6 +32,7 @@ import kotlinx.collections.immutable.persistentSetOf
  */
 val LocalNesPortraitLayout = compositionLocalOf { false }
 val LocalNesLandscapeMinimal = compositionLocalOf { false }
+val LocalNesLandscapeHandheld = compositionLocalOf { false }
 
 /** NES-only touch presentation. Keep the existing PadKit input event IDs. */
 @Composable
@@ -54,7 +55,7 @@ fun PadKitScope.NESLeft(
         },
         secondaryDials = {
             NesSecondarySelect(settings)
-            SecondaryButtonMenuPlaceholder(settings)
+            if (!LocalNesLandscapeHandheld.current) SecondaryButtonMenuPlaceholder(settings)
         },
     )
 }
@@ -133,7 +134,8 @@ private fun nesFaceAnchor(
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings) {
-    val scale = if (LocalNesPortraitLayout.current) 1.15f else 1.05f
+    val handheld = LocalNesLandscapeHandheld.current
+    val scale = if (handheld) 0.90f else if (LocalNesPortraitLayout.current) 1.15f else 1.05f
     val geometry = settings.selectButton
     val buttonScale =
         geometry.size.coerceIn(
@@ -143,7 +145,7 @@ private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings
     ControlButton(
         modifier =
             Modifier
-                .radialPosition(120f)
+                .radialPosition(if (handheld) 60f else 120f)
                 .radialScale(scale * buttonScale)
                 .offset(
                     x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
@@ -158,7 +160,8 @@ private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings) {
-    val scale = if (LocalNesPortraitLayout.current) 1.15f else 1.05f
+    val handheld = LocalNesLandscapeHandheld.current
+    val scale = if (handheld) 0.90f else if (LocalNesPortraitLayout.current) 1.15f else 1.05f
     val geometry = settings.startButton
     val buttonScale =
         geometry.size.coerceIn(
@@ -168,7 +171,7 @@ private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings)
     ControlButton(
         modifier =
             Modifier
-                .radialPosition(60f)
+                .radialPosition(if (handheld) 120f else 60f)
                 .radialScale(scale * buttonScale)
                 .offset(
                     x = (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f)).dp,
@@ -184,6 +187,7 @@ private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings)
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) {
+    val handheld = LocalNesLandscapeHandheld.current
     val geometry = settings.menuButton
     val buttonScale =
         geometry.size.coerceIn(
@@ -194,10 +198,11 @@ private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) 
         modifier =
             Modifier
                 .radialPosition(
-                    -60f + 2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
+                    (if (handheld) -120f else -60f) +
+                        2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
                 )
                 .radialScale(
-                    (if (LocalNesPortraitLayout.current) 1.15f else 1.05f) *
+                    (if (handheld) 0.90f else if (LocalNesPortraitLayout.current) 1.15f else 1.05f) *
                         buttonScale,
                 )
                 .offset(
