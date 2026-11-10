@@ -22,6 +22,14 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M7 — RomM integration** | **ACTIVE**: read-only HTTPS browse/import, protected token, verified save archives with delete/compare, server-bound offline request preparation and non-executing journal review/discard | Latest source still needs CI; real-server verification, remote writes, actual sync executor, conflict-resolution UI and safe live-save restoration remain unavailable |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
 
+## November 10 — M2 library refinements and M6 achievement panel pagination
+
+- **Fix Match:** Improved field visibility on keyboard opening, invalidated stale selected previews when search title/year changes, and added bounded progressive suffix stripping for manually searched ROM titles. Metadata is not applied until the user explicitly selects and confirms a verified NES candidate.
+- **Library:** Custom artwork uses Android's persistable document picker rather than ephemeral Get Content; an inability to retain access is shown rather than saving a broken URI. Existing custom names and artwork can be replaced directly. Offline catalogue lookup rejects non-NES rows and deduplicates equivalent entries; late responses cannot replace results for an edited query.
+- **Artwork:** A bounded session-only cache remembers successfully decoded alternate NES box-art URLs for use on subsequent screens. Official Libretro NES screenshot/title previews accept both encoded and unencoded URL paths, with tests rejecting unrelated domains or non-NES paths.
+- **Achievements:** Achievement cards use 20-item progressive batches instead of eagerly composing every row; leaderboard listings initially show eight entries with an option to expand. Compatibility warnings are compact and expandable, but still available to inspect. Official completion counts use the full verified list.
+- **Acceptance:** The source batch is awaiting a green all-in-one CI run and phone layout/behavior tests. These changes do not certify a new RetroAchievements unlock, fix a live RomM server, or enable Hardcore.
+
 ## November 10 — offline RomM archive and server-bound sync preparation
 
 - **Verified archive management:** [CI 42911500306](https://github.com/JPLuker/OpenNES/actions/runs/42911500306) passed all lint, JVM, native Android and APK release gates. Local archive deletion verifies current SHA-256 manifest/canonical path and never deletes emulator saves. Read-only comparisons reopen a user-selected document twice and refuse changed, missing or oversized streams.

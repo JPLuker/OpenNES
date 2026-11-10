@@ -10,8 +10,11 @@ import com.swordfish.lemuroid.lib.library.db.entity.Game
  * Coil downloads and caches these images when the game details are opened.
  */
 object NesArtwork {
-    private const val NES_BOXART_PATH =
-        "thumbnails.libretro.com/Nintendo - Nintendo Entertainment System/Named_Boxarts/"
+    private val knownBoxartRoots =
+        setOf(
+            "https://thumbnails.libretro.com/Nintendo - Nintendo Entertainment System/Named_Boxarts/",
+            "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/",
+        )
 
     data class Preview(
         val kind: Kind,
@@ -24,12 +27,20 @@ object NesArtwork {
     }
 
     fun previews(game: Game): List<Preview> {
+        val catalogue = game.coverFrontUrl
+        val alternate = NesBoxArtUrls.romFilenameFallback(game)
+        val selected = NesCoverResolutionCache.preferred(catalogue, alternate)
+        return previewsForUrl(selected ?: catalogue ?: alternate)
+    }
+
+    /** Only the official NES box-art tree can generate related preview URLs. */
+    internal fun previewsForUrl(source: String?): List<Preview> {
         val url =
-            game.coverFrontUrl
+            source
                 ?.replace("http://thumbnails.libretro.com/", "https://thumbnails.libretro.com/")
                 ?: return emptyList()
 
-        if (!url.startsWith("https://$NES_BOXART_PATH") || !url.endsWith(".png")) {
+        if (knownBoxartRoots.none { url.startsWith(it) } || !url.endsWith(".png")) {
             return emptyList()
         }
 

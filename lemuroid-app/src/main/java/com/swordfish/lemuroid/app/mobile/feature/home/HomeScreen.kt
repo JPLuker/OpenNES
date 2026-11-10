@@ -1661,8 +1661,14 @@ private fun GameDetailField(
 
 @Composable
 private fun GameArtworkGallery(game: Game) {
-    val allPreviews = remember(game.id, game.coverFrontUrl) { NesArtwork.previews(game) }
-    val failedUrls = remember(game.id, game.coverFrontUrl) { mutableStateListOf<String>() }
+    val allPreviews =
+        remember(game.id, game.coverFrontUrl, game.fileName, game.customCoverUri) {
+            NesArtwork.previews(game)
+        }
+    val failedUrls =
+        remember(game.id, game.coverFrontUrl, game.fileName, game.customCoverUri) {
+            mutableStateListOf<String>()
+        }
     val previews = allPreviews.filterNot { it.url in failedUrls }
 
     // No related art for unrecognized games; absent URLs disappear cleanly after
