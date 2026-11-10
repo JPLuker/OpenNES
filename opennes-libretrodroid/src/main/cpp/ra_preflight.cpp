@@ -177,7 +177,7 @@ bool validMd5(const std::string& hash) {
 }
 }
 
-extern "C" JNIEXPORT jstring JNICALL
+extern "C" JNIEXPORT jobjectArray JNICALL
 Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_prepareGameResolveRequest(
     JNIEnv* env, jobject, jstring rawMd5
 ) {
@@ -193,10 +193,33 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_prep
     rc_api_request_t request{};
     const int result = rc_api_init_resolve_hash_request(&request, &params);
     std::string url;
-    if (result == RC_OK && request.url) url.assign(request.url);
+    std::string form;
+    // Official rcheevos constructs a POST request. Preserve both parts
+    // instead of accidentally issuing a GET with no hash parameters.
+    if (result == RC_OK && request.url && request.post_data) {
+        url.assign(request.url);
+        form.assign(request.post_data);
+    }
     rc_api_destroy_request(&request);
-    if (url.empty()) return nullptr;
-    return env->NewStringUTF(url.c_str());
+    if (url.empty() || form.empty()) return nullptr;
+
+    jclass stringClass = env->FindClass("java/lang/String");
+    if (!stringClass) return nullptr;
+    jobjectArray parts = env->NewObjectArray(2, stringClass, nullptr);
+    env->DeleteLocalRef(stringClass);
+    if (!parts) return nullptr;
+    jstring endpoint = env->NewStringUTF(url.c_str());
+    jstring body = env->NewStringUTF(form.c_str());
+    if (!endpoint || !body) {
+        if (endpoint) env->DeleteLocalRef(endpoint);
+        if (body) env->DeleteLocalRef(body);
+        return nullptr;
+    }
+    env->SetObjectArrayElement(parts, 0, endpoint);
+    env->SetObjectArrayElement(parts, 1, body);
+    env->DeleteLocalRef(endpoint);
+    env->DeleteLocalRef(body);
+    return env->ExceptionCheck() ? nullptr : parts;
 }
 
 extern "C" JNIEXPORT jint JNICALL
