@@ -82,6 +82,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     var pendingSave by remember { mutableStateOf<RommApiClient.RemoteSave?>(null) }
     var pendingArchive by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
     var pendingArchiveDeletion by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
+    var pendingArchiveComparison by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
     var pendingIntentDeletion by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
     var archivedSaves by remember { mutableStateOf<List<RommVersionedSaveBackupStore.Backup>>(emptyList()) }
     var syncQueue by remember {
@@ -139,6 +140,27 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                 perform("Exporting local backup") {
                     client.exportOfflineSaveBackup(context, selected, destination)
                     status = context.getString(R.string.opennes_romm_save_exported)
+                }
+            }
+        }
+
+    val comparePicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument(),
+        ) { source ->
+            val chosen = pendingArchiveComparison
+            pendingArchiveComparison = null
+            if (source != null && chosen != null) {
+                perform("Comparing save files") {
+                    val same = client.compareOfflineSaveBackup(context, chosen, source)
+                    status =
+                        context.getString(
+                            if (same) {
+                                R.string.opennes_romm_compare_matching
+                            } else {
+                                R.string.opennes_romm_compare_different
+                            },
+                        )
                 }
             }
         }
@@ -389,26 +411,36 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                     Text(stringResource(R.string.opennes_romm_archive_empty))
                 }
                 archivedSaves.forEach { backup ->
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.opennes_romm_archive_entry, backup.romId))
-                            Text(stringResource(R.string.opennes_romm_archive_size, backup.bytes))
+                        Text(stringResource(R.string.opennes_romm_archive_entry, backup.romId))
+                        Text(stringResource(R.string.opennes_romm_archive_size, backup.bytes))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            TextButton(
+                                enabled = !busy,
+                                onClick = {
+                                    pendingArchive = backup
+                                    archivePicker.launch("romm-${backup.romId}.savebak")
+                                },
+                            ) { Text(stringResource(R.string.opennes_romm_export_save)) }
+                            TextButton(
+                                enabled = !busy,
+                                onClick = {
+                                    pendingArchiveComparison = backup
+                                    comparePicker.launch(arrayOf("*/*"))
+                                },
+                            ) { Text(stringResource(R.string.opennes_romm_compare_action)) }
+                            TextButton(
+                                enabled = !busy,
+                                onClick = { pendingArchiveDeletion = backup },
+                            ) { Text(stringResource(R.string.opennes_romm_archive_delete)) }
                         }
-                        TextButton(
-                            enabled = !busy,
-                            onClick = {
-                                pendingArchive = backup
-                                archivePicker.launch("romm-${backup.romId}.savebak")
-                            },
-                        ) { Text(stringResource(R.string.opennes_romm_export_save)) }
-                        TextButton(
-                            enabled = !busy,
-                            onClick = { pendingArchiveDeletion = backup },
-                        ) { Text(stringResource(R.string.opennes_romm_archive_delete)) }
                     }
                 }
             }

@@ -588,6 +588,9 @@
     <string name="opennes_romm_archive_entry">RomM game #%1$d</string>
     <string name="opennes_romm_archive_size">%1$d bytes · Verified</string>
     <string name="opennes_romm_archive_delete">Delete backup</string>
+    <string name="opennes_romm_compare_action">Compare</string>
+    <string name="opennes_romm_compare_matching">Selected save and archived backup have identical bytes. No files were changed.</string>
+    <string name="opennes_romm_compare_different">Selected save and archived backup differ. No files were changed; this does not establish which save is newer.</string>
     <string name="opennes_romm_archive_delete_confirm">Permanently remove the verified offline backup for RomM game #%1$d? This does not delete live emulator saves or any RomM server files.</string>
     <string name="opennes_romm_archive_deleted">Offline backup deleted. Live saves were not changed.</string>
     <string name="opennes_romm_archive_delete_failed">This backup could not be safely deleted. Refresh the archive and try again.</string>
