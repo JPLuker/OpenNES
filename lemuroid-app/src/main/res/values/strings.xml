@@ -103,8 +103,11 @@
     <string name="game_context_menu_create_shortcut">Add to home screen</string>
 
     <string name="game_context_menu_add_custom_name">Add custom name</string>
+    <string name="game_context_menu_edit_custom_name">Edit custom name</string>
     <string name="game_context_menu_remove_custom_name">Remove custom name</string>
     <string name="game_context_menu_add_custom_artwork">Add custom artwork</string>
+    <string name="game_context_menu_change_custom_artwork">Change custom artwork</string>
+    <string name="opennes_custom_artwork_access_failed">Couldn't keep access to that image. Choose another image document to avoid losing your custom cover after reopening OpenNES.</string>
     <string name="game_context_menu_remove_custom_artwork">Remove custom artwork</string>
     <string name="game_context_menu_custom_name_dialog_title">Set custom name</string>
 

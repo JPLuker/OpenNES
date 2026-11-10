@@ -117,23 +117,32 @@ private fun ContextActionContent(
     onClearCustomCoverUri: (Game) -> Unit,
 ) {
     val context = LocalContext.current
-    var showCustomNameDialog by remember { mutableStateOf(false) }
+    var showCustomNameDialog by remember(selectedGame.id) { mutableStateOf(false) }
+    var coverPermissionError by remember(selectedGame.id) { mutableStateOf(false) }
 
     val imagePickerLauncher =
         rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent(),
+            contract = ActivityResultContracts.OpenDocument(),
         ) { uri: Uri? ->
             if (uri != null) {
-                try {
-                    context.contentResolver.takePersistableUriPermission(
-                        uri,
-                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
-                    )
-                } catch (e: SecurityException) {
-                    Timber.e(e, "Failed to persist read URI permission for custom cover")
+                val retained =
+                    runCatching {
+                        context.contentResolver.takePersistableUriPermission(
+                            uri,
+                            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                        )
+                    }.onFailure {
+                        Timber.w(it, "Could not retain the selected NES artwork document")
+                    }.isSuccess
+                if (retained) {
+                    coverPermissionError = false
+                    onSetCustomCoverUri(selectedGame, uri.toString())
+                    selectedGameState.value = null
+                } else {
+                    // Do not persist a URI that will vanish after reopening
+                    // OpenNES. Ask the player to select another document.
+                    coverPermissionError = true
                 }
-                onSetCustomCoverUri(selectedGame, uri.toString())
-                selectedGameState.value = null
             }
         }
 
@@ -194,6 +203,18 @@ private fun ContextActionContent(
             )
         }
 
+        ContextActionEntry(
+            label =
+                stringResource(
+                    if (selectedGame.customName == null) {
+                        R.string.game_context_menu_add_custom_name
+                    } else {
+                        R.string.game_context_menu_edit_custom_name
+                    },
+                ),
+            icon = Icons.Default.Edit,
+            onClick = { showCustomNameDialog = true },
+        )
         if (selectedGame.customName != null) {
             ContextActionEntry(
                 label = stringResource(id = R.string.game_context_menu_remove_custom_name),
@@ -203,16 +224,23 @@ private fun ContextActionContent(
                     selectedGameState.value = null
                 },
             )
-        } else {
-            ContextActionEntry(
-                label = stringResource(id = R.string.game_context_menu_add_custom_name),
-                icon = Icons.Default.Edit,
-                onClick = {
-                    showCustomNameDialog = true
-                },
-            )
         }
 
+        ContextActionEntry(
+            label =
+                stringResource(
+                    if (selectedGame.customCoverUri == null) {
+                        R.string.game_context_menu_add_custom_artwork
+                    } else {
+                        R.string.game_context_menu_change_custom_artwork
+                    },
+                ),
+            icon = Icons.Default.Image,
+            onClick = {
+                coverPermissionError = false
+                imagePickerLauncher.launch(arrayOf("image/*"))
+            },
+        )
         if (selectedGame.customCoverUri != null) {
             ContextActionEntry(
                 label = stringResource(id = R.string.game_context_menu_remove_custom_artwork),
@@ -222,20 +250,19 @@ private fun ContextActionContent(
                     selectedGameState.value = null
                 },
             )
-        } else {
-            ContextActionEntry(
-                label = stringResource(id = R.string.game_context_menu_add_custom_artwork),
-                icon = Icons.Default.Image,
-                onClick = {
-                    imagePickerLauncher.launch("image/*")
-                },
+        }
+        if (coverPermissionError) {
+            Text(
+                text = stringResource(R.string.opennes_custom_artwork_access_failed),
+                color = Color(0xFFE7A6A7),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
     }
 
     if (showCustomNameDialog) {
         CustomNameDialog(
-            initialName = selectedGame.fileName,
+            initialName = selectedGame.customName ?: selectedGame.displayName(),
             onDismiss = { showCustomNameDialog = false },
             onConfirm = { newName ->
                 showCustomNameDialog = false
