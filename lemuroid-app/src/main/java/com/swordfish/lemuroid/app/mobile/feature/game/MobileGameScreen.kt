@@ -91,6 +91,7 @@ import com.swordfish.touchinput.radial.ui.LemuroidButtonPressFeedback
 import gg.padkit.PadKit
 import gg.padkit.config.HapticFeedbackType
 import gg.padkit.inputstate.InputState
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 @Composable
@@ -103,6 +104,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         val onboardingStore = remember(appContext) { NesControllerOnboardingStore(appContext) }
         val appearanceStore = remember(appContext) { NesControllerAppearanceStore(appContext) }
         val onboardingVisible = remember { mutableStateOf(false) }
+        val pendingLayoutEditor = remember { mutableStateOf(false) }
 
         LaunchedEffect(isLandscape) {
             val orientation =
@@ -178,6 +180,19 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 onboardingVisible.value = true
             }
             if (!showTouchPads) onboardingVisible.value = false
+        }
+
+        // The onboarding sheet is a separate modal window. Open the editor
+        // only AFTER that window has dismissed, so the next editor is not
+        // obscured underneath its outgoing scrim.
+        LaunchedEffect(onboardingVisible.value, pendingLayoutEditor.value, showTouchPads) {
+            if (!showTouchPads) {
+                pendingLayoutEditor.value = false
+            } else if (!onboardingVisible.value && pendingLayoutEditor.value) {
+                delay(350)
+                pendingLayoutEditor.value = false
+                viewModel.showEditControls(true)
+            }
         }
 
         val landscapeOverlaySelected =
@@ -414,8 +429,8 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 onChooseColor = { part, hex -> appearanceStore.setColor(part, hex) },
                 onCustomizeLayout = {
                     onboardingStore.complete()
+                    pendingLayoutEditor.value = true
                     onboardingVisible.value = false
-                    viewModel.setDragEditMode(true)
                 },
                 onUseDefaults = {
                     onboardingStore.complete()
@@ -600,6 +615,9 @@ private fun MenuEditTouchControls(
                     },
                     compact = true,
                 )
+                if (compactLandscape) {
+                    Text(stringResource(com.swordfish.lemuroid.R.string.opennes_landscape_compact_fallback))
+                }
             }
             Button(
                 modifier = Modifier.fillMaxWidth(),
