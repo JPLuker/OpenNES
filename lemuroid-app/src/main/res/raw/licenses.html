@@ -5,45 +5,43 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Open-Source Licenses</title>
-        <link
-                rel="stylesheet"
-                href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+        <meta http-equiv="Content-Security-Policy"
+              content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
         <style>
             body {
-                background-color: #f2f2f2;
+                background: #f2f2f2;
+                color: #20232a;
+                font: 15px/1.5 system-ui, sans-serif;
+                margin: 0;
             }
-            main {
-                padding: 24px;
+            header {
+                background: #25272d;
+                color: white;
+                font-size: 20px;
+                font-weight: 700;
+                padding: 16px 20px;
+                position: sticky;
+                top: 0;
             }
-            #demo-wrapper {
-                margin: 24px;
-                display: flex;
-                flex-flow: row wrap;
-                align-content: center;
-                justify-content: center;
-            }
-            #demo-wrapper .demo-card {
-                margin: 24px;
-            }
+            main { padding: 16px; }
+            #demo-wrapper { margin: 0 auto; max-width: 880px; }
             .demo-card {
-                margin-bottom: 48px;
                 background: white;
+                border: 1px solid #d4d6db;
+                border-radius: 12px;
+                margin-bottom: 16px;
+                padding: 18px;
             }
+            .demo-card h2 { font-size: 18px; margin: 0 0 4px; }
+            .demo-card a { color: #9b293d; overflow-wrap: anywhere; }
+            .license-copyright { color: #555861; margin: 6px 0 12px; }
             .license-text {
                 font-family: monospace;
-                white-space: pre;
+                font-size: 12px;
+                overflow-wrap: anywhere;
+                white-space: pre-wrap;
             }
         </style>
-        <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
-        <script id="library-template" type="text/x-handlebars-template">
-            <div class="mdc-card demo-card">
-                <section class="mdc-card__primary">
-                    <h1 class="mdc-card__title mdc-card__title--large">{{name}}</h1>
-                    <h2 class="mdc-card__subtitle">{{copyright}}</h2>
-                </section>
-                <section class="mdc-card__supporting-text license-text">{{license}}</section>
-            </div>
-        </script>
         <script type="application/javascript">
             const LICENSES = {
                 "apache2": `
@@ -193,31 +191,41 @@
               return str.replace(re, '');
             }
 
-            window.onload = function() {
-              let librariesDiv = document.getElementById("demo-wrapper");
-              LIBRARIES.forEach((library) => {
-                  library.license = stripIndent(LICENSES[library.license] || "");
-                  let source   = document.getElementById("library-template").innerHTML;
-                  let template = Handlebars.compile(source);
-                  let div = document.createElement("div");
-                  div.innerHTML = template(library);
-                  librariesDiv.appendChild(div);
+            window.addEventListener("DOMContentLoaded", () => {
+                const container = document.getElementById("demo-wrapper");
+                LIBRARIES.forEach((library) => {
+                    const card = document.createElement("article");
+                    card.className = "demo-card";
+                    const heading = document.createElement("h2");
+                    const link = document.createElement("a");
+                    link.textContent = library.name;
+                    if (library.url && library.url.startsWith("https://")) {
+                        link.href = library.url;
+                        link.rel = "noopener noreferrer";
+                        heading.appendChild(link);
+                    } else {
+                        heading.textContent = library.name;
+                    }
+                    card.appendChild(heading);
+                    if (library.copyright) {
+                        const copyright = document.createElement("p");
+                        copyright.className = "license-copyright";
+                        copyright.textContent = library.copyright;
+                        card.appendChild(copyright);
+                    }
+                    const license = document.createElement("pre");
+                    license.className = "license-text";
+                    license.textContent = stripIndent(LICENSES[library.license] || "");
+                    card.appendChild(license);
+                    container.appendChild(card);
                 });
-              };
+            });
         </script>
     </head>
-    <body class="mdc-typography">
-        <header class="mdc-toolbar mdc-toolbar--fixed">
-            <div class="mdc-toolbar__row">
-                <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
-                    <span class="mdc-toolbar__title catalog-title">Open-Source Licenses</span>
-                </section>
-            </div>
-        </header>
+    <body>
+        <header>Open-Source Licenses</header>
         <main id="libraries">
-            <div class="mdc-toolbar-fixed-adjust"></div>
-            <section class="demo-typography--section" id="demo-wrapper">
-            </section>
+            <section id="demo-wrapper"></section>
         </main>
     </body>
 </html>
