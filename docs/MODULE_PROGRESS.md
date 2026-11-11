@@ -1,8 +1,18 @@
 # OpenNES — Development progress
 
-Updated: 2026-11-10
+Updated: 2026-11-11
 
 This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The current source baseline passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071), including archive integrity, sync-policy and RomM 5.4 protocol regression tests, native/Android compilation and rolling APK publication. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
+
+## November 10–11 — RomM full-library and offline reliability candidate
+
+- **Unified NES library:** all indexed local NES games and RomM-only previews share the physical shelf, with a full-screen adaptive cover grid, search, A–Z jumps, Installed/RomM filters and the regular details layout. A remote preview never enters Room as a fake playable file. Download becomes Play only once a real local ROM has been indexed.
+- **Native RomM metadata:** description/summary is used where available, with a clear missing-description label. Only trusted public IGDB HTTPS cover URLs are accepted from the RomM record; Libretro NES box-art fallback remains. The selected server token is never sent to a cover host.
+- **Offline metadata:** a strictly bounded metadata-only cache is kept in private no-backup storage, keyed by exact server identity plus login revision, and cleared on disconnect/reconnect. Reopening the app without RomM access can show previously fetched titles and descriptions; ROM bytes are not cached or downloaded. A visible Retry action bypasses the refresh interval.
+- **Transfer workflow:** explicitly requested downloads show queued, connecting, downloading (bounded percent when known), verifying, importing and indexing states. The game details blur during work, a persistent home banner preserves status after dismiss, and the Settings browser has a cancellable loading dialog. Failures are per-ROM and actionable; a stalled WorkManager scan offers Retry library scan rather than another ROM download.
+- **Correct complete pagination:** the client advances by raw server-row count, not filtered NES entries; small, filtered and total-less pages are covered by tests. Platform discovery is reused within one connection's paginated request.
+- **Storage safety:** prevent case-insensitive duplicate imports, reject renamed SAF-created files, never overwrite a local ROM or save, and retain successful file imports in the indexing-recovery state if scan scheduling fails. A ROM stream retains connection/read stall limits plus a strict size bound without the JSON API's 60-second overall timeout.
+- **Verification:** all work is a source candidate pending the latest CI build and an actual phone/RomM server session. Tests now cover offline cache corruption/account isolation, album-art host restrictions, paging, deduplication and index completion. Do not mark M7 complete or publish M8 stable until real-device acceptance is performed.
 
 ## Milestones
 
