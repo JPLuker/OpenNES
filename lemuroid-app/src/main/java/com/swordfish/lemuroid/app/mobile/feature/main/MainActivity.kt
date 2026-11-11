@@ -205,7 +205,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             modifier = Modifier.padding(padding),
                             viewModel =
                                 viewModel(
-                                    factory = SearchViewModel.Factory(retrogradeDb),
+                                    factory = SearchViewModel.Factory(retrogradeDb, applicationContext),
                                 ),
                             searchQuery = mainUIState.searchQuery,
                             onGameClick = onGameClick,
