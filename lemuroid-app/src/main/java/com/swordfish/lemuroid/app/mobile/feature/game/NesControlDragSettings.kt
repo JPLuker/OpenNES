@@ -38,7 +38,10 @@ internal object NesControlDragSettings {
         }
     }
 
-    private fun adjust(v: Float, delta: Float): Float = (v + delta).coerceIn(-MAX_ABSOLUTE_OFFSET_DP, MAX_ABSOLUTE_OFFSET_DP)
+    private fun adjust(
+        v: Float,
+        delta: Float,
+    ): Float = (v + delta).coerceIn(-MAX_ABSOLUTE_OFFSET_DP, MAX_ABSOLUTE_OFFSET_DP)
 
     private fun movedButton(
         geometry: TouchControllerSettingsManager.ButtonGeometry,
