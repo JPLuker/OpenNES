@@ -38,8 +38,9 @@ object NesGameTitle {
         val cleaned = clean(original)
         val withoutPrefix = cleaned.replace(bundlePrefix, "").trim()
         val results = linkedSetOf(original, cleaned, withoutPrefix)
-        val article = Regex("""^(The|An|A)\s+(.+)$""", RegexOption.IGNORE_CASE)
-            .matchEntire(withoutPrefix)
+        val article =
+            Regex("""^(The|An|A)\s+(.+)$""", RegexOption.IGNORE_CASE)
+                .matchEntire(withoutPrefix)
         if (article != null) {
             results += "${article.groupValues[2]}, ${article.groupValues[1]}"
         }
