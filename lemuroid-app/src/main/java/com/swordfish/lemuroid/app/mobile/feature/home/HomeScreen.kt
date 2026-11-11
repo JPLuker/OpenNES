@@ -59,6 +59,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -164,12 +165,29 @@ fun HomeScreen(
                 .map(RommLibraryCatalog::asPreview)
         }
     var selectedGame by remember { mutableStateOf<Game?>(null) }
+    var browsingAll by remember { mutableStateOf(false) }
+    val allGames =
+        remember(state.discoveryGames, remoteGames) {
+            (state.discoveryGames + remoteGames)
+                .sortedBy { it.displayName().lowercase(java.util.Locale.ROOT) }
+        }
+
     LaunchedEffect(Unit) { viewModel.refreshRomMLibrary() }
+    LaunchedEffect(localFileNames, romm.awaitingIndexIds) {
+        RommLibraryCatalog.reconcileIndexed(localFileNames)
+        if (romm.awaitingIndexIds.isNotEmpty()) {
+            delay(26_000)
+            RommLibraryCatalog.reconcileIndexed(localFileNames)
+        }
+    }
 
     OpenNesLibrary(
         modifier = modifier,
         state = state,
-        remoteGames = remoteGames,
+        allGames = allGames,
+        romm = romm,
+        onBrowseAll = { browsingAll = true },
+        onOpenRemoteStatus = { selectedGame = RommLibraryCatalog.asPreview(it) },
         onGameClick = onGameClick,
         onGameLongClick = { game ->
             if (game.id < 0) {
@@ -190,6 +208,17 @@ fun HomeScreen(
         onRescanClicked = { LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext) },
     )
 
+    if (browsingAll) {
+        LibraryBrowserDialog(
+            games = allGames,
+            onDismiss = { browsingAll = false },
+            onSelect = {
+                browsingAll = false
+                selectedGame = it
+            },
+        )
+    }
+
     selectedGame?.let { game ->
         val remote = RommLibraryCatalog.remoteFor(game, romm)
         if (remote != null) {
@@ -197,8 +226,16 @@ fun HomeScreen(
                 rom = remote,
                 catalog = romm,
                 hasRomFolder = state.hasRomDirectory,
+                installedGame =
+                    state.discoveryGames.firstOrNull {
+                        it.fileName.equals(remote.fileName, ignoreCase = true)
+                    },
                 onDismiss = { selectedGame = null },
                 onDownload = { viewModel.downloadFromRomM(remote) },
+                onPlay = {
+                    selectedGame = null
+                    onGameClick(it)
+                },
             )
         } else if (game.id > 0) {
             GameDetailsSheet(
@@ -252,7 +289,10 @@ fun HomeScreen(
 private fun OpenNesLibrary(
     modifier: Modifier,
     state: HomeViewModel.UIState,
-    remoteGames: List<Game>,
+    allGames: List<Game>,
+    romm: RommLibraryCatalog.State,
+    onBrowseAll: () -> Unit,
+    onOpenRemoteStatus: (com.swordfish.lemuroid.app.shared.romm.RommApiClient.Rom) -> Unit,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
     onGameDetailsClick: (Game) -> Unit,
@@ -298,6 +338,10 @@ private fun OpenNesLibrary(
     ) {
         LibraryHeader(onSearchClick, onSettingsClick)
 
+        // Remains accessible after the details sheet is dismissed, so a long
+        // download or failed scan never becomes an invisible disabled action.
+        RommDownloadStatus(catalog = romm, onOpen = onOpenRemoteStatus)
+
         AnimatedVisibility(state.showNoNotificationPermissionCard) {
             LibraryNotice(
                 title = stringResource(R.string.home_notification_title),
@@ -308,7 +352,7 @@ private fun OpenNesLibrary(
         }
 
         AnimatedVisibility(
-            (state.showNoGamesCard && (remoteGames.isEmpty() || !state.hasRomDirectory)) ||
+            (state.showNoGamesCard && (allGames.isEmpty() || !state.hasRomDirectory)) ||
                 (state.scanError != null && !state.scanInProgress),
         ) {
             LibrarySetupCard(
@@ -339,17 +383,15 @@ private fun OpenNesLibrary(
                 onGameLongClick = onGameLongClick,
             )
         }
-        // A single NES shelf contains installed and RomM-only games. Remote
-        // previews have negative IDs and cannot be passed to the emulator.
-        val notYetPlayed =
-            remember(state.discoveryGames, remoteGames) {
-                (state.discoveryGames + remoteGames).sortedBy { it.displayName().lowercase() }
-            }
+        // Preserve the physical NES shelf, but keep it short. The full
+        // collection is in a searchable, alphabet-jump grid instead.
         GameShelf(
             title = stringResource(R.string.opennes_discover_shelf),
-            games = notYetPlayed,
+            games = allGames.take(16),
             onGameClick = onGameDetailsClick,
             onGameLongClick = onGameLongClick,
+            onViewAll = onBrowseAll,
+            total = allGames.size,
         )
         Spacer(modifier = Modifier.height(20.dp))
     }
@@ -571,17 +613,33 @@ private fun GameShelf(
     games: List<Game>,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
+    onViewAll: (() -> Unit)? = null,
+    total: Int = games.size,
 ) {
     if (games.isEmpty()) return
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(horizontal = 20.dp).semantics { heading() },
-            color = LibraryColors.foreground,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f).semantics { heading() },
+                color = LibraryColors.foreground,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+            )
+            if (onViewAll != null) {
+                TextButton(onClick = onViewAll) {
+                    Text(
+                        stringResource(R.string.opennes_romm_browse_all, total),
+                        color = LibraryColors.red,
+                        fontSize = 13.sp,
+                    )
+                }
+            }
+        }
 
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
