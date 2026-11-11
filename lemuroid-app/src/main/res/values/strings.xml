@@ -472,6 +472,10 @@
     <string name="opennes_romm_phase_queued">Waiting for current download…</string>
     <string name="opennes_romm_operation_cancelled">Operation cancelled.</string>
     <string name="opennes_romm_cache_offline">RomM unavailable — showing cached games</string>
+    <string name="opennes_romm_notice_settings">Connection notices</string>
+    <string name="opennes_romm_notice_toggle">Show disconnection warnings</string>
+    <string name="opennes_romm_notice_description">Show a small notice when RomM is unavailable. Downloads always report connection failures. Default: on.</string>
+    <string name="opennes_romm_download_offline">This game is not downloaded. Connect to your RomM server to download it. Your local games are still playable.</string>
     <string name="opennes_romm_connection_failed">Cannot load the RomM library</string>
     <string name="opennes_romm_cache_refreshing">Checking RomM — cached games available</string>
     <string name="opennes_romm_offline_only_metadata">Game details remain available; downloads need network access.</string>
