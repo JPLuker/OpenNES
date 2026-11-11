@@ -131,34 +131,35 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
 
     val perform: (String, suspend () -> Unit) -> Unit = { title, action ->
         if (!busy) {
-            activeJob = scope.launch {
-                busy = true
-                operation = title
-                status = ""
-                try {
-                    action()
-                } catch (e: CancellationException) {
-                    status = context.getString(R.string.opennes_romm_operation_cancelled)
-                    throw e
-                } catch (e: Exception) {
-                    // Network/SAF exceptions may embed full server URLs,
-                    // bearer tokens or private paths in their messages.
-                    status =
-                        context.getString(
-                            when (OpenNesFailureCategory.classify(e)) {
-                                OpenNesFailureCategory.ACCESS -> R.string.opennes_support_error_access
-                                OpenNesFailureCategory.IO -> R.string.opennes_support_error_io
-                                OpenNesFailureCategory.INVALID_INPUT ->
-                                    R.string.opennes_support_error_input
-                                OpenNesFailureCategory.UNEXPECTED -> R.string.opennes_support_error_generic
-                            },
-                        )
-                } finally {
-                    busy = false
-                    operation = ""
-                    activeJob = null
+            activeJob =
+                scope.launch {
+                    busy = true
+                    operation = title
+                    status = ""
+                    try {
+                        action()
+                    } catch (e: CancellationException) {
+                        status = context.getString(R.string.opennes_romm_operation_cancelled)
+                        throw e
+                    } catch (e: Exception) {
+                        // Network/SAF exceptions may embed full server URLs,
+                        // bearer tokens or private paths in their messages.
+                        status =
+                            context.getString(
+                                when (OpenNesFailureCategory.classify(e)) {
+                                    OpenNesFailureCategory.ACCESS -> R.string.opennes_support_error_access
+                                    OpenNesFailureCategory.IO -> R.string.opennes_support_error_io
+                                    OpenNesFailureCategory.INVALID_INPUT ->
+                                        R.string.opennes_support_error_input
+                                    OpenNesFailureCategory.UNEXPECTED -> R.string.opennes_support_error_generic
+                                },
+                            )
+                    } finally {
+                        busy = false
+                        operation = ""
+                        activeJob = null
+                    }
                 }
-            }
         }
     }
 
