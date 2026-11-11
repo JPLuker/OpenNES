@@ -9,6 +9,13 @@
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
+    <!-- QR pairing is optional; manual pairing must work without a camera. -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
