@@ -36,8 +36,7 @@ object GameProcessLock {
         }
     }
 
-    fun isHeldByAnotherProcess(appContext: Context): Boolean =
-        isFileLocked(File(appContext.filesDir, LOCK_FILE_NAME))
+    fun isHeldByAnotherProcess(appContext: Context): Boolean = isFileLocked(File(appContext.filesDir, LOCK_FILE_NAME))
 
     /** Fail closed if the lock cannot be probed; never launch two cores. */
     internal fun isFileLocked(file: File): Boolean {
