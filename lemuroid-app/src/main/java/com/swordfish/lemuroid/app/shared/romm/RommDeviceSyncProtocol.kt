@@ -173,14 +173,11 @@ internal object RommDeviceSyncProtocol {
 
     // Never truncate fractional/exponential JSON values to identifiers.
     // Exact integer syntax is required before any future account binding.
-    private fun positiveLong(raw: Any?): Long? =
-        (raw as? Number)?.toString()?.toLongOrNull()?.takeIf { it > 0 }
+    private fun positiveLong(raw: Any?): Long? = (raw as? Number)?.toString()?.toLongOrNull()?.takeIf { it > 0 }
 
-    private fun positiveInt(raw: Any?): Int? =
-        (raw as? Number)?.toString()?.toIntOrNull()?.takeIf { it > 0 }
+    private fun positiveInt(raw: Any?): Int? = (raw as? Number)?.toString()?.toIntOrNull()?.takeIf { it > 0 }
 
-    private fun nonnegativeInt(raw: Any?): Int? =
-        (raw as? Number)?.toString()?.toIntOrNull()?.takeIf { it >= 0 }
+    private fun nonnegativeInt(raw: Any?): Int? = (raw as? Number)?.toString()?.toIntOrNull()?.takeIf { it >= 0 }
 
     private fun validFileName(name: String): Boolean =
         name.isNotBlank() &&
