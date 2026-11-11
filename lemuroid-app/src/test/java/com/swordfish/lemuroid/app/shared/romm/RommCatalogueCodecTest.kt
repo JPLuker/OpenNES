@@ -1,10 +1,10 @@
 package com.swordfish.lemuroid.app.shared.romm
 
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.json.JSONObject
 
 class RommCatalogueCodecTest {
     private val source = "a".repeat(64)
