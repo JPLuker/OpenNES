@@ -19,11 +19,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -31,6 +35,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.game.GameActivity
+import com.swordfish.lemuroid.app.mobile.feature.game.GameService
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeScreen
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeViewModel
 import com.swordfish.lemuroid.app.mobile.feature.romm.RommSettingsScreen
@@ -49,7 +55,10 @@ import com.swordfish.lemuroid.app.mobile.feature.settings.savesync.SaveSyncSetti
 import com.swordfish.lemuroid.app.mobile.feature.settings.savesync.SaveSyncSettingsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.shortcuts.ShortcutsGenerator
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.AppTheme
+import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.app.shared.GameInteractor
+import com.swordfish.lemuroid.app.shared.game.ActiveGameSession
+import com.swordfish.lemuroid.app.shared.game.GameProcessLock
 import com.swordfish.lemuroid.app.shared.game.BaseGameActivity
 import com.swordfish.lemuroid.app.shared.game.GameLauncher
 import com.swordfish.lemuroid.app.shared.input.InputDeviceManager
@@ -70,6 +79,10 @@ import dagger.Provides
 import de.charlex.compose.material3.HtmlText
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -137,12 +150,38 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                     mutableStateOf<Game?>(null)
                 }
 
+            val activeSession = remember { mutableStateOf(ActiveGameSession.current(applicationContext)) }
+            val pendingSwitch = remember { mutableStateOf<Game?>(null) }
+            val switching = remember { mutableStateOf(false) }
+            val scope = rememberCoroutineScope()
+
+            ComposableLifecycle { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    activeSession.value = ActiveGameSession.current(applicationContext)
+                }
+            }
+
+            val resumeGame = {
+                if (ActiveGameSession.current(applicationContext) != null) {
+                    startActivity(
+                        Intent(this@MainActivity, GameActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
+                    )
+                }
+            }
+
             val onGameLongClick = { game: Game ->
                 selectedGameState.value = game
             }
 
             val onGameClick = { game: Game ->
-                gameInteractor.onGamePlay(game)
+                val running = ActiveGameSession.current(applicationContext)
+                activeSession.value = running
+                when {
+                    running == null -> gameInteractor.onGamePlay(game)
+                    running.gameId == game.id -> resumeGame()
+                    else -> pendingSwitch.value = game
+                }
             }
 
             val onGameFavoriteToggle = { game: Game, isFavorite: Boolean ->
@@ -151,6 +190,71 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
             val onHelpPressed = {
                 infoDialogDisplayed.value = true
+            }
+
+            pendingSwitch.value?.let { next ->
+                AlertDialog(
+                    onDismissRequest = { if (!switching.value) pendingSwitch.value = null },
+                    title = { Text("Another game is running") },
+                    text = {
+                        Text(
+                            "${activeSession.value?.title ?: "A game"} is currently open. " +
+                                "Close it safely before starting ${next.displayName()}?",
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            enabled = !switching.value,
+                            onClick = {
+                                switching.value = true
+                                scope.launch {
+                                    GameService.requestCloseRunningGame(applicationContext)
+                                    val stopped =
+                                        withContext(Dispatchers.IO) {
+                                            repeat(150) {
+                                                val locked =
+                                                    runCatching {
+                                                        GameProcessLock.isHeldByAnotherProcess(applicationContext)
+                                                    }.getOrDefault(true)
+                                                if (!locked) return@withContext true
+                                                delay(100)
+                                            }
+                                            false
+                                        }
+                                    switching.value = false
+                                    pendingSwitch.value = null
+                                    activeSession.value = ActiveGameSession.current(applicationContext)
+                                    if (stopped) {
+                                        gameInteractor.onGamePlay(next)
+                                    } else {
+                                        android.widget.Toast.makeText(
+                                            applicationContext,
+                                            "Could not safely close the running game.",
+                                            android.widget.Toast.LENGTH_LONG,
+                                        ).show()
+                                    }
+                                }
+                            },
+                        ) {
+                            Text(if (switching.value) "Closing…" else "Close & launch")
+                        }
+                    },
+                    dismissButton = {
+                        androidx.compose.foundation.layout.Row {
+                            TextButton(
+                                enabled = !switching.value,
+                                onClick = { pendingSwitch.value = null },
+                            ) { Text("Cancel") }
+                            TextButton(
+                                enabled = !switching.value,
+                                onClick = {
+                                    pendingSwitch.value = null
+                                    resumeGame()
+                                },
+                            ) { Text("Resume current") }
+                        }
+                    },
+                )
             }
 
             val mainUIState =
@@ -192,6 +296,11 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                         ),
                                 ),
                             onGameClick = onGameClick,
+
+                            activeSession = activeSession.value,
+
+                            onResumeActive = resumeGame,
+
                             onGameLongClick = onGameLongClick,
                             onPinShortcut = { gameInteractor.onCreateShortcut(it) },
                             pinShortcutSupported = gameInteractor.supportShortcuts(),
