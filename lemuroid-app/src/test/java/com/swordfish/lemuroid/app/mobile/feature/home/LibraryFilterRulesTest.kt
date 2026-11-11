@@ -14,7 +14,7 @@ class LibraryFilterRulesTest {
         played: Long?,
     ) = Game(
         id = id,
-        fileName = "test_${id}.nes",
+        fileName = "test_$id.nes",
         fileUri = if (id < 0) "romm-preview://game/${-id}" else "content://nes/$id",
         title = title,
         systemId = "nes",
