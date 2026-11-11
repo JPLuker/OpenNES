@@ -101,7 +101,8 @@ internal object RommCatalogueCodec {
                         .put("size", rom.sizeBytes)
                         .put("md5", rom.md5.orEmpty())
                         .put("description", rom.description.orEmpty().take(MAX_SUMMARY))
-                        .put("cover", RommCoverUrl.trusted(rom.coverUrl).orEmpty()),
+                        .put("cover", RommCoverUrl.trusted(rom.coverUrl).orEmpty())
+                        .put("genres", JSONArray(rom.genres.take(12))),
                 )
             }
             val payload =
@@ -157,6 +158,14 @@ internal object RommCatalogueCodec {
                             md5 = md5.ifBlank { null },
                             description = summary.ifBlank { null },
                             coverUrl = RommCoverUrl.trusted(row.optString("cover")),
+                            genres =
+                                row.optJSONArray("genres")?.let { values ->
+                                    (0 until minOf(values.length(), 12))
+                                        .mapNotNull { i ->
+                                            values.optString(i).trim().takeIf { it.length in 2..60 }
+                                        }
+                                        .distinct()
+                                } ?: emptyList(),
                         )
                     require(validRom(rom) && seen.add(rom.id))
                     rom
@@ -172,5 +181,7 @@ internal object RommCatalogueCodec {
             rom.name.length <= 500 &&
             rom.sizeBytes in 0..MAX_ROM_BYTES &&
             RommApiClient.safeRomFileName(rom.fileName) &&
-            (rom.coverUrl == null || RommCoverUrl.trusted(rom.coverUrl) != null)
+            (rom.coverUrl == null || RommCoverUrl.trusted(rom.coverUrl) != null) &&
+            rom.genres.size <= 12 &&
+            rom.genres.all { it.length in 2..60 }
 }
