@@ -32,6 +32,7 @@ internal fun RommDownloadStatus(
     val id =
         catalog.downloadingIds.firstOrNull()
             ?: catalog.awaitingIndexIds.firstOrNull()
+            ?: catalog.queuedIds.firstOrNull()
             ?: catalog.downloadFailures.keys.firstOrNull()
             ?: return
     val rom = catalog.games.firstOrNull { it.id == id } ?: return
@@ -40,6 +41,7 @@ internal fun RommDownloadStatus(
     val label =
         when {
             problem != null -> R.string.opennes_romm_failed_tap
+            id in catalog.queuedIds -> R.string.opennes_romm_phase_queued
             id in catalog.indexingDelayedIds -> R.string.opennes_romm_indexing_delayed_short
             progress?.stage == RommApiClient.ImportStage.DOWNLOADING ->
                 R.string.opennes_romm_phase_downloading
