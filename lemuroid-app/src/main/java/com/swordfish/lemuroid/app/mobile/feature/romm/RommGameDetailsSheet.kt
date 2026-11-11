@@ -214,8 +214,6 @@ internal fun RommGameDetailsSheet(
                         phase == RommApiClient.ImportStage.IMPORTING -> R.string.opennes_romm_phase_importing
                         else -> R.string.opennes_romm_phase_indexing
                     }
-                /*
-                        */
                 val portion =
                     progress?.totalBytes?.takeIf { it > 0 }?.let {
                         (progress.receivedBytes.toFloat() / it.toFloat()).coerceIn(0f, 1f)
