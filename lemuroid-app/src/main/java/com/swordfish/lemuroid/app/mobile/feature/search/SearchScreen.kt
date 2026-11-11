@@ -159,6 +159,7 @@ fun SearchScreen(
                             remote = true,
                             downloading = remote.id in romm.downloadingIds,
                             awaitingIndex = remote.id in romm.awaitingIndexIds,
+                            hasRomFolder = hasRomFolder,
                             onDownload = { viewModel.downloadFromRomM(remote) },
                         )
                     }
@@ -207,6 +208,7 @@ private fun SearchGameRow(
     remote: Boolean = false,
     downloading: Boolean = false,
     awaitingIndex: Boolean = false,
+    hasRomFolder: Boolean = true,
     onDownload: () -> Unit = {},
 ) {
     Surface(
@@ -263,7 +265,7 @@ private fun SearchGameRow(
             }
             Spacer(modifier = Modifier.width(2.dp))
             if (remote) {
-                Button(onClick = onDownload, enabled = !downloading && !awaitingIndex) {
+                Button(onClick = onDownload, enabled = hasRomFolder && !downloading && !awaitingIndex) {
                     Text(
                         stringResource(
                             when {
