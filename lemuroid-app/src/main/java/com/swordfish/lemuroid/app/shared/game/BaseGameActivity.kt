@@ -21,8 +21,8 @@ import com.swordfish.lemuroid.app.shared.GameMenuContract
 import com.swordfish.lemuroid.app.shared.ImmersiveActivity
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.coreoptions.CoreOption
-import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.coreoptions.LemuroidCoreOption
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelSideEffects
 import com.swordfish.lemuroid.app.shared.input.InputDeviceManager
 import com.swordfish.lemuroid.app.shared.rumble.RumbleManager
@@ -330,9 +330,10 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     private fun performErrorFinish(message: String) {
         // Expected game-load errors may contain private ROM URIs too.
         Timber.w("Game loading failed (details withheld from UI)")
-        val resultIntent = Intent().apply {
-            putExtra(PLAY_GAME_RESULT_ERROR_CATEGORY, OpenNesFailureCategory.UNEXPECTED.name)
-        }
+        val resultIntent =
+            Intent().apply {
+                putExtra(PLAY_GAME_RESULT_ERROR_CATEGORY, OpenNesFailureCategory.UNEXPECTED.name)
+            }
 
         setResult(RESULT_ERROR, resultIntent)
         finishAndExitProcess()
