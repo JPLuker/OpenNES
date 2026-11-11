@@ -38,6 +38,21 @@ class RommApiClient {
         val fileName: String,
         val sizeBytes: Long,
         val md5: String?,
+        val description: String? = null,
+    )
+
+    enum class ImportStage {
+        CONNECTING,
+        DOWNLOADING,
+        VERIFYING,
+        IMPORTING,
+        INDEXING,
+    }
+
+    data class ImportProgress(
+        val stage: ImportStage,
+        val receivedBytes: Long = 0L,
+        val totalBytes: Long? = null,
     )
 
     data class Page(
@@ -142,6 +157,11 @@ class RommApiClient {
                         name = row.optString("name").takeIf { it.isNotBlank() } ?: fileName,
                         fileName = fileName,
                         sizeBytes = row.optLong("fs_size_bytes", 0L),
+                        description =
+                            row.optString("summary")
+                                .trim()
+                                .takeIf { it.isNotBlank() && it != "null" }
+                                ?.take(8_000),
                         md5 =
                             row.optString("md5_hash")
                                 .lowercase(Locale.ROOT)
@@ -450,6 +470,7 @@ class RommApiClient {
         context: Context,
         connection: RommConnection,
         rom: Rom,
+        onProgress: (ImportProgress) -> Unit = {},
     ): Uri =
         withContext(Dispatchers.IO) {
             require(rom.id > 0 && safeRomFileName(rom.fileName)) {
@@ -473,12 +494,15 @@ class RommApiClient {
 
             val temporary = File.createTempFile("opennes-romm-", ".part", context.cacheDir)
             try {
-                downloadToTemp(connection, rom, temporary)
+                onProgress(ImportProgress(ImportStage.CONNECTING))
+                downloadToTemp(connection, rom, temporary, onProgress)
+                onProgress(ImportProgress(ImportStage.VERIFYING))
                 RommDownloadVerification.checkImportedRom(temporary, rom.fileName)
                 coroutineContext.ensureActive()
                 if (folder.findFile(rom.fileName) != null) {
                     throw IOException("The local ROM appeared during download; import cancelled")
                 }
+                onProgress(ImportProgress(ImportStage.IMPORTING))
                 val newFile =
                     folder.createFile("application/octet-stream", rom.fileName)
                         ?: throw IOException("Could not create a file in the selected NES folder")
@@ -504,6 +528,7 @@ class RommApiClient {
                     throw e
                 }
                 LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext)
+                onProgress(ImportProgress(ImportStage.INDEXING))
                 newFile.uri
             } finally {
                 temporary.delete()
@@ -565,6 +590,7 @@ class RommApiClient {
         connection: RommConnection,
         rom: Rom,
         target: File,
+        onProgress: (ImportProgress) -> Unit,
     ) {
         val request =
             Request.Builder()
@@ -580,7 +606,12 @@ class RommApiClient {
                 throw IOException("RomM ROM exceeds import size limit")
             }
             val digest = MessageDigest.getInstance("MD5")
+            val totalBytes =
+                body.contentLength().takeIf { it > 0 }
+                    ?: rom.sizeBytes.takeIf { it > 0 }
             var countTotal = 0L
+            var lastNotified = 0L
+            onProgress(ImportProgress(ImportStage.DOWNLOADING, 0L, totalBytes))
             body.byteStream().use { input ->
                 target.outputStream().use { output ->
                     val buffer = ByteArray(16 * 1024)
@@ -594,9 +625,14 @@ class RommApiClient {
                         }
                         digest.update(buffer, 0, count)
                         output.write(buffer, 0, count)
+                        if (countTotal - lastNotified >= 16 * 1024L) {
+                            onProgress(ImportProgress(ImportStage.DOWNLOADING, countTotal, totalBytes))
+                            lastNotified = countTotal
+                        }
                     }
                 }
             }
+            onProgress(ImportProgress(ImportStage.DOWNLOADING, countTotal, totalBytes))
             if (countTotal == 0L) throw IOException("RomM returned an empty ROM")
             rom.md5?.let { expected ->
                 val actual =
