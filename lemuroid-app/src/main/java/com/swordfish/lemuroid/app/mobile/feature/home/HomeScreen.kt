@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -44,6 +45,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
@@ -69,6 +71,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -165,7 +168,6 @@ fun HomeScreen(
                 .map(RommLibraryCatalog::asPreview)
         }
     var selectedGame by remember { mutableStateOf<Game?>(null) }
-    var browsingAll by remember { mutableStateOf(false) }
     val allGames =
         remember(state.discoveryGames, remoteGames) {
             (state.discoveryGames + remoteGames)
@@ -186,8 +188,6 @@ fun HomeScreen(
         state = state,
         allGames = allGames,
         romm = romm,
-        onRetryRomM = { viewModel.refreshRomMLibrary(force = true) },
-        onBrowseAll = { browsingAll = true },
         onOpenRemoteStatus = { selectedGame = RommLibraryCatalog.asPreview(it) },
         onGameClick = onGameClick,
         onGameLongClick = { game ->
@@ -208,17 +208,6 @@ fun HomeScreen(
         onSetDirectoryClicked = { viewModel.changeLocalStorageFolder(context) },
         onRescanClicked = { LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext) },
     )
-
-    if (browsingAll) {
-        LibraryBrowserDialog(
-            games = allGames,
-            onDismiss = { browsingAll = false },
-            onSelect = {
-                browsingAll = false
-                selectedGame = it
-            },
-        )
-    }
 
     selectedGame?.let { game ->
         val remote = RommLibraryCatalog.remoteFor(game, romm)
@@ -292,8 +281,6 @@ private fun OpenNesLibrary(
     state: HomeViewModel.UIState,
     allGames: List<Game>,
     romm: RommLibraryCatalog.State,
-    onRetryRomM: () -> Unit,
-    onBrowseAll: () -> Unit,
     onOpenRemoteStatus: (com.swordfish.lemuroid.app.shared.romm.RommApiClient.Rom) -> Unit,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
@@ -330,73 +317,174 @@ private fun OpenNesLibrary(
         return
     }
 
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(LibraryColors.background)
-                .verticalScroll(rememberScrollState()),
+    var source by rememberSaveable { mutableStateOf(LibraryLocation.ALL.name) }
+    var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE.name) }
+    var genre by rememberSaveable { mutableStateOf<String?>(null) }
+    var showingFilters by remember { mutableStateOf(false) }
+    val availableGenres = remember(allGames) { LibraryFilterRules.availableGenres(allGames) }
+    val currentLocation = LibraryLocation.valueOf(source)
+    val currentSort = LibrarySort.valueOf(sort)
+    val filtered =
+        remember(allGames, currentLocation, currentSort, genre) {
+            LibraryFilterRules.apply(allGames, currentLocation, genre, currentSort)
+        }
+    val columns =
+        when {
+            LocalConfiguration.current.screenWidthDp >= 800 -> 6
+            LocalConfiguration.current.screenWidthDp >= 600 -> 5
+            LocalConfiguration.current.screenWidthDp >= 450 -> 4
+            LocalConfiguration.current.screenWidthDp >= 330 -> 3
+            else -> 2
+        }
+    val rows = remember(filtered, columns) { filtered.chunked(columns) }
+
+    // One vertical lazy list owns the screen: the inline cover grid never
+    // scrolls in a nested page and only visible rows are composed.
+    LazyColumn(
+        modifier = modifier.fillMaxSize().background(LibraryColors.background),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        LibraryHeader(onSearchClick, onSettingsClick)
+        item { LibraryHeader(onSearchClick, onSettingsClick) }
 
-        // Remains accessible after the details sheet is dismissed, so a long
-        // download or failed scan never becomes an invisible disabled action.
-        RommDownloadStatus(catalog = romm, onOpen = onOpenRemoteStatus)
-        RommConnectionNotice(catalog = romm, onRetry = onRetryRomM)
+        // A user-requested download retains a visible progress or failure row.
+        // Passive RomM network retries are intentionally silent on Home.
+        item { RommDownloadStatus(catalog = romm, onOpen = onOpenRemoteStatus) }
 
-        AnimatedVisibility(state.showNoNotificationPermissionCard) {
-            LibraryNotice(
-                title = stringResource(R.string.home_notification_title),
-                message = stringResource(R.string.home_notification_message),
-                action = stringResource(R.string.home_notification_action),
-                onAction = onEnableNotificationsClicked,
-            )
+        if (state.showNoNotificationPermissionCard) {
+            item {
+                LibraryNotice(
+                    title = stringResource(R.string.home_notification_title),
+                    message = stringResource(R.string.home_notification_message),
+                    action = stringResource(R.string.home_notification_action),
+                    onAction = onEnableNotificationsClicked,
+                )
+            }
         }
 
-        AnimatedVisibility(
+        if (
             (state.showNoGamesCard && (allGames.isEmpty() || !state.hasRomDirectory)) ||
-                (state.scanError != null && !state.scanInProgress),
+            (state.scanError != null && !state.scanInProgress)
         ) {
-            LibrarySetupCard(
-                hasRomDirectory = state.hasRomDirectory,
-                scanInProgress = state.scanInProgress,
-                scanError = state.scanError,
-                onChooseFolder = onSetDirectoryClicked,
-                onRescan = onRescanClicked,
-            )
+            item {
+                LibrarySetupCard(
+                    hasRomDirectory = state.hasRomDirectory,
+                    scanInProgress = state.scanInProgress,
+                    scanError = state.scanError,
+                    onChooseFolder = onSetDirectoryClicked,
+                    onRescan = onRescanClicked,
+                )
+            }
         }
 
-        // A real, previously played game is the only eligible "Continue" item.
         state.recentGames.firstOrNull()?.let { game ->
-            FeaturedGame(game, onGameClick)
+            item { FeaturedGame(game, onGameClick) }
+        }
+        if (state.recentGames.isNotEmpty()) {
+            item {
+                GameShelf(
+                    title = stringResource(R.string.opennes_recent_shelf),
+                    games = state.recentGames,
+                    onGameClick = onGameDetailsClick,
+                    onGameLongClick = onGameLongClick,
+                )
+            }
+        }
+        if (state.favoritesGames.isNotEmpty()) {
+            item {
+                GameShelf(
+                    title = stringResource(R.string.opennes_favorites_shelf),
+                    games = state.favoritesGames,
+                    onGameClick = onGameDetailsClick,
+                    onGameLongClick = onGameLongClick,
+                )
+            }
         }
 
-        GameShelf(
-            title = stringResource(R.string.opennes_recent_shelf),
-            games = state.recentGames,
-            onGameClick = onGameDetailsClick,
-            onGameLongClick = onGameLongClick,
-        )
-        if (state.favoritesGames.isNotEmpty()) {
-            GameShelf(
-                title = stringResource(R.string.opennes_favorites_shelf),
-                games = state.favoritesGames,
-                onGameClick = onGameDetailsClick,
-                onGameLongClick = onGameLongClick,
-            )
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.opennes_discover_shelf),
+                    modifier = Modifier.weight(1f).semantics { heading() },
+                    color = LibraryColors.foreground,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+                IconButton(onClick = { showingFilters = true }) {
+                    Icon(
+                        imageVector = Icons.Outlined.FilterList,
+                        contentDescription = stringResource(R.string.opennes_library_filter_title),
+                        tint = LibraryColors.foreground,
+                    )
+                }
+            }
         }
-        // Preserve the physical NES shelf, but keep it short. The full
-        // collection is in a searchable, alphabet-jump grid instead.
-        GameShelf(
-            title = stringResource(R.string.opennes_discover_shelf),
-            games = allGames.take(16),
-            onGameClick = onGameDetailsClick,
-            onGameLongClick = onGameLongClick,
-            onViewAll = onBrowseAll,
-            total = allGames.size,
+
+        if (rows.isEmpty()) {
+            item {
+                Text(
+                    stringResource(R.string.opennes_romm_browser_empty),
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    color = LibraryColors.muted,
+                )
+            }
+        } else {
+            items(rows.size) { index ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    rows[index].forEach { game ->
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            NesBoxArtwork(
+                                game = game,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onGameDetailsClick(game) },
+                            )
+                            Text(
+                                game.displayName(),
+                                color = LibraryColors.foreground,
+                                fontSize = 12.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (game.id < 0) {
+                                Text(
+                                    stringResource(R.string.opennes_romm_download),
+                                    color = LibraryColors.muted,
+                                    fontSize = 11.sp,
+                                )
+                            }
+                        }
+                    }
+                    repeat(columns - rows[index].size) {
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+    }
+
+    if (showingFilters) {
+        LibraryFilterSheet(
+            location = currentLocation,
+            sort = currentSort,
+            genre = genre,
+            genres = availableGenres,
+            onLocation = { source = it.name },
+            onSort = { sort = it.name },
+            onGenre = { genre = it },
+            onDismiss = { showingFilters = false },
         )
-        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 
@@ -508,22 +596,13 @@ private fun LibraryHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "OPENNES",
-                color = LibraryColors.red,
-                fontWeight = FontWeight.Black,
-                fontSize = 12.sp,
-                letterSpacing = 3.sp,
-            )
-            Text(
-                text = stringResource(R.string.opennes_library_title),
-                modifier = Modifier.semantics { heading() },
-                color = LibraryColors.foreground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-            )
-        }
+        Text(
+            text = "OpenNES",
+            modifier = Modifier.weight(1f).semantics { heading() },
+            color = LibraryColors.foreground,
+            fontWeight = FontWeight.Bold,
+            fontSize = 26.sp,
+        )
         IconButton(onClick = onSearchClick) {
             Icon(
                 imageVector = Icons.Outlined.Search,
