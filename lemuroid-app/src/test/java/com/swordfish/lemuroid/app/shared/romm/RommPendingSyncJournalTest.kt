@@ -161,6 +161,9 @@ class RommPendingSyncJournalTest {
                 RommSaveSyncPlanner.Request(
                     optedIn = true,
                     online = true,
+                    serverVerified = true,
+                    accountVerified = true,
+                    deviceVerified = true,
                     romId = 5,
                     confirmedRomId = 5,
                     previousLocal = snapshot("a"),

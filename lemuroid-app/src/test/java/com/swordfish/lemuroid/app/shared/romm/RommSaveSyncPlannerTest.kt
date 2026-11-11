@@ -13,6 +13,9 @@ class RommSaveSyncPlannerTest {
         RommSaveSyncPlanner.Request(
             optedIn = true,
             online = true,
+            serverVerified = true,
+            accountVerified = true,
+            deviceVerified = true,
             romId = 31,
             confirmedRomId = 31,
             previousLocal = a,
@@ -41,6 +44,28 @@ class RommSaveSyncPlannerTest {
                     versionedBackupVerified = true,
                 ),
             ),
+        )
+    }
+
+    @Test
+    fun offlineFingerprintsAreNotAccountOrDeviceVerification() {
+        val ready =
+            request().copy(
+                direction = RommSaveSyncPlanner.Direction.UPLOAD,
+                approvedThisOperation = true,
+                versionedBackupVerified = true,
+            )
+        assertEquals(
+            RommSaveSyncPlanner.Decision.UnverifiedIdentity,
+            RommSaveSyncPlanner.plan(ready.copy(serverVerified = false)),
+        )
+        assertEquals(
+            RommSaveSyncPlanner.Decision.UnverifiedIdentity,
+            RommSaveSyncPlanner.plan(ready.copy(accountVerified = false)),
+        )
+        assertEquals(
+            RommSaveSyncPlanner.Decision.UnverifiedIdentity,
+            RommSaveSyncPlanner.plan(ready.copy(deviceVerified = false)),
         )
     }
 

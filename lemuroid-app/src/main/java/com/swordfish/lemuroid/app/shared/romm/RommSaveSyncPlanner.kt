@@ -30,6 +30,12 @@ internal object RommSaveSyncPlanner {
     data class Request(
         val optedIn: Boolean,
         val online: Boolean,
+        // This is not asserted by an offline URL fingerprint. A future
+        // integration must verify the current authenticated RomM account,
+        // registered device and server identity through the live API.
+        val serverVerified: Boolean = false,
+        val accountVerified: Boolean = false,
+        val deviceVerified: Boolean = false,
         val romId: Int,
         val confirmedRomId: Int,
         val previousLocal: Snapshot?,
@@ -74,6 +80,9 @@ internal object RommSaveSyncPlanner {
     fun plan(request: Request): Decision {
         if (!request.optedIn) return Decision.Disabled
         if (!request.online) return Decision.RevalidateWhenOnline
+        if (!request.serverVerified || !request.accountVerified || !request.deviceVerified) {
+            return Decision.UnverifiedIdentity
+        }
         if (request.romId <= 0 || request.confirmedRomId != request.romId) {
             return Decision.UnverifiedIdentity
         }
