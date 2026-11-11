@@ -25,6 +25,43 @@ object NesGameTitle {
         )
     private val trailingArticle = Regex("""^(.+),\s*(The|An|A)$""", RegexOption.IGNORE_CASE)
 
+    private val bundlePrefix = Regex("""^(?:2-in-1|2 in 1)\\s*[:\\-]?\\s*""", RegexOption.IGNORE_CASE)
+    private val multiGameSeparator = Regex("""\\s*(?:\\+|/|&|\\band\\b)\\s*""", RegexOption.IGNORE_CASE)
+
+    /**
+     * Manual NES search accepts reversed articles and naming differences on
+     * multi-cart labels, but never searches an individual game in place of a
+     * bundle. All variants must retain the full cartridge identity.
+     */
+    fun searchVariants(raw: String): List<String> {
+        val original = raw.trim()
+        val cleaned = clean(original)
+        val withoutPrefix = cleaned.replace(bundlePrefix, "").trim()
+        val results = linkedSetOf(original, cleaned, withoutPrefix)
+        val article = Regex("""^(The|An|A)\\s+(.+)$""", RegexOption.IGNORE_CASE)
+            .matchEntire(withoutPrefix)
+        if (article != null) {
+            results += "${article.groupValues[2]}, ${article.groupValues[1]}"
+        }
+        val components = withoutPrefix.split(multiGameSeparator).map(String::trim)
+        if (components.size in 2..3 && components.all { it.length >= 3 }) {
+            for (joiner in listOf(" / ", " + ", " & ", " and ")) {
+                results += components.joinToString(joiner)
+            }
+        }
+        return results.filter { it.length in 3..120 }.take(9)
+    }
+
+    fun isCompilation(raw: String): Boolean {
+        val parts = clean(raw).replace(bundlePrefix, "").split(multiGameSeparator)
+        return parts.count { it.trim().length >= 3 } >= 2
+    }
+
+    fun canonicalReleaseName(raw: String): String =
+        clean(raw).replace(bundlePrefix, "").lowercase(java.util.Locale.ROOT)
+            .replace(multiGameSeparator, "/")
+            .replace(Regex("[^a-z0-9/]"), "")
+
     fun clean(raw: String): String {
         var title = raw.trim().replace(nesExtension, "").trim()
         while (true) {
