@@ -25,6 +25,7 @@ object ActiveGameSession {
         game: Game,
     ) {
         if (game.id <= 0) return
+        // Session marker failures must never interrupt running a game.
         runCatching {
             val json = JSONObject().put("id", game.id).put("title", game.displayName())
             val destination = file(context)
@@ -36,8 +37,6 @@ object ActiveGameSession {
                 destination.failWrite(stream)
             }
         }
-        // Session marker failures must never interrupt running a game.
-
     }
 
     fun clear(context: Context) {
