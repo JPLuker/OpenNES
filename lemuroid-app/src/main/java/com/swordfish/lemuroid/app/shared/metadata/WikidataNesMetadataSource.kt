@@ -10,7 +10,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -67,10 +66,16 @@ class WikidataNesMetadataSource {
             val term = NesGameTitle.clean(query)
             if (term.length !in 3..120) return@withContext CandidateResults.NoMatch
             runCatching {
-                var result = findManualCandidates(term)
+                val queries = linkedSetOf(term)
+                queries.addAll(NesMetadataTitleQueries.alternateQueries(term))
                 for (fallback in NesManualSearchTerms.fallbacks(term)) {
-                    if (result !is CandidateResults.NoMatch) break
-                    result = findManualCandidates(fallback)
+                    queries += fallback
+                    queries.addAll(NesMetadataTitleQueries.alternateQueries(fallback))
+                }
+                var result: CandidateResults = CandidateResults.NoMatch
+                for (query in queries.take(12)) {
+                    result = findManualCandidates(query, term)
+                    if (result is CandidateResults.Found) break
                 }
                 result
             }.onFailure {
@@ -86,7 +91,10 @@ class WikidataNesMetadataSource {
                 .getOrElse { Result.Unavailable }
         }
 
-    private fun findManualCandidates(term: String): CandidateResults {
+    private fun findManualCandidates(
+        term: String,
+        requestedTitle: String,
+    ): CandidateResults {
         val search =
             request(
                 mapOf(
@@ -128,6 +136,9 @@ class WikidataNesMetadataSource {
                 val label =
                     item.optString("label").trim().takeIf { it.isNotBlank() }
                         ?: return@mapNotNull null
+                if (!NesMetadataTitleQueries.compatibleCandidate(requestedTitle, label)) {
+                    return@mapNotNull null
+                }
                 val claims = entity.optJSONObject("claims")
                 val year =
                     claims?.let { gameClaims ->
@@ -191,8 +202,16 @@ class WikidataNesMetadataSource {
                 return@withContext Result.NoMatch
             }
 
-            runCatching { findMatch(searchTerm) }
-                .onFailure { Timber.w(it, "Wikidata NES lookup unavailable") }
+            runCatching {
+                var result = findMatch(searchTerm)
+                if (result is Result.NoMatch) {
+                    for (variant in NesMetadataTitleQueries.alternateQueries(searchTerm)) {
+                        result = findMatch(variant)
+                        if (result !is Result.NoMatch) break
+                    }
+                }
+                result
+            }.onFailure { Timber.w(it, "Wikidata NES lookup unavailable") }
                 .getOrElse { Result.Unavailable }
         }
 
@@ -210,11 +229,11 @@ class WikidataNesMetadataSource {
                 ),
             )
         val names = search.optJSONArray("search") ?: return Result.NoMatch
-        val canonical = normalize(title)
+        val canonical = NesMetadataTitleQueries.normalized(title)
         val matchingIds =
             (0 until names.length())
                 .mapNotNull { names.optJSONObject(it) }
-                .filter { normalize(it.optString("label")) == canonical }
+                .filter { NesMetadataTitleQueries.normalized(it.optString("label")) == canonical }
                 .map { it.optString("id") }
                 .filter { it.matches(Regex("Q[1-9][0-9]*")) }
                 .distinct()
@@ -373,10 +392,6 @@ class WikidataNesMetadataSource {
         val statements: JSONArray = claims.optJSONArray(property) ?: return emptyList()
         return (0 until statements.length()).mapNotNull { statements.optJSONObject(it) }
     }
-
-    private fun normalize(title: String): String =
-        title.lowercase(Locale.ROOT)
-            .replace(Regex("[^a-z0-9]"), "")
 
     private fun request(params: Map<String, String>): JSONObject {
         val uri =
