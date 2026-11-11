@@ -35,12 +35,15 @@ import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
+import com.swordfish.lemuroid.app.shared.romm.RommPairing
 import com.swordfish.lemuroid.app.shared.romm.RommPendingReviewSummary
 import com.swordfish.lemuroid.app.shared.romm.RommPendingSyncJournal
 import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncPlanner
 import com.swordfish.lemuroid.app.shared.romm.RommServerIdentity
 import com.swordfish.lemuroid.app.shared.romm.RommVersionedSaveBackupStore
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -75,6 +78,9 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
 
     var serverUrl by remember { mutableStateOf(store.configuredServer().orEmpty()) }
     var tokenInput by remember { mutableStateOf("") }
+    var pairingCodeInput by remember { mutableStateOf("") }
+    var pendingPairing by remember { mutableStateOf<RommPairing.Request?>(null) }
+    var confirmPlainHttpManual by remember { mutableStateOf(false) }
     var configured by remember {
         mutableStateOf(store.configuredServer() != null && store.hasSavedToken())
     }
@@ -242,6 +248,15 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             }
         }
 
+    val qrScanner =
+        rememberLauncherForActivityResult(ScanContract()) { result ->
+            result.contents?.let { contents ->
+                runCatching { RommPairing.parseQr(contents) }
+                    .onSuccess { pendingPairing = it }
+                    .onFailure { status = context.getString(R.string.opennes_romm_pair_invalid) }
+            }
+        }
+
     // Archives are local-only and must remain accessible without network,
     // connected RomM credentials, or an online save-list request.
     LaunchedEffect(context) {
@@ -258,6 +273,22 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             page = client.listNesRoms(connection, offset = offset)
             remoteSaves = null
             selectedSaveGame = null
+        }
+    }
+
+    val connectManually: () -> Unit = {
+        perform("Connecting") {
+            val candidate = RommConnection(serverUrl.trim(), tokenInput.trim())
+            val user = client.checkAccount(candidate)
+            withContext(Dispatchers.IO) {
+                store.save(candidate.serverUrl, candidate.token)
+            }
+            configured = true
+            signedInAs = user
+            serverUrl = store.configuredServer().orEmpty()
+            tokenInput = ""
+            pairingCodeInput = ""
+            status = "Connected"
         }
     }
 
@@ -289,21 +320,55 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                     Button(
                         enabled = !busy && serverUrl.isNotBlank() && tokenInput.isNotBlank(),
                         onClick = {
-                            perform("Connecting") {
-                                val candidate = RommConnection(serverUrl.trim(), tokenInput.trim())
-                                val user = client.checkAccount(candidate)
-                                withContext(Dispatchers.IO) {
-                                    store.save(candidate.serverUrl, candidate.token)
-                                }
-                                configured = true
-                                signedInAs = user
-                                serverUrl = store.configuredServer().orEmpty()
-                                tokenInput = ""
-                                status = "Connected"
+                            if (RommApiClient.isPrivateLanHttp(serverUrl)) {
+                                confirmPlainHttpManual = true
+                            } else {
+                                connectManually()
                             }
                         },
                     ) {
                         Text(stringResource(R.string.opennes_romm_connect))
+                    }
+                    Text(stringResource(R.string.opennes_romm_pair_instructions))
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            qrScanner.launch(
+                                ScanOptions()
+                                    .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                                    .setPrompt(context.getString(R.string.opennes_romm_scan_prompt))
+                                    .setBeepEnabled(false)
+                                    .setOrientationLocked(false),
+                            )
+                        },
+                    ) {
+                        Text(stringResource(R.string.opennes_romm_scan_qr))
+                    }
+                    OutlinedTextField(
+                        value = pairingCodeInput,
+                        onValueChange = { pairingCodeInput = it.take(12) },
+                        label = { Text(stringResource(R.string.opennes_romm_pair_code)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedButton(
+                        enabled = !busy && serverUrl.isNotBlank() && pairingCodeInput.isNotBlank(),
+                        onClick = {
+                            runCatching {
+                                RommPairing.Request(
+                                    RommApiClient.validatedServerUrl(serverUrl),
+                                    RommPairing.normalizeCode(pairingCodeInput),
+                                )
+                            }.onSuccess { pendingPairing = it }
+                                .onFailure {
+                                    status = context.getString(R.string.opennes_romm_pair_code_invalid)
+                                }
+                        },
+                    ) {
+                        Text(stringResource(R.string.opennes_romm_pair_code_action))
+                    }
+                    if (RommApiClient.isPrivateLanHttp(serverUrl)) {
+                        Text(stringResource(R.string.opennes_romm_http_warning))
                     }
                 } else {
                     Text(stringResource(R.string.opennes_romm_connected, serverUrl))
@@ -651,6 +716,69 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+
+    if (confirmPlainHttpManual) {
+        AlertDialog(
+            onDismissRequest = { confirmPlainHttpManual = false },
+            title = { Text(stringResource(R.string.opennes_romm_http_confirm_title)) },
+            text = { Text(stringResource(R.string.opennes_romm_http_warning)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmPlainHttpManual = false
+                        connectManually()
+                    },
+                ) { Text(stringResource(R.string.opennes_romm_http_continue)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmPlainHttpManual = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
+    pendingPairing?.let { selected ->
+        AlertDialog(
+            onDismissRequest = { pendingPairing = null },
+            title = { Text(stringResource(R.string.opennes_romm_pair_confirm)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.opennes_romm_pair_explanation, selected.serverUrl))
+                    if (RommApiClient.isPrivateLanHttp(selected.serverUrl)) {
+                        Text(stringResource(R.string.opennes_romm_http_warning))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !busy,
+                    onClick = {
+                        pendingPairing = null
+                        perform("Pairing with RomM") {
+                            val connection =
+                                client.exchangePairingCode(selected.serverUrl, selected.code)
+                            val user = client.checkAccount(connection)
+                            withContext(Dispatchers.IO) {
+                                store.save(connection.serverUrl, connection.token)
+                            }
+                            configured = true
+                            signedInAs = user
+                            serverUrl = store.configuredServer().orEmpty()
+                            tokenInput = ""
+                            pairingCodeInput = ""
+                            status = "Connected"
+                        }
+                    },
+                ) { Text(stringResource(R.string.opennes_romm_pair)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingPairing = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 
     prepareArchive?.let { selected ->
