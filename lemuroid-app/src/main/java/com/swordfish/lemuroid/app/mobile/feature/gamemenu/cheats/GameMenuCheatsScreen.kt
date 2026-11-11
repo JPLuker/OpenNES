@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -47,6 +50,7 @@ import com.swordfish.lemuroid.app.shared.cheats.NesCheatCodes
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatDefinition
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatExchange
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatRepository
+import com.swordfish.lemuroid.app.shared.cheats.NesLibretroCheatFinder
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +75,12 @@ internal fun GameMenuCheatsScreen(game: Game) {
     var name by remember(uri) { mutableStateOf("") }
     var code by remember(uri) { mutableStateOf("") }
     var deleteTarget by remember(uri) { mutableStateOf<NesCheatDefinition?>(null) }
+    var finderOpen by remember(uri) { mutableStateOf(false) }
+    var finderTerm by remember(uri) { mutableStateOf(game.displayName()) }
+    var finderLoading by remember(uri) { mutableStateOf(false) }
+    var finderResults by remember(uri) { mutableStateOf<List<NesLibretroCheatFinder.Candidate>>(emptyList()) }
+    var finderSelected by remember(uri) { mutableStateOf<Set<String>>(emptySet()) }
+    var finderMessage by remember(uri) { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     val importDocument =
@@ -196,6 +206,17 @@ internal fun GameMenuCheatsScreen(game: Game) {
                 Text(stringResource(R.string.opennes_cheats_export))
             }
         }
+        OutlinedButton(
+            onClick = {
+                finderResults = emptyList()
+                finderSelected = emptySet()
+                finderMessage = null
+                finderOpen = true
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Find Cheats")
+        }
         Button(
             onClick = { openEditor(null) },
             modifier = Modifier.fillMaxWidth(),
@@ -263,6 +284,100 @@ internal fun GameMenuCheatsScreen(game: Game) {
                 }
             }
         }
+    }
+
+    if (finderOpen) {
+        AlertDialog(
+            onDismissRequest = { if (!finderLoading) finderOpen = false },
+            title = { Text("Find NES cheats") },
+            text = {
+                Column(
+                    modifier = Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(
+                        "Libretro NES cheat database · CC BY-SA 4.0. " +
+                            "Only compatible individual codes are shown; imported codes stay disabled.",
+                        color = GameMenuStyle.muted,
+                        fontSize = 12.sp,
+                    )
+                    OutlinedTextField(
+                        value = finderTerm,
+                        onValueChange = { finderTerm = it.take(120) },
+                        label = { Text("Game title") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    OutlinedButton(
+                        enabled = !finderLoading && finderTerm.trim().length >= 3,
+                        onClick = {
+                            finderLoading = true
+                            finderMessage = null
+                            finderResults = emptyList()
+                            finderSelected = emptySet()
+                            scope.launch {
+                                val result = runCatching { NesLibretroCheatFinder.find(finderTerm) }
+                                finderResults = result.getOrDefault(emptyList())
+                                finderLoading = false
+                                finderMessage =
+                                    when {
+                                        result.isFailure -> "Could not reach the cheat database. Check the connection."
+                                        finderResults.isEmpty() -> "No compatible NES cheats found. Try a different title."
+                                        else -> "${finderResults.size} compatible cheats found."
+                                    }
+                            }
+                        },
+                    ) { Text("Search database") }
+                    if (finderLoading) CircularProgressIndicator()
+                    finderMessage?.let { Text(it, color = GameMenuStyle.muted, fontSize = 12.sp) }
+                    finderResults.forEach { candidate ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        ) {
+                            Checkbox(
+                                checked = candidate.code in finderSelected,
+                                onCheckedChange = { checked ->
+                                    finderSelected =
+                                        if (checked) finderSelected + candidate.code
+                                        else finderSelected - candidate.code
+                                },
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(candidate.title, fontSize = 13.sp)
+                                Text(candidate.code, color = GameMenuStyle.muted, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !finderLoading && finderSelected.isNotEmpty(),
+                    onClick = {
+                        val additions =
+                            finderResults.filter { it.code in finderSelected }
+                                .mapNotNull { repository.create(it.title, it.code) }
+                        val merged = NesCheatExchange.merge(definitions, additions)
+                        if (merged != null && repository.save(uri, merged)) {
+                            definitions = merged
+                            finderOpen = false
+                            finderMessage = null
+                        } else {
+                            finderMessage = "Unable to import selected codes."
+                        }
+                    },
+                ) {
+                    Text("Import selected (${finderSelected.size})")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { if (!finderLoading) finderOpen = false }) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = GameMenuStyle.surface,
+        )
     }
 
     if (editorOpen) {
