@@ -2,7 +2,7 @@
 
 Updated: 2026-11-10
 
-This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The most recent verified source baseline for the archive-management batch is [CI run 42911500306](https://github.com/JPLuker/OpenNES/actions/runs/42911500306). Subsequent server-bound intent staging is source committed but still awaiting a full CI verdict. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
+This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The current source baseline passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071), including archive integrity, sync-policy and RomM 5.4 protocol regression tests, native/Android compilation and rolling APK publication. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
 
 ## Milestones
 
@@ -19,8 +19,18 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | **M5-C — NES cheats** | **CI VERIFIED, HARDWARE TESTING OPEN**: per-ROM Game Genie and hex editor, session-only native toggles, bounded JSON import/export through SAF; new imports disabled | Test real cheat activation/removal, per-ROM reset, editor and import/export on phone; atomic native replacement is CI verified |
 | **M6-H — Hardcore mode** | **FOUNDATION CI VERIFIED, USER MODE UNAVAILABLE**: fail-closed mode policy, clean-reset eligibility tests, save-load/cheat/Game Genie restrictions and suspend downgrade are wired; native client explicitly Casual | Finish native session switching, in-game overlays, offline queue, all bypass audits, device validation and official recognition before enabling Hardcore |
 | **M6 — RetroAchievements** | **CI VERIFIED, DEVICE ACCEPTANCE OPEN**: authenticated native client, ROM/game identity, native achievements, unlock events, Rich Presence and leaderboard listings, connectivity and RAM validation; FDS awards disabled | Genuine new award/server persistence, leaderboard/overlay behavior and official recognition must be device-tested |
-| **M7 — RomM integration** | **ACTIVE**: read-only HTTPS browse/import, protected token, verified save archives with delete/compare, server-bound offline request preparation and non-executing journal review/discard | Latest source still needs CI; real-server verification, remote writes, actual sync executor, conflict-resolution UI and safe live-save restoration remain unavailable |
+| **M7 — RomM integration** | **FOUNDATION CI VERIFIED**: HTTPS browse/import, protected token, archive audit, safe backups/recovery, per-server pending intent review, strict common-ancestor planner and RomM 5.4 protocol/dual-hash parsing | Real RomM version and per-user/device identity, upload/download, conflict adjudication, on-device save mapping and safe live-save restoration remain unavailable |
 | **M8 — Public release** | **PRE-RELEASE HARDENING**: one rolling APK/checksum CI job is verified; production signing remains separately configured | After M7 RomM and M6 feature completion: sign, audit licenses/security, test real devices and tag stable release |
+
+## November 10 — M7 no-server synchronization protocol and archive safety
+
+- **Verified:** [CI 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071) passed formatting, unit regressions, native preparation, Android compilation, APK inspection and release publication.
+- **Safer decisions:** `RommSaveSyncPlanner` now rejects two different historical hashes as a shared baseline. The v2 offline journal keys outstanding work by server fingerprint *and* RomM game ID, refuses stale entries, and can only compare a reselected local document to a previously observed hash.
+- **UI:** Settings → RomM permits read-only local rechecks, displays requests from other servers separately, and audits valid, unverified, orphaned-manifest and incomplete archive files. No audit action deletes damaged evidence.
+- **Backup safety:** A source save must match before, during and after staging. Recovery refuses an archive if its recorded manifest is no longer verified.
+- **RomM protocol:** `RommDeviceSyncProtocol` accepts only a bounded, explicitly recognized 5.4 negotiation schema with numeric session ID, verified ROM IDs, safe filenames and consistent operation totals. Separate stable MD5 and SHA-256 digests are calculated for file content. Unknown, older and malformed schemas fail closed; no API write executor exists.
+- **Still blocked:** Per-user/account-bound device registration, server-version compatibility, permissions, immutable upload staging, conflict review, deliberate overwrite/recovery approval, device tests and real HTTPS RomM integration. The current offline journal is server-bound but **not account-bound** and can never authorize execution.
+- **References:** [RomM 5.4 Device Sync Protocol](https://docs.romm.app/5.4.0/developers/device-sync-protocol/); [Client API Tokens](https://docs.romm.app/5.4.0/developers/client-api-tokens/).
 
 ## November 10 — M2 library refinements and M6 achievement panel pagination
 
@@ -28,14 +38,14 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 - **Library:** Custom artwork uses Android's persistable document picker rather than ephemeral Get Content; an inability to retain access is shown rather than saving a broken URI. Existing custom names and artwork can be replaced directly. Offline catalogue lookup rejects non-NES rows and deduplicates equivalent entries; late responses cannot replace results for an edited query.
 - **Artwork:** A bounded session-only cache remembers successfully decoded alternate NES box-art URLs for use on subsequent screens. Official Libretro NES screenshot/title previews accept both encoded and unencoded URL paths, with tests rejecting unrelated domains or non-NES paths.
 - **Achievements:** Achievement cards use 20-item progressive batches instead of eagerly composing every row; leaderboard listings initially show eight entries with an option to expand. Compatibility warnings are compact and expandable, but still available to inspect. Official completion counts use the full verified list.
-- **Acceptance:** The source batch is awaiting a green all-in-one CI run and phone layout/behavior tests. These changes do not certify a new RetroAchievements unlock, fix a live RomM server, or enable Hardcore.
+- **Acceptance:** The source batch passed [CI run 42923112381](https://github.com/JPLuker/OpenNES/actions/runs/42923112381); phone layout/behavior tests remain outstanding. These changes do not certify a new RetroAchievements unlock, fix a live RomM server, or enable Hardcore.
 
 ## November 10 — offline RomM archive and server-bound sync preparation
 
 - **Verified archive management:** [CI 42911500306](https://github.com/JPLuker/OpenNES/actions/runs/42911500306) passed all lint, JVM, native Android and APK release gates. Local archive deletion verifies current SHA-256 manifest/canonical path and never deletes emulator saves. Read-only comparisons reopen a user-selected document twice and refuse changed, missing or oversized streams.
 - **Sync staging added after that baseline:** New offline save archives record a SHA-256 fingerprint of their normalized RomM HTTPS server URL. Older backups remain usable for export/deletion/comparison, but cannot be queued against an unverified server origin. The pending journal has a version-2 source binding, refuses legacy/unbound or corrupted journals, and rejects a different server on replay evaluation.
 - **User workflow:** A player may select a local save document, choose intended upload/download direction and persist an intent for a matching server-bound offline archive. The journal stores only fingerprints, ROM ID, direction and timestamp. It does **not** store save bytes, local document access, token or permission to execute. Duplicate or corrupt requests fail closed; users may inspect/discard requests in Settings → RomM.
-- **Remaining gates:** Final CI for the new source; on-phone UI acceptance; actual account/ROM verification, documented server API write contracts, immutable upload snapshots, conflict adjudication, backups and transactional restore. No remote save writes or local-save replacements are enabled.
+- **Remaining gates:** On-phone UI acceptance; actual account/ROM verification, documented server API write contracts, immutable upload snapshots, conflict adjudication, backups and transactional restore. No remote save writes or local-save replacements are enabled.
 
 ## November 10 — Hardcore safety gates and atomic FCEUmm cheat replacement
 

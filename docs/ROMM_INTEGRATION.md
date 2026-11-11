@@ -1,6 +1,6 @@
 # OpenNES — RomM integration
 
-**Status (2026-11-10): M7 integration in progress.** A read-only HTTPS API client, Android Keystore-backed token store, manually verified offline backups, archive management and non-executing, server-bound intent staging exist in source. The archive-management APK passed CI 42911500306; the newer intent-staging source awaits its own CI. No real RomM server, Android UI acceptance or remote write behavior has been verified.
+**Status (2026-11-10): M7 integration in progress.** A read-only HTTPS API client, Android Keystore-backed token store, immutable offline archives and server-bound non-executing request staging exist. Offline integrity auditing, local request review, strict conflict ancestry checks and a read-only RomM 5.4 negotiation parser passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071). No real RomM server, Android UI acceptance, per-user device registration or remote write behavior has been verified.
 
 ## Connection & security
 
@@ -35,7 +35,7 @@
 ## November 10 no-device synchronization safety groundwork
 
 - Added `RommSaveSyncPlanner`: a **non-mutating** sync decision engine, deliberately **not wired to uploads or downloads**. It starts disabled, requires a confirmed RomM ROM ID, immutable local and remote SHA-256 save snapshots, a remembered pair of previous snapshots, a current online recheck, explicit upload/download direction, approval for that exact operation and an already verified versioned backup.
-- A save changed on both devices is a conflict even if one file has a later timestamp. Missing baselines require explicit initial pairing. Offline changes must be revalidated against the remote state on reconnect rather than blindly replayed. The planner returns expected hashes for a future executor to recheck before modifying a file.
+- A save changed on both devices is a conflict even if one file has a later timestamp. **Differing historical hashes also constitute an invalid shared baseline** and fail closed. Missing baselines require explicit initial pairing. Offline changes must be revalidated against the remote state on reconnect rather than blindly replayed. The planner returns expected hashes for a future executor to recheck before modifying a file.
 - JVM tests exercise opt-in, offline behavior, unverified identity, first pairing, diverged saves, required backups, explicit direction and no-op equality.
 - **Still absent:** an executable sync queue, remote create/update endpoint, immutable upload snapshot storage, transactional local replacement, full conflict resolution UI and server/device validation. No code enables RomM remote writes or overwrites live saves. Build each layer separately, then require real-server testing before release signoff.
 
@@ -45,7 +45,7 @@
 
 ### Offline pending-sync journal (source and CI verified; NOT a transfer executor)
 
-`RommPendingSyncJournal` writes a versioned, checksummed app-private file with at most 32 outstanding per-ROM intents. Only ROM ID, requested upload/download direction, observed local/remote SHA-256 snapshots and an informational timestamp are persisted. It contains **no token, save payload, network endpoint, user approval, or automatic-replay capability**. A corrupt journal is reported as corrupt and prevents queue changes. Duplicate requests cannot overwrite older pending intents.
+`RommPendingSyncJournal` writes a versioned, checksummed app-private file with at most 32 outstanding per-ROM intents. Only ROM ID, source-server fingerprint, requested upload/download direction, observed local/remote SHA-256 snapshots and an informational timestamp are persisted. It contains **no token, save payload, network endpoint, user approval, or automatic-replay capability**. A corrupt journal is reported as corrupt and prevents queue changes. Duplicate requests cannot overwrite older pending intents.
 
 A future executor must obtain fresh local and remote snapshots, verify RomM account/server and ROM identity, re-run `RommSaveSyncPlanner`, create and verify required versioned backups, and secure explicit approval for that exact operation. Any changed snapshot rejects the old intent for user review. Until real-server validation and an explicit executor exist, this journal **cannot upload, download into live saves, or replay offline writes**.
 
@@ -60,3 +60,29 @@ Newly archived RomM saves record a non-secret SHA-256 fingerprint of the normali
 When a verified server-bound offline archive is present, the user can prepare a **non-executing** upload/download intent by explicitly choosing a direction and a local save document. The app hashes the selected document twice, revalidates the archive's manifest and content, and persists only local/remote fingerprints, ROM ID, server fingerprint, direction, and timestamp. No network write is scheduled; no local save is copied for upload, no URI is remembered, and no previously granted approval can be replayed. Future execution must reselect/reverify sources, confirm the current RomM account and ROM mapping, obtain a new approval, and create verified versioned backups before doing anything destructive.
 
 Baseline: https://github.com/JPLuker/OpenNES/actions/runs/42911500306 (archive management). The later server-bound request workflow requires a separate green CI build and actual phone/server tests before claiming acceptance.
+
+## November 10 — Read-only offline integrity and RomM 5.4 device-protocol groundwork
+
+**Verified CI:** [42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071). The rolling APK includes these source changes, but requires real Android and server acceptance.
+
+### Offline review and backup safety
+
+- Pending v2 requests are keyed by **server fingerprint plus game ID**, not game ID alone. Different RomM servers may use the same integer ROM ID; they must never be treated as the same content or account. A stale request cannot pass future planner revalidation after it is edited or discarded.
+- The player may explicitly choose a local save document to **recheck its SHA-256 fingerprint** against the saved request. A match only says that this local file looks unchanged. It does not verify the remote save, authorize an upload or identify the owner of the save.
+- An archive audit reports verified backups, unverified archives, orphaned integrity manifests and interrupted partial writes. It does not delete or repair any evidence automatically. Staging a backup rechecks the source file before and after copying; recovery rechecks the current manifest and content.
+
+### Strict supported protocol (no execution)
+
+[RomM 5.4 Device Sync Protocol](https://docs.romm.app/5.4.0/developers/device-sync-protocol/) documents **UUID device IDs, numeric session IDs, MD5 `content_hash` values**, and negotiated `upload`, `download`, `conflict`, `delete` and `no_op` actions. Older published 4.x examples use different fields and session IDs. **The user's actual server version is not yet known.**
+
+`RommDeviceSyncProtocol` is an isolated parser for the 5.4 response shape only. It rejects unknown actions/older schemas, remote-specified paths or URLs, unverified ROM IDs, missing content IDs, malformed filenames, duplicate operations and inconsistent operation totals. It computes stable **MD5 for RomM protocol compatibility and SHA-256 for local verification** by independently rereading the source. Parsing a server request never constitutes user consent or execution.
+
+**The following still do not exist:** production device registration, authenticated negotiation request execution, upload/download byte transport, server delete handling, conflict resolution, baseline writes, session completion, automatic polling or live emulator save replacement. `delete` and every write direction remain in-memory descriptions only.
+
+### Multi-user and authentication release gate
+
+RomM's [Client API Tokens](https://docs.romm.app/5.4.0/developers/client-api-tokens/) are **per user**. Every person must authenticate with their **own** scoped token; a shared OpenNES token would mix privileges and identity. Current local backup manifests and offline journal entries are **server-bound only**: they are **not yet bound to a verified RomM account/device**. This is acceptable for non-executing offline review but **blocks all future automatic replay and writes** until the actual RomM user ID, token owner, device UUID, confirmed ROM mapping and permissions are checked and persisted using a reviewed design.
+
+Read-only browsing needs only the scopes currently requested by the client. A future full device-sync integration will additionally require relevant `devices.read`, `devices.write`, `assets.read` and `assets.write` scopes. Do not request write scopes until the user elects to enable and verify that feature. Check the installed server's `/api/docs` or `/api/openapi.json` first; never assume the user's installed version matches a documentation example.
+
+**Next acceptance:** Connect each of two separate user accounts with separate scoped tokens, confirm visibility and save isolation, inspect the real OpenAPI schema, verify read-only endpoints, test revoked/expired tokens and interruptions, and review actual negotiation/conflict responses before implementing any write executor. Then test backup-first manual transfers on Android, with no live save ever overwritten without explicit approval.

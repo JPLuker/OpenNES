@@ -2,11 +2,11 @@
 
 **Status (2026-11-10):** M0/M1 have a CI-verified NES-only rolling debug APK; additional debloat and release signing remain. M2/M3/M4 keyboard, metadata and controller changes are implemented in source, but latest notch/editor behavior still requires phone acceptance. M5 saves, audio and input are manual-test gates. **M6 now has a game-owned, authenticated native `rc_client` for NES ROMs**, with emulated-frame evaluation, RAM validation before activation, native achievement events, cancellable HTTPS callbacks, disconnect/reconnect gating and pause-time idle processing under the core lock. FDS native awards remain disabled pending memory mapping validation. **A real achievement award and server-side persistence have not yet been verified on a phone.** M7 RomM read-only import, manual offline save archives and explicit export are available in source; two-way sync and real-server testing remain. **M7 acceptance precedes M8 public release.** See [module progress](docs/MODULE_PROGRESS.md) and [the no-device plan](docs/NO_DEVICE_BUILD_PLAN_2026-11-10.md).
 
-**M2/M6 no-device refinement (2026-11-10):** Source candidate includes Fix Match IME/focus handling, invalidation of stale year/title previews, bounded qualifier fallback searches, durable SAF permission for custom covers, edit/replace actions, official NES-only catalogue result filtering and deduplication, persistent successful artwork fallback selection, encoded Libretro NES gallery support, and smaller progressive achievement/leaderboard lists with collapsible emulator warnings. These changes require the next green CI run and phone acceptance before the milestone is closed.
+**M2/M6 no-device refinement (2026-11-10):** Source candidate includes Fix Match IME/focus handling, invalidation of stale year/title previews, bounded qualifier fallback searches, durable SAF permission for custom covers, edit/replace actions, official NES-only catalogue result filtering and deduplication, persistent successful artwork fallback selection, encoded Libretro NES gallery support, and smaller progressive achievement/leaderboard lists with collapsible emulator warnings. This source batch passed CI 42923112381; phone acceptance remains open before the milestone closes.
 
 **Real-device M6 evidence (2026-11-10):** The user has confirmed native RetroAchievements sessions listing actual game achievements and historical unlock progress for Zelda and RoboCop. A newly triggered, server-persisted award is **not** yet confirmed. The most recent M6 source batch repairs late sign-in/reconnect/retry and separates client-generated emulator warnings from genuine achievement totals; it requires final CI plus device acceptance.
 
-**Last verified CI baseline:** [run 42911500306](https://github.com/JPLuker/OpenNES/actions/runs/42911500306) passed Kotlin lint, offline JVM regressions, Android/native compilation, NES-only APK inspection and rolling release for M7 archive management and read-only save comparison. The newer server-bound offline intent staging needs its own CI verdict. Source acceptance does not equal device/server verification.
+**Last verified CI baseline:** [run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071) passed Kotlin lint, JVM regression tests, native/Android compilation, NES-only APK inspection and rolling development APK publication. This includes M7 per-server journal isolation, conflict guards, read-only local request review, archive integrity auditing, stable snapshot recovery and a strict RomM 5.4 device-sync parser. CI does not verify live RomM server compatibility or phone behavior.
 
 **Next feature tracks:** M5-C NES cheat manager is **source implemented and CI verified** (run 42886631595), with a per-ROM editor, raw and Game Genie validation, session-only opt-in toggles and native FCEUmm cheat calls. Device behavior and code persistence still need acceptance; bounded local JSON import/export is source implemented with Android document pickers and non-activating imports. Atomic native cheat replacement is now CI-verified with a core-generation lease and per-ROM reset; real-game acceptance remains. M6-H has a **CI-verified, fail-closed restrictions foundation**, but Hardcore mode is **not available** and the native RA client still operates in Casual. Emulator recognition, compliant offline unlock handling, real-device verification and a clean-reset native activation path are still required.
 **Platform:** Native Android  
@@ -115,7 +115,7 @@
 - [ ] Offer skin/full-frame and minimal/transparent-control modes.
 - [ ] Store independent landscape placement, size, opacity, and scaling preferences.
 - [ ] Handle wide, narrow, rounded, and cutout screens; rotation must not lose gameplay or controls.
-- [ ] Hide touch controls automatically or by preference for external gamepads.
+- [x] Hide touch controls automatically when an enabled external gamepad takes over; release held virtual inputs and cancel drag editing. Verify gamepad reconnect behavior on a phone.
 
 **Exit criteria:** Portrait/landscape transitions are safe; both have individually polished composition on several aspect ratios.
 
@@ -211,8 +211,14 @@ See [Hardcore compliance audit](docs/HARDCORE_COMPLIANCE_AUDIT.md) for implement
 - [x] Provide optional save listing and explicit manual backup export without overwriting live saves.
 - [ ] Test connection, permissions, ROM imports, save exports, token revocation, and network interruptions against a real RomM server on Android.
 - [x] Add verified offline save management (export, explicit deletion, comparison with a selected local document) and a non-executing, server-bound request journal with review/discard UI.
-- [ ] Decide and implement the release scope for actual two-way save synchronization, including server-verified account/ROM identities, transactionality, versioned backups, conflict resolution and live-server tests.
+- [x] Harden offline planning to reject divergent historical baselines, stale intents, changed local files and cross-server identity mismatches. Add per-server/ROM queue isolation and read-only recheck via Android's document picker.
+- [x] Audit local archive integrity without deleting damaged, orphaned or incomplete files; verify source stability when creating backups and the current manifest when recovering.
+- [x] Add strict, tested **RomM 5.4** negotiation parsing and immutable dual MD5/SHA-256 file fingerprinting. Treat all upload/download/conflict/delete actions as preview-only. Older schemas are rejected, not guessed.
+- [ ] Verify the actual server's version, per-user token ownership, account ID, ROM IDs, protocol shape and device permissions before any account-scoped pairing or real synchronization.
+- [ ] Decide and implement the release scope for actual two-way save synchronization, including per-user/device identity, safe upload/download, transactionality, backups, conflict resolution and live-server tests.
 - [ ] Finish privacy, security and failure-state reviews for the agreed RomM functionality.
+
+**Current boundary:** The v2 offline journal is **server-bound, not account-bound**, and **cannot execute** transfers. Same-server multi-user safety, device registration, remote writes, live-save restoration and real-server conflict adjudication remain blocked. See [RomM integration](docs/ROMM_INTEGRATION.md).
 
 **Exit criteria:** The agreed RomM feature set is functional, tested, and documented; public-release signoff cannot precede this gate.
 
