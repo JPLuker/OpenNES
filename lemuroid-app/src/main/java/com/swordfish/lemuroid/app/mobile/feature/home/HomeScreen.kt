@@ -1,27 +1,23 @@
 package com.swordfish.lemuroid.app.mobile.feature.home
 
-import android.Manifest
 import android.content.Intent
+import android.Manifest
 import android.net.Uri
 import android.os.Build
 import android.text.format.DateUtils
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,20 +26,24 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
@@ -60,22 +60,22 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -96,21 +96,21 @@ import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.romm.RommGameDetailsSheet
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.covers.NesCoverResolutionCache
-import com.swordfish.lemuroid.app.mobile.feature.romm.RommGameDetailsSheet
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
+import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.romm.RommLibraryCatalog
-import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
+import com.swordfish.lemuroid.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -202,47 +202,47 @@ fun HomeScreen(
             )
         } else if (game.id > 0) {
             GameDetailsSheet(
-            game = game,
-            onDismiss = { selectedGame = null },
-            onPlay = {
-                selectedGame = null
-                onGameClick(game)
-            },
-            onMore = {
-                selectedGame = null
-                onGameLongClick(game)
-            },
-            onPinShortcut = { onPinShortcut(game) },
-            pinShortcutSupported = pinShortcutSupported,
-            onFavoriteToggle = { favorite ->
-                onFavoriteToggle(game, favorite)
-                selectedGame = game.copy(isFavorite = favorite)
-            },
-            onSearchMetadata = { query, onResults ->
-                viewModel.searchMetadata(query, onResults)
-            },
-            onApplyMetadata = { match, onApplied ->
-                viewModel.applyMetadataMatch(game.id, match, onApplied)
-            },
-            onGameUpdated = { updatedGame -> selectedGame = updatedGame },
-            onSaveProfile = { genre, year, description, onSaved ->
-                viewModel.saveGameProfile(game.id, genre, year, description, onSaved)
-            },
-            onLookupOnline = { onResult ->
-                viewModel.lookupWikidata(game.title, onResult)
-            },
-            onApplyOnline = { match, onApplied ->
-                viewModel.applyWikidata(game.id, match, onApplied)
-            },
-            onSearchFixMatch = { query, onResult ->
-                viewModel.searchFixMatch(query, onResult)
-            },
-            onResolveFixMatch = { candidateId, onResult ->
-                viewModel.resolveFixMatch(candidateId, onResult)
-            },
-            onApplyFixMatch = { match, onApplied ->
-                viewModel.applyFixMatch(game.id, match, onApplied)
-            },
+                game = game,
+                onDismiss = { selectedGame = null },
+                onPlay = {
+                    selectedGame = null
+                    onGameClick(game)
+                },
+                onMore = {
+                    selectedGame = null
+                    onGameLongClick(game)
+                },
+                onPinShortcut = { onPinShortcut(game) },
+                pinShortcutSupported = pinShortcutSupported,
+                onFavoriteToggle = { favorite ->
+                    onFavoriteToggle(game, favorite)
+                    selectedGame = game.copy(isFavorite = favorite)
+                },
+                onSearchMetadata = { query, onResults ->
+                    viewModel.searchMetadata(query, onResults)
+                },
+                onApplyMetadata = { match, onApplied ->
+                    viewModel.applyMetadataMatch(game.id, match, onApplied)
+                },
+                onGameUpdated = { updatedGame -> selectedGame = updatedGame },
+                onSaveProfile = { genre, year, description, onSaved ->
+                    viewModel.saveGameProfile(game.id, genre, year, description, onSaved)
+                },
+                onLookupOnline = { onResult ->
+                    viewModel.lookupWikidata(game.title, onResult)
+                },
+                onApplyOnline = { match, onApplied ->
+                    viewModel.applyWikidata(game.id, match, onApplied)
+                },
+                onSearchFixMatch = { query, onResult ->
+                    viewModel.searchFixMatch(query, onResult)
+                },
+                onResolveFixMatch = { candidateId, onResult ->
+                    viewModel.resolveFixMatch(candidateId, onResult)
+                },
+                onApplyFixMatch = { match, onApplied ->
+                    viewModel.applyFixMatch(game.id, match, onApplied)
+                },
             )
         }
     }
