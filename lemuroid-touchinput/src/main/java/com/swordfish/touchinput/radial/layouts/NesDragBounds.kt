@@ -17,8 +17,14 @@ object NesDragBounds {
     ): Float {
         val values =
             listOf(
-                deltaPx, groupStartPx, groupEndPx, viewportStartPx, viewportEndPx,
-                edgeInsetPx, safeStartPx, safeEndPx,
+                deltaPx,
+                groupStartPx,
+                groupEndPx,
+                viewportStartPx,
+                viewportEndPx,
+                edgeInsetPx,
+                safeStartPx,
+                safeEndPx,
             )
         if (values.any { !it.isFinite() }) return 0f
         if (viewportEndPx < viewportStartPx || groupEndPx < groupStartPx) return 0f
