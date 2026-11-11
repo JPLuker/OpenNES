@@ -71,7 +71,6 @@ fun PadKitScope.NESRight(
 ) {
     val aId = Id.Key(KeyEvent.KEYCODE_BUTTON_A)
     val bId = Id.Key(KeyEvent.KEYCODE_BUTTON_B)
-    val report = LocalNesControlBoundsReporter.current
     // PadKit anchors control BOTH the rendered buttons and their hit targets.
     // Avoid graphical offsets here: those would visually move buttons while
     // leaving the original invisible input regions behind.
@@ -96,12 +95,6 @@ fun PadKitScope.NESRight(
         modifier = modifier,
         primaryDial = {
             LemuroidControlFaceButtons(
-                modifier =
-                    Modifier.onGloballyPositioned {
-                        val dial = it.boundsInRoot()
-                        report(NesEditableControl.A, faceEditRect(dial, 0.92f, settings.aButton))
-                        report(NesEditableControl.B, faceEditRect(dial, -0.92f, settings.bButton))
-                    },
                 primaryAnchors = primaryAnchors,
                 compositeAnchors = compositeAnchors,
                 trackPointers = true,
