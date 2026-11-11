@@ -6,6 +6,7 @@ import android.content.pm.ServiceInfo
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import com.swordfish.lemuroid.app.mobile.shared.NotificationsManager
+import com.swordfish.lemuroid.app.shared.game.ActiveGameSession
 import dagger.android.DaggerService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +15,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.system.exitProcess
@@ -40,6 +43,10 @@ class GameService : DaggerService() {
         flags: Int,
         startId: Int,
     ): Int {
+        if (intent.action == ACTION_CLOSE_ACTIVE_GAME) {
+            closeSequence.value = closeSequence.value + 1L
+            return START_NOT_STICKY
+        }
         displayNotification(intent)
         return START_NOT_STICKY
     }
@@ -62,6 +69,7 @@ class GameService : DaggerService() {
     }
 
     override fun onDestroy() {
+        ActiveGameSession.clear(applicationContext)
         serviceScope.cancel()
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         hideNotification()
@@ -69,6 +77,17 @@ class GameService : DaggerService() {
 
     companion object {
         private const val EXTRA_GAME_ACTIVITY_INTENT = "EXTRA_GAME_ACTIVITY_INTENT"
+        private const val ACTION_CLOSE_ACTIVE_GAME = "com.swordfish.lemuroid.action.CLOSE_RUNNING_GAME"
+
+        private val closeSequence = MutableStateFlow(0L)
+        val closeRequests: StateFlow<Long> = closeSequence
+
+        /** Sent by the library, delivered only to the running emulator process. */
+        fun requestCloseRunningGame(context: Context) {
+            context.startService(
+                Intent(context, GameService::class.java).setAction(ACTION_CLOSE_ACTIVE_GAME),
+            )
+        }
 
         private data class GameProcessTask(
             val task: suspend () -> Unit = {},

@@ -15,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.swordfish.lemuroid.app.mobile.feature.game.GameActivity
 import com.swordfish.lemuroid.app.mobile.feature.game.GameService
+import com.swordfish.lemuroid.app.shared.game.ActiveGameSession
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.AppTheme
 import com.swordfish.lemuroid.app.shared.GameMenuContract
@@ -45,6 +46,7 @@ import dagger.Lazy
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -98,6 +100,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         setUpExceptionsHandler()
         GameService.startService(applicationContext, intent)
         game = intent.getSerializableExtra(EXTRA_GAME) as Game
+        ActiveGameSession.record(applicationContext, game)
         systemCoreConfig = intent.getSerializableExtra(EXTRA_SYSTEM_CORE_CONFIG) as SystemCoreConfig
         system = GameSystem.findById(game.systemId)
 
@@ -120,6 +123,15 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         }
 
         baseGameScreenViewModel = viewModel
+
+        val initialCloseSequence = GameService.closeRequests.value
+        lifecycleScope.launch {
+            GameService.closeRequests.collectLatest { sequence ->
+                if (sequence > initialCloseSequence && !finishTriggered) {
+                    baseGameScreenViewModel.requestFinish()
+                }
+            }
+        }
 
         lifecycle.addObserver(baseGameScreenViewModel)
 
@@ -350,6 +362,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     open fun onFinishTriggered() {
+        ActiveGameSession.clear(applicationContext)
         finishTriggered = true
     }
 
