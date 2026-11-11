@@ -10,6 +10,8 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
@@ -24,7 +26,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.coroutineContext
 
 /**
- * Read-only RomM API adapter. Uses a scoped bearer token and HTTPS exclusively.
+ * RomM adapter. Uses scoped bearer tokens; HTTPS is required outside private IPv4 LANs.
  * Every import is explicitly initiated by the player, staged in app cache,
  * and committed into the already selected NES ROM document tree.
  */
@@ -63,6 +65,40 @@ class RommApiClient {
             .followRedirects(false)
             .followSslRedirects(false)
             .build()
+
+    /**
+     * RomM client-token QR pairing: exchange an expiring code exactly once.
+     * Never put the token in a URL, display it or persist it until /users/me
+     * verifies the returned account in the screen's explicit Connect action.
+     */
+    suspend fun exchangePairingCode(
+        serverUrl: String,
+        pairingCode: String,
+    ): RommConnection =
+        withContext(Dispatchers.IO) {
+            val root = validatedServerUrl(serverUrl).toHttpUrlOrNull()
+                ?: throw IllegalArgumentException("Invalid RomM server URL")
+            val code = RommPairing.normalizeCode(pairingCode)
+            val url = root.newBuilder().addPathSegments("api/client-tokens/exchange").build()
+            val json = JSONObject().put("code", code).toString()
+            val request =
+                Request.Builder()
+                    .url(url)
+                    .post(json.toRequestBody("application/json; charset=utf-8".toMediaType()))
+                    .header("Accept", "application/json")
+                    .header("User-Agent", "OpenNES/0.1 RomM pairing")
+                    .build()
+            http.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw httpError(response.code)
+                val body = response.body ?: throw IOException("Empty RomM pairing response")
+                val payload = body.byteStream().use { readBounded(it, 16 * 1024L) }
+                val rawToken = JSONObject(String(payload, Charsets.UTF_8)).optString("raw_token")
+                if (!rawToken.matches(Regex("rmm_[0-9a-f]{64}"))) {
+                    throw IOException("RomM returned an invalid client token")
+                }
+                RommConnection(root.toString(), rawToken)
+            }
+        }
 
     suspend fun checkAccount(connection: RommConnection): String =
         withContext(Dispatchers.IO) {
@@ -578,7 +614,7 @@ class RommApiClient {
     ): HttpUrl {
         val root =
             validatedServerUrl(connection.serverUrl).toHttpUrlOrNull()
-                ?: throw IllegalArgumentException("Invalid RomM HTTPS address")
+                ?: throw IllegalArgumentException("Invalid RomM server URL")
         return root.newBuilder().apply {
             path.forEach { addPathSegment(it) }
             params.forEach { (name, value) -> addQueryParameter(name, value) }
@@ -602,23 +638,36 @@ class RommApiClient {
         private const val MAX_SAVE_BYTES = 16 * 1024 * 1024L
         private val NES_SLUGS = setOf("nes", "famicom", "fds", "famicom-disk-system")
 
-        /** HTTPS-only: never expose bearer tokens over cleartext HTTP. */
+        /**
+         * Allow cleartext only to literal RFC1918 IPv4 addresses. Hostnames
+         * and public IPs must use HTTPS; never trust DNS to prove a LAN.
+         * Plain HTTP exposes a bearer token to observers on that network.
+         */
+        fun isPrivateLanHttp(raw: String): Boolean {
+            val url = raw.trim().toHttpUrlOrNull() ?: return false
+            if (url.scheme != "http") return false
+            val octets = url.host.split('.')
+            if (octets.size != 4 || octets.any { it.isEmpty() || it.length > 3 }) return false
+            val parts = octets.map { it.toIntOrNull() ?: return false }
+            if (parts.any { it !in 0..255 }) return false
+            return parts[0] == 10 ||
+                (parts[0] == 172 && parts[1] in 16..31) ||
+                (parts[0] == 192 && parts[1] == 168)
+        }
+
         fun validatedServerUrl(raw: String): String {
-            val candidate = raw.trim()
             val parsed =
-                candidate.toHttpUrlOrNull()
+                raw.trim().toHttpUrlOrNull()
                     ?: throw IllegalArgumentException("Enter a valid RomM URL")
             require(
-                parsed.scheme == "https" &&
+                (parsed.scheme == "https" || isPrivateLanHttp(raw)) &&
                     parsed.username.isEmpty() &&
                     parsed.password.isEmpty() &&
                     parsed.query == null &&
                     parsed.fragment == null,
             ) {
-                "RomM requires an HTTPS URL without login details or query"
+                "RomM requires HTTPS, or an explicit private-LAN HTTP address, without credentials or query"
             }
-            // Accept both https://host and https://host/subpath.
-            // The trailing slash is needed before appending /api endpoints.
             return if (parsed.encodedPath.endsWith("/")) {
                 parsed.toString()
             } else {
