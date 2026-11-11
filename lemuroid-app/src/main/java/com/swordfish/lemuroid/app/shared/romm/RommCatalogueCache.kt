@@ -5,81 +5,29 @@ import android.util.AtomicFile
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.io.IOException
 
 /**
- * Best-effort, metadata-only cache. Never writes ROM content, bearer tokens,
- * private save data, or account identifiers. In noBackupFilesDir so a restored
- * install cannot inherit another device's cached game catalogue.
- *
- * A cache is usable only with the exact server fingerprint AND credential
- * revision that created it. Old accounts are never surfaced after reconnect.
+ * Metadata-only and private: never store token, ROM bytes, save content,
+ * passwords or account names. The credential revision changes on every login,
+ * so an offline catalogue cannot leak across RomM accounts on one server.
  */
 internal class RommCatalogueCache(context: Context) {
-    data class Snapshot(
-        val games: List<RommApiClient.Rom>,
-        val fetchedAt: Long,
-    )
-
     private val file = AtomicFile(File(context.applicationContext.noBackupFilesDir, "romm-nes-catalog-v1.json"))
 
     @Synchronized
     fun read(
         serverFingerprint: String,
         credentialRevision: String,
-    ): Snapshot? {
-        if (!RommServerIdentity.validFingerprint(serverFingerprint) ||
-            credentialRevision.isBlank() || !file.baseFile.isFile
-        ) {
+    ): RommCatalogueCodec.Snapshot? {
+        if (!file.baseFile.isFile || file.baseFile.length() !in 1L..RommCatalogueCodec.MAX_BYTES.toLong()) {
             return null
         }
         return try {
-            if (file.baseFile.length() !in 1..MAX_FILE_BYTES) return null
-            val bytes = file.openRead().use { stream ->
-                stream.readBytes().takeIf { it.size <= MAX_FILE_BYTES } ?: return null
+            val bytes = file.openRead().use { input ->
+                input.readBytes().takeIf { it.size <= RommCatalogueCodec.MAX_BYTES } ?: return null
             }
-            val root = JSONObject(String(bytes, Charsets.UTF_8))
-            if (root.optInt("version", -1) != VERSION ||
-                root.optString("source") != serverFingerprint ||
-                root.optString("revision") != credentialRevision
-            ) {
-                return null
-            }
-            val fetchedAt = root.optLong("fetched_at", 0)
-            if (fetchedAt <= 0L ||
-                fetchedAt > System.currentTimeMillis() + CLOCK_SKEW_MS
-            ) {
-                return null
-            }
-            val rows = root.optJSONArray("games") ?: return null
-            if (rows.length() > MAX_GAMES) return null
-            val seen = HashSet<Int>()
-            val games =
-                (0 until rows.length()).map { index ->
-                    val row = rows.getJSONObject(index)
-                    val id = row.getInt("id")
-                    val platform = row.getInt("platform")
-                    val name = row.getString("name")
-                    val filename = row.getString("filename")
-                    val size = row.optLong("size", 0)
-                    require(id > 0 && platform > 0 && id !in seen)
-                    require(name.isNotBlank() && name.length <= 500)
-                    require(RommApiClient.safeRomFileName(filename))
-                    require(size in 0..MAX_ROM_SIZE)
-                    seen += id
-                    RommApiClient.Rom(
-                        id = id,
-                        platformId = platform,
-                        name = name,
-                        fileName = filename,
-                        sizeBytes = size,
-                        md5 = row.optString("md5").takeIf { it.matches(Regex("[0-9a-f]{32}")) },
-                        description = row.optString("description").takeIf { it.isNotBlank() }?.take(MAX_SUMMARY),
-                    )
-                }
-            Snapshot(games, fetchedAt)
+            RommCatalogueCodec.decode(bytes, serverFingerprint, credentialRevision)
         } catch (_: Exception) {
-            // Cache corruption is not an authentication or library failure.
             null
         }
     }
@@ -91,46 +39,14 @@ internal class RommCatalogueCache(context: Context) {
         games: List<RommApiClient.Rom>,
         fetchedAt: Long = System.currentTimeMillis(),
     ): Boolean {
-        if (!RommServerIdentity.validFingerprint(serverFingerprint) ||
-            credentialRevision.isBlank() || games.size > MAX_GAMES || fetchedAt <= 0L
-        ) {
-            return false
-        }
+        val payload = RommCatalogueCodec.encode(games, serverFingerprint, credentialRevision, fetchedAt) ?: return false
         return try {
-            val items = JSONArray()
-            for (rom in games) {
-                if (rom.id <= 0 || rom.platformId <= 0 ||
-                    rom.name.isBlank() || !RommApiClient.safeRomFileName(rom.fileName)
-                ) {
-                    return false
-                }
-                items.put(
-                    JSONObject()
-                        .put("id", rom.id)
-                        .put("platform", rom.platformId)
-                        .put("name", rom.name.take(500))
-                        .put("filename", rom.fileName)
-                        .put("size", rom.sizeBytes)
-                        .put("md5", rom.md5.orEmpty())
-                        .put("description", rom.description.orEmpty().take(MAX_SUMMARY)),
-                )
-            }
-            val payload =
-                JSONObject()
-                    .put("version", VERSION)
-                    .put("source", serverFingerprint)
-                    .put("revision", credentialRevision)
-                    .put("fetched_at", fetchedAt)
-                    .put("games", items)
-                    .toString()
-                    .toByteArray(Charsets.UTF_8)
-            if (payload.size > MAX_FILE_BYTES) return false
-            val output = file.startWrite()
+            val stream = file.startWrite()
             try {
-                output.write(payload)
-                file.finishWrite(output)
+                stream.write(payload)
+                file.finishWrite(stream)
             } catch (error: Exception) {
-                file.failWrite(output)
+                file.failWrite(stream)
                 throw error
             }
             true
@@ -143,13 +59,114 @@ internal class RommCatalogueCache(context: Context) {
     fun clear() {
         file.delete()
     }
+}
 
-    companion object {
-        private const val VERSION = 1
-        private const val MAX_GAMES = 10_000
-        private const val MAX_SUMMARY = 8_000
-        private const val MAX_FILE_BYTES = 12 * 1024 * 1024L
-        private const val MAX_ROM_SIZE = 96 * 1024 * 1024L
-        private const val CLOCK_SKEW_MS = 5 * 60 * 1000L
+/** Pure bounded codec, exercised by local JVM tests without Android storage. */
+internal object RommCatalogueCodec {
+    data class Snapshot(
+        val games: List<RommApiClient.Rom>,
+        val fetchedAt: Long,
+    )
+
+    const val MAX_BYTES = 12 * 1024 * 1024
+    private const val VERSION = 1
+    private const val MAX_GAMES = 10_000
+    private const val MAX_SUMMARY = 8_000
+    private const val MAX_ROM_BYTES = 96 * 1024 * 1024L
+    private const val CLOCK_SKEW_MS = 5L * 60 * 1000
+
+    fun encode(
+        games: List<RommApiClient.Rom>,
+        source: String,
+        revision: String,
+        timestamp: Long,
+    ): ByteArray? {
+        if (!RommServerIdentity.validFingerprint(source) ||
+            revision.isBlank() || timestamp <= 0L || games.size > MAX_GAMES
+        ) {
+            return null
+        }
+        return runCatching {
+            val array = JSONArray()
+            val seen = HashSet<Int>()
+            for (rom in games) {
+                require(validRom(rom) && seen.add(rom.id))
+                array.put(
+                    JSONObject()
+                        .put("id", rom.id)
+                        .put("platform", rom.platformId)
+                        .put("name", rom.name)
+                        .put("filename", rom.fileName)
+                        .put("size", rom.sizeBytes)
+                        .put("md5", rom.md5.orEmpty())
+                        .put("description", rom.description.orEmpty().take(MAX_SUMMARY)),
+                )
+            }
+            val payload =
+                JSONObject()
+                    .put("version", VERSION)
+                    .put("source", source)
+                    .put("revision", revision)
+                    .put("fetched_at", timestamp)
+                    .put("games", array)
+                    .toString()
+                    .toByteArray(Charsets.UTF_8)
+            payload.takeIf { it.size <= MAX_BYTES }
+        }.getOrNull()
     }
+
+    fun decode(
+        payload: ByteArray,
+        source: String,
+        revision: String,
+        now: Long = System.currentTimeMillis(),
+    ): Snapshot? {
+        if (payload.isEmpty() || payload.size > MAX_BYTES ||
+            !RommServerIdentity.validFingerprint(source) || revision.isBlank()
+        ) {
+            return null
+        }
+        return runCatching {
+            val root = JSONObject(String(payload, Charsets.UTF_8))
+            require(
+                root.optInt("version", -1) == VERSION &&
+                    root.optString("source") == source &&
+                    root.optString("revision") == revision,
+            )
+            val timestamp = root.getLong("fetched_at")
+            require(timestamp > 0L && timestamp <= now + CLOCK_SKEW_MS)
+            val array = root.getJSONArray("games")
+            require(array.length() <= MAX_GAMES)
+            val seen = HashSet<Int>()
+            val games =
+                (0 until array.length()).map { index ->
+                    val row = array.getJSONObject(index)
+                    val md5 = row.getString("md5")
+                    require(md5.isEmpty() || md5.matches(Regex("[a-f0-9]{32}")))
+                    val summary = row.getString("description")
+                    require(summary.length <= MAX_SUMMARY)
+                    val rom =
+                        RommApiClient.Rom(
+                            id = row.getInt("id"),
+                            platformId = row.getInt("platform"),
+                            name = row.getString("name"),
+                            fileName = row.getString("filename"),
+                            sizeBytes = row.getLong("size"),
+                            md5 = md5.ifBlank { null },
+                            description = summary.ifBlank { null },
+                        )
+                    require(validRom(rom) && seen.add(rom.id))
+                    rom
+                }
+            Snapshot(games, timestamp)
+        }.getOrNull()
+    }
+
+    private fun validRom(rom: RommApiClient.Rom): Boolean =
+        rom.id > 0 &&
+            rom.platformId > 0 &&
+            rom.name.isNotBlank() &&
+            rom.name.length <= 500 &&
+            rom.sizeBytes in 0..MAX_ROM_BYTES &&
+            RommApiClient.safeRomFileName(rom.fileName)
 }
