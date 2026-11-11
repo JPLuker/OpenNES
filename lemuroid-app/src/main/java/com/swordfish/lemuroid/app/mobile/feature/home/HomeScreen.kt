@@ -884,7 +884,14 @@ private fun GameDetailsSheet(
                     ),
             ) {
                 Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                Text(stringResource(R.string.opennes_play))
+                Text("Play Casual")
+            }
+            OutlinedButton(
+                onClick = {},
+                modifier = Modifier.weight(1f),
+                enabled = false,
+            ) {
+                Text("Hardcore")
             }
             Box {
                 OutlinedIconButton(
@@ -1039,6 +1046,12 @@ private fun GameDetailsSheet(
                         if (!compactGameDetails) {
                             gameActions()
                         }
+                        Text(
+                            "Hardcore unlocks are unavailable until emulator approval. " +
+                                "Casual uses your existing saves.",
+                            color = LibraryColors.muted,
+                            fontSize = 11.sp,
+                        )
                     }
                 }
 
