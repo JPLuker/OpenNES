@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.swordfish.touchinput.radial.controls.LemuroidControlCross
 import com.swordfish.touchinput.radial.controls.LemuroidControlFaceButtons
@@ -135,6 +136,28 @@ internal fun nesFaceAnchor(
     )
 }
 
+/**
+ * Cancel the parent PadKit dial translation for secondary controls, leaving
+ * Start/Select/Menu free to move independently with their real touch target.
+ */
+private fun independentSecondaryOffset(
+    settings: TouchControllerSettingsManager.Settings,
+    geometry: TouchControllerSettingsManager.ButtonGeometry,
+    isLeft: Boolean,
+): Pair<Dp, Dp> {
+    val groupX =
+        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X *
+            (if (isLeft) settings.leftOffsetX else settings.rightOffsetX) +
+            (if (isLeft) settings.leftDragX else settings.rightDragX)
+    val groupY =
+        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y *
+            (if (isLeft) settings.leftOffsetY else settings.rightOffsetY) +
+            (if (isLeft) settings.leftDragY else settings.rightDragY)
+    val x = TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX + geometry.dragX - groupX
+    val y = TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY + geometry.dragY - groupY
+    return x.dp to y.dp
+}
+
 context(PadKitScope, LayoutRadialSecondaryDialsScope)
 @Composable
 private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings) {
@@ -147,6 +170,12 @@ private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings
         }
     val geometry = settings.selectButton
     val report = LocalNesControlBoundsReporter.current
+    val (buttonX, buttonY) =
+        independentSecondaryOffset(
+            settings,
+            geometry,
+            isLeft = true,
+        )
     val buttonScale =
         geometry.size.coerceIn(
             TouchControllerSettingsManager.MIN_BUTTON_SIZE,
@@ -157,18 +186,7 @@ private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings
             Modifier
                 .radialPosition(if (handheld) 60f else 120f)
                 .radialScale(scale * buttonScale)
-                .offset(
-                    x =
-                        (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f) +
-                            geometry.dragX -
-                            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X * settings.leftOffsetX -
-                            settings.leftDragX).dp,
-                    y =
-                        (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f) +
-                            geometry.dragY -
-                            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y * settings.leftOffsetY -
-                            settings.leftDragY).dp,
-                )
+                .offset(x = buttonX, y = buttonY)
                 .onGloballyPositioned { report(NesEditableControl.SELECT, it.boundsInRoot()) },
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_SELECT),
         foreground = { NesPillButtonForeground(pressed = it, label = "SELECT", expanded = true) },
@@ -188,6 +206,12 @@ private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings)
         }
     val geometry = settings.startButton
     val report = LocalNesControlBoundsReporter.current
+    val (buttonX, buttonY) =
+        independentSecondaryOffset(
+            settings,
+            geometry,
+            isLeft = false,
+        )
     val buttonScale =
         geometry.size.coerceIn(
             TouchControllerSettingsManager.MIN_BUTTON_SIZE,
@@ -198,18 +222,7 @@ private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings)
             Modifier
                 .radialPosition(if (handheld) 120f else 60f)
                 .radialScale(scale * buttonScale)
-                .offset(
-                    x =
-                        (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f) +
-                            geometry.dragX -
-                            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X * settings.rightOffsetX -
-                            settings.rightDragX).dp,
-                    y =
-                        (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f) +
-                            geometry.dragY -
-                            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y * settings.rightOffsetY -
-                            settings.rightDragY).dp,
-                )
+                .offset(x = buttonX, y = buttonY)
                 .onGloballyPositioned { report(NesEditableControl.START, it.boundsInRoot()) },
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_START),
         foreground = { NesPillButtonForeground(pressed = it, label = "START", expanded = true) },
@@ -230,6 +243,12 @@ private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) 
         }
     val geometry = settings.menuButton
     val report = LocalNesControlBoundsReporter.current
+    val (buttonX, buttonY) =
+        independentSecondaryOffset(
+            settings,
+            geometry,
+            isLeft = false,
+        )
     val buttonScale =
         geometry.size.coerceIn(
             TouchControllerSettingsManager.MIN_BUTTON_SIZE,
@@ -243,18 +262,7 @@ private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) 
                         2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
                 )
                 .radialScale(scale * buttonScale)
-                .offset(
-                    x =
-                        (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X * geometry.offsetX.coerceIn(-1f, 1f) +
-                            geometry.dragX -
-                            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X * settings.rightOffsetX -
-                            settings.rightDragX).dp,
-                    y =
-                        (TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y * geometry.offsetY.coerceIn(-1f, 1f) +
-                            geometry.dragY -
-                            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y * settings.rightOffsetY -
-                            settings.rightDragY).dp,
-                )
+                .offset(x = buttonX, y = buttonY)
                 .onGloballyPositioned { report(NesEditableControl.MENU, it.boundsInRoot()) },
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_MODE),
         foreground = { NesPillButtonForeground(pressed = it, label = "MENU", expanded = true) },
