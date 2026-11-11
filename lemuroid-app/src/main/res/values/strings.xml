@@ -461,6 +461,12 @@
     <string name="opennes_romm_browse_all">Browse all (%1$d)</string>
     <string name="opennes_romm_no_description">No description available from RomM.</string>
     <string name="opennes_romm_installed">Installed · Ready to play</string>
+    <string name="opennes_romm_phase_queued">Waiting for current download…</string>
+    <string name="opennes_romm_cache_offline">RomM unavailable — showing cached games</string>
+    <string name="opennes_romm_connection_failed">Cannot load the RomM library</string>
+    <string name="opennes_romm_cache_refreshing">Checking RomM — cached games available</string>
+    <string name="opennes_romm_offline_only_metadata">Game details remain available; downloads need network access.</string>
+    <string name="opennes_romm_retry_connection">Retry</string>
     <string name="opennes_romm_phase_connecting">Connecting to RomM…</string>
     <string name="opennes_romm_phase_downloading">Downloading game…</string>
     <string name="opennes_romm_phase_verifying">Verifying ROM…</string>
