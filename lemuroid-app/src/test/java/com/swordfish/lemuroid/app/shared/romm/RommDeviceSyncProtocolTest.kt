@@ -104,6 +104,38 @@ class RommDeviceSyncProtocolTest {
     }
 
     @Test
+    fun fractionalOrOverflowingIdentifiersNeverGetTruncatedToValidIds() {
+        val counts = """"total_upload":0,"total_download":0,"total_conflict":0,"total_delete":0,"total_no_op":1"""
+        val validRow = """{"action":"no_op","rom_id":1,"file_name":"save.srm"}"""
+        val fractionalSession =
+            """{"session_id":42.5,"operations":[$validRow],$counts}"""
+        assertTrue(
+            RommDeviceSyncProtocol.parseNegotiation(fractionalSession, setOf(1)) is
+                RommDeviceSyncProtocol.ParseResult.Rejected,
+        )
+        val hugeSession =
+            """{"session_id":999999999999999999999999,"operations":[$validRow],$counts}"""
+        assertTrue(
+            RommDeviceSyncProtocol.parseNegotiation(hugeSession, setOf(1)) is
+                RommDeviceSyncProtocol.ParseResult.Rejected,
+        )
+        val fractionalRom = validRow.replace("\"rom_id\":1", "\"rom_id\":1.5")
+        assertTrue(
+            RommDeviceSyncProtocol.parseNegotiation(
+                response(fractionalRom, counts),
+                setOf(1),
+            ) is RommDeviceSyncProtocol.ParseResult.Rejected,
+        )
+        val fractionalCount = counts.replace("\"total_no_op\":1", "\"total_no_op\":1.5")
+        assertTrue(
+            RommDeviceSyncProtocol.parseNegotiation(
+                response(validRow, fractionalCount),
+                setOf(1),
+            ) is RommDeviceSyncProtocol.ParseResult.Rejected,
+        )
+    }
+
+    @Test
     fun countMismatchesDuplicateEntriesAndInjectedUrlsFailClosed() {
         val row =
             """{"action":"upload","rom_id":1,"file_name":"game.srm","slot":"autosave"}"""

@@ -83,10 +83,9 @@ internal object RommDeviceSyncProtocol {
     ): ParseResult {
         // RomM 4.x documented a UUID session and "type"/URL operations.
         // Never try to execute that format through this 5.x parser.
-        val sessionRaw = root.opt("session_id")
-        if (sessionRaw !is Number || sessionRaw.toLong() <= 0L) {
-            return ParseResult.Rejected(Rejection.UNSUPPORTED_SCHEMA)
-        }
+        val sessionId =
+            positiveLong(root.opt("session_id"))
+                ?: return ParseResult.Rejected(Rejection.UNSUPPORTED_SCHEMA)
         val rows =
             root.optJSONArray("operations")
                 ?: return ParseResult.Rejected(Rejection.UNSUPPORTED_SCHEMA)
@@ -113,11 +112,9 @@ internal object RommDeviceSyncProtocol {
             if (row.has("source") || row.has("destination") || row.has("dest_path")) {
                 return ParseResult.Rejected(Rejection.UNSUPPORTED_SCHEMA)
             }
-            val romRaw = row.opt("rom_id")
-            if (romRaw !is Number || romRaw.toLong() !in 1L..Int.MAX_VALUE.toLong()) {
-                return ParseResult.Rejected(Rejection.UNVERIFIED_ROM)
-            }
-            val romId = romRaw.toInt()
+            val romId =
+                positiveInt(row.opt("rom_id"))
+                    ?: return ParseResult.Rejected(Rejection.UNVERIFIED_ROM)
             if (romId !in allowedRomIds) return ParseResult.Rejected(Rejection.UNVERIFIED_ROM)
             val file = row.optString("file_name").trim()
             if (!validFileName(file)) return ParseResult.Rejected(Rejection.INVALID_FILE_NAME)
@@ -133,10 +130,8 @@ internal object RommDeviceSyncProtocol {
                 if (!row.has("save_id") || row.isNull("save_id")) {
                     null
                 } else {
-                    if (rawSaveId !is Number || rawSaveId.toLong() <= 0L) {
-                        return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
-                    }
-                    rawSaveId.toLong()
+                    positiveLong(rawSaveId)
+                        ?: return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
                 }
             if (action in listOf(Action.DOWNLOAD, Action.CONFLICT) && saveId == null) {
                 return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
@@ -169,12 +164,23 @@ internal object RommDeviceSyncProtocol {
             )
         countNames.forEach { (action, field) ->
             val amount = root.opt(field)
-            if (amount !is Number || amount.toInt() != (totals[action] ?: 0)) {
+            if (nonnegativeInt(amount) != (totals[action] ?: 0)) {
                 return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
             }
         }
-        return ParseResult.Accepted(Negotiation(sessionRaw.toLong(), operations))
+        return ParseResult.Accepted(Negotiation(sessionId, operations))
     }
+
+    // Never truncate fractional/exponential JSON values to identifiers.
+    // Exact integer syntax is required before any future account binding.
+    private fun positiveLong(raw: Any?): Long? =
+        (raw as? Number)?.toString()?.toLongOrNull()?.takeIf { it > 0 }
+
+    private fun positiveInt(raw: Any?): Int? =
+        (raw as? Number)?.toString()?.toIntOrNull()?.takeIf { it > 0 }
+
+    private fun nonnegativeInt(raw: Any?): Int? =
+        (raw as? Number)?.toString()?.toIntOrNull()?.takeIf { it >= 0 }
 
     private fun validFileName(name: String): Boolean =
         name.isNotBlank() &&
