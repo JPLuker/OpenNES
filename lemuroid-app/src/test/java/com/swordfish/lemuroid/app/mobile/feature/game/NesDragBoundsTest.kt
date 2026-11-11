@@ -27,7 +27,14 @@ class NesDragBoundsTest {
     fun invalidMeasurementsNeverPropagateNaN() {
         val actual =
             NesDragBounds.clamp(
-                Float.NaN, 0f, 40f, 0f, 400f, 10f, 0f, 0f,
+                Float.NaN,
+                0f,
+                40f,
+                0f,
+                400f,
+                10f,
+                0f,
+                0f,
             )
         assertEquals(0f, actual, 0.001f)
     }
