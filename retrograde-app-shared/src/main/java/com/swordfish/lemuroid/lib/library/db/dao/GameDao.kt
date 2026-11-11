@@ -33,6 +33,10 @@ interface GameDao {
     @Query("SELECT * FROM games WHERE id = :id")
     suspend fun selectById(id: Int): Game?
 
+    /** All installed NES ROMs, including already-played games and favorites. */
+    @Query("SELECT * FROM games WHERE systemId = 'nes' ORDER BY COALESCE(customName, title) ASC")
+    fun observeAllNesGames(): Flow<List<Game>>
+
     /** Exact local filenames for RomM catalogue deduplication; no ROM bytes are read. */
     @Query("SELECT fileName FROM games WHERE systemId = 'nes'")
     fun observeNesFileNames(): Flow<List<String>>
