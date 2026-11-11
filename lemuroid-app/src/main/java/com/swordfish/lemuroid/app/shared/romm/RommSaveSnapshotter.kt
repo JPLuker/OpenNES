@@ -39,7 +39,7 @@ internal object RommSaveSnapshotter {
         var total = 0L
         val buffer = ByteArray(16 * 1024)
         while (true) {
-            val read = input.read(buffer)
+            val read = RommSafeStreamRead.next(input, buffer)
             if (read < 0) break
             if (read == 0) continue
             total += read
@@ -65,7 +65,7 @@ internal object RommSaveSnapshotter {
         file.inputStream().buffered().use { stream ->
             val buffer = ByteArray(16 * 1024)
             while (true) {
-                val read = stream.read(buffer)
+                val read = RommSafeStreamRead.next(stream, buffer)
                 if (read < 0) break
                 if (read == 0) continue
                 bytes += read

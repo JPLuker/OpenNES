@@ -46,7 +46,7 @@ internal class RommSaveRecoveryStore(
                 FileOutputStream(temporary).use { sink ->
                     val buffer = ByteArray(16 * 1024)
                     while (true) {
-                        val count = source.read(buffer)
+                        val count = RommSafeStreamRead.next(source, buffer)
                         if (count < 0) break
                         if (count == 0) continue
                         bytes += count
@@ -92,7 +92,7 @@ internal class RommSaveRecoveryStore(
         file.inputStream().buffered().use { source ->
             val buffer = ByteArray(16 * 1024)
             while (true) {
-                val count = source.read(buffer)
+                val count = RommSafeStreamRead.next(source, buffer)
                 if (count < 0) break
                 if (count > 0) digest.update(buffer, 0, count)
             }

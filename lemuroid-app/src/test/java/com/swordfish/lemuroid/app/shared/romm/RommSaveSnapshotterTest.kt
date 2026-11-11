@@ -12,6 +12,23 @@ import java.io.IOException
 import java.security.MessageDigest
 
 class RommSaveSnapshotterTest {
+    @Test
+    fun permanentlyStalledDocumentProviderCannotHangSyncReview() {
+        assertThrows(IOException::class.java) {
+            RommSaveSnapshotter.fromReopenableStream {
+                object : java.io.InputStream() {
+                    override fun read(): Int = 0
+
+                    override fun read(
+                        bytes: ByteArray,
+                        offset: Int,
+                        length: Int,
+                    ): Int = 0
+                }
+            }
+        }
+    }
+
     @get:Rule
     val folder = TemporaryFolder()
 

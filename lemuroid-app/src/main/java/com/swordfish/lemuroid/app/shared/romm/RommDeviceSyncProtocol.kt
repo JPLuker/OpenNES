@@ -211,7 +211,7 @@ internal object RommDeviceSyncProtocol {
         var bytes = 0L
         val buffer = ByteArray(16 * 1024)
         while (true) {
-            val read = input.read(buffer)
+            val read = RommSafeStreamRead.next(input, buffer)
             if (read < 0) break
             if (read == 0) continue
             bytes += read

@@ -9,6 +9,47 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 
 class RommDeviceSyncProtocolTest {
+    @Test
+    fun brokenProviderFailsInsteadOfHangingOnZeroByteReads() {
+        assertThrows(IOException::class.java) {
+            RommDeviceSyncProtocol.fingerprint {
+                object : java.io.InputStream() {
+                    override fun read(): Int = 0
+
+                    override fun read(
+                        bytes: ByteArray,
+                        offset: Int,
+                        length: Int,
+                    ): Int = 0
+                }
+            }
+        }
+    }
+
+    @Test
+    fun transientZeroByteReadDoesNotLoseSaveData() {
+        val bytes = byteArrayOf(1, 2, 3, 4)
+        val result =
+            RommDeviceSyncProtocol.fingerprint {
+                object : ByteArrayInputStream(bytes) {
+                    private var first = true
+
+                    override fun read(
+                        data: ByteArray,
+                        offset: Int,
+                        length: Int,
+                    ): Int {
+                        if (first) {
+                            first = false
+                            return 0
+                        }
+                        return super.read(data, offset, length)
+                    }
+                }
+            }
+        assertEquals(4L, result.bytes)
+    }
+
     private fun response(
         rows: String,
         counts: String,

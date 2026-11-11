@@ -96,7 +96,7 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
                 FileOutputStream(staging).use { output ->
                     val buffer = ByteArray(16 * 1024)
                     while (true) {
-                        val read = source.read(buffer)
+                        val read = RommSafeStreamRead.next(source, buffer)
                         if (read < 0) break
                         if (read == 0) continue
                         total += read
@@ -245,7 +245,7 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
         backup.file.inputStream().buffered().use { input ->
             val buffer = ByteArray(16 * 1024)
             while (true) {
-                val length = input.read(buffer)
+                val length = RommSafeStreamRead.next(input, buffer)
                 if (length < 0) break
                 if (length > 0) digest.update(buffer, 0, length)
             }
