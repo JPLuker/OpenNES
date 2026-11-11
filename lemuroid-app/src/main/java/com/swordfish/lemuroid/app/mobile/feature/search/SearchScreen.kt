@@ -77,6 +77,7 @@ fun SearchScreen(
     val games = viewModel.searchResults.collectAsLazyPagingItems()
     val romm = RommLibraryCatalog.state.collectAsState().value
     val indexedNames = viewModel.indexedNesFileNames.collectAsState(emptySet()).value
+    val installedGames = viewModel.installedNesGames.collectAsState(emptyList()).value
     val context = LocalContext.current
 
     @Suppress("DEPRECATION")
@@ -106,6 +107,13 @@ fun SearchScreen(
         viewModel.refreshRomMLibrary()
     }
     LaunchedEffect(searchQuery) { viewModel.queryString.value = searchQuery }
+    LaunchedEffect(indexedNames, romm.awaitingIndexIds) {
+        RommLibraryCatalog.reconcileIndexed(indexedNames)
+        if (romm.awaitingIndexIds.isNotEmpty()) {
+            kotlinx.coroutines.delay(26_000)
+            RommLibraryCatalog.reconcileIndexed(indexedNames)
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize().background(SearchColors.background).padding(horizontal = 16.dp),
@@ -161,7 +169,10 @@ fun SearchScreen(
                             downloading = remote.id in romm.downloadingIds,
                             awaitingIndex = remote.id in romm.awaitingIndexIds,
                             hasRomFolder = hasRomFolder,
-                            onDownload = { viewModel.downloadFromRomM(remote) },
+                            onDownload = {
+                                selectedRemote = remote
+                                viewModel.downloadFromRomM(remote)
+                            },
                         )
                     }
                 }
@@ -173,8 +184,16 @@ fun SearchScreen(
             rom = remote,
             catalog = romm,
             hasRomFolder = hasRomFolder,
+            installedGame =
+                installedGames.firstOrNull {
+                    it.fileName.equals(remote.fileName, ignoreCase = true)
+                },
             onDismiss = { selectedRemote = null },
             onDownload = { viewModel.downloadFromRomM(remote) },
+            onPlay = {
+                selectedRemote = null
+                onGameClick(it)
+            },
         )
     }
 }
@@ -244,6 +263,17 @@ private fun SearchGameRow(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (remote) {
+                    game.description?.takeIf { it.isNotBlank() }?.let { summary ->
+                        Text(
+                            text = summary,
+                            color = SearchColors.muted,
+                            fontSize = 12.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
                 game.developer?.takeIf { it.isNotBlank() }?.let {
                     Text(
                         text = it,
