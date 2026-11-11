@@ -43,8 +43,8 @@ class SearchViewModel(
     val indexedNesFileNames: Flow<Set<String>> =
         retrogradeDb.gameDao().observeNesFileNames().map { it.toSet() }
 
-    fun refreshRomMLibrary() {
-        viewModelScope.launch { RommLibraryCatalog.refresh(context) }
+    fun refreshRomMLibrary(force: Boolean = false) {
+        viewModelScope.launch { RommLibraryCatalog.refresh(context, force) }
     }
 
     fun downloadFromRomM(rom: RommApiClient.Rom) {
