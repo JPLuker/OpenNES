@@ -60,6 +60,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -856,37 +857,34 @@ private fun GameDetailsSheet(
     var applying by remember(game.id) { mutableStateOf(false) }
     var matchFailed by remember(game.id) { mutableStateOf(false) }
     val detailsScroll = rememberScrollState()
+    val context = LocalContext.current.applicationContext
+    val launchModeStore = remember(context) { NesRomLaunchModeStore(context) }
+    var wantsHardcore by remember(game.fileUri) { mutableStateOf(launchModeStore.wantsHardcore(game.fileUri)) }
     val compactGameDetails =
         LocalConfiguration.current.screenWidthDp < 380 || LocalDensity.current.fontScale > 1.2f
 
-    // Keep both actions near the box art on normal phones, but move them
-    // underneath the header when narrow screens or large text require space.
+    // Always put Play beneath the full header; the previous two weighted
+    // buttons squeezed "Play Casual" into a three-line vertical pill.
     val gameActions: @Composable () -> Unit = {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Button(
-                onClick = onPlay,
-                modifier = Modifier.weight(1f),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = LibraryColors.red,
-                        contentColor = LibraryColors.foreground,
-                    ),
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                Text("Play Casual")
-            }
-            OutlinedButton(
-                onClick = {},
-                modifier = Modifier.weight(1f),
-                enabled = false,
-            ) {
-                Text("Hardcore")
-            }
-            Box {
+                Button(
+                    onClick = onPlay,
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = LibraryColors.red,
+                            contentColor = LibraryColors.foreground,
+                        ),
+                ) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Text("Play")
+                }
+                Box {
                 OutlinedIconButton(
                     onClick = { menuExpanded = true },
                     modifier = Modifier.size(48.dp),
@@ -978,6 +976,33 @@ private fun GameDetailsSheet(
                     )
                 }
             }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Casual", color = LibraryColors.foreground)
+                Switch(
+                    checked = wantsHardcore,
+                    enabled = launchModeStore.hardcoreAvailable,
+                    onCheckedChange = { value ->
+                        if (launchModeStore.select(game.fileUri, value)) {
+                            wantsHardcore = value
+                        }
+                    },
+                )
+                Text(
+                    "Hardcore",
+                    color = if (launchModeStore.hardcoreAvailable) LibraryColors.foreground else LibraryColors.muted,
+                )
+            }
+            if (!launchModeStore.hardcoreAvailable) {
+                Text(
+                    "Hardcore requires emulator approval. Casual uses your existing saves.",
+                    color = LibraryColors.muted,
+                    fontSize = 12.sp,
+                )
+            }
         }
     }
 
@@ -1036,21 +1061,10 @@ private fun GameDetailsSheet(
                             color = LibraryColors.muted,
                             fontSize = 13.sp,
                         )
-                        if (!compactGameDetails) {
-                            gameActions()
-                        }
-                        Text(
-                            "Hardcore unlocks are unavailable until emulator approval. " +
-                                "Casual uses your existing saves.",
-                            color = LibraryColors.muted,
-                            fontSize = 11.sp,
-                        )
                     }
                 }
 
-                if (compactGameDetails) {
-                    gameActions()
-                }
+                gameActions()
 
                 if (onlineExpanded) {
                     WikidataLookupSection(
