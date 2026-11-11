@@ -135,10 +135,10 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         lifecycleScope.launch {
             GameService.closeRequests.collectLatest { sequence ->
                 if (sequence > initialCloseSequence && !finishTriggered) {
-                    // A remote Close & Launch request must not disappear
-                    // simply because another state operation is in progress.
-                    baseGameScreenViewModel.loadingState.first { !it }
-                    if (!finishTriggered) baseGameScreenViewModel.requestFinish()
+                    // This Activity is behind the library. Its render thread
+                    // is not guaranteed to service a synchronous GL save.
+                    // requestFinish waits for pending state work internally.
+                    baseGameScreenViewModel.requestFinish(useEmulationThread = false)
                 }
             }
         }

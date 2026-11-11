@@ -46,6 +46,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
@@ -347,15 +348,18 @@ class BaseGameScreenViewModel(
             }
         }
 
-    fun requestFinish() {
-        // Multiple Back/Quit events must not race two native SRAM writes
-        // or dispatch more than one activity finish result.
-        if (loadingState.value || !finishRequestPending.compareAndSet(false, true)) return
+    fun requestFinish(useEmulationThread: Boolean = true) {
+        // A remote Close & Launch arrives while the game Activity is stopped.
+        // Its GL thread may no longer process synchronous save requests; use
+        // the same non-GL snapshot path as ordinary background autosave.
+        if (!finishRequestPending.compareAndSet(false, true)) return
         viewModelScope.launch {
             var completed = false
             try {
+                // A pending save/load must not discard an explicit Quit.
+                loadingState.first { !it }
                 withLoading {
-                    if (!saves.persistSessionSnapshot(true)) {
+                    if (!saves.persistSessionSnapshot(useEmulationThread)) {
                         sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
                         return@withLoading
                     }
