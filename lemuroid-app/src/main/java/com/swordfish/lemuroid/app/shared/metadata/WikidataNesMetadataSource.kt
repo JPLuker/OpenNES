@@ -2,14 +2,21 @@ package com.swordfish.lemuroid.app.shared.metadata
 
 import android.net.Uri
 import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -26,6 +33,8 @@ import java.util.concurrent.TimeUnit
 class WikidataNesMetadataSource {
     companion object {
         private const val MAX_SUMMARY_LENGTH = 1050
+        private const val MAX_METADATA_RESPONSE_BYTES = 2 * 1024 * 1024
+        private const val MAX_WIKIPEDIA_RESPONSE_BYTES = 512 * 1024
         private const val USER_AGENT =
             "OpenNES/0.2 (https://github.com/JPLuker/OpenNES; Android NES metadata)"
     }
@@ -79,6 +88,7 @@ class WikidataNesMetadataSource {
                 }
                 result
             }.onFailure {
+                if (it is CancellationException) throw it
                 Timber.w(it, "Manual NES metadata candidate search unavailable")
             }.getOrElse { CandidateResults.Unavailable }
         }
@@ -87,11 +97,14 @@ class WikidataNesMetadataSource {
         withContext(Dispatchers.IO) {
             if (!entityId.matches(Regex("Q[1-9][0-9]*"))) return@withContext Result.NoMatch
             runCatching { findManualCandidateDetails(entityId) }
-                .onFailure { Timber.w(it, "Manual NES metadata candidate lookup unavailable") }
+                .onFailure {
+                    if (it is CancellationException) throw it
+                    Timber.w(it, "Manual NES metadata candidate lookup unavailable")
+                }
                 .getOrElse { Result.Unavailable }
         }
 
-    private fun findManualCandidates(
+    private suspend fun findManualCandidates(
         term: String,
         requestedTitle: String,
     ): CandidateResults {
@@ -165,7 +178,7 @@ class WikidataNesMetadataSource {
         return if (matches.isEmpty()) CandidateResults.NoMatch else CandidateResults.Found(matches)
     }
 
-    private fun findManualCandidateDetails(id: String): Result {
+    private suspend fun findManualCandidateDetails(id: String): Result {
         val response =
             request(
                 mapOf(
@@ -193,6 +206,8 @@ class WikidataNesMetadataSource {
             .connectTimeout(6, TimeUnit.SECONDS)
             .readTimeout(8, TimeUnit.SECONDS)
             .callTimeout(18, TimeUnit.SECONDS)
+            .followRedirects(false)
+            .followSslRedirects(false)
             .build()
 
     suspend fun lookup(title: String): Result =
@@ -211,11 +226,14 @@ class WikidataNesMetadataSource {
                     }
                 }
                 result
-            }.onFailure { Timber.w(it, "Wikidata NES lookup unavailable") }
+            }.onFailure {
+                if (it is CancellationException) throw it
+                Timber.w(it, "Wikidata NES lookup unavailable")
+            }
                 .getOrElse { Result.Unavailable }
         }
 
-    private fun findMatch(title: String): Result {
+    private suspend fun findMatch(title: String): Result {
         val search =
             request(
                 mapOf(
@@ -268,7 +286,7 @@ class WikidataNesMetadataSource {
         return buildVerifiedMatch(id, entity) ?: Result.NoMatch
     }
 
-    private fun buildVerifiedMatch(
+    private suspend fun buildVerifiedMatch(
         id: String,
         entity: JSONObject,
     ): Result.Match? {
@@ -318,7 +336,7 @@ class WikidataNesMetadataSource {
      * Store the exact article title so game details can link to the source.
      * A 404 means no summary; transient network or rate-limit failures retry.
      */
-    private fun wikipediaSummary(articleTitle: String): String? {
+    private suspend fun wikipediaSummary(articleTitle: String): String? {
         val url =
             "https://en.wikipedia.org/api/rest_v1/page/summary/" +
                 Uri.encode(articleTitle.replace(' ', '_'))
@@ -329,15 +347,9 @@ class WikidataNesMetadataSource {
                 .header("Accept", "application/json")
                 .build()
 
-        val body =
-            http.newCall(request).execute().use { response ->
-                if (response.code == 404) return null
-                if (!response.isSuccessful) {
-                    throw IOException("Wikipedia summary HTTP status: " + response.code)
-                }
-                response.body?.string() ?: throw IOException("Empty Wikipedia summary response")
-            }
-        val data = JSONObject(body)
+        val data =
+            fetchJson(request, MAX_WIKIPEDIA_RESPONSE_BYTES, allowNotFound = true)
+                ?: return null
         if (data.optString("type") == "disambiguation") return null
 
         val extract =
@@ -350,7 +362,7 @@ class WikidataNesMetadataSource {
         return if (sentence.length >= 300) "$sentence." else shortened.trimEnd() + "…"
     }
 
-    private fun genreLabels(ids: List<String>): String? {
+    private suspend fun genreLabels(ids: List<String>): String? {
         if (ids.isEmpty()) return null
         val labels =
             request(
@@ -393,7 +405,7 @@ class WikidataNesMetadataSource {
         return (0 until statements.length()).mapNotNull { statements.optJSONObject(it) }
     }
 
-    private fun request(params: Map<String, String>): JSONObject {
+    private suspend fun request(params: Map<String, String>): JSONObject {
         val uri =
             Uri.parse("https://www.wikidata.org/w/api.php")
                 .buildUpon().apply {
@@ -406,12 +418,52 @@ class WikidataNesMetadataSource {
                 .header("Accept", "application/json")
                 .build()
 
-        return http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("Wikidata HTTP status: " + response.code)
-            }
-            val body = response.body?.string() ?: throw IOException("Empty Wikidata response")
-            JSONObject(body)
-        }
+        return fetchJson(request, MAX_METADATA_RESPONSE_BYTES)
+            ?: throw IOException("Empty Wikidata response")
     }
+
+    /** Search cancellation closes the underlying request, not only the UI. */
+    private suspend fun fetchJson(
+        request: Request,
+        maxBytes: Int,
+        allowNotFound: Boolean = false,
+    ): JSONObject? =
+        suspendCancellableCoroutine { continuation ->
+            val call = http.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(
+                object : Callback {
+                    override fun onFailure(
+                        call: Call,
+                        e: IOException,
+                    ) {
+                        if (continuation.isActive) continuation.resumeWithException(e)
+                    }
+
+                    override fun onResponse(
+                        call: Call,
+                        response: Response,
+                    ) {
+                        try {
+                            val parsed =
+                                response.use {
+                                    if (allowNotFound && it.code == 404) return@use null
+                                    if (!it.isSuccessful) {
+                                        throw IOException("Metadata HTTP status: " + it.code)
+                                    }
+                                    val body = it.body ?: throw IOException("Empty metadata response")
+                                    val bytes =
+                                        body.byteStream().use { stream ->
+                                            WikidataResponseReader.readBounded(stream, maxBytes)
+                                        }
+                                    JSONObject(String(bytes, Charsets.UTF_8))
+                                }
+                            if (continuation.isActive) continuation.resume(parsed)
+                        } catch (failure: Exception) {
+                            if (continuation.isActive) continuation.resumeWithException(failure)
+                        }
+                    }
+                },
+            )
+        }
 }

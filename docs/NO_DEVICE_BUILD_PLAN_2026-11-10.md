@@ -90,3 +90,7 @@
 - **M8:** Signed production install/upgrade, security, source attribution and public-release approval.
 
 **Hard release gate:** M6 must not be advertised as offering unlocks before an actual verified unlock; M7 must pass the agreed real-server acceptance before M8 is published.
+
+## November 11 — Cancellable and bounded metadata HTTP
+
+Wikidata/Wikipedia metadata lookups now cancel the underlying OkHttp call when the search coroutine is cancelled. The previous blocking request could continue after a Fix Match search closed. Redirects are disabled, Wikidata responses are bounded to 2 MiB and Wikipedia summaries to 512 KiB. Empty-read loops fail with an error. Coroutine cancellation propagates rather than becoming an inaccurate “service unavailable” result. Strict NES game-identity matching and explicit candidate selection remain unchanged. Unit tests cover response bounds and stalled/transient reads; physical device keyboard and search-cancellation behavior still require acceptance.
