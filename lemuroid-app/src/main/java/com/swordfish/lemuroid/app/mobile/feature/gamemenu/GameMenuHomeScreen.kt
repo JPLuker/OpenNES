@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -71,19 +76,20 @@ fun GameMenuHomeScreen(
     Column(
         modifier =
             Modifier
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            NesBoxArtwork(game = gameMenuRequest.game, modifier = Modifier.width(82.dp))
+            NesBoxArtwork(game = gameMenuRequest.game, modifier = Modifier.width(66.dp))
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(7.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = stringResource(R.string.opennes_pause_label),
@@ -95,17 +101,20 @@ fun GameMenuHomeScreen(
                 Text(
                     text = gameMenuRequest.game.displayName(),
                     color = GameMenuStyle.foreground,
-                    fontSize = 20.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 3,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+            IconButton(onClick = { onResult { } }) {
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close), tint = GameMenuStyle.foreground)
             }
         }
 
         Button(
             onClick = { onResult { } },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 46.dp),
             colors =
                 ButtonDefaults.buttonColors(
                     containerColor = GameMenuStyle.red,
@@ -141,7 +150,6 @@ fun GameMenuHomeScreen(
         GameMenuAction(
             title = stringResource(R.string.opennes_ra_menu_title),
             icon = R.drawable.ic_menu_achievements,
-            detail = stringResource(R.string.opennes_ra_menu_subtitle),
             onClick = { navController.navigateToRoute(GameMenuRoute.ACHIEVEMENTS) },
         )
 
@@ -149,7 +157,6 @@ fun GameMenuHomeScreen(
             GameMenuAction(
                 title = stringResource(R.string.opennes_cheats_title),
                 icon = R.drawable.ic_menu_cheats,
-                detail = stringResource(R.string.opennes_cheats_subtitle),
                 onClick = { navController.navigateToRoute(GameMenuRoute.CHEATS) },
             )
         }
@@ -225,17 +232,23 @@ fun GameMenuHomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.padding(top = 2.dp))
-        GameMenuAction(
-            title = stringResource(R.string.game_menu_restart),
-            icon = R.drawable.ic_menu_restart,
-            onClick = { confirmation = Confirmation.RESTART },
-        )
-        GameMenuAction(
-            title = stringResource(R.string.game_menu_quit),
-            icon = R.drawable.ic_menu_quit,
-            onClick = { confirmation = Confirmation.QUIT },
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            GameMenuQuickAction(
+                label = stringResource(R.string.game_menu_restart),
+                icon = R.drawable.ic_menu_restart,
+                modifier = Modifier.weight(1f),
+                onClick = { confirmation = Confirmation.RESTART },
+            )
+            GameMenuQuickAction(
+                label = stringResource(R.string.game_menu_quit),
+                icon = R.drawable.ic_menu_quit,
+                modifier = Modifier.weight(1f),
+                onClick = { confirmation = Confirmation.QUIT },
+            )
+        }
     }
 
     confirmation?.let { selection ->
@@ -291,7 +304,7 @@ private fun GameMenuQuickAction(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.defaultMinSize(minHeight = 48.dp),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, GameMenuStyle.border),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = GameMenuStyle.foreground),
@@ -314,10 +327,10 @@ private fun GameMenuAction(
         color = GameMenuStyle.surface,
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, GameMenuStyle.border),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 14.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -365,7 +378,7 @@ private fun GameMenuSwitchAction(
         border = BorderStroke(1.dp, GameMenuStyle.border),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {

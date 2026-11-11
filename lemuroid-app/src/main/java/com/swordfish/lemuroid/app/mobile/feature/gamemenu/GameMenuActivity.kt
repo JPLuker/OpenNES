@@ -192,7 +192,8 @@ class GameMenuActivity : RetrogradeComponentActivity() {
             SideMenu(
                 fullscreen = currentRoute == GameMenuRoute.ACHIEVEMENTS || currentRoute == GameMenuRoute.CHEATS,
             ) {
-                TopAppBar(
+                if (currentRoute != GameMenuRoute.HOME) {
+                    TopAppBar(
                     title = {
                         Text(
                             text = stringResource(currentRoute.titleId),
@@ -225,7 +226,8 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                         }
                     },
                 )
-                Divider(modifier = Modifier.fillMaxWidth(), color = GameMenuStyle.border)
+                    Divider(modifier = Modifier.fillMaxWidth(), color = GameMenuStyle.border)
+                }
                 NavHost(
                     modifier =
                         Modifier
