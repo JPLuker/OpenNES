@@ -46,6 +46,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -134,7 +135,10 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         lifecycleScope.launch {
             GameService.closeRequests.collectLatest { sequence ->
                 if (sequence > initialCloseSequence && !finishTriggered) {
-                    baseGameScreenViewModel.requestFinish()
+                    // A remote Close & Launch request must not disappear
+                    // simply because another state operation is in progress.
+                    baseGameScreenViewModel.loadingState.first { !it }
+                    if (!finishTriggered) baseGameScreenViewModel.requestFinish()
                 }
             }
         }

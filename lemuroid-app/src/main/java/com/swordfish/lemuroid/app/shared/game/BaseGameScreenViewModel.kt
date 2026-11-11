@@ -355,12 +355,10 @@ class BaseGameScreenViewModel(
             var completed = false
             try {
                 withLoading {
-                    val snapshot = saves.captureSaveSnapshot(true)
-                    if (snapshot == null) {
+                    if (!saves.persistSessionSnapshot(true)) {
                         sideEffects.showToast(appContext.getString(R.string.opennes_save_state_failed))
                         return@withLoading
                     }
-                    saves.writeSaveSnapshot(snapshot)
                     completed = true
                     sideEffects.requestSuccessfulFinish()
                 }
@@ -377,14 +375,14 @@ class BaseGameScreenViewModel(
     }
 
     fun requestBackgroundSave() {
-        if (loadingState.value) return
+        if (loadingState.value || finishRequestPending.get()) return
         GameService.schedule {
-            val snapshot = saves.captureSaveSnapshot(false)
-            if (snapshot == null) {
+            // A queued background task may start after the player requested
+            // Quit. Do not write an older snapshot after the final save.
+            if (finishRequestPending.get()) return@schedule
+            if (!saves.persistSessionSnapshot(false)) {
                 Timber.w("Could not capture NES save while moving to background")
-                return@schedule
             }
-            saves.writeSaveSnapshot(snapshot)
         }
     }
 

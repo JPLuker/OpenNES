@@ -20,6 +20,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import kotlin.math.roundToInt
 
@@ -36,6 +38,10 @@ class GameViewModelSaves(
     private val sideEffects: GameViewModelSideEffects,
 ) {
     private var currentQuickSave: SaveState? = null
+
+    // Background save and final Quit must never capture/write overlapping
+    // snapshots. The last successful Quit snapshot must win on disk.
+    private val sessionSnapshotWriteMutex = Mutex()
 
     data class SaveSnapshot(
         val sram: ByteArray,
@@ -98,6 +104,13 @@ class GameViewModelSaves(
         val autoSaveState = if (isAutoSaveEnabled()) getCurrentSaveState(useEmulationThread) else null
         return SaveSnapshot(sramState, autoSaveState)
     }
+
+    suspend fun persistSessionSnapshot(useEmulationThread: Boolean): Boolean =
+        sessionSnapshotWriteMutex.withLock {
+            val snapshot = captureSaveSnapshot(useEmulationThread) ?: return@withLock false
+            writeSaveSnapshot(snapshot)
+            true
+        }
 
     suspend fun writeSaveSnapshot(snapshot: SaveSnapshot?) {
         if (snapshot == null) return

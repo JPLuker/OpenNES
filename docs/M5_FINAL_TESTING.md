@@ -58,6 +58,8 @@ Mark each row **Pass / Fail / Blocked / Not tested** and include evidence for fa
 | S-05 | Leave game via Home, return from recent apps, lock/unlock screen, open/close pause menu | Gameplay, input and music recover with no black screen or duplicate scene |
 | S-06 | Save/quit, press Back/Quit multiple times quickly | One finish sequence; no race, stuck spinner or corrupted save |
 | S-07 | Switch apps while a save is pending; simulate constrained storage in a controlled test | Error is visible/logged and retry remains possible; no false success |
+| S-08 | Background a game, immediately resume and Quit, or choose Close & Launch during a save operation | Background and final snapshots never overlap; latest progress survives; close request waits for in-flight state work and does not disappear |
+| T-02 | Rotate repeatedly, pause behind the game menu, and return from the Android background before quitting | Library playtime includes the foreground intervals across Activity recreation, without counting menu/background time |
 | T-01 | Play for a period, pause/background app, return, quit | Recent-played duration counts foreground time without adding the full background interval |
 | D-01 | Optional second phone / smaller screen / different Android version | All critical controller and save behaviors repeat without layout clipping |
 
