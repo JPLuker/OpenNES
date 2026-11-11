@@ -427,7 +427,7 @@
     <string name="opennes_controls_reset_left">Reset D-pad position and size</string>
     <string name="opennes_controls_reset_right">Reset A/B position and size</string>
     <string name="opennes_controls_drag_start">Drag controls on screen</string>
-    <string name="opennes_controls_drag_hint">Drag the outlined D-pad or A/B group to reposition it</string>
+    <string name="opennes_controls_drag_hint">Drag the D-pad, A, B, Start, Select, or Menu separately. Fine-tune for exact placement.</string>
     <string name="opennes_controls_drag_sliders">Fine-tune</string>
     <string name="opennes_controls_reset_confirm_title">Reset this controller layout?</string>
     <string name="opennes_controls_reset_confirm_description">This resets sizes, positions, opacity and rotation for the current orientation. Your other orientation and saved games are not affected.</string>
