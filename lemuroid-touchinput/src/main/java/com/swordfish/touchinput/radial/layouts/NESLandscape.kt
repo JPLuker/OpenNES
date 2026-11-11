@@ -50,20 +50,25 @@ fun PadKitScope.NESLandscapeLeft(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val sideWidth = maxWidth
         val sideHeight = maxHeight
+        val report = LocalNesControlBoundsReporter.current
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.leftScale ?: settings.scale)
         val x =
             NesLandscapeDragLimits.horizontalTravelDp(sideWidth.value, dialSize.value).dp *
-                settings.leftOffsetX.coerceIn(-1f, 1f)
+                settings.leftOffsetX.coerceIn(-1f, 1f) + settings.leftDragX.dp
         val y =
             NesLandscapeDragLimits.verticalTravelDp(sideHeight.value, dialSize.value).dp *
-                settings.leftOffsetY.coerceIn(-1f, 1f)
+                settings.leftOffsetY.coerceIn(-1f, 1f) + settings.leftDragY.dp
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             LemuroidControlCross(
                 modifier =
                     Modifier
                         .size(dialSize)
                         .offset(x = x, y = y)
-                        .onGloballyPositioned { onPrimaryBounds?.invoke(it.boundsInRoot()) },
+                        .onGloballyPositioned {
+                            val rect = it.boundsInRoot()
+                            onPrimaryBounds?.invoke(rect)
+                            report(NesEditableControl.DPAD, rect)
+                        },
                 id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
                 allowDiagonals = true,
                 expandedTouchArea = true,
@@ -78,8 +83,9 @@ fun PadKitScope.NESLandscapeLeft(
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
                 above = true,
-                clusterOffsetX = x,
-                clusterOffsetY = y,
+                control = NesEditableControl.SELECT,
+                clusterOffsetX = 0.dp,
+                clusterOffsetY = 0.dp,
             )
         }
     }
@@ -97,10 +103,10 @@ fun PadKitScope.NESLandscapeRight(
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.rightScale ?: settings.scale)
         val x =
             NesLandscapeDragLimits.horizontalTravelDp(sideWidth.value, dialSize.value).dp *
-                settings.rightOffsetX.coerceIn(-1f, 1f)
+                settings.rightOffsetX.coerceIn(-1f, 1f) + settings.rightDragX.dp
         val y =
             NesLandscapeDragLimits.verticalTravelDp(sideHeight.value, dialSize.value).dp *
-                settings.rightOffsetY.coerceIn(-1f, 1f)
+                settings.rightOffsetY.coerceIn(-1f, 1f) + settings.rightDragY.dp
         val aId = remember { Id.Key(KeyEvent.KEYCODE_BUTTON_A) }
         val bId = remember { Id.Key(KeyEvent.KEYCODE_BUTTON_B) }
         val primaryAnchors =
@@ -125,7 +131,12 @@ fun PadKitScope.NESLandscapeRight(
                     Modifier
                         .size(dialSize)
                         .offset(x = x, y = y)
-                        .onGloballyPositioned { onPrimaryBounds?.invoke(it.boundsInRoot()) },
+                        .onGloballyPositioned {
+                            val rect = it.boundsInRoot()
+                            onPrimaryBounds?.invoke(rect)
+                            report(NesEditableControl.A, faceEditRect(rect, 0.92f, settings.aButton))
+                            report(NesEditableControl.B, faceEditRect(rect, -0.92f, settings.bButton))
+                        },
                 primaryAnchors = primaryAnchors,
                 compositeAnchors = compositeAnchors,
                 trackPointers = true,
@@ -142,6 +153,7 @@ fun PadKitScope.NESLandscapeRight(
                 modifier = Modifier.align(Alignment.Center),
                 keyCode = KeyEvent.KEYCODE_BUTTON_START,
                 label = "START",
+                control = NesEditableControl.START,
                 geometry = settings.startButton,
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
@@ -153,6 +165,7 @@ fun PadKitScope.NESLandscapeRight(
                 modifier = Modifier.align(Alignment.Center),
                 keyCode = KeyEvent.KEYCODE_BUTTON_MODE,
                 label = "MENU",
+                control = NesEditableControl.MENU,
                 geometry = settings.menuButton,
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
@@ -180,6 +193,7 @@ private fun PadKitScope.NESLandscapeSecondaryButton(
     modifier: Modifier,
     keyCode: Int,
     label: String,
+    control: NesEditableControl,
     geometry: TouchControllerSettingsManager.ButtonGeometry,
     sideWidth: Dp,
     sideHeight: Dp,
@@ -187,6 +201,7 @@ private fun PadKitScope.NESLandscapeSecondaryButton(
     clusterOffsetX: Dp,
     clusterOffsetY: Dp,
 ) {
+    val report = LocalNesControlBoundsReporter.current
     val buttonScale =
         geometry.size.coerceIn(
             TouchControllerSettingsManager.MIN_BUTTON_SIZE,
@@ -197,10 +212,10 @@ private fun PadKitScope.NESLandscapeSecondaryButton(
     val centerOffset = sideHeight * (if (above) -0.34f else 0.34f)
     val offsetX =
         TouchControllerSettingsManager.MAX_BUTTON_OFFSET_X.dp *
-            geometry.offsetX.coerceIn(-1f, 1f)
+            geometry.offsetX.coerceIn(-1f, 1f) + geometry.dragX.dp
     val offsetY =
         TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y.dp *
-            geometry.offsetY.coerceIn(-1f, 1f)
+            geometry.offsetY.coerceIn(-1f, 1f) + geometry.dragY.dp
     // Secondary controls follow their group when it is dragged, but clamp
     // individually so Start/Select/Menu remain reachable at the grip edges.
     val safeX = (sideWidth - buttonWidth).coerceAtLeast(0.dp) / 2f - 6.dp
@@ -215,7 +230,8 @@ private fun PadKitScope.NESLandscapeSecondaryButton(
         modifier =
             modifier
                 .offset(x = positionedX, y = positionedY)
-                .size(buttonWidth, buttonHeight),
+                .size(buttonWidth, buttonHeight)
+                .onGloballyPositioned { report(control, it.boundsInRoot()) },
         id = Id.Key(keyCode),
         background = {},
         foreground = { NesPillButtonForeground(pressed = it, label = label, expanded = true, large = true) },
