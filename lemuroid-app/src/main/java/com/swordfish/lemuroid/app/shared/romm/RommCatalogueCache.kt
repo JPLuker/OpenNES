@@ -100,7 +100,8 @@ internal object RommCatalogueCodec {
                         .put("filename", rom.fileName)
                         .put("size", rom.sizeBytes)
                         .put("md5", rom.md5.orEmpty())
-                        .put("description", rom.description.orEmpty().take(MAX_SUMMARY)),
+                        .put("description", rom.description.orEmpty().take(MAX_SUMMARY))
+                        .put("cover", RommCoverUrl.trusted(rom.coverUrl).orEmpty()),
                 )
             }
             val payload =
@@ -155,6 +156,7 @@ internal object RommCatalogueCodec {
                             sizeBytes = row.getLong("size"),
                             md5 = md5.ifBlank { null },
                             description = summary.ifBlank { null },
+                            coverUrl = RommCoverUrl.trusted(row.optString("cover")),
                         )
                     require(validRom(rom) && seen.add(rom.id))
                     rom
@@ -169,5 +171,6 @@ internal object RommCatalogueCodec {
             rom.name.isNotBlank() &&
             rom.name.length <= 500 &&
             rom.sizeBytes in 0..MAX_ROM_BYTES &&
-            RommApiClient.safeRomFileName(rom.fileName)
+            RommApiClient.safeRomFileName(rom.fileName) &&
+            (rom.coverUrl == null || RommCoverUrl.trusted(rom.coverUrl) != null)
 }
