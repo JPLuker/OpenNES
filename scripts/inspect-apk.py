@@ -6,6 +6,27 @@ import zipfile
 from pathlib import Path
 
 
+REQUIRED_NATIVE_SYMBOLS = (
+    b"Java_com_swordfish_libretrodroid_LibretroDroid_copyCoreMemory",
+    b"Java_com_swordfish_libretrodroid_LibretroDroid_emulatedFrameCount",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_preflight",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startFrameProbe",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_stopFrameProbe",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_observedProbeFrames",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_mappedProbeBytes",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_successfulMemorySamples",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startGameSession",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameSessionStatus",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameAchievementRows",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameRichPresence",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameLeaderboardRows",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_takeGameEvent",
+    b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_stopGameSession",
+    b"Java_com_swordfish_lemuroid_app_shared_cheats_NesCheatNative_currentGeneration",
+    b"Java_com_swordfish_lemuroid_app_shared_cheats_NesCheatNative_replaceCheats",
+)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("apk", type=Path)
@@ -25,9 +46,17 @@ def main() -> int:
         parser.error(f"APK does not exist: {args.apk}")
 
     with zipfile.ZipFile(args.apk) as archive:
+        entries = archive.infolist()
+        names = [info.filename for info in entries]
+        if len(names) != len(set(names)):
+            print("ERROR: APK has duplicate ZIP entries.", file=sys.stderr)
+            return 1
+        if archive.testzip() is not None:
+            print("ERROR: APK contains a corrupt ZIP entry.", file=sys.stderr)
+            return 1
         native = [
             info
-            for info in archive.infolist()
+            for info in entries
             if info.filename.startswith("lib/") and info.filename.endswith(".so")
         ]
     core_libs = [
@@ -59,20 +88,19 @@ def main() -> int:
         if not libs:
             print("ERROR: Missing source-built libretrodroid.so", file=sys.stderr)
             return 1
-        symbols = (
-            b"Java_com_swordfish_libretrodroid_LibretroDroid_copyCoreMemory",
-            b"Java_com_swordfish_libretrodroid_LibretroDroid_emulatedFrameCount",
-            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_preflight",
-            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startFrameProbe",
-            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_stopFrameProbe",
-            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_observedProbeFrames",
-            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_mappedProbeBytes",
-            b"Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_successfulMemorySamples",
-        )
+        core_abis = {info.filename.split("/")[1] for info in fceumm}
+        bridge_abis = {info.filename.split("/")[1] for info in libs}
+        if core_abis != bridge_abis:
+            print(
+                f"ERROR: Emulator core ABIs {sorted(core_abis)} do not match "
+                f"JNI bridge ABIs {sorted(bridge_abis)}.",
+                file=sys.stderr,
+            )
+            return 1
         with zipfile.ZipFile(args.apk) as archive:
             for lib in libs:
                 blob = archive.read(lib.filename)
-                for symbol in symbols:
+                for symbol in REQUIRED_NATIVE_SYMBOLS:
                     if symbol not in blob:
                         print(f"ERROR: {lib.filename} lacks {symbol.decode()}", file=sys.stderr)
                         return 1
