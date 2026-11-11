@@ -53,7 +53,9 @@ import com.swordfish.lemuroid.app.shared.cheats.NesCheatRepository
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
 import com.swordfish.lemuroid.app.shared.cheats.NesLibretroCheatFinder
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -81,6 +83,8 @@ internal fun GameMenuCheatsScreen(game: Game) {
     var finderResults by remember(uri) { mutableStateOf<List<NesLibretroCheatFinder.Candidate>>(emptyList()) }
     var finderSelected by remember(uri) { mutableStateOf<Set<String>>(emptySet()) }
     var finderMessage by remember(uri) { mutableStateOf<String?>(null) }
+    var finderRequestSerial by remember(uri) { mutableStateOf(0) }
+    var finderJob by remember(uri) { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
 
     val importDocument =
@@ -156,6 +160,20 @@ internal fun GameMenuCheatsScreen(game: Game) {
         return applied
     }
 
+    fun cancelFinderLookup() {
+        // Cancel the old request and invalidate any late results before the
+        // user can change the title, close the dialog or begin another search.
+        finderRequestSerial += 1
+        finderJob?.cancel()
+        finderJob = null
+        finderLoading = false
+    }
+
+    fun dismissFinder() {
+        cancelFinderLookup()
+        finderOpen = false
+    }
+
     Column(
         modifier =
             Modifier
@@ -208,6 +226,7 @@ internal fun GameMenuCheatsScreen(game: Game) {
         }
         OutlinedButton(
             onClick = {
+                cancelFinderLookup()
                 finderResults = emptyList()
                 finderSelected = emptySet()
                 finderMessage = null
@@ -288,7 +307,7 @@ internal fun GameMenuCheatsScreen(game: Game) {
 
     if (finderOpen) {
         AlertDialog(
-            onDismissRequest = { if (!finderLoading) finderOpen = false },
+            onDismissRequest = { dismissFinder() },
             title = { Text("Find NES cheats") },
             text = {
                 Column(
@@ -303,7 +322,16 @@ internal fun GameMenuCheatsScreen(game: Game) {
                     )
                     OutlinedTextField(
                         value = finderTerm,
-                        onValueChange = { finderTerm = it.take(120) },
+                        onValueChange = { entered ->
+                            val next = entered.take(120)
+                            if (next != finderTerm) {
+                                cancelFinderLookup()
+                                finderTerm = next
+                                finderResults = emptyList()
+                                finderSelected = emptySet()
+                                finderMessage = null
+                            }
+                        },
                         label = { Text("Game title") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -311,22 +339,41 @@ internal fun GameMenuCheatsScreen(game: Game) {
                     OutlinedButton(
                         enabled = !finderLoading && finderTerm.trim().length >= 3,
                         onClick = {
+                            cancelFinderLookup()
+                            val searchedTitle = finderTerm.trim()
+                            val requestSerial = finderRequestSerial
                             finderLoading = true
                             finderMessage = null
                             finderResults = emptyList()
                             finderSelected = emptySet()
-                            scope.launch {
-                                val result = runCatching { NesLibretroCheatFinder.find(finderTerm) }
-                                finderResults = result.getOrDefault(emptyList())
-                                finderLoading = false
-                                finderMessage =
-                                    when {
-                                        result.isFailure -> "Could not reach the cheat database. Check the connection."
-                                        finderResults.isEmpty() ->
-                                            "No compatible NES cheats found. Try a different title."
-                                        else -> "${finderResults.size} compatible cheats found."
+                            finderJob =
+                                scope.launch {
+                                    val result =
+                                        try {
+                                            Result.success(NesLibretroCheatFinder.find(searchedTitle))
+                                        } catch (cancelled: CancellationException) {
+                                            throw cancelled
+                                        } catch (failure: Exception) {
+                                            Result.failure(failure)
+                                        }
+                                    if (!finderOpen ||
+                                        requestSerial != finderRequestSerial ||
+                                        searchedTitle != finderTerm.trim()
+                                    ) {
+                                        return@launch
                                     }
-                            }
+                                    finderResults = result.getOrDefault(emptyList())
+                                    finderLoading = false
+                                    finderJob = null
+                                    finderMessage =
+                                        when {
+                                            result.isFailure ->
+                                                "Could not reach the cheat database. Check the connection."
+                                            finderResults.isEmpty() ->
+                                                "No compatible NES cheats found. Try a different title."
+                                            else -> "${finderResults.size} compatible cheats found."
+                                        }
+                                }
                         },
                     ) { Text("Search database") }
                     if (finderLoading) CircularProgressIndicator()
@@ -370,7 +417,7 @@ internal fun GameMenuCheatsScreen(game: Game) {
                         val merged = NesCheatExchange.merge(definitions, additions)
                         if (merged != null && repository.save(uri, merged)) {
                             definitions = merged
-                            finderOpen = false
+                            dismissFinder()
                             finderMessage = null
                         } else {
                             finderMessage = "Unable to import selected codes."
@@ -381,7 +428,7 @@ internal fun GameMenuCheatsScreen(game: Game) {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { if (!finderLoading) finderOpen = false }) {
+                TextButton(onClick = { dismissFinder() }) {
                     Text("Cancel")
                 }
             },
