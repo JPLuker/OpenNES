@@ -20,10 +20,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +54,7 @@ import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
 import com.swordfish.lemuroid.app.shared.romm.RommCataloguePaging
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
+import com.swordfish.lemuroid.app.shared.romm.RommConnectionPreferences
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
 import com.swordfish.lemuroid.app.shared.romm.RommPairing
 import com.swordfish.lemuroid.app.shared.romm.RommPendingReviewSummary
@@ -76,6 +79,8 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current.applicationContext
     val store = remember(context) { RommConnectionStore(context) }
     val client = remember { RommApiClient() }
+    LaunchedEffect(context) { RommConnectionPreferences.load(context) }
+    val showDisconnectWarnings = RommConnectionPreferences.warnings.collectAsState().value
     val scope = rememberCoroutineScope()
     val syncJournal =
         remember(context) {
@@ -317,6 +322,26 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     }
 
     OpenNesSettingsPage(modifier = modifier.then(if (busy) Modifier.blur(10.dp) else Modifier)) {
+        OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_romm_notice_settings)) }) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.opennes_romm_notice_toggle))
+                    Text(
+                        stringResource(R.string.opennes_romm_notice_description),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp,
+                    )
+                }
+                Switch(
+                    checked = showDisconnectWarnings,
+                    onCheckedChange = { RommConnectionPreferences.setWarnings(context, it) },
+                )
+            }
+        }
         OpenNesSettingsGroup(
             title = { Text(stringResource(R.string.opennes_romm_title)) },
         ) {
