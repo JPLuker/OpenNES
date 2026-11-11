@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,9 +27,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -40,7 +47,12 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
+import com.swordfish.lemuroid.app.mobile.feature.romm.RommGameDetailsSheet
+import com.swordfish.lemuroid.app.shared.romm.RommApiClient
+import com.swordfish.lemuroid.app.shared.romm.RommLibraryCatalog
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
+import java.util.Locale
 
 /** NES-only library search, sharing the artwork and visual language of OpenNES Home. */
 private object SearchColors {
@@ -63,8 +75,35 @@ fun SearchScreen(
     onResetSearchQuery: () -> Unit,
 ) {
     val games = viewModel.searchResults.collectAsLazyPagingItems()
+    val romm = RommLibraryCatalog.state.collectAsState().value
+    val indexedNames = viewModel.indexedNesFileNames.collectAsState(emptySet()).value
+    val context = LocalContext.current
+    @Suppress("DEPRECATION")
+    val folderPreferences =
+        remember(context) {
+            SharedPreferencesHelper.getLegacySharedPreferences(context.applicationContext)
+        }
+    val folderKey = stringResource(com.swordfish.lemuroid.lib.R.string.pref_key_extenral_folder)
+    val hasRomFolder = !folderPreferences.getString(folderKey, null).isNullOrBlank()
+    var selectedRemote by remember { mutableStateOf<RommApiClient.Rom?>(null) }
+    val visibleRemote =
+        remember(romm.games, indexedNames, searchQuery) {
+            val query = searchQuery.trim().lowercase(Locale.ROOT)
+            if (query.isEmpty()) {
+                emptyList()
+            } else {
+                RommLibraryCatalog.available(romm.games, indexedNames)
+                    .filter {
+                        it.name.lowercase(Locale.ROOT).contains(query) ||
+                            it.fileName.lowercase(Locale.ROOT).contains(query)
+                    }
+            }
+        }
 
-    LaunchedEffect(Unit) { onResetSearchQuery() }
+    LaunchedEffect(Unit) {
+        onResetSearchQuery()
+        viewModel.refreshRomMLibrary()
+    }
     LaunchedEffect(searchQuery) { viewModel.queryString.value = searchQuery }
 
     Column(
@@ -82,16 +121,18 @@ fun SearchScreen(
 
         when {
             searchQuery.isBlank() -> SearchMessage(stringResource(R.string.opennes_search_hint))
-            games.loadState.refresh is LoadState.Loading -> {
+            games.loadState.refresh is LoadState.Loading && visibleRemote.isEmpty() -> {
                 CircularProgressIndicator(
                     color = SearchColors.red,
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 28.dp),
                 )
             }
-            games.loadState.refresh is LoadState.Error -> {
+            games.loadState.refresh is LoadState.Error && visibleRemote.isEmpty() -> {
                 SearchMessage(stringResource(R.string.opennes_search_error))
             }
-            games.itemCount == 0 -> SearchMessage(stringResource(R.string.opennes_search_no_results))
+            games.itemCount == 0 && visibleRemote.isEmpty() -> {
+                SearchMessage(stringResource(R.string.opennes_search_no_results))
+            }
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
@@ -107,9 +148,32 @@ fun SearchScreen(
                             onFavorite = { onGameFavoriteToggle(game, !game.isFavorite) },
                         )
                     }
+                    items(visibleRemote.size, key = { "romm:" + visibleRemote[it].id }) { index ->
+                        val remote = visibleRemote[index]
+                        val game = RommLibraryCatalog.asPreview(remote)
+                        SearchGameRow(
+                            game = game,
+                            onPlay = { selectedRemote = remote },
+                            onMore = { selectedRemote = remote },
+                            onFavorite = {},
+                            remote = true,
+                            downloading = remote.id in romm.downloadingIds,
+                            awaitingIndex = remote.id in romm.awaitingIndexIds,
+                            onDownload = { viewModel.downloadFromRomM(remote) },
+                        )
+                    }
                 }
             }
         }
+    }
+    selectedRemote?.let { remote ->
+        RommGameDetailsSheet(
+            rom = remote,
+            catalog = romm,
+            hasRomFolder = hasRomFolder,
+            onDismiss = { selectedRemote = null },
+            onDownload = { viewModel.downloadFromRomM(remote) },
+        )
     }
 }
 
@@ -140,6 +204,10 @@ private fun SearchGameRow(
     onPlay: () -> Unit,
     onMore: () -> Unit,
     onFavorite: () -> Unit,
+    remote: Boolean = false,
+    downloading: Boolean = false,
+    awaitingIndex: Boolean = false,
+    onDownload: () -> Unit = {},
 ) {
     Surface(
         color = SearchColors.panel,
@@ -151,7 +219,7 @@ private fun SearchGameRow(
                 Modifier
                     .fillMaxWidth()
                     .combinedClickable(
-                        onClickLabel = stringResource(R.string.opennes_play_game_for, game.displayName()),
+                        onClickLabel = stringResource(R.string.opennes_open_game_details, game.displayName()),
                         onLongClickLabel = stringResource(R.string.opennes_game_actions_for, game.displayName()),
                         onClick = onPlay,
                         onLongClick = onMore,
@@ -183,26 +251,46 @@ private fun SearchGameRow(
                     )
                 }
                 Text(
-                    text = searchPlayTime(game),
+                    text =
+                        if (remote) {
+                            stringResource(R.string.opennes_romm_available_remote)
+                        } else {
+                            searchPlayTime(game)
+                        },
                     color = SearchColors.muted,
                     fontSize = 12.sp,
                 )
             }
             Spacer(modifier = Modifier.width(2.dp))
-            IconButton(onClick = onFavorite) {
-                Icon(
-                    imageVector = if (game.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription =
+            if (remote) {
+                Button(onClick = onDownload, enabled = !downloading && !awaitingIndex) {
+                    Text(
                         stringResource(
-                            if (game.isFavorite) {
-                                R.string.opennes_remove_favorite_for
-                            } else {
-                                R.string.opennes_add_favorite_for
+                            when {
+                                downloading -> R.string.opennes_romm_downloading
+                                awaitingIndex -> R.string.opennes_romm_adding_to_library
+                                else -> R.string.opennes_romm_download
                             },
-                            game.displayName(),
                         ),
-                    tint = if (game.isFavorite) SearchColors.red else SearchColors.muted,
-                )
+                    )
+                }
+            } else {
+                IconButton(onClick = onFavorite) {
+                    Icon(
+                        imageVector =
+                            if (game.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription =
+                            stringResource(
+                                if (game.isFavorite) {
+                                    R.string.opennes_remove_favorite_for
+                                } else {
+                                    R.string.opennes_add_favorite_for
+                                },
+                                game.displayName(),
+                            ),
+                        tint = if (game.isFavorite) SearchColors.red else SearchColors.muted,
+                    )
+                }
             }
         }
     }
