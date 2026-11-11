@@ -109,6 +109,7 @@ import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
+import com.swordfish.lemuroid.app.shared.romm.RommConnectionPreferences
 import com.swordfish.lemuroid.app.shared.romm.RommLibraryCatalog
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
@@ -158,6 +159,8 @@ fun HomeScreen(
             }
         }
 
+    LaunchedEffect(context) { RommConnectionPreferences.load(context) }
+    val showRommWarnings = RommConnectionPreferences.warnings.collectAsState().value
     val state = viewModel.getViewStates().collectAsState(HomeViewModel.UIState()).value
     val romm = RommLibraryCatalog.state.collectAsState().value
     val localFileNames = viewModel.indexedNesFileNames.collectAsState(emptySet()).value
@@ -187,6 +190,8 @@ fun HomeScreen(
         state = state,
         allGames = allGames,
         romm = romm,
+        showRommWarnings = showRommWarnings,
+        onRetryRomM = { viewModel.refreshRomMLibrary(force = true) },
         onOpenRemoteStatus = { selectedGame = RommLibraryCatalog.asPreview(it) },
         onGameClick = onGameClick,
         onGameLongClick = { game ->
@@ -221,6 +226,7 @@ fun HomeScreen(
                     },
                 onDismiss = { selectedGame = null },
                 onDownload = { viewModel.downloadFromRomM(remote) },
+                onRetryConnection = { viewModel.refreshRomMLibrary(force = true) },
                 onPlay = {
                     selectedGame = null
                     onGameClick(it)
@@ -280,6 +286,8 @@ private fun OpenNesLibrary(
     state: HomeViewModel.UIState,
     allGames: List<Game>,
     romm: RommLibraryCatalog.State,
+    showRommWarnings: Boolean,
+    onRetryRomM: () -> Unit,
     onOpenRemoteStatus: (com.swordfish.lemuroid.app.shared.romm.RommApiClient.Rom) -> Unit,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
@@ -348,6 +356,9 @@ private fun OpenNesLibrary(
         // A user-requested download retains a visible progress or failure row.
         // Passive RomM network retries are intentionally silent on Home.
         item { RommDownloadStatus(catalog = romm, onOpen = onOpenRemoteStatus) }
+        if (showRommWarnings && romm.error != null) {
+            item { RommConnectionNotice(catalog = romm, onRetry = onRetryRomM) }
+        }
 
         if (state.showNoNotificationPermissionCard) {
             item {
