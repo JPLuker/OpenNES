@@ -1783,7 +1783,6 @@ private fun GameProfileSection(
                     }
                 }
             }
-
         } else {
             OutlinedTextField(
                 value = genreInput,
