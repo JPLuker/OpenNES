@@ -40,7 +40,7 @@ fun openNesAppPalette(controller: NesControllerPalette): OpenNesAppPalette {
         foreground = Color(0xFFF2EDE6),
         muted = Color(0xFFB2B2B4),
         red = contrastAccent,
-        onAccent = if (contrastAccent.luminance() > 0.40f) Color.Black else Color.White,
+        onAccent = if (contrastAccent.luminance() > 0.179f) Color.Black else Color.White,
     )
 }
 

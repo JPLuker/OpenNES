@@ -72,11 +72,12 @@ internal fun RommGameDetailsSheet(
     val delayed = rom.id in catalog.indexingDelayedIds
     val busy = installedGame == null && (queued || downloading || (indexing && !delayed))
     val error = catalog.downloadFailures[rom.id]
-    val foreground = Color(0xFFF2EDE6)
-    val muted = Color(0xFFB2B2B4)
-    val red = Color(0xFFB73439)
-    val surface = Color(0xFF1C2027)
-    val border = Color(0xFF414650)
+    val appColors = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current
+    val foreground = appColors.foreground
+    val muted = appColors.muted
+    val red = appColors.red
+    val surface = appColors.panel
+    val border = appColors.border
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -250,7 +251,7 @@ internal fun RommGameDetailsSheet(
                     contentAlignment = Alignment.Center,
                 ) {
                     Surface(
-                        color = Color(0xFF272B33),
+                        color = appColors.surface,
                         shape = RoundedCornerShape(18.dp),
                         border = BorderStroke(1.dp, border),
                         modifier = Modifier.fillMaxWidth(0.84f),

@@ -55,14 +55,8 @@ import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import java.util.Locale
 
 /** NES-only library search, sharing the artwork and visual language of OpenNES Home. */
-private object SearchColors {
-    val background = Color(0xFF111317)
-    val panel = Color(0xFF1C2027)
-    val border = Color(0xFF414650)
-    val foreground = Color(0xFFF2EDE6)
-    val muted = Color(0xFFB2B2B4)
-    val red = Color(0xFFB73439)
-}
+private val SearchColors: com.swordfish.lemuroid.app.mobile.shared.compose.ui.OpenNesAppPalette
+    @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current
 
 @Composable
 fun SearchScreen(

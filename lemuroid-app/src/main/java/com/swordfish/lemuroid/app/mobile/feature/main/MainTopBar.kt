@@ -201,7 +201,7 @@ private fun OpenNesSearchView(
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
             placeholder = { Text(searchLabel, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFB2B2B4))
+                Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             },
             onValueChange = { onUpdateQueryString(it) },
             singleLine = true,
@@ -212,8 +212,8 @@ private fun OpenNesSearchView(
                 ),
             colors =
                 TextFieldDefaults.colors(
-                    focusedTextColor = Color(0xFFF2EDE6),
-                    unfocusedTextColor = Color(0xFFF2EDE6),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                     cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,

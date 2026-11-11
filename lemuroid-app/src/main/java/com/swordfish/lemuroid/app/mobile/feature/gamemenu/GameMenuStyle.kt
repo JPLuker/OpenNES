@@ -1,14 +1,23 @@
 package com.swordfish.lemuroid.app.mobile.feature.gamemenu
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors
 
-/** OpenNES's pause-menu palette, shared by the session and save-state screens. */
+/** The pause menu follows the active controller color palette. */
 internal object GameMenuStyle {
-    val background = Color(0xFF111317)
-    val surface = Color(0xFF1C2027)
-    val surfaceRaised = Color(0xFF272B33)
-    val border = Color(0xFF414650)
-    val foreground = Color(0xFFF2EDE6)
-    val muted = Color(0xFFB2B2B4)
-    val red = Color(0xFFB73439)
+    val background: Color
+        @Composable get() = LocalOpenNesAppColors.current.background
+    val surface: Color
+        @Composable get() = LocalOpenNesAppColors.current.panel
+    val surfaceRaised: Color
+        @Composable get() = LocalOpenNesAppColors.current.surface
+    val border: Color
+        @Composable get() = LocalOpenNesAppColors.current.border
+    val foreground: Color
+        @Composable get() = LocalOpenNesAppColors.current.foreground
+    val muted: Color
+        @Composable get() = LocalOpenNesAppColors.current.muted
+    val red: Color
+        @Composable get() = LocalOpenNesAppColors.current.red
 }
