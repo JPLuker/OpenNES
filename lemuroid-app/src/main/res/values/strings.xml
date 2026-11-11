@@ -452,6 +452,12 @@
     <string name="opennes_romm_http_continue">Connect over HTTP</string>
     <string name="opennes_romm_invalid_server">Enter a valid HTTPS URL or a private-network HTTP IP address (for example, http://192.168.86.163:8081).</string>
     <string name="opennes_romm_token">Client API token</string>
+    <string name="opennes_romm_download">Download</string>
+    <string name="opennes_romm_downloading">Downloading…</string>
+    <string name="opennes_romm_adding_to_library">Adding to library…</string>
+    <string name="opennes_romm_available_remote">Available from RomM · Not downloaded</string>
+    <string name="opennes_romm_download_requires_folder">Choose a writable NES ROM folder in Settings before downloading.</string>
+    <string name="opennes_romm_library_loading">Checking RomM library…</string>
     <string name="opennes_romm_connect">Connect</string>
     <string name="opennes_romm_connected">Server: %1$s</string>
     <string name="opennes_romm_verified">Signed in as %1$s</string>
