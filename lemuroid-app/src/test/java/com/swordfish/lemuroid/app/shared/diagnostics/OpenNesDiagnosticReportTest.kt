@@ -14,9 +14,11 @@ class OpenNesDiagnosticReportTest {
                 androidSdk = 35,
                 deviceAbi = "arm64-v8a",
                 packageVariant = "debug",
+                sourceCommit = "abc123def456",
             )
         assertTrue(result.contains("Android SDK: 35"))
         assertTrue(result.contains("ABI: arm64-v8a"))
+        assertTrue(result.contains("Source: abc123def456"))
         assertTrue(result.contains("Hardcore: Unavailable"))
         assertFalse(result.contains("token"))
         assertFalse(result.contains("RomM URL"))
@@ -33,6 +35,7 @@ class OpenNesDiagnosticReportTest {
                 androidSdk = -10,
                 deviceAbi = "arm64-v8a; /data/user/0/private",
                 packageVariant = "debug?key=$token",
+                sourceCommit = "abc123?secret=$token",
             )
         assertFalse(result.contains(token))
         assertFalse(result.contains("/data/user/0"))
@@ -41,5 +44,6 @@ class OpenNesDiagnosticReportTest {
         assertTrue(result.contains("Build: 0"))
         assertTrue(result.contains("Variant: unknown"))
         assertTrue(result.contains("ABI: unknown"))
+        assertTrue(result.contains("Source: local"))
     }
 }

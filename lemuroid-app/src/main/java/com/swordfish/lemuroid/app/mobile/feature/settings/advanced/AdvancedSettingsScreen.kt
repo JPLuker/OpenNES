@@ -156,6 +156,7 @@ private fun SupportDiagnostics() {
                         androidSdk = Build.VERSION.SDK_INT,
                         deviceAbi = Build.SUPPORTED_ABIS.firstOrNull().orEmpty(),
                         packageVariant = if (BuildConfig.DEBUG) "debug" else "release",
+                        sourceCommit = BuildConfig.SOURCE_COMMIT,
                     )
                 if (clipboard != null) {
                     clipboard.setPrimaryClip(ClipData.newPlainText("OpenNES diagnostics", report))

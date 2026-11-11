@@ -13,6 +13,12 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         applicationId = "com.jpluker.opennes"
+        // Private-free source revision in user-copied diagnostics, not a signing identity.
+        val sourceSha = System.getenv("GITHUB_SHA").orEmpty()
+        val verifiedSha =
+            sourceSha.takeIf { it.matches(Regex("[0-9a-fA-F]{40}")) }
+                ?.take(12)?.lowercase() ?: "local"
+        buildConfigField("String", "SOURCE_COMMIT", "\"$verifiedSha\"")
     }
     flavorDimensions += listOf("opensource", "cores")
 
