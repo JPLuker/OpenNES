@@ -30,6 +30,12 @@ fun BaseLayoutLeft(
                 (settings.leftScale ?: settings.scale).coerceIn(0f, 1f),
             )
         }
+    val xOffsetDp =
+        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X *
+            settings.leftOffsetX.coerceIn(-1f, 1f) + settings.leftDragX
+    val yOffsetDp =
+        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y *
+            settings.leftOffsetY.coerceIn(-1f, 1f) + settings.leftDragY
 
     LayoutRadial(
         modifier =
@@ -38,14 +44,7 @@ fun BaseLayoutLeft(
                     left = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX,
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
                 )
-                .offset(
-                    x =
-                        (TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X *
-                            settings.leftOffsetX.coerceIn(-1f, 1f) + settings.leftDragX).dp,
-                    y =
-                        (TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y *
-                            settings.leftOffsetY.coerceIn(-1f, 1f) + settings.leftDragY).dp,
-                )
+                .offset(x = xOffsetDp.dp, y = yOffsetDp.dp)
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
         secondaryDials = secondaryDials,
@@ -63,6 +62,12 @@ fun BaseLayoutRight(
     primaryDial: @Composable () -> Unit,
     secondaryDials: @Composable LayoutRadialSecondaryDialsScope.() -> Unit,
 ) {
+    val xOffsetDp =
+        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X *
+            settings.rightOffsetX.coerceIn(-1f, 1f) + settings.rightDragX
+    val yOffsetDp =
+        TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y *
+            settings.rightOffsetY.coerceIn(-1f, 1f) + settings.rightDragY
     LayoutRadial(
         modifier =
             modifier
@@ -70,14 +75,7 @@ fun BaseLayoutRight(
                     right = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX,
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
                 )
-                .offset(
-                    x =
-                        (TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X *
-                            settings.rightOffsetX.coerceIn(-1f, 1f) + settings.rightDragX).dp,
-                    y =
-                        (TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y *
-                            settings.rightOffsetY.coerceIn(-1f, 1f) + settings.rightDragY).dp,
-                )
+                .offset(x = xOffsetDp.dp, y = yOffsetDp.dp)
                 .padding(LocalLemuroidPadTheme.current.padding),
         primaryDial = primaryDial,
         secondaryDials = secondaryDials,
