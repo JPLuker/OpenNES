@@ -1,12 +1,14 @@
 # OpenNES — RomM integration
 
-**Status (2026-11-10): M7 integration in progress.** A read-only HTTPS API client, Android Keystore-backed token store, immutable offline archives and server-bound non-executing request staging exist. Offline integrity auditing, local request review, strict conflict ancestry checks and a read-only RomM 5.4 negotiation parser passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071). No real RomM server, Android UI acceptance, per-user device registration or remote write behavior has been verified.
+**Status (2026-11-10): M7 integration in progress.** A scoped read-only API client (HTTPS or explicitly approved private IPv4 HTTP), Android Keystore-backed token store, immutable offline archives and server-bound non-executing request staging exist. Offline integrity auditing, local request review, strict conflict ancestry checks and a read-only RomM 5.4 negotiation parser passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071). No real RomM server, Android UI acceptance, per-user device registration or remote write behavior has been verified.
 
 ## Connection & security
 
 - Use a **RomM Client API Token** restricted to `me.read`, `platforms.read` and `roms.read`. Generate the token in your own RomM instance; never paste it into source, issues or logs.
 - OpenNES stores the token as AES-GCM ciphertext in the Android no-backup directory, with an Android Keystore key. It is never copied to ordinary SharedPreferences; the server URL is not secret.
-- HTTPS is required for bearer-token calls. No redirects are followed, preventing accidental token forwarding to another host. If a server is available only over HTTP, configure TLS at a reverse proxy or private VPN before connecting.
+- HTTPS is required for public hosts and domain names. A literal RFC1918 IPv4 destination (10/8, 172.16/12 or 192.168/16) can use HTTP **after an explicit warning and confirmation**. This permits local installations such as `http://192.168.86.163:8081`; anyone on an untrusted network may intercept the bearer token or downloads, so use HTTPS or an encrypted VPN for remote access. No redirects are followed, preventing token forwarding to another origin.
+- Android's network-security XML cannot whitelist an IP subnet. Cleartext support is enabled at the Android network-security layer, while OpenNES' RomM URL validator enforces private literal addresses before making any RomM HTTP request. Audit other app HTTP clients before production release.
+- **QR pairing (source candidate, device testing pending):** RomM → Client API Tokens → Create/Regenerate → Pair device displays a 60-second QR of the form `https://server/pair?code=XXXX-XXXX`. OpenNES can scan using an offline ZXing scanner or accept the eight-character code manually, then POST `/api/client-tokens/exchange`, verify `/api/users/me` and store the returned `rmm_` token encrypted. QR links are validated to a matching official `/pair` path; scans never automatically contact the server. A local HTTP QR triggers its own explicit warning. Pairing may regenerate an existing token, invalidating that token on other devices; use one token per device.
 - Supports read-only `GET /api/users/me`, `/api/platforms` (bare array), `/api/roms` (paginated `items` object) and authenticated ROM download. For paginated ROMs, the client explicitly requests total-count metadata. Server schemas vary across RomM major releases; the client's pagination/filters need verification against the user's installed server's `/openapi.json`.
 
 ## NES import policy
@@ -22,6 +24,13 @@
 - https://docs.romm.app/latest/Getting-Started/Authentication/
 - https://docs.romm.app/5.4.0/developers/client-api-tokens/
 - https://docs.romm.app/latest/using/downloads/
+
+## Pairing acceptance (not yet completed)
+
+- Verify on an Android device that the scanner opens, the camera permission is requested, an official RomM QR is recognized and the token exchange finishes before the code expires.
+- Verify both scan and manual eight-character code against the actual RomM server version, with read scopes and revoked/expired codes. A canceled QR scan must not connect; duplicate/bad codes must not save credentials.
+- Verify private-LAN HTTP on the player's own Wi-Fi, and reject public HTTP, ordinary hostnames over HTTP, redirects, userinfo and malformed QR content. Prefer HTTPS outside a trusted LAN.
+- Verify the new ZXing dependency's APK size, Android permission merge, license attribution and offline scanner behavior.
 
 ## Outstanding gates
 
