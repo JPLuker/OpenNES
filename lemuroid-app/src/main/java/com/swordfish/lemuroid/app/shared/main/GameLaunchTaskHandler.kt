@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.game.BaseGameActivity
 import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
 import com.swordfish.lemuroid.app.shared.savesync.SaveSyncWork
@@ -24,18 +25,23 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
         rescheduleBackgroundWork(activity.applicationContext)
         when (resultCode) {
             Activity.RESULT_OK -> handleSuccessfulGameFinish(data)
-            BaseGameActivity.RESULT_ERROR ->
-                handleUnsuccessfulGameFinish(
-                    activity,
-                    data?.getStringExtra(BaseGameActivity.PLAY_GAME_RESULT_ERROR)!!,
-                    null,
-                )
-            BaseGameActivity.RESULT_UNEXPECTED_ERROR ->
-                handleUnsuccessfulGameFinish(
-                    activity,
-                    activity.getString(R.string.lemuroid_crash_disclamer),
-                    data?.getStringExtra(BaseGameActivity.PLAY_GAME_RESULT_ERROR),
-                )
+            BaseGameActivity.RESULT_ERROR,
+            BaseGameActivity.RESULT_UNEXPECTED_ERROR,
+            -> {
+                val category =
+                    data?.getStringExtra(BaseGameActivity.PLAY_GAME_RESULT_ERROR_CATEGORY)
+                        ?.let { raw ->
+                            OpenNesFailureCategory.entries.firstOrNull { it.name == raw }
+                        } ?: OpenNesFailureCategory.UNEXPECTED
+                val message =
+                    when (category) {
+                        OpenNesFailureCategory.ACCESS -> R.string.opennes_support_error_access
+                        OpenNesFailureCategory.IO -> R.string.opennes_support_error_io
+                        OpenNesFailureCategory.INVALID_INPUT -> R.string.opennes_support_error_input
+                        OpenNesFailureCategory.UNEXPECTED -> R.string.opennes_support_error_emulator
+                    }
+                handleUnsuccessfulGameFinish(activity, activity.getString(message), null)
+            }
         }
     }
 

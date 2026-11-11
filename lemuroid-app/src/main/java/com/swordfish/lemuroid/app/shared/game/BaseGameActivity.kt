@@ -21,6 +21,7 @@ import com.swordfish.lemuroid.app.shared.GameMenuContract
 import com.swordfish.lemuroid.app.shared.ImmersiveActivity
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.coreoptions.CoreOption
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.coreoptions.LemuroidCoreOption
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelSideEffects
 import com.swordfish.lemuroid.app.shared.input.InputDeviceManager
@@ -313,10 +314,14 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     private fun performUnexpectedErrorFinish(exception: Throwable) {
-        Timber.e(exception, "Handling java exception in BaseGameActivity")
+        // The game process communicates with the main UI. Never put
+        // exception.message into an Intent: ROM paths and credentials can
+        // appear in third-party core and Android error messages.
+        Timber.w("Unexpected emulator failure: %s", exception.javaClass.simpleName)
+        val failure = OpenNesFailureCategory.classify(exception)
         val resultIntent =
             Intent().apply {
-                putExtra(PLAY_GAME_RESULT_ERROR, exception.message)
+                putExtra(PLAY_GAME_RESULT_ERROR_CATEGORY, failure.name)
             }
 
         setResult(RESULT_UNEXPECTED_ERROR, resultIntent)
@@ -324,10 +329,11 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     private fun performErrorFinish(message: String) {
-        val resultIntent =
-            Intent().apply {
-                putExtra(PLAY_GAME_RESULT_ERROR, message)
-            }
+        // Expected game-load errors may contain private ROM URIs too.
+        Timber.w("Game loading failed (details withheld from UI)")
+        val resultIntent = Intent().apply {
+            putExtra(PLAY_GAME_RESULT_ERROR_CATEGORY, OpenNesFailureCategory.UNEXPECTED.name)
+        }
 
         setResult(RESULT_ERROR, resultIntent)
         finishAndExitProcess()
@@ -397,7 +403,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     ) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == DIALOG_REQUEST) {
-            Timber.i("Game menu dialog response: ${data?.extras.dump()}")
+            Timber.d("Game menu dialog response received")
             if (data?.getBooleanExtra(GameMenuContract.RESULT_RESET, false) == true) {
                 lifecycleScope.launch {
                     baseGameScreenViewModel.reset()
@@ -466,6 +472,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         const val PLAY_GAME_RESULT_GAME = "PLAY_GAME_RESULT_GAME"
         const val PLAY_GAME_RESULT_LEANBACK = "PLAY_GAME_RESULT_LEANBACK"
         const val PLAY_GAME_RESULT_ERROR = "PLAY_GAME_RESULT_ERROR"
+        const val PLAY_GAME_RESULT_ERROR_CATEGORY = "PLAY_GAME_RESULT_ERROR_CATEGORY"
 
         const val RESULT_ERROR = Activity.RESULT_FIRST_USER + 2
         const val RESULT_UNEXPECTED_ERROR = Activity.RESULT_FIRST_USER + 3

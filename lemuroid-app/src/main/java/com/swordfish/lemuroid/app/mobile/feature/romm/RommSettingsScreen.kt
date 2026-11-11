@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
@@ -113,7 +114,18 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    status = e.message?.take(240) ?: "RomM request failed"
+                    // Network/SAF exceptions may embed full server URLs,
+                    // bearer tokens or private paths in their messages.
+                    status =
+                        context.getString(
+                            when (OpenNesFailureCategory.classify(e)) {
+                                OpenNesFailureCategory.ACCESS -> R.string.opennes_support_error_access
+                                OpenNesFailureCategory.IO -> R.string.opennes_support_error_io
+                                OpenNesFailureCategory.INVALID_INPUT ->
+                                    R.string.opennes_support_error_input
+                                OpenNesFailureCategory.UNEXPECTED -> R.string.opennes_support_error_generic
+                            },
+                        )
                 } finally {
                     busy = false
                     operation = ""
