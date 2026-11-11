@@ -85,12 +85,12 @@ class RommApiClient {
             .followSslRedirects(false)
             .build()
 
-    // Large explicit ROM imports may legitimately exceed the API's 60-second
-    // total call timeout. Still enforce connection/read stall timeouts and
-    // MAX_ROM_BYTES, and allow coroutine cancellation during the copy loop.
+    // Explicit ROM imports can exceed the metadata API's 60-second timeout,
+    // but a 15-minute absolute cap plus read-stall and size limits avoids an
+    // indefinitely draining transfer on a hostile or extremely slow server.
     private val importHttp =
         http.newBuilder()
-            .callTimeout(0, TimeUnit.MILLISECONDS)
+            .callTimeout(15, TimeUnit.MINUTES)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
