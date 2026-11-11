@@ -35,6 +35,7 @@ import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
+import com.swordfish.lemuroid.app.shared.romm.RommPendingReviewSummary
 import com.swordfish.lemuroid.app.shared.romm.RommPendingSyncJournal
 import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncPlanner
 import com.swordfish.lemuroid.app.shared.romm.RommServerIdentity
@@ -91,6 +92,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     }
     var pendingIntentDeletion by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
     var pendingIntentReview by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
+    var pendingIntentDetails by remember { mutableStateOf<RommPendingSyncJournal.Pending?>(null) }
     var localReviews by remember {
         mutableStateOf<Map<String, RommPendingSyncJournal.LocalReview>>(emptyMap())
     }
@@ -626,6 +628,9 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                     Text(stringResource(label))
                                 }
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    TextButton(
+                                        onClick = { pendingIntentDetails = pending },
+                                    ) { Text(stringResource(R.string.opennes_romm_pending_details)) }
                                     if (currentServer != null && pending.serverFingerprint == currentServer) {
                                         TextButton(
                                             enabled = !busy,
@@ -710,6 +715,58 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             dismissButton = {
                 TextButton(onClick = { pendingArchiveDeletion = null }) {
                     Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+    pendingIntentDetails?.let { selected ->
+        val summary =
+            RommPendingReviewSummary.summarize(
+                selected,
+                RommServerIdentity.fingerprint(store.configuredServer()),
+                localReviews[selected.id],
+            )
+        AlertDialog(
+            onDismissRequest = { pendingIntentDetails = null },
+            title = { Text(stringResource(R.string.opennes_romm_pending_details)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val message =
+                        when (summary.status) {
+                            RommPendingReviewSummary.Status.SERVER_MISMATCH ->
+                                R.string.opennes_romm_pending_other_server
+                            RommPendingReviewSummary.Status.JOURNAL_UNAVAILABLE ->
+                                R.string.opennes_romm_pending_corrupt
+                            RommPendingReviewSummary.Status.REQUEST_CHANGED ->
+                                R.string.opennes_romm_pending_request_stale
+                            RommPendingReviewSummary.Status.LOCAL_CHANGED ->
+                                R.string.opennes_romm_pending_local_changed
+                            RommPendingReviewSummary.Status.RECORDED_MATCH ->
+                                R.string.opennes_romm_pending_recorded_equal
+                            RommPendingReviewSummary.Status.RECORDED_DIFFERENCE ->
+                                R.string.opennes_romm_pending_recorded_different
+                        }
+                    Text(stringResource(message))
+                    Text(
+                        stringResource(
+                            R.string.opennes_romm_pending_local_snapshot,
+                            summary.localBytes,
+                            summary.localHash,
+                        ),
+                    )
+                    Text(
+                        stringResource(
+                            R.string.opennes_romm_pending_remote_snapshot,
+                            summary.archivedBytes,
+                            summary.archivedHash,
+                        ),
+                    )
+                    Text(stringResource(R.string.opennes_romm_pending_account_warning))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { pendingIntentDetails = null }) {
+                    Text(stringResource(R.string.ok))
                 }
             },
         )

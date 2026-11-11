@@ -31,7 +31,7 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
                 val category =
                     data?.getStringExtra(BaseGameActivity.PLAY_GAME_RESULT_ERROR_CATEGORY)
                         ?.let { raw ->
-                            OpenNesFailureCategory.entries.firstOrNull { it.name == raw }
+                            OpenNesFailureCategory.values().firstOrNull { it.name == raw }
                         } ?: OpenNesFailureCategory.UNEXPECTED
                 val message =
                     when (category) {
