@@ -85,7 +85,7 @@ fun OpenNesTopAppBar(
     onUpdateQueryString: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val topBarColor = Color(0xFF111317)
+    val topBarColor = MaterialTheme.colorScheme.background
 
     TopAppBar(
         // Include landscape display cutouts in the header's safe touch area.
@@ -97,7 +97,7 @@ fun OpenNesTopAppBar(
                     onUpdateQueryString = onUpdateQueryString,
                 )
             } else {
-                Text(text = stringResource(route.titleId), color = Color(0xFFF2EDE6))
+                Text(text = stringResource(route.titleId), color = MaterialTheme.colorScheme.onBackground)
             }
         },
         colors =
@@ -115,7 +115,7 @@ fun OpenNesTopAppBar(
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         stringResource(id = R.string.back),
-                        tint = Color(0xFFF2EDE6),
+                        tint = MaterialTheme.colorScheme.onBackground,
                     )
                 }
             }
@@ -188,7 +188,7 @@ private fun OpenNesSearchView(
                     .fillMaxSize()
                     .padding(top = 8.dp, bottom = 8.dp, end = 8.dp),
             shape = RoundedCornerShape(20.dp),
-            color = Color(0xFF272B33),
+            color = MaterialTheme.colorScheme.surfaceVariant,
         ) { }
 
         TextField(
@@ -198,8 +198,8 @@ private fun OpenNesSearchView(
                     .fillMaxSize()
                     .focusRequester(focusRequester)
                     .semantics { contentDescription = searchLabel },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFFF2EDE6)),
-            placeholder = { Text(searchLabel, color = Color(0xFFB2B2B4)) },
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+            placeholder = { Text(searchLabel, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFB2B2B4))
             },
@@ -214,7 +214,7 @@ private fun OpenNesSearchView(
                 TextFieldDefaults.colors(
                     focusedTextColor = Color(0xFFF2EDE6),
                     unfocusedTextColor = Color(0xFFF2EDE6),
-                    cursorColor = Color(0xFFB73439),
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,

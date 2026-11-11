@@ -37,6 +37,7 @@ import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.game.GameActivity
 import com.swordfish.lemuroid.app.mobile.feature.game.GameService
+import com.swordfish.lemuroid.app.mobile.feature.game.NesControllerOnboardingStore
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeScreen
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeViewModel
 import com.swordfish.lemuroid.app.mobile.feature.romm.RommSettingsScreen
@@ -129,6 +130,11 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
     @Composable
     private fun MainScreen(navController: NavHostController) {
         AppTheme {
+            val firstRunStore = remember { OpenNesFirstRunStore(applicationContext) }
+            val firstRoute =
+                remember {
+                    if (firstRunStore.shouldShow()) MainRoute.ONBOARDING.route else MainRoute.HOME.route
+                }
             val navBackStackEntry = navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry.value?.destination
             val currentRoute =
@@ -267,7 +273,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 // as well as system bars when edge-to-edge is enforced.
                 contentWindowInsets = WindowInsets.safeDrawing,
                 topBar = {
-                    if (currentRoute != MainRoute.HOME) {
+                    if (currentRoute != MainRoute.HOME && currentRoute != MainRoute.ONBOARDING) {
                         MainTopBar(
                             currentRoute = currentRoute,
                             navController = navController,
@@ -281,8 +287,21 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
                     navController = navController,
-                    startDestination = MainRoute.HOME.route,
+                    startDestination = firstRoute,
                 ) {
+                    composable(MainRoute.ONBOARDING) {
+                        OpenNesFirstRunGuide(
+                            modifier = Modifier.padding(padding),
+                            onOpenSettings = { navController.navigateToRoute(it) },
+                            onFinish = {
+                                firstRunStore.complete()
+                                NesControllerOnboardingStore(applicationContext).complete()
+                                navController.navigate(MainRoute.HOME.route) {
+                                    popUpTo(MainRoute.ONBOARDING.route) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
                     composable(MainRoute.HOME) {
                         HomeScreen(
                             modifier = Modifier.padding(padding),

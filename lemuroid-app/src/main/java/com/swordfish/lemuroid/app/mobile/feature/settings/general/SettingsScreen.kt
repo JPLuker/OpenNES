@@ -12,6 +12,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.NavController
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
+import com.swordfish.lemuroid.app.mobile.feature.main.OpenNesFirstRunStore
 import com.swordfish.lemuroid.app.mobile.feature.main.navigateToRoute
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
@@ -47,6 +48,16 @@ fun SettingsScreen(
             .value
 
     OpenNesSettingsPage(modifier = modifier) {
+        OpenNesSettingsGroup(title = { Text("Getting started") }) {
+            OpenNesSettingsLink(
+                title = { Text("Run setup wizard again") },
+                subtitle = { Text("Controller layout, theme, ROM folder, achievements and RomM") },
+                onClick = {
+                    OpenNesFirstRunStore(navController.context.applicationContext).requestAgain()
+                    navController.navigateToRoute(MainRoute.ONBOARDING)
+                },
+            )
+        }
         RomsSettings(
             state = state,
             onChangeFolder = { viewModel.changeLocalStorageFolder() },

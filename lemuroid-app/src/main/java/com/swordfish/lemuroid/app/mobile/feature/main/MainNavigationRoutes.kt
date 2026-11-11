@@ -27,6 +27,10 @@ enum class MainRoute(
     val parent: MainRoute? = null,
     val arguments: List<NamedNavArgument> = emptyList(),
 ) {
+    ONBOARDING(
+        route = "onboarding",
+        titleId = R.string.opennes_setup_title,
+    ),
     HOME(
         route = "home",
         titleId = R.string.title_home,
