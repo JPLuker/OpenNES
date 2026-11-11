@@ -40,6 +40,17 @@ class RommCatalogueCodecTest {
     }
 
     @Test
+    fun remoteGenreMetadataSurvivesOfflineRestart() {
+        val withGenres = rom().copy(genres = listOf("Platform", "Action"))
+        val payload =
+            RommCatalogueCodec.encode(listOf(withGenres), source, revision, 1_000_000L)!!
+        val recovered = RommCatalogueCodec.decode(payload, source, revision, 2_000_000L)!!
+        assertEquals(listOf("Platform", "Action"), recovered.games.single().genres)
+        val invalid = rom().copy(genres = listOf("x".repeat(100)))
+        assertNull(RommCatalogueCodec.encode(listOf(invalid), source, revision, 1_000_000L))
+    }
+
+    @Test
     fun wrongAccountOrServerCannotReadAnotherAccountCatalogue() {
         val bytes = RommCatalogueCodec.encode(listOf(rom()), source, revision, 1_000_000L)!!
         assertNull(RommCatalogueCodec.decode(bytes, source, "another-account", 2_000_000L))
