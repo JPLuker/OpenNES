@@ -69,6 +69,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.NesColorWheelDialog
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameStateStore
 import com.swordfish.lemuroid.app.shared.game.BaseGameScreenViewModel
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelTouchControls.Companion.MENU_LOADING_ANIMATION_MILLIS
 import com.swordfish.lemuroid.app.shared.settings.HapticFeedbackMode
@@ -108,6 +109,14 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         val appearanceStore = remember(appContext) { NesControllerAppearanceStore(appContext) }
         val onboardingVisible = remember { mutableStateOf(false) }
         val pendingLayoutEditor = remember { mutableStateOf(false) }
+        val nativeUnlock = RetroAchievementsGameStateStore.snapshots.collectAsState().value.notice
+
+        LaunchedEffect(nativeUnlock?.sequence) {
+            nativeUnlock?.let { notice ->
+                delay(4_500L)
+                RetroAchievementsGameStateStore.dismissUnlock(notice.sequence)
+            }
+        }
 
         LaunchedEffect(isLandscape) {
             val orientation =
@@ -458,6 +467,17 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
             ) {
                 CircularProgressIndicator()
             }
+        }
+
+        if (nativeUnlock != null && !isLoading && !onboardingVisible.value) {
+            RetroAchievementUnlockBanner(
+                title = nativeUnlock.title,
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+            )
         }
     }
 }

@@ -1,8 +1,6 @@
 package com.swordfish.lemuroid.app.shared.achievements
 
 import android.content.Context
-import android.widget.Toast
-import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -213,16 +211,15 @@ internal class RetroAchievementsGameSessionRunner(
                         }
                         is NativeGameEvent.Unlock -> {
                             if (connection.observe(event)) {
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.opennes_ra_live_unlock_toast, event.title),
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                }
+                                RetroAchievementsGameStateStore.notifyUnlock(
+                                    ticket = ticket,
+                                    romMd5 = md5,
+                                    achievementId = event.id,
+                                    title = event.title,
+                                )
                             }
-                            // Refresh actual native state after a frame event;
-                            // never synthesize an unlock from an event string.
+                            // Refresh native state rather than inferring award
+                            // persistence from a UI event.
                             lastRefresh = 0L
                         }
                         null -> Unit
