@@ -72,7 +72,7 @@ internal object RommLibraryCatalog {
             title = rom.name,
             systemId = "nes",
             developer = null,
-            coverFrontUrl = null,
+            coverFrontUrl = rom.coverUrl,
             lastIndexedAt = 0,
             description = rom.description,
         )
