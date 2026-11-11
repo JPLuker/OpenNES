@@ -47,12 +47,18 @@ import kotlin.math.roundToInt
  * no keys, values, controller mappings or other emulator behavior are changed.
  */
 object OpenNesSettingsColors {
-    val background = Color(0xFF111317)
-    val panel = Color(0xFF1C2027)
-    val border = Color(0xFF414650)
-    val foreground = Color(0xFFF2EDE6)
-    val muted = Color(0xFFB2B2B4)
-    val red = Color(0xFFB73439)
+    val background: Color
+        @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current.background
+    val panel: Color
+        @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current.panel
+    val border: Color
+        @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current.border
+    val foreground: Color
+        @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current.foreground
+    val muted: Color
+        @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current.muted
+    val red: Color
+        @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current.red
 }
 
 @Composable

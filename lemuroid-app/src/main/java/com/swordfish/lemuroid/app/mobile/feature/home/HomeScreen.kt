@@ -122,15 +122,8 @@ import kotlinx.coroutines.launch
 /** Original OpenNES home palette. The rest of the application will adopt these in M2. */
 private const val NES_BOX_ART_ASPECT_RATIO = 5f / 7.125f
 
-private object LibraryColors {
-    val background = Color(0xFF111317)
-    val panel = Color(0xFF1C2027)
-    val surface = Color(0xFF272B33)
-    val border = Color(0xFF414650)
-    val foreground = Color(0xFFF2EDE6)
-    val muted = Color(0xFFB2B2B4)
-    val red = Color(0xFFB73439)
-}
+private val LibraryColors: com.swordfish.lemuroid.app.mobile.shared.compose.ui.OpenNesAppPalette
+    @Composable get() = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current
 
 @Composable
 fun HomeScreen(

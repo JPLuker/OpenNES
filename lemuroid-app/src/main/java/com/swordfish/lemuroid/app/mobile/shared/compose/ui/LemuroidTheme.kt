@@ -80,16 +80,33 @@ fun AppTheme(
     darkTheme: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    // darkTheme is retained for existing callers. OpenNES uses its own
+    // user-selected controller colors rather than Android dynamic colors.
+    val appearance = com.swordfish.touchinput.radial.rememberNesControllerAppearance()
+    val themed = openNesAppPalette(appearance.palette)
     val colors =
-        when {
-            dynamicColor && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
-            dynamicColor && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
-            darkTheme -> DarkColorScheme
-            else -> LightColorScheme
+        darkColorScheme(
+            primary = themed.red,
+            onPrimary = themed.onAccent,
+            primaryContainer = themed.surface,
+            onPrimaryContainer = themed.foreground,
+            secondary = appearance.palette.accent,
+            onSecondary = themed.foreground,
+            background = themed.background,
+            onBackground = themed.foreground,
+            surface = themed.panel,
+            onSurface = themed.foreground,
+            surfaceVariant = themed.surface,
+            onSurfaceVariant = themed.muted,
+            outline = themed.border,
+            outlineVariant = themed.border,
+        )
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalOpenNesAppColors provides themed,
+        com.swordfish.touchinput.radial.LocalNesControllerPalette provides appearance.palette,
+    ) {
+        MaterialTheme(colorScheme = colors) {
+            content()
         }
-
-    MaterialTheme(colorScheme = colors) {
-        content()
     }
 }
