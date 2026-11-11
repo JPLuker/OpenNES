@@ -19,10 +19,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -50,8 +50,8 @@ import com.swordfish.lemuroid.app.shared.cheats.NesCheatCodes
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatDefinition
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatExchange
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatRepository
-import com.swordfish.lemuroid.app.shared.cheats.NesLibretroCheatFinder
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
+import com.swordfish.lemuroid.app.shared.cheats.NesLibretroCheatFinder
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -322,7 +322,8 @@ internal fun GameMenuCheatsScreen(game: Game) {
                                 finderMessage =
                                     when {
                                         result.isFailure -> "Could not reach the cheat database. Check the connection."
-                                        finderResults.isEmpty() -> "No compatible NES cheats found. Try a different title."
+                                        finderResults.isEmpty() ->
+                                            "No compatible NES cheats found. Try a different title."
                                         else -> "${finderResults.size} compatible cheats found."
                                     }
                             }
@@ -339,8 +340,11 @@ internal fun GameMenuCheatsScreen(game: Game) {
                                 checked = candidate.code in finderSelected,
                                 onCheckedChange = { checked ->
                                     finderSelected =
-                                        if (checked) finderSelected + candidate.code
-                                        else finderSelected - candidate.code
+                                        if (checked) {
+                                            finderSelected + candidate.code
+                                        } else {
+                                            finderSelected - candidate.code
+                                        }
                                 },
                             )
                             Column(modifier = Modifier.weight(1f)) {

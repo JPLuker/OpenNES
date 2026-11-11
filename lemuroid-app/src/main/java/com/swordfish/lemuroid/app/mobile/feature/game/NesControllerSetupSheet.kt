@@ -142,7 +142,7 @@ internal fun NesControllerSetupSheet(
                             }
                         }
                     }
-                    } else {
+                } else {
                     Text(stringResource(R.string.opennes_setup_explanation))
                     Text(stringResource(R.string.opennes_setup_preview))
                     ControllerAppearancePreview(currentPalette)
