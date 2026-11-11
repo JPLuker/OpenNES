@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -26,8 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.swordfish.lemuroid.R
@@ -979,8 +983,23 @@ private fun RommGameRow(
 
 @Composable
 private fun RommGameName(game: RommApiClient.Rom) {
-    Text(game.name)
-    Text(game.fileName)
+    Text(game.name, fontWeight = FontWeight.SemiBold)
+    game.description?.takeIf { it.isNotBlank() }?.let { summary ->
+        Text(
+            summary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 13.sp,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    Text(
+        game.fileName,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontSize = 12.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 @Composable
@@ -998,7 +1017,7 @@ private fun RommGameActions(
             Text(stringResource(R.string.opennes_romm_view_saves))
         }
         TextButton(enabled = !busy && importAvailable, onClick = onImport) {
-            Text(stringResource(R.string.opennes_romm_import))
+            Text(stringResource(R.string.opennes_romm_download))
         }
     }
 }
