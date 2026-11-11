@@ -39,6 +39,7 @@ class RommApiClient {
         val sizeBytes: Long,
         val md5: String?,
         val description: String? = null,
+        val coverUrl: String? = null,
     )
 
     enum class ImportStage {
@@ -186,6 +187,7 @@ class RommApiClient {
                                 .trim()
                                 .takeIf { it.isNotBlank() && it != "null" }
                                 ?.take(8_000),
+                        coverUrl = RommCoverUrl.trusted(row.optString("url_cover")),
                         md5 =
                             row.optString("md5_hash")
                                 .lowercase(Locale.ROOT)
