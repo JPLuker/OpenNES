@@ -13,6 +13,8 @@ import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
+import com.swordfish.lemuroid.app.shared.romm.RommApiClient
+import com.swordfish.lemuroid.app.shared.romm.RommLibraryCatalog
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.lib.library.SystemID
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,6 +79,18 @@ class HomeViewModel(
 
     private val notificationsPermissionEnabledState = MutableStateFlow(true)
     private val uiStates = MutableStateFlow(UIState())
+    private val context = appContext.applicationContext
+    val indexedNesFileNames: Flow<Set<String>> =
+        retrogradeDb.gameDao().observeNesFileNames().map { it.toSet() }
+
+    fun refreshRomMLibrary() {
+        viewModelScope.launch { RommLibraryCatalog.refresh(context) }
+    }
+
+    fun downloadFromRomM(rom: RommApiClient.Rom) {
+        viewModelScope.launch { RommLibraryCatalog.download(context, rom) }
+    }
+
     private val coverPrefetcher = NesCoverPrefetcher(appContext.applicationContext)
     private val wikidataSource = WikidataNesMetadataSource()
 
