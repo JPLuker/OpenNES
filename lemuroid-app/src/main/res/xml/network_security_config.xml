@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Apparently a lot of covers in ovgdb are using cleartext http. This is something that we should fix -->
+    <!-- Android cannot whitelist a whole RFC1918 range in Network Security Config.
+         The RomM API client strictly restricts HTTP to literal private IPv4
+         destinations and requires an explicit cleartext-consent dialog.
+         Keep all non-local RomM destinations HTTPS only. -->
+    <base-config cleartextTrafficPermitted="true" />
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">thumbnails.libretro.com</domain>
     </domain-config>
