@@ -305,12 +305,13 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     val connectManually: () -> Unit = {
         perform("Connecting") {
             val candidate = RommConnection(serverUrl.trim(), tokenInput.trim())
-            val user = client.checkAccount(candidate)
+            val user = client.checkAccountProfile(candidate)
             withContext(Dispatchers.IO) {
                 store.save(candidate.serverUrl, candidate.token)
+                store.pinVerifiedAccount(candidate, user)
             }
             configured = true
-            signedInAs = user
+            signedInAs = user.username
             page = null
             remoteSaves = null
             selectedSaveGame = null
@@ -436,7 +437,11 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                         withContext(Dispatchers.IO) {
                                             store.load() ?: error("Reconnect to RomM")
                                         }
-                                    signedInAs = client.checkAccount(connection)
+                                    val profile = client.checkAccountProfile(connection)
+                                    withContext(Dispatchers.IO) {
+                                        store.pinVerifiedAccount(connection, profile)
+                                    }
+                                    signedInAs = profile.username
                                     status = "Connection verified"
                                 }
                             },
@@ -849,12 +854,13 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                         perform("Pairing with RomM") {
                             val connection =
                                 client.exchangePairingCode(selected.serverUrl, selected.code)
-                            val user = client.checkAccount(connection)
+                            val user = client.checkAccountProfile(connection)
                             withContext(Dispatchers.IO) {
                                 store.save(connection.serverUrl, connection.token)
+                                store.pinVerifiedAccount(connection, user)
                             }
                             configured = true
-                            signedInAs = user
+                            signedInAs = user.username
                             page = null
                             remoteSaves = null
                             selectedSaveGame = null

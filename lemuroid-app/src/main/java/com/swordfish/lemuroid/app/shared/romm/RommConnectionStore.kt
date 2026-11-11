@@ -8,6 +8,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
+import java.security.MessageDigest
 import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -67,6 +68,9 @@ class RommConnectionStore(context: Context) {
             prefs.edit()
                 .putString(SERVER_KEY, url)
                 .putString(CREDENTIAL_REVISION_KEY, UUID.randomUUID().toString())
+                .remove(VERIFIED_ACCOUNT_ID_KEY)
+                .remove(VERIFIED_ACCOUNT_SERVER_KEY)
+                .remove(VERIFIED_ACCOUNT_REVISION_KEY)
                 .apply()
             // A token rotation invalidates metadata from the previous account.
             RommCatalogueCache(app).clear()
@@ -106,10 +110,68 @@ class RommConnectionStore(context: Context) {
         }
     }
 
+    /**
+     * A live /api/users/me response pins a read-only account ID to the
+     * current encrypted credential revision. It is NOT authorization for
+     * offline sync or future remote writes.
+     */
+    @Synchronized
+    fun pinVerifiedAccount(
+        connection: RommConnection,
+        profile: RommAccountIdentity.Profile,
+    ): Boolean {
+        val id = profile.userId ?: return false
+        val current = load() ?: return false
+        val fingerprint = RommServerIdentity.fingerprint(current.serverUrl) ?: return false
+        if (current.serverUrl != RommApiClient.validatedServerUrl(connection.serverUrl) ||
+            !MessageDigest.isEqual(
+                current.token.toByteArray(Charsets.UTF_8),
+                connection.token.toByteArray(Charsets.UTF_8),
+            )
+        ) {
+            return false
+        }
+        val revision = credentialRevision() ?: return false
+        prefs.edit()
+            .putLong(VERIFIED_ACCOUNT_ID_KEY, id)
+            .putString(VERIFIED_ACCOUNT_SERVER_KEY, fingerprint)
+            .putString(VERIFIED_ACCOUNT_REVISION_KEY, revision)
+            .apply()
+        return true
+    }
+
+    /** Offline display/provenance only. Re-verify online before any future sync. */
+    @Synchronized
+    fun lastVerifiedUserId(): Long? {
+        val userId = prefs.getLong(VERIFIED_ACCOUNT_ID_KEY, 0L).takeIf { it > 0L }
+        val serverFingerprint = RommServerIdentity.fingerprint(configuredServer())
+        val revision = credentialRevision()
+        return if (
+            RommAccountIdentity.matchesPin(
+                serverFingerprint = serverFingerprint,
+                credentialRevision = revision,
+                userId = userId,
+                pinnedServerFingerprint = prefs.getString(VERIFIED_ACCOUNT_SERVER_KEY, null),
+                pinnedCredentialRevision = prefs.getString(VERIFIED_ACCOUNT_REVISION_KEY, null),
+                pinnedUserId = userId,
+            )
+        ) {
+            userId
+        } else {
+            null
+        }
+    }
+
     @Synchronized
     fun disconnect() {
         secretFile.delete()
-        prefs.edit().remove(SERVER_KEY).remove(CREDENTIAL_REVISION_KEY).apply()
+        prefs.edit()
+            .remove(SERVER_KEY)
+            .remove(CREDENTIAL_REVISION_KEY)
+            .remove(VERIFIED_ACCOUNT_ID_KEY)
+            .remove(VERIFIED_ACCOUNT_SERVER_KEY)
+            .remove(VERIFIED_ACCOUNT_REVISION_KEY)
+            .apply()
         RommCatalogueCache(app).clear()
         RommLibraryCatalog.invalidateSession()
     }
@@ -136,6 +198,9 @@ class RommConnectionStore(context: Context) {
     companion object {
         private const val SERVER_KEY = "server_url"
         private const val CREDENTIAL_REVISION_KEY = "credential_revision"
+        private const val VERIFIED_ACCOUNT_ID_KEY = "verified_user_id"
+        private const val VERIFIED_ACCOUNT_SERVER_KEY = "verified_user_server"
+        private const val VERIFIED_ACCOUNT_REVISION_KEY = "verified_user_revision"
         private const val KEY_ALIAS = "opennes_romm_client_token_v1"
         private const val FORMAT_VERSION = 1
     }

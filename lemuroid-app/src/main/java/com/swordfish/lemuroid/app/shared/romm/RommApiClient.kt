@@ -130,12 +130,12 @@ class RommApiClient {
             }
         }
 
-    suspend fun checkAccount(connection: RommConnection): String =
+    suspend fun checkAccountProfile(connection: RommConnection): RommAccountIdentity.Profile =
         withContext(Dispatchers.IO) {
-            val data = getJson(connection, listOf("api", "users", "me"))
-            data.optString("username").takeIf { it.isNotBlank() }
-                ?: throw IOException("RomM did not return a signed-in user")
+            RommAccountIdentity.parseProfile(getJson(connection, listOf("api", "users", "me")))
         }
+
+    suspend fun checkAccount(connection: RommConnection): String = checkAccountProfile(connection).username
 
     // An API adapter is scoped to one active connection during a catalogue
     // refresh. Avoid re-requesting /api/platforms for every page.
