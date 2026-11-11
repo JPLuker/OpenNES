@@ -520,7 +520,7 @@ class RommApiClient {
             if (!folder.isDirectory || !folder.canWrite()) {
                 throw IOException("The selected NES ROM folder is not writable")
             }
-            if (folder.findFile(rom.fileName) != null) {
+            if (romFileExists(folder, rom.fileName)) {
                 throw IOException("A local ROM with this filename already exists; nothing was overwritten")
             }
 
@@ -531,13 +531,19 @@ class RommApiClient {
                 onProgress(ImportProgress(ImportStage.VERIFYING))
                 RommDownloadVerification.checkImportedRom(temporary, rom.fileName)
                 coroutineContext.ensureActive()
-                if (folder.findFile(rom.fileName) != null) {
+                if (romFileExists(folder, rom.fileName)) {
                     throw IOException("The local ROM appeared during download; import cancelled")
                 }
                 onProgress(ImportProgress(ImportStage.IMPORTING))
                 val newFile =
                     folder.createFile("application/octet-stream", rom.fileName)
                         ?: throw IOException("Could not create a file in the selected NES folder")
+                if (newFile.name != rom.fileName) {
+                    // Some providers append a MIME extension. Do not leave an
+                    // unindexable or wrongly named ROM and claim success.
+                    newFile.delete()
+                    throw IOException("Selected document provider renamed the imported ROM")
+                }
                 try {
                     val stream =
                         context.contentResolver.openOutputStream(newFile.uri, "w")
@@ -559,13 +565,25 @@ class RommApiClient {
                     newFile.delete()
                     throw e
                 }
-                LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext)
+                // The ROM has already been durably written at this point.
+                // If WorkManager cannot enqueue, leave it untouched and let
+                // the details screen offer Retry library scan after a delay.
+                runCatching {
+                    LibraryIndexScheduler.scheduleLibrarySync(context.applicationContext)
+                }
                 onProgress(ImportProgress(ImportStage.INDEXING))
                 newFile.uri
             } finally {
                 temporary.delete()
             }
         }
+
+    private fun romFileExists(
+        folder: DocumentFile,
+        fileName: String,
+    ): Boolean =
+        folder.findFile(fileName) != null ||
+            folder.listFiles().any { it.name.equals(fileName, ignoreCase = true) }
 
     private fun findNesPlatformIds(connection: RommConnection): Set<Int> {
         // RomM's GET /api/platforms returns a bare JSON array, unlike
