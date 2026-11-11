@@ -70,6 +70,7 @@ internal object RommLibraryCatalog {
             developer = null,
             coverFrontUrl = null,
             lastIndexedAt = 0,
+            description = rom.description,
         )
 
     fun remoteFor(
