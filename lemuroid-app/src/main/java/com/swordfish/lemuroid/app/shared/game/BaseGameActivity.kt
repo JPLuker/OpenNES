@@ -90,12 +90,13 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     // Track foreground play only. Paused games and the system's background time
     // must not inflate the playtime shown on the OpenNES library shelves.
-    private var foregroundStartMillis: Long? = null
-    private var accumulatedPlayMillis = 0L
+    private var foregroundPlaySession = ForegroundPlaySession()
     private var finishTriggered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        foregroundPlaySession =
+            ForegroundPlaySession(savedInstanceState?.getLong(STATE_SESSION_DURATION_MILLIS) ?: 0L)
         // A stale Resume intent must not start a duplicate emulator without
         // game/core initialization extras.
         if (!intent.hasExtra(EXTRA_GAME) || !intent.hasExtra(EXTRA_SYSTEM_CORE_CONFIG)) {
@@ -374,28 +375,24 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (foregroundStartMillis == null) {
-            foregroundStartMillis = SystemClock.elapsedRealtime()
-        }
+        foregroundPlaySession.resume(SystemClock.elapsedRealtime())
     }
 
     override fun onPause() {
-        finishForegroundSession()
+        foregroundPlaySession.pause(SystemClock.elapsedRealtime())
         super.onPause()
     }
 
-    private fun finishForegroundSession() {
-        val startMillis = foregroundStartMillis ?: return
-        accumulatedPlayMillis += (SystemClock.elapsedRealtime() - startMillis).coerceAtLeast(0L)
-        foregroundStartMillis = null
+    override fun onSaveInstanceState(outState: Bundle) {
+        // A rotation replaces the Activity, not the NES session. Carry the
+        // accumulated foreground time across recreation without counting
+        // the time spent behind menus or in the Android background.
+        outState.putLong(STATE_SESSION_DURATION_MILLIS, currentPlayDuration())
+        super.onSaveInstanceState(outState)
     }
 
-    private fun currentPlayDuration(): Long {
-        val activeDuration =
-            foregroundStartMillis?.let { (SystemClock.elapsedRealtime() - it).coerceAtLeast(0L) }
-                ?: 0L
-        return accumulatedPlayMillis + activeDuration
-    }
+    private fun currentPlayDuration(): Long =
+        foregroundPlaySession.elapsed(SystemClock.elapsedRealtime())
 
     override fun onStop() {
         // Even a quick-resumed or backgrounded emulator must downgrade to
@@ -479,6 +476,8 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     companion object {
+        private const val STATE_SESSION_DURATION_MILLIS = "opennes_session_duration_millis"
+
         const val DIALOG_REQUEST = 100
 
         private const val EXTRA_GAME = "GAME"
