@@ -35,6 +35,7 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
 import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
+import com.swordfish.lemuroid.app.shared.romm.RommCataloguePaging
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
 import com.swordfish.lemuroid.app.shared.romm.RommPairing
@@ -285,6 +286,9 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             }
             configured = true
             signedInAs = user
+            page = null
+            remoteSaves = null
+            selectedSaveGame = null
             serverUrl = store.configuredServer().orEmpty()
             tokenInput = ""
             pairingCodeInput = ""
@@ -465,8 +469,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                 },
                             )
                         }
-                        if (loaded.offset + loaded.limit < loaded.total) {
-                            Button(enabled = !busy, onClick = { browse(loaded.offset + loaded.limit) }) {
+                        val nextOffset =
+                            runCatching { RommCataloguePaging.nextOffset(loaded.offset, loaded) }.getOrNull()
+                        if (nextOffset != null) {
+                            Button(enabled = !busy, onClick = { browse(nextOffset) }) {
                                 Text(stringResource(R.string.opennes_romm_more))
                             }
                         }
@@ -765,6 +771,9 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                             }
                             configured = true
                             signedInAs = user
+                            page = null
+                            remoteSaves = null
+                            selectedSaveGame = null
                             serverUrl = store.configuredServer().orEmpty()
                             tokenInput = ""
                             pairingCodeInput = ""
