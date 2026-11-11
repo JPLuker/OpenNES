@@ -34,6 +34,9 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val size: Float = 1f,
         val offsetX: Float = 0f,
         val offsetY: Float = 0f,
+        // Absolute drag displacement in dp, separate from legacy fine-tune.
+        val dragX: Float = 0f,
+        val dragY: Float = 0f,
     )
 
     @Serializable
@@ -59,6 +62,11 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val leftOffsetY: Float = 0f,
         val rightOffsetX: Float = 0f,
         val rightOffsetY: Float = 0f,
+        // New independent primary drag offsets preserve all older layouts.
+        val leftDragX: Float = 0f,
+        val leftDragY: Float = 0f,
+        val rightDragX: Float = 0f,
+        val rightDragY: Float = 0f,
         val startButton: ButtonGeometry = ButtonGeometry(),
         val selectButton: ButtonGeometry = ButtonGeometry(),
         val menuButton: ButtonGeometry = ButtonGeometry(),
