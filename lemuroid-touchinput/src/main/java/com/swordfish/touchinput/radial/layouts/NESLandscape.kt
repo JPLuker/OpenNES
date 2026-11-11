@@ -100,6 +100,7 @@ fun PadKitScope.NESLandscapeRight(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val sideWidth = maxWidth
         val sideHeight = maxHeight
+        val report = LocalNesControlBoundsReporter.current
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.rightScale ?: settings.scale)
         val x =
             NesLandscapeDragLimits.horizontalTravelDp(sideWidth.value, dialSize.value).dp *
@@ -158,8 +159,8 @@ fun PadKitScope.NESLandscapeRight(
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
                 above = true,
-                clusterOffsetX = x,
-                clusterOffsetY = y,
+                clusterOffsetX = 0.dp,
+                clusterOffsetY = 0.dp,
             )
             NESLandscapeSecondaryButton(
                 modifier = Modifier.align(Alignment.Center),
@@ -170,8 +171,8 @@ fun PadKitScope.NESLandscapeRight(
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
                 above = false,
-                clusterOffsetX = x,
-                clusterOffsetY = y,
+                clusterOffsetX = 0.dp,
+                clusterOffsetY = 0.dp,
             )
         }
     }
@@ -216,8 +217,8 @@ private fun PadKitScope.NESLandscapeSecondaryButton(
     val offsetY =
         TouchControllerSettingsManager.MAX_BUTTON_OFFSET_Y.dp *
             geometry.offsetY.coerceIn(-1f, 1f) + geometry.dragY.dp
-    // Secondary controls follow their group when it is dragged, but clamp
-    // individually so Start/Select/Menu remain reachable at the grip edges.
+    // Secondary controls move independently from the D-pad/A-B surface.
+    // Clamp their actual touch target inside the safe side-panel grip.
     val safeX = (sideWidth - buttonWidth).coerceAtLeast(0.dp) / 2f - 6.dp
     val safeY = (sideHeight - buttonHeight).coerceAtLeast(0.dp) / 2f - 6.dp
     val positionedX = (clusterOffsetX + offsetX).coerceIn(-safeX.coerceAtLeast(0.dp), safeX.coerceAtLeast(0.dp))
