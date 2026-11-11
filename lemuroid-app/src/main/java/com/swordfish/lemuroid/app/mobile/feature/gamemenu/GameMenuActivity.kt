@@ -200,32 +200,32 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                                 color = GameMenuStyle.foreground,
                                 fontSize = if (currentRoute == GameMenuRoute.ACHIEVEMENTS) 19.sp else 22.sp,
                             )
-                    },
-                    colors =
-                        TopAppBarDefaults.topAppBarColors(
-                            containerColor = GameMenuStyle.background,
-                        ),
-                    windowInsets = WindowInsets(0.dp),
-                    navigationIcon = {
-                        AnimatedContent(targetState = currentRoute.canGoBack(), label = "Back") { canGoBack ->
-                            if (canGoBack) {
-                                IconButton(onClick = { navController.popBackStack() }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        stringResource(R.string.back),
-                                    )
-                                }
-                            } else {
-                                IconButton(onClick = { onResult { } }) {
-                                    Icon(
-                                        Icons.Filled.Close,
-                                        stringResource(R.string.close),
-                                    )
+                        },
+                        colors =
+                            TopAppBarDefaults.topAppBarColors(
+                                containerColor = GameMenuStyle.background,
+                            ),
+                        windowInsets = WindowInsets(0.dp),
+                        navigationIcon = {
+                            AnimatedContent(targetState = currentRoute.canGoBack(), label = "Back") { canGoBack ->
+                                if (canGoBack) {
+                                    IconButton(onClick = { navController.popBackStack() }) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ArrowBack,
+                                            stringResource(R.string.back),
+                                        )
+                                    }
+                                } else {
+                                    IconButton(onClick = { onResult { } }) {
+                                        Icon(
+                                            Icons.Filled.Close,
+                                            stringResource(R.string.close),
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    },
-                )
+                        },
+                    )
                     Divider(modifier = Modifier.fillMaxWidth(), color = GameMenuStyle.border)
                 }
                 NavHost(
