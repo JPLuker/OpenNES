@@ -143,7 +143,11 @@ internal fun NesControllerDragOverlay(
                             Text(stringResource(R.string.opennes_controls_drag_sliders))
                         }
                         TextButton(onClick = { confirmRestore.value = true }, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(com.swordfish.touchinput.controller.R.string.touch_customize_button_reset))
+                            Text(
+                                stringResource(
+                                    TouchInputR.string.touch_customize_button_reset,
+                                ),
+                            )
                         }
                         TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(TouchInputR.string.touch_customize_button_done))
@@ -155,7 +159,11 @@ internal fun NesControllerDragOverlay(
                             Text(stringResource(R.string.opennes_controls_drag_sliders))
                         }
                         TextButton(onClick = { confirmRestore.value = true }) {
-                            Text(stringResource(com.swordfish.touchinput.controller.R.string.touch_customize_button_reset))
+                            Text(
+                                stringResource(
+                                    TouchInputR.string.touch_customize_button_reset,
+                                ),
+                            )
                         }
                         TextButton(onClick = onDone) {
                             Text(stringResource(TouchInputR.string.touch_customize_button_done))

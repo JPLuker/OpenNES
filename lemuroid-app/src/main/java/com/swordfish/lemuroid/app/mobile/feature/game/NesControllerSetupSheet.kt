@@ -142,56 +142,56 @@ internal fun NesControllerSetupSheet(
                             }
                         }
                     }
-                } else {
-                Text(stringResource(R.string.opennes_setup_explanation))
-                Text(stringResource(R.string.opennes_setup_preview))
-                ControllerAppearancePreview(currentPalette)
-                Text(stringResource(R.string.opennes_landscape_style_title))
-                Text(stringResource(R.string.opennes_setup_landscape_hint))
-                NesLandscapeStylePicker(
-                    selected = selectedLandscapeStyle,
-                    palette = currentPalette,
-                    onSelect = onSelectLandscapeStyle,
-                )
+                    } else {
+                    Text(stringResource(R.string.opennes_setup_explanation))
+                    Text(stringResource(R.string.opennes_setup_preview))
+                    ControllerAppearancePreview(currentPalette)
+                    Text(stringResource(R.string.opennes_landscape_style_title))
+                    Text(stringResource(R.string.opennes_setup_landscape_hint))
+                    NesLandscapeStylePicker(
+                        selected = selectedLandscapeStyle,
+                        palette = currentPalette,
+                        onSelect = onSelectLandscapeStyle,
+                    )
 
-                // Each choice immediately updates the shared live controller preview.
-                // Show housing, D-pad and A/B swatches, not just an action-button dot.
-                NesControllerPresets.all.chunked(2).forEach { pair ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        pair.forEach { preset ->
-                            val selected = preset.id == currentPresetId
-                            OutlinedButton(
-                                onClick = { onChoosePreset(preset.id) },
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    // Each choice immediately updates the shared live controller preview.
+                    // Show housing, D-pad and A/B swatches, not just an action-button dot.
+                    NesControllerPresets.all.chunked(2).forEach { pair ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            pair.forEach { preset ->
+                                val selected = preset.id == currentPresetId
+                                OutlinedButton(
+                                    onClick = { onChoosePreset(preset.id) },
+                                    modifier = Modifier.weight(1f),
                                 ) {
-                                    listOf(
-                                        preset.palette.panel,
-                                        preset.palette.dpad,
-                                        preset.palette.action,
-                                    ).forEach { swatch ->
-                                        Box(
-                                            modifier =
-                                                Modifier
-                                                    .size(12.dp)
-                                                    .background(swatch, CircleShape),
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    ) {
+                                        listOf(
+                                            preset.palette.panel,
+                                            preset.palette.dpad,
+                                            preset.palette.action,
+                                        ).forEach { swatch ->
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .size(12.dp)
+                                                        .background(swatch, CircleShape),
+                                            )
+                                        }
+                                        Text(
+                                            text = if (selected) "✓ " + preset.title else preset.title,
+                                            maxLines = 2,
                                         )
                                     }
-                                    Text(
-                                        text = if (selected) "✓ " + preset.title else preset.title,
-                                        maxLines = 2,
-                                    )
                                 }
                             }
                         }
                     }
-                }
                 }
             }
             HorizontalDivider()
