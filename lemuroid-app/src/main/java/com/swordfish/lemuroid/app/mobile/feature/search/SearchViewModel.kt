@@ -38,6 +38,8 @@ class SearchViewModel(
         }
     }
 
+    val installedNesGames = retrogradeDb.gameDao().observeAllNesGames()
+
     val indexedNesFileNames: Flow<Set<String>> =
         retrogradeDb.gameDao().observeNesFileNames().map { it.toSet() }
 
