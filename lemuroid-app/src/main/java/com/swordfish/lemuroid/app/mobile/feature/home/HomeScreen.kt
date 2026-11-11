@@ -101,9 +101,11 @@ import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.covers.NesCoverResolutionCache
+import com.swordfish.lemuroid.app.mobile.feature.romm.RommGameDetailsSheet
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
+import com.swordfish.lemuroid.app.shared.romm.RommLibraryCatalog
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
@@ -142,6 +144,7 @@ fun HomeScreen(
     ComposableLifecycle { _, event ->
         if (event == Lifecycle.Event.ON_RESUME) {
             viewModel.updatePermissions(context.applicationContext)
+            viewModel.refreshRomMLibrary()
         }
     }
 
@@ -153,13 +156,28 @@ fun HomeScreen(
         }
 
     val state = viewModel.getViewStates().collectAsState(HomeViewModel.UIState()).value
+    val romm = RommLibraryCatalog.state.collectAsState().value
+    val localFileNames = viewModel.indexedNesFileNames.collectAsState(emptySet()).value
+    val remoteGames =
+        remember(romm.games, localFileNames) {
+            RommLibraryCatalog.available(romm.games, localFileNames)
+                .map(RommLibraryCatalog::asPreview)
+        }
     var selectedGame by remember { mutableStateOf<Game?>(null) }
+    LaunchedEffect(Unit) { viewModel.refreshRomMLibrary() }
 
     OpenNesLibrary(
         modifier = modifier,
         state = state,
+        remoteGames = remoteGames,
         onGameClick = onGameClick,
-        onGameLongClick = onGameLongClick,
+        onGameLongClick = { game ->
+            if (RommLibraryCatalog.remoteFor(game, romm) != null) {
+                selectedGame = game
+            } else {
+                onGameLongClick(game)
+            }
+        },
         onGameDetailsClick = { selectedGame = it },
         onSearchClick = onSearchClick,
         onSettingsClick = onSettingsClick,
@@ -173,7 +191,17 @@ fun HomeScreen(
     )
 
     selectedGame?.let { game ->
-        GameDetailsSheet(
+        val remote = RommLibraryCatalog.remoteFor(game, romm)
+        if (remote != null) {
+            RommGameDetailsSheet(
+                rom = remote,
+                catalog = romm,
+                hasRomFolder = state.hasRomDirectory,
+                onDismiss = { selectedGame = null },
+                onDownload = { viewModel.downloadFromRomM(remote) },
+            )
+        } else {
+            GameDetailsSheet(
             game = game,
             onDismiss = { selectedGame = null },
             onPlay = {
@@ -215,7 +243,8 @@ fun HomeScreen(
             onApplyFixMatch = { match, onApplied ->
                 viewModel.applyFixMatch(game.id, match, onApplied)
             },
-        )
+            )
+        }
     }
 }
 
@@ -223,6 +252,7 @@ fun HomeScreen(
 private fun OpenNesLibrary(
     modifier: Modifier,
     state: HomeViewModel.UIState,
+    remoteGames: List<Game>,
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
     onGameDetailsClick: (Game) -> Unit,
@@ -277,7 +307,10 @@ private fun OpenNesLibrary(
             )
         }
 
-        AnimatedVisibility(state.showNoGamesCard || (state.scanError != null && !state.scanInProgress)) {
+        AnimatedVisibility(
+            (state.showNoGamesCard && (remoteGames.isEmpty() || !state.hasRomDirectory)) ||
+                (state.scanError != null && !state.scanInProgress),
+        ) {
             LibrarySetupCard(
                 hasRomDirectory = state.hasRomDirectory,
                 scanInProgress = state.scanInProgress,
@@ -306,9 +339,15 @@ private fun OpenNesLibrary(
                 onGameLongClick = onGameLongClick,
             )
         }
+        // A single NES shelf contains installed and RomM-only games. Remote
+        // previews have negative IDs and cannot be passed to the emulator.
+        val notYetPlayed =
+            remember(state.discoveryGames, remoteGames) {
+                (state.discoveryGames + remoteGames).sortedBy { it.displayName().lowercase() }
+            }
         GameShelf(
             title = stringResource(R.string.opennes_discover_shelf),
-            games = state.discoveryGames,
+            games = notYetPlayed,
             onGameClick = onGameDetailsClick,
             onGameLongClick = onGameLongClick,
         )
