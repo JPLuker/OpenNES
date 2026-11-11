@@ -61,10 +61,11 @@ internal fun RommGameDetailsSheet(
 ) {
     val context = LocalContext.current
     val progress = catalog.transferProgress[rom.id]
+    val queued = rom.id in catalog.queuedIds
     val downloading = rom.id in catalog.downloadingIds
     val indexing = rom.id in catalog.awaitingIndexIds
     val delayed = rom.id in catalog.indexingDelayedIds
-    val busy = installedGame == null && (downloading || (indexing && !delayed))
+    val busy = installedGame == null && (queued || downloading || (indexing && !delayed))
     val error = catalog.downloadFailures[rom.id]
     val foreground = Color(0xFFF2EDE6)
     val muted = Color(0xFFB2B2B4)
@@ -189,7 +190,7 @@ internal fun RommGameDetailsSheet(
                 } else if (!indexing) {
                     Button(
                         onClick = onDownload,
-                        enabled = hasRomFolder && !downloading,
+                        enabled = hasRomFolder && !downloading && !queued,
                         modifier = Modifier.fillMaxWidth(),
                         colors =
                             ButtonDefaults.buttonColors(
@@ -205,13 +206,16 @@ internal fun RommGameDetailsSheet(
             if (busy) {
                 val phase = progress?.stage ?: RommApiClient.ImportStage.CONNECTING
                 val message =
-                    when (phase) {
-                        RommApiClient.ImportStage.CONNECTING -> R.string.opennes_romm_phase_connecting
-                        RommApiClient.ImportStage.DOWNLOADING -> R.string.opennes_romm_phase_downloading
-                        RommApiClient.ImportStage.VERIFYING -> R.string.opennes_romm_phase_verifying
-                        RommApiClient.ImportStage.IMPORTING -> R.string.opennes_romm_phase_importing
-                        RommApiClient.ImportStage.INDEXING -> R.string.opennes_romm_phase_indexing
+                    when {
+                        queued -> R.string.opennes_romm_phase_queued
+                        phase == RommApiClient.ImportStage.CONNECTING -> R.string.opennes_romm_phase_connecting
+                        phase == RommApiClient.ImportStage.DOWNLOADING -> R.string.opennes_romm_phase_downloading
+                        phase == RommApiClient.ImportStage.VERIFYING -> R.string.opennes_romm_phase_verifying
+                        phase == RommApiClient.ImportStage.IMPORTING -> R.string.opennes_romm_phase_importing
+                        else -> R.string.opennes_romm_phase_indexing
                     }
+                /*
+                        */
                 val portion =
                     progress?.totalBytes?.takeIf { it > 0 }?.let {
                         (progress.receivedBytes.toFloat() / it.toFloat()).coerceIn(0f, 1f)
