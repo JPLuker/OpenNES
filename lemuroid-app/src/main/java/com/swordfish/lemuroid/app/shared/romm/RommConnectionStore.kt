@@ -116,7 +116,7 @@ class RommConnectionStore(context: Context) {
      * offline sync or future remote writes.
      */
     @Synchronized
-    fun pinVerifiedAccount(
+    internal fun pinVerifiedAccount(
         connection: RommConnection,
         profile: RommAccountIdentity.Profile,
     ): Boolean {

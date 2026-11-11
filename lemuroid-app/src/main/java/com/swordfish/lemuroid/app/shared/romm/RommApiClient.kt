@@ -130,7 +130,7 @@ class RommApiClient {
             }
         }
 
-    suspend fun checkAccountProfile(connection: RommConnection): RommAccountIdentity.Profile =
+    internal suspend fun checkAccountProfile(connection: RommConnection): RommAccountIdentity.Profile =
         withContext(Dispatchers.IO) {
             RommAccountIdentity.parseProfile(getJson(connection, listOf("api", "users", "me")))
         }
