@@ -270,6 +270,8 @@ internal object RommLibraryCatalog {
             error is SocketTimeoutException -> "RomM connection timed out. Check your network and retry."
             "checksum mismatch" in detail -> "ROM verification failed: checksum mismatch. No game was imported."
             "unsupported" in detail || "invalid rom" in detail -> "RomM returned an invalid or unsupported NES ROM."
+            "renamed" in detail ->
+                "Android renamed the downloaded ROM. Select a different NES folder and retry."
             "already exists" in detail || "appeared during download" in detail ->
                 "The ROM file already exists. Rescan your NES library instead of downloading another copy."
             "not writable" in detail || "cannot write" in detail || "choose an opennes rom folder" in detail ->
