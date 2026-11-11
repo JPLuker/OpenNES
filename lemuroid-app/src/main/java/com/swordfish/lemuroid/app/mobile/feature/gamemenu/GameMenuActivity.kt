@@ -194,12 +194,12 @@ class GameMenuActivity : RetrogradeComponentActivity() {
             ) {
                 if (currentRoute != GameMenuRoute.HOME) {
                     TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(currentRoute.titleId),
-                            color = GameMenuStyle.foreground,
-                            fontSize = if (currentRoute == GameMenuRoute.ACHIEVEMENTS) 19.sp else 22.sp,
-                        )
+                        title = {
+                            Text(
+                                text = stringResource(currentRoute.titleId),
+                                color = GameMenuStyle.foreground,
+                                fontSize = if (currentRoute == GameMenuRoute.ACHIEVEMENTS) 19.sp else 22.sp,
+                            )
                     },
                     colors =
                         TopAppBarDefaults.topAppBarColors(

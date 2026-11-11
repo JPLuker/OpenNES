@@ -1,18 +1,20 @@
 package com.swordfish.lemuroid.app.mobile.feature.main
 
 import android.content.Context
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -22,9 +24,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,16 +33,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.displayCutout
 import com.swordfish.lemuroid.app.mobile.feature.game.NesLandscapeStyle
 import com.swordfish.lemuroid.app.mobile.feature.game.NesLandscapeStylePicker
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
@@ -163,7 +162,11 @@ fun OpenNesFirstRunGuide(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
-                                    NesPortraitPreview(appearance.palette.panel, appearance.palette.action, scale < 0.50f)
+                                    NesPortraitPreview(
+                                        appearance.palette.panel,
+                                        appearance.palette.action,
+                                        scale < 0.50f,
+                                    )
                                     Text(if (kotlin.math.abs(portrait.scale - scale) < 0.02f) "✓ $title" else title)
                                 }
                             }
@@ -203,7 +206,11 @@ fun OpenNesFirstRunGuide(
                                             Modifier.size(24.dp).background(preset.palette.action, CircleShape),
                                         )
                                         Text(
-                                            if (appearance.preset.id == preset.id && !customColors) "✓ ${preset.title}" else preset.title,
+                                            if (appearance.preset.id == preset.id && !customColors) {
+                                                "✓ ${preset.title}"
+                                            } else {
+                                                preset.title
+                                            },
                                             maxLines = 2,
                                         )
                                     }

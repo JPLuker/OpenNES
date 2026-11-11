@@ -12,8 +12,7 @@ internal class NesRomLaunchModeStore(context: Context) {
     val hardcoreAvailable: Boolean
         get() = HardcoreRuntime.hardcoreAvailable()
 
-    fun wantsHardcore(romUri: String): Boolean =
-        hardcoreAvailable && preferences.getBoolean(keyFor(romUri), false)
+    fun wantsHardcore(romUri: String): Boolean = hardcoreAvailable && preferences.getBoolean(keyFor(romUri), false)
 
     fun select(
         romUri: String,
