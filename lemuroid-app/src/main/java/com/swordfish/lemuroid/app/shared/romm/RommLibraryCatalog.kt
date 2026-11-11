@@ -45,6 +45,7 @@ internal object RommLibraryCatalog {
     private val refreshMutex = Mutex()
     private val downloadMutex = Mutex()
     private var refreshedAt = 0L
+
     @Volatile
     private var credentialRevision: String? = null
     private var restoredCacheKey: String? = null
