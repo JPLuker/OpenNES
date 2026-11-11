@@ -33,6 +33,8 @@ internal object RommLibraryCatalog {
         val transferProgress: Map<Int, RommApiClient.ImportProgress> = emptyMap(),
         val downloadFailures: Map<Int, String> = emptyMap(),
         val indexingDelayedIds: Set<Int> = emptySet(),
+        val showingOfflineCache: Boolean = false,
+        val lastSuccessfulRefreshAt: Long? = null,
     )
 
     private const val PAGE_SIZE = 100
@@ -43,6 +45,7 @@ internal object RommLibraryCatalog {
     private val downloadMutex = Mutex()
     private var refreshedAt = 0L
     private var credentialRevision: String? = null
+    private var restoredCacheKey: String? = null
     private val awaitingIndexSince = mutableMapOf<Int, Long>()
     private const val INDEXING_NOTICE_DELAY_MS = 25_000L
     private val snapshot = MutableStateFlow(State())
@@ -94,6 +97,7 @@ internal object RommLibraryCatalog {
                 snapshot.value = State()
                 refreshedAt = 0L
                 credentialRevision = null
+                restoredCacheKey = null
                 awaitingIndexSince.clear()
                 return@withLock
             }
@@ -106,14 +110,35 @@ internal object RommLibraryCatalog {
                 refreshedAt = 0L
                 credentialRevision = revision
                 awaitingIndexSince.clear()
+                restoredCacheKey = null
             }
-            snapshot.value = previous
+            val cacheKey = source + ":" + revision
+            val cached =
+                if (previous.games.isEmpty() && restoredCacheKey != cacheKey) {
+                    restoredCacheKey = cacheKey
+                    withContext(Dispatchers.IO) {
+                        if (revision.isNullOrBlank()) null else RommCatalogueCache(context).read(source, revision)
+                    }
+                } else {
+                    null
+                }
+            val initial =
+                if (cached == null) {
+                    previous
+                } else {
+                    previous.copy(
+                        games = cached.games,
+                        showingOfflineCache = true,
+                        lastSuccessfulRefreshAt = cached.fetchedAt,
+                    )
+                }
+            snapshot.value = initial
             if (!force && !previous.refreshing && refreshedAt > 0 &&
                 System.currentTimeMillis() - refreshedAt < REFRESH_INTERVAL_MS
             ) {
                 return@withLock
             }
-            snapshot.value = previous.copy(refreshing = true, error = null)
+            snapshot.value = initial.copy(refreshing = true, error = null)
             try {
                 val connection =
                     withContext(Dispatchers.IO) {
@@ -141,14 +166,23 @@ internal object RommLibraryCatalog {
                         store.credentialRevision() == revision,
                 ) { "RomM connection changed during refresh" }
                 val latest = snapshot.value
+                val finishedAt = System.currentTimeMillis()
+                val games = found.values.sortedBy { it.name.lowercase(Locale.ROOT) }
                 snapshot.value =
                     latest.copy(
                         source = source,
-                        games = found.values.sortedBy { it.name.lowercase(Locale.ROOT) },
+                        games = games,
                         refreshing = false,
                         error = null,
+                        showingOfflineCache = false,
+                        lastSuccessfulRefreshAt = finishedAt,
                     )
-                refreshedAt = System.currentTimeMillis()
+                refreshedAt = finishedAt
+                if (!revision.isNullOrBlank()) {
+                    withContext(Dispatchers.IO) {
+                        RommCatalogueCache(context).write(source, revision, games, finishedAt)
+                    }
+                }
             } catch (cancelled: CancellationException) {
                 snapshot.value = snapshot.value.copy(refreshing = false)
                 throw cancelled
@@ -156,7 +190,8 @@ internal object RommLibraryCatalog {
                 snapshot.value =
                     snapshot.value.copy(
                         refreshing = false,
-                        error = "RomM library unavailable. Check the connection in Settings.",
+                        error = "RomM is unavailable. Previously loaded games remain visible; downloads require a connection.",
+                        showingOfflineCache = snapshot.value.games.isNotEmpty(),
                     )
             }
         }
