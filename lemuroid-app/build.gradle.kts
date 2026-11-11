@@ -182,6 +182,8 @@ dependencies {
     implementation(deps.libs.dagger.core)
     implementation(deps.libs.kotlinxCoroutinesAndroid)
     implementation(deps.libs.okHttp3)
+    // Offline, on-device QR scanner; no Google Play Services dependency.
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation(deps.libs.okio)
     implementation(deps.libs.retrofit)
     implementation(deps.libs.flowPreferences)
