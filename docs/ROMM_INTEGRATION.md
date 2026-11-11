@@ -32,6 +32,16 @@
 - Verify private-LAN HTTP on the player's own Wi-Fi, and reject public HTTP, ordinary hostnames over HTTP, redirects, userinfo and malformed QR content. Prefer HTTPS outside a trusted LAN.
 - Verify the new ZXing dependency's APK size, Android permission merge, license attribution and offline scanner behavior.
 
+## Unified library previews (November 2026)
+
+- **Remote NES/Famicom ROMs now enter the regular OpenNES library shelf and search** as read-only previews, not fake Room games. The shelf includes all indexed local NES titles plus a lazily presented RomM catalogue; local recent/favorites remain normal and every local game keeps its own saved states and playtime.
+- **Remote-only games show Download instead of Play.** Selecting Download invokes the existing explicit, size-bounded and integrity-checked SAF import. It does not launch the game, import saves or download any other ROM; the library indexer then creates the real playable local entry.
+- Remote catalogues are fetched over the existing authenticated RomM connection in bounded pages of 100, with a 5-minute in-memory refresh interval and no ROM downloads. A disconnected/unconfigured account yields only the local library.
+- The current Room schema has no global ROM checksum identity field. The display deduplicates by exact case-insensitive local filename (not by game title) to avoid merging different-region games with the same name. Renamed local files may appear separately until an explicit identity mapping is implemented.
+- A download that completes while library indexing is pending is shown as **Adding to library**, never as Play. The existing file and any local save are never overwritten.
+- Remote previews use the same NES box-art renderer, which can resolve official Libretro art for recognizable ROM filenames; non-matching filenames may show a normal fallback image. The RomM endpoint and user token are never embedded into public cover URLs.
+- UI/device acceptance is still pending, including remote catalogue scale, dedup, Android lifecycle/network changes and import completion. The server is *not* treated as a virtual ROM filesystem or used for streaming gameplay.
+
 ## Outstanding gates
 
 - [x] Settings → RomM library now contains Connect/Browse/Import, pagination, connection check and disconnect controls. All imports are explicitly initiated and respect the configured local NES folder.
