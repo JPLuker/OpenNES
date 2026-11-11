@@ -11,9 +11,9 @@ import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -76,8 +76,9 @@ class RommApiClient {
         pairingCode: String,
     ): RommConnection =
         withContext(Dispatchers.IO) {
-            val root = validatedServerUrl(serverUrl).toHttpUrlOrNull()
-                ?: throw IllegalArgumentException("Invalid RomM server URL")
+            val root =
+                validatedServerUrl(serverUrl).toHttpUrlOrNull()
+                    ?: throw IllegalArgumentException("Invalid RomM server URL")
             val code = RommPairing.normalizeCode(pairingCode)
             val url = root.newBuilder().addPathSegments("api/client-tokens/exchange").build()
             val json = JSONObject().put("code", code).toString()
