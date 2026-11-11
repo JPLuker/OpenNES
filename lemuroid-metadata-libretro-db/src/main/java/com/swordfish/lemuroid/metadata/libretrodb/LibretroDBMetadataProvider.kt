@@ -131,8 +131,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         return uniqueMatch?.let { convertToGameMetadata(it) }
     }
 
-    private fun canonicalNesTitle(raw: String): String =
-        NesGameTitle.canonicalReleaseName(raw)
+    private fun canonicalNesTitle(raw: String): String = NesGameTitle.canonicalReleaseName(raw)
 
     private suspend fun findByPathAndFilename(
         db: LibretroDatabase,
