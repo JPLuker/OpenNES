@@ -37,8 +37,7 @@ internal object OpenNesDiagnosticReport {
             else -> "unknown"
         }
 
-    private fun safeCommit(value: String): String =
-        value.takeIf { it.matches(Regex("[0-9a-f]{7,40}")) } ?: "local"
+    private fun safeCommit(value: String): String = value.takeIf { it.matches(Regex("[0-9a-f]{7,40}")) } ?: "local"
 
     private fun safeVariant(value: String): String =
         when (value) {
