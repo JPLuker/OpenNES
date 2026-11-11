@@ -1,11 +1,30 @@
 package com.swordfish.lemuroid.app.shared.metadata
 
+import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NesMetadataTitleQueriesTest {
+    @Test
+    fun localCatalogueSearchHandlesReorderedAndBundledTitles() {
+        assertTrue(NesGameTitle.searchVariants("Simpsons, The (USA)").contains("The Simpsons"))
+        assertTrue(
+            NesGameTitle.searchVariants("2-in-1 Super Mario Bros. + Duck Hunt")
+                .contains("Super Mario Bros. / Duck Hunt"),
+        )
+        assertTrue(NesGameTitle.isCompilation("Super Mario Bros. + Duck Hunt"))
+        assertEquals(
+            NesGameTitle.canonicalReleaseName("Super Mario Bros. + Duck Hunt"),
+            NesGameTitle.canonicalReleaseName("Super Mario Bros. / Duck Hunt"),
+        )
+        assertFalse(
+            NesGameTitle.canonicalReleaseName("Super Mario Bros. + Duck Hunt") ==
+                NesGameTitle.canonicalReleaseName("Super Mario Bros."),
+        )
+    }
+
     @Test
     fun reversedArticleMatchesNormalTitle() {
         assertTrue(NesMetadataTitleQueries.equivalent("Simpsons, The", "The Simpsons"))
