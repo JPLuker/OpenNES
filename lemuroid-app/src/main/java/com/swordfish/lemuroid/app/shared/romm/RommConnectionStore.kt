@@ -68,6 +68,8 @@ class RommConnectionStore(context: Context) {
                 .putString(SERVER_KEY, url)
                 .putString(CREDENTIAL_REVISION_KEY, UUID.randomUUID().toString())
                 .apply()
+            // A token rotation invalidates metadata from the previous account.
+            RommCatalogueCache(app).clear()
         } catch (e: Exception) {
             secretFile.failWrite(stream)
             throw e
@@ -107,6 +109,7 @@ class RommConnectionStore(context: Context) {
     fun disconnect() {
         secretFile.delete()
         prefs.edit().remove(SERVER_KEY).remove(CREDENTIAL_REVISION_KEY).apply()
+        RommCatalogueCache(app).clear()
     }
 
     private fun getOrCreateKey(): SecretKey {
