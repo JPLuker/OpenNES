@@ -19,6 +19,15 @@ class RommServerIdentityTest {
     }
 
     @Test
+    fun privateLanIdentityStaysBoundToExactOriginAndProtocol() {
+        val lan = RommServerIdentity.fingerprint("http://192.168.86.163:8081")
+        assertTrue(lan != null && RommServerIdentity.validFingerprint(lan))
+        assertEquals(lan, RommServerIdentity.fingerprint("HTTP://192.168.86.163:8081/"))
+        assertNotEquals(lan, RommServerIdentity.fingerprint("https://192.168.86.163:8081"))
+        assertNotEquals(lan, RommServerIdentity.fingerprint("http://192.168.86.163:8082"))
+    }
+
+    @Test
     fun unsafeAndMissingServerIdentitiesCannotBeBound() {
         assertNull(RommServerIdentity.fingerprint(null))
         assertNull(RommServerIdentity.fingerprint("http://romm.example.com"))
