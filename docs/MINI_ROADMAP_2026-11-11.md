@@ -35,6 +35,10 @@ source implementation, green CI, and physical-device acceptance.
 7. **Regression coverage:** cheat parsing/title matching and profile
    separation have JVM tests; compile, lint and APK inspection gates run
    through the one rolling OpenNES GitHub Actions workflow.
+8. **Cheat finder cancellation:** changing the title invalidates previous results,
+   and Cancel/Back dismisses a lookup even when a network request is active.
+   Late responses cannot replace the newer query or reopen the dialog.
+   Source committed; exact-commit CI and device interaction still need checking.
 
 ## Device acceptance checklist (NOT automatically satisfied by green CI)
 
@@ -53,6 +57,8 @@ source implementation, green CI, and physical-device acceptance.
   check correct source revision, import a compatible single Game Genie
   code and activate manually. Confirm unsupported multi-part codes never
   import and session switches do not carry enabled cheats.
+  During a slow search, edit the title or tap Cancel/Back; verify the dialog
+  dismisses promptly and no old results appear after a new search.
 - **Existing fixes:** NES-only library scan/filtering, reordered-article
   and compilation metadata matching, offline RomM titles/artwork,
   downloaded gameplay, undownloaded download warnings, and opt-out
