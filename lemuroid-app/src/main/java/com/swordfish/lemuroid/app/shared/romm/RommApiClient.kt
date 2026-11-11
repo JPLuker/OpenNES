@@ -40,6 +40,7 @@ class RommApiClient {
         val md5: String?,
         val description: String? = null,
         val coverUrl: String? = null,
+        val genres: List<String> = emptyList(),
     )
 
     enum class ImportStage {
@@ -188,6 +189,14 @@ class RommApiClient {
                                 .takeIf { it.isNotBlank() && it != "null" }
                                 ?.take(8_000),
                         coverUrl = RommCoverUrl.trusted(row.optString("url_cover")),
+                        genres =
+                            row.optJSONObject("metadatum")?.optJSONArray("genres")?.let { values ->
+                                (0 until minOf(values.length(), 12))
+                                    .mapNotNull { index ->
+                                        values.optString(index).trim().takeIf { it.length in 2..60 }
+                                    }
+                                    .distinct()
+                            } ?: emptyList(),
                         md5 =
                             row.optString("md5_hash")
                                 .lowercase(Locale.ROOT)
