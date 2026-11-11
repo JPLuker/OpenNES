@@ -43,7 +43,9 @@ class RommAccountIdentityTest {
             RommAccountIdentity.parseProfile(JSONObject("""{"id":5,"username":""}"""))
         }
         assertThrows(IOException::class.java) {
-            RommAccountIdentity.parseProfile(JSONObject("""{"id":5,"username":"a\\nb"}"""))
+            RommAccountIdentity.parseProfile(
+                JSONObject().put("id", 5).put("username", "a" + '\n' + "b"),
+            )
         }
         assertThrows(IOException::class.java) {
             RommAccountIdentity.parseProfile(
