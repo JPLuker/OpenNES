@@ -100,7 +100,6 @@ fun PadKitScope.NESLandscapeRight(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val sideWidth = maxWidth
         val sideHeight = maxHeight
-        val report = LocalNesControlBoundsReporter.current
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.rightScale ?: settings.scale)
         val x =
             NesLandscapeDragLimits.horizontalTravelDp(sideWidth.value, dialSize.value).dp *
@@ -135,8 +134,6 @@ fun PadKitScope.NESLandscapeRight(
                         .onGloballyPositioned {
                             val rect = it.boundsInRoot()
                             onPrimaryBounds?.invoke(rect)
-                            report(NesEditableControl.A, faceEditRect(rect, 0.92f, settings.aButton))
-                            report(NesEditableControl.B, faceEditRect(rect, -0.92f, settings.bButton))
                         },
                 primaryAnchors = primaryAnchors,
                 compositeAnchors = compositeAnchors,
