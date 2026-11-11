@@ -203,33 +203,44 @@ internal object RommLibraryCatalog {
      * indexed. A slow scan offers a retry action rather than a silent disabled
      * button. A remote file is never redownloaded just to force indexing.
      */
+    /** Pure reducer for Room scan events; testable without a phone. */
+    fun reconciled(
+        current: State,
+        indexedFileNames: Set<String>,
+        now: Long,
+        pendingSince: Map<Int, Long>,
+    ): State {
+        val names = indexedFileNames.mapTo(HashSet()) { it.lowercase(Locale.ROOT) }
+        val indexedIds =
+            current.games.asSequence()
+                .filter { it.id in current.awaitingIndexIds && it.fileName.lowercase(Locale.ROOT) in names }
+                .map { it.id }
+                .toSet()
+        val pending = current.awaitingIndexIds - indexedIds
+        val delayed =
+            pending.filterTo(mutableSetOf()) {
+                now - (pendingSince[it] ?: now) >= INDEXING_NOTICE_DELAY_MS
+            }
+        return if (indexedIds.isEmpty() && delayed == current.indexingDelayedIds) {
+            current
+        } else {
+            current.copy(
+                awaitingIndexIds = pending,
+                indexingDelayedIds = delayed,
+                transferProgress = current.transferProgress - indexedIds,
+            )
+        }
+    }
+
     fun reconcileIndexed(
         indexedFileNames: Set<String>,
         now: Long = System.currentTimeMillis(),
     ) {
-        val names = indexedFileNames.mapTo(HashSet()) { it.lowercase(Locale.ROOT) }
+        val previousPending = snapshot.value.awaitingIndexIds
         snapshot.update { current ->
-            val indexedIds =
-                current.games.asSequence()
-                    .filter { it.id in current.awaitingIndexIds && it.fileName.lowercase(Locale.ROOT) in names }
-                    .map { it.id }
-                    .toSet()
-            indexedIds.forEach { awaitingIndexSince.remove(it) }
-            val pending = current.awaitingIndexIds - indexedIds
-            val delayed =
-                pending.filterTo(mutableSetOf()) {
-                    now - (awaitingIndexSince[it] ?: now) >= INDEXING_NOTICE_DELAY_MS
-                }
-            if (indexedIds.isEmpty() && delayed == current.indexingDelayedIds) {
-                current
-            } else {
-                current.copy(
-                    awaitingIndexIds = pending,
-                    indexingDelayedIds = delayed,
-                    transferProgress = current.transferProgress - indexedIds,
-                )
-            }
+            reconciled(current, indexedFileNames, now, awaitingIndexSince)
         }
+        (previousPending - snapshot.value.awaitingIndexIds).forEach { awaitingIndexSince.remove(it) }
     }
 
     fun retryLibraryIndex(
