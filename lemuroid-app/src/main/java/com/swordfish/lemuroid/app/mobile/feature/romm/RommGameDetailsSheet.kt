@@ -25,7 +25,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -57,9 +60,11 @@ internal fun RommGameDetailsSheet(
     installedGame: Game? = null,
     onDismiss: () -> Unit,
     onDownload: () -> Unit,
+    onRetryConnection: () -> Unit = {},
     onPlay: (Game) -> Unit = {},
 ) {
     val context = LocalContext.current
+    var offlinePrompt by remember(rom.id) { mutableStateOf(false) }
     val progress = catalog.transferProgress[rom.id]
     val queued = rom.id in catalog.queuedIds
     val downloading = rom.id in catalog.downloadingIds
@@ -161,6 +166,19 @@ internal fun RommGameDetailsSheet(
                 if (installedGame == null && error != null) {
                     Text(error, color = red, fontSize = 13.sp)
                 }
+                if (offlinePrompt && installedGame == null) {
+                    Text(
+                        stringResource(R.string.opennes_romm_download_offline),
+                        color = foreground,
+                        fontSize = 13.sp,
+                    )
+                    OutlinedButton(onClick = {
+                        offlinePrompt = false
+                        onRetryConnection()
+                    }) {
+                        Text(stringResource(R.string.opennes_romm_retry_connection))
+                    }
+                }
                 if (installedGame == null && delayed) {
                     Text(
                         stringResource(R.string.opennes_romm_indexing_delayed),
@@ -189,7 +207,9 @@ internal fun RommGameDetailsSheet(
                     }
                 } else if (!indexing) {
                     Button(
-                        onClick = onDownload,
+                        onClick = {
+                            if (catalog.error != null) offlinePrompt = true else onDownload()
+                        },
                         enabled = hasRomFolder && !downloading && !queued,
                         modifier = Modifier.fillMaxWidth(),
                         colors =
