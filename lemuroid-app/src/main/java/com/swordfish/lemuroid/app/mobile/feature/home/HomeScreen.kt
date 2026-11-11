@@ -714,7 +714,7 @@ private fun FeaturedGame(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = LibraryColors.red,
-                            contentColor = LibraryColors.foreground,
+                            contentColor = LibraryColors.onAccent,
                         ),
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
@@ -878,7 +878,7 @@ private fun GameDetailsSheet(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = LibraryColors.red,
-                            contentColor = LibraryColors.foreground,
+                            contentColor = LibraryColors.onAccent,
                         ),
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
@@ -2153,7 +2153,7 @@ private fun LibrarySetupCard(
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = LibraryColors.red,
-                                contentColor = LibraryColors.foreground,
+                                contentColor = LibraryColors.onAccent,
                             ),
                     ) {
                         Text(stringResource(R.string.opennes_setup_choose_action))
@@ -2185,7 +2185,7 @@ private fun LibrarySetupCard(
                                 colors =
                                     ButtonDefaults.buttonColors(
                                         containerColor = LibraryColors.red,
-                                        contentColor = LibraryColors.foreground,
+                                        contentColor = LibraryColors.onAccent,
                                     ),
                             ) {
                                 Text(stringResource(R.string.opennes_setup_rescan_action))
@@ -2210,7 +2210,7 @@ private fun LibrarySetupCard(
                                 colors =
                                     ButtonDefaults.buttonColors(
                                         containerColor = LibraryColors.red,
-                                        contentColor = LibraryColors.foreground,
+                                        contentColor = LibraryColors.onAccent,
                                     ),
                             ) {
                                 Text(stringResource(R.string.opennes_setup_rescan_action))

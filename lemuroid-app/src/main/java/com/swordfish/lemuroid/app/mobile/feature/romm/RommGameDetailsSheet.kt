@@ -201,7 +201,7 @@ internal fun RommGameDetailsSheet(
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = red,
-                                contentColor = foreground,
+                                contentColor = appColors.onAccent,
                             ),
                     ) {
                         Text(stringResource(R.string.opennes_play))
@@ -216,7 +216,7 @@ internal fun RommGameDetailsSheet(
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = red,
-                                contentColor = foreground,
+                                contentColor = appColors.onAccent,
                             ),
                     ) {
                         Text(stringResource(R.string.opennes_romm_download))
