@@ -25,8 +25,9 @@ internal object RommPairing {
 
     fun parseQr(raw: String): Request {
         require(raw.length in 1..2048) { "Invalid RomM pairing QR" }
-        val url = raw.trim().toHttpUrlOrNull()
-            ?: throw IllegalArgumentException("Invalid RomM pairing QR")
+        val url =
+            raw.trim().toHttpUrlOrNull()
+                ?: throw IllegalArgumentException("Invalid RomM pairing QR")
         require(
             url.username.isEmpty() &&
                 url.password.isEmpty() &&
