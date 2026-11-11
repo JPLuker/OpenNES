@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -79,9 +80,11 @@ import com.swordfish.touchinput.radial.LocalNesControllerPalette
 import com.swordfish.touchinput.radial.NesColorPart
 import com.swordfish.touchinput.radial.NesControllerAppearanceStore
 import com.swordfish.touchinput.radial.NesControllerPresets
+import com.swordfish.touchinput.radial.layouts.LocalNesControlBoundsReporter
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
+import com.swordfish.touchinput.radial.layouts.NesEditableControl
 import com.swordfish.touchinput.radial.layouts.NESLandscapeLeft
 import com.swordfish.touchinput.radial.layouts.NESLandscapeRight
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
@@ -243,6 +246,8 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
             val viewportPosition = remember { mutableStateOf<Rect?>(null) }
             val leftPadBounds = remember { mutableStateOf<Rect?>(null) }
             val rightPadBounds = remember { mutableStateOf<Rect?>(null) }
+            val controlBounds = remember { mutableStateMapOf<NesEditableControl, Rect>() }
+            LaunchedEffect(showTouchPads, isLandscape) { controlBounds.clear() }
 
             // Clear bounds only when PadKit controls disappear. On rotation,
             // onGloballyPositioned supplies the new sizes; clearing them after
@@ -319,6 +324,9 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     CompositionLocalProvider(
                         LocalLemuroidPadTheme provides LemuroidPadTheme(touchControllerSettings.opacity),
                         LocalNesControllerPalette provides controllerAppearance.palette,
+                        LocalNesControlBoundsReporter provides { id, bounds ->
+                            if (controlBounds[id] != bounds) controlBounds[id] = bounds
+                        },
                         LocalNesPortraitLayout provides !isLandscape,
                         LocalNesLandscapeHandheld provides handheldActive,
                         LocalNesLandscapeMinimal provides (
@@ -403,6 +411,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 NesControllerDragOverlay(
                     leftBounds = leftPadBounds.value,
                     rightBounds = rightPadBounds.value,
+                    controlBounds = controlBounds,
                     settings = touchControllerSettings,
                     landscapeSidePanels = isLandscape && !allowTouchOverlay,
                     onPreview = viewModel::previewTouchControllerSettings,
