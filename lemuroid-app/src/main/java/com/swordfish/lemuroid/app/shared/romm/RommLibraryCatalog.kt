@@ -153,13 +153,10 @@ internal object RommLibraryCatalog {
                 var offset = 0
                 while (offset < MAX_GAMES) {
                     val page = api.listNesRoms(connection, offset, PAGE_SIZE)
-                    require(page.offset == offset && page.total >= 0) {
-                        "Unexpected RomM catalogue page"
-                    }
-                    require(page.total <= MAX_GAMES) { "RomM library exceeds supported catalogue size" }
+                    val next = RommCataloguePaging.nextOffset(offset, page, MAX_GAMES)
                     page.items.forEach { found[it.id] = it }
-                    offset += PAGE_SIZE
-                    if (page.items.size < PAGE_SIZE || offset >= page.total) break
+                    if (next == null) break
+                    offset = next
                 }
                 require(
                     RommServerIdentity.fingerprint(store.configuredServer()) == source &&
