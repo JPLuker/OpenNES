@@ -51,6 +51,7 @@ fun PadKitScope.NESLandscapeLeft(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val sideWidth = gripWidthDp.takeIf { it > 0f }?.dp ?: maxWidth
         val sideHeight = maxHeight
+        val fullWidth = maxWidth
         val sideCenter = -(maxWidth - sideWidth) / 2f
         val report = LocalNesControlBoundsReporter.current
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.leftScale ?: settings.scale)
@@ -84,7 +85,7 @@ fun PadKitScope.NESLandscapeLeft(
                 geometry = settings.selectButton,
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
-                viewportWidth = maxWidth,
+                viewportWidth = fullWidth,
                 sideCenter = sideCenter,
                 above = true,
                 control = NesEditableControl.SELECT,
@@ -105,6 +106,7 @@ fun PadKitScope.NESLandscapeRight(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val sideWidth = gripWidthDp.takeIf { it > 0f }?.dp ?: maxWidth
         val sideHeight = maxHeight
+        val fullWidth = maxWidth
         val sideCenter = (maxWidth - sideWidth) / 2f
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.rightScale ?: settings.scale)
         val x =
@@ -161,7 +163,7 @@ fun PadKitScope.NESLandscapeRight(
                 geometry = settings.startButton,
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
-                viewportWidth = maxWidth,
+                viewportWidth = fullWidth,
                 sideCenter = sideCenter,
                 above = true,
                 clusterOffsetX = 0.dp,
@@ -175,7 +177,7 @@ fun PadKitScope.NESLandscapeRight(
                 geometry = settings.menuButton,
                 sideWidth = sideWidth,
                 sideHeight = sideHeight,
-                viewportWidth = maxWidth,
+                viewportWidth = fullWidth,
                 sideCenter = sideCenter,
                 above = false,
                 clusterOffsetX = 0.dp,
