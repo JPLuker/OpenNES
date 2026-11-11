@@ -84,9 +84,9 @@ import com.swordfish.touchinput.radial.layouts.LocalNesControlBoundsReporter
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
-import com.swordfish.touchinput.radial.layouts.NesEditableControl
 import com.swordfish.touchinput.radial.layouts.NESLandscapeLeft
 import com.swordfish.touchinput.radial.layouts.NESLandscapeRight
+import com.swordfish.touchinput.radial.layouts.NesEditableControl
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
