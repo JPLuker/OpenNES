@@ -37,6 +37,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
+import com.swordfish.touchinput.radial.layouts.NesDragBounds
 import com.swordfish.touchinput.radial.layouts.NesLandscapeDragLimits
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import kotlin.math.roundToInt
@@ -74,7 +76,14 @@ internal fun NesControllerDragOverlay(
                 .background(Color(0x330B0D12))
                 .onGloballyPositioned { editingBounds.value = it.boundsInRoot() },
     ) {
-        val compactActions = maxWidth < 360.dp || LocalDensity.current.fontScale > 1.2f
+        val density = LocalDensity.current
+        val layoutDirection = LocalLayoutDirection.current
+        val safeDrawing = WindowInsets.safeDrawing
+        val safeLeftPx = safeDrawing.getLeft(density, layoutDirection).toFloat()
+        val safeRightPx = safeDrawing.getRight(density, layoutDirection).toFloat()
+        val safeTopPx = safeDrawing.getTop(density).toFloat()
+        val safeBottomPx = safeDrawing.getBottom(density).toFloat()
+        val compactActions = maxWidth < 360.dp || density.fontScale > 1.2f
         val gripWidthDp =
             if (landscapeSidePanels) {
                 ((maxWidth.value - maxHeight.value * 4f / 3f) / 2f).coerceAtLeast(0f)
@@ -91,6 +100,10 @@ internal fun NesControllerDragOverlay(
                 settings = settings,
                 gripWidthDp = gripWidthDp,
                 gripHeightDp = gripHeightDp,
+                safeLeftPx = safeLeftPx,
+                safeRightPx = safeRightPx,
+                safeTopPx = safeTopPx,
+                safeBottomPx = safeBottomPx,
                 onPreview = onPreview,
                 onCommit = onCommit,
             )
@@ -104,6 +117,10 @@ internal fun NesControllerDragOverlay(
                 settings = settings,
                 gripWidthDp = gripWidthDp,
                 gripHeightDp = gripHeightDp,
+                safeLeftPx = safeLeftPx,
+                safeRightPx = safeRightPx,
+                safeTopPx = safeTopPx,
+                safeBottomPx = safeBottomPx,
                 onPreview = onPreview,
                 onCommit = onCommit,
             )
@@ -170,6 +187,10 @@ private fun NesDragTarget(
     settings: TouchControllerSettingsManager.Settings,
     gripWidthDp: Float?,
     gripHeightDp: Float,
+    safeLeftPx: Float,
+    safeRightPx: Float,
+    safeTopPx: Float,
+    safeBottomPx: Float,
     onPreview: (TouchControllerSettingsManager.Settings) -> Unit,
     onCommit: (TouchControllerSettingsManager.Settings) -> Unit,
 ) {
@@ -235,24 +256,28 @@ private fun NesDragTarget(
                             // the edited cluster follows the finger.
                             val limitedX =
                                 startEditingBounds?.let { viewport ->
-                                    clampDragToVisibleBounds(
+                                    NesDragBounds.clamp(
                                         totalDrag.x,
                                         startBounds.left,
                                         startBounds.right,
                                         viewport.left,
                                         viewport.right,
                                         edgeInsetPx,
+                                        safeLeftPx,
+                                        safeRightPx,
                                     )
                                 } ?: totalDrag.x
                             val limitedY =
                                 startEditingBounds?.let { viewport ->
-                                    clampDragToVisibleBounds(
+                                    NesDragBounds.clamp(
                                         totalDrag.y,
                                         startBounds.top,
                                         startBounds.bottom,
                                         viewport.top,
                                         viewport.bottom,
                                         edgeInsetPx,
+                                        safeTopPx,
+                                        safeBottomPx,
                                     )
                                 } ?: totalDrag.y
                             val xDp = limitedX / density.density
@@ -307,20 +332,3 @@ private fun NesDragTarget(
     }
 }
 
-/**
- * Limit user-driven drag deltas to the current editor viewport. If an
- * oversized custom control group cannot fit at all, retain the previous
- * offset limits instead of applying an invalid reversed clamp range.
- */
-private fun clampDragToVisibleBounds(
-    deltaPx: Float,
-    groupStartPx: Float,
-    groupEndPx: Float,
-    viewportStartPx: Float,
-    viewportEndPx: Float,
-    insetPx: Float,
-): Float {
-    val minimum = viewportStartPx + insetPx - groupStartPx
-    val maximum = viewportEndPx - insetPx - groupEndPx
-    return if (minimum <= maximum) deltaPx.coerceIn(minimum, maximum) else deltaPx
-}
