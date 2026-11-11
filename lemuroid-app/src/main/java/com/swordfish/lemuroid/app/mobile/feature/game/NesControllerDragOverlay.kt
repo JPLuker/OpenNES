@@ -46,20 +46,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
 import com.swordfish.touchinput.radial.layouts.NesDragBounds
-import com.swordfish.touchinput.radial.layouts.NesLandscapeDragLimits
+import com.swordfish.touchinput.radial.layouts.NesEditableControl
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import kotlin.math.roundToInt
 import com.swordfish.touchinput.controller.R as TouchInputR
 
 /**
- * Editing-only touch layer positioned over the existing, real PadKit clusters.
- * It does not replace the gameplay input implementation. The ViewModel blocks
- * virtual gameplay events while this layer is active.
+ * One drag handle per actual input: D-pad, A, B, Start, Select and Menu.
+ * Real PadKit controls report their layout bounds through a CompositionLocal.
+ * This editor only handles gestures; PadKit still owns gameplay input.
  */
 @Composable
 internal fun NesControllerDragOverlay(
     leftBounds: Rect?,
     rightBounds: Rect?,
+    controlBounds: Map<NesEditableControl, Rect>,
     settings: TouchControllerSettingsManager.Settings,
     landscapeSidePanels: Boolean = false,
     onPreview: (TouchControllerSettingsManager.Settings) -> Unit,
@@ -68,7 +69,6 @@ internal fun NesControllerDragOverlay(
     onFineTune: () -> Unit,
 ) {
     val editingBounds = remember { mutableStateOf<Rect?>(null) }
-
     BoxWithConstraints(
         modifier =
             Modifier
@@ -84,47 +84,29 @@ internal fun NesControllerDragOverlay(
         val safeTopPx = safeDrawing.getTop(density).toFloat()
         val safeBottomPx = safeDrawing.getBottom(density).toFloat()
         val compactActions = maxWidth < 360.dp || density.fontScale > 1.2f
-        val gripWidthDp =
-            if (landscapeSidePanels) {
-                ((maxWidth.value - maxHeight.value * 4f / 3f) / 2f).coerceAtLeast(0f)
-            } else {
-                null
+
+        // Use individual real-control measurements, not the old two radial
+        // group rectangles. D-pad fallback exists for older PadKit layouts.
+        NesEditableControl.entries.forEach { control ->
+            val bounds =
+                controlBounds[control]
+                    ?: if (control == NesEditableControl.DPAD) leftBounds else null
+            if (bounds != null && bounds.width > 0f && bounds.height > 0f) {
+                NesDragTarget(
+                    control = control,
+                    bounds = bounds,
+                    editingBounds = editingBounds.value,
+                    settings = settings,
+                    safeLeftPx = safeLeftPx,
+                    safeRightPx = safeRightPx,
+                    safeTopPx = safeTopPx,
+                    safeBottomPx = safeBottomPx,
+                    onPreview = onPreview,
+                    onCommit = onCommit,
+                )
             }
-        val gripHeightDp = maxHeight.value
-        leftBounds?.let {
-            NesDragTarget(
-                bounds = it,
-                editingBounds = editingBounds.value,
-                label = stringResource(R.string.opennes_controls_left_group),
-                isLeft = true,
-                settings = settings,
-                gripWidthDp = gripWidthDp,
-                gripHeightDp = gripHeightDp,
-                safeLeftPx = safeLeftPx,
-                safeRightPx = safeRightPx,
-                safeTopPx = safeTopPx,
-                safeBottomPx = safeBottomPx,
-                onPreview = onPreview,
-                onCommit = onCommit,
-            )
         }
-        rightBounds?.let {
-            NesDragTarget(
-                bounds = it,
-                editingBounds = editingBounds.value,
-                label = stringResource(R.string.opennes_controls_right_group),
-                isLeft = false,
-                settings = settings,
-                gripWidthDp = gripWidthDp,
-                gripHeightDp = gripHeightDp,
-                safeLeftPx = safeLeftPx,
-                safeRightPx = safeRightPx,
-                safeTopPx = safeTopPx,
-                safeBottomPx = safeBottomPx,
-                onPreview = onPreview,
-                onCommit = onCommit,
-            )
-        }
+
         Surface(
             modifier =
                 Modifier
@@ -162,9 +144,7 @@ internal fun NesControllerDragOverlay(
                         }
                     }
                 } else {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         TextButton(onClick = onFineTune) {
                             Text(stringResource(R.string.opennes_controls_drag_sliders))
                         }
@@ -180,13 +160,10 @@ internal fun NesControllerDragOverlay(
 
 @Composable
 private fun NesDragTarget(
+    control: NesEditableControl,
     bounds: Rect,
     editingBounds: Rect?,
-    label: String,
-    isLeft: Boolean,
     settings: TouchControllerSettingsManager.Settings,
-    gripWidthDp: Float?,
-    gripHeightDp: Float,
     safeLeftPx: Float,
     safeRightPx: Float,
     safeTopPx: Float,
@@ -195,24 +172,24 @@ private fun NesDragTarget(
     onCommit: (TouchControllerSettingsManager.Settings) -> Unit,
 ) {
     val density = LocalDensity.current
-    val latestSettings = rememberUpdatedState(settings)
-    val latestBounds = rememberUpdatedState(bounds)
-    val latestEditingBounds = rememberUpdatedState(editingBounds)
-    val latestPreview = rememberUpdatedState(onPreview)
-    val latestCommit = rememberUpdatedState(onCommit)
-    val width = with(density) { bounds.width.toDp().coerceAtLeast(72.dp) }
-    val height = with(density) { bounds.height.toDp().coerceAtLeast(72.dp) }
-    val edgeInsetPx = with(density) { 10.dp.toPx() }
-    val horizontalRangeDp =
-        gripWidthDp?.let { NesLandscapeDragLimits.horizontalTravelDp(it, width.value) }
-            ?: TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_X
-    val verticalRangeDp =
-        if (gripWidthDp != null) {
-            NesLandscapeDragLimits.verticalTravelDp(gripHeightDp, height.value)
-        } else {
-            TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y
+    val currentSettings = rememberUpdatedState(settings)
+    val currentBounds = rememberUpdatedState(bounds)
+    val currentViewport = rememberUpdatedState(editingBounds)
+    val currentPreview = rememberUpdatedState(onPreview)
+    val currentCommit = rememberUpdatedState(onCommit)
+    val width = with(density) { bounds.width.toDp().coerceAtLeast(48.dp) }
+    val height = with(density) { bounds.height.toDp().coerceAtLeast(48.dp) }
+    val edgePx = with(density) { 8.dp.toPx() }
+    val corner = RoundedCornerShape(12.dp)
+    val label =
+        when (control) {
+            NesEditableControl.DPAD -> "D-PAD"
+            NesEditableControl.A -> "A"
+            NesEditableControl.B -> "B"
+            NesEditableControl.START -> "START"
+            NesEditableControl.SELECT -> "SELECT"
+            NesEditableControl.MENU -> "MENU"
         }
-    val corner = RoundedCornerShape(16.dp)
 
     Box(
         modifier =
@@ -224,94 +201,68 @@ private fun NesDragTarget(
                     )
                 }
                 .size(width, height)
-                .background(Color(0x224B5462), corner)
+                .background(Color(0x244B5462), corner)
                 .border(2.dp, Color(0xFFC74356), corner)
-                .pointerInput(isLeft, density.density) {
-                    var startSettings = latestSettings.value
-                    var startBounds = latestBounds.value
-                    var startEditingBounds = latestEditingBounds.value
-                    var totalDrag = Offset.Zero
-                    var finalSettings: TouchControllerSettingsManager.Settings? = null
+                .pointerInput(control, density.density) {
+                    var original = currentSettings.value
+                    var originalBounds = currentBounds.value
+                    var viewport = currentViewport.value
+                    var drag = Offset.Zero
+                    var latest: TouchControllerSettingsManager.Settings? = null
                     detectDragGestures(
                         onDragStart = {
-                            startSettings = latestSettings.value
-                            startBounds = latestBounds.value
-                            startEditingBounds = latestEditingBounds.value
-                            totalDrag = Offset.Zero
-                            finalSettings = null
+                            original = currentSettings.value
+                            originalBounds = currentBounds.value
+                            viewport = currentViewport.value
+                            drag = Offset.Zero
+                            latest = null
                         },
                         onDragEnd = {
-                            finalSettings?.let { latestCommit.value(it) }
-                            finalSettings = null
+                            latest?.let { currentCommit.value(it) }
+                            latest = null
                         },
                         onDragCancel = {
-                            latestPreview.value(startSettings)
-                            finalSettings = null
+                            currentPreview.value(original)
+                            latest = null
                         },
                         onDrag = { change, movement ->
                             change.consume()
-                            totalDrag += movement
-                            // Freeze the measured starting bounds for this gesture.
-                            // Otherwise recomposition would shift the clamp as
-                            // the edited cluster follows the finger.
-                            val limitedX =
-                                startEditingBounds?.let { viewport ->
+                            drag += movement
+                            val dx =
+                                viewport?.let {
                                     NesDragBounds.clamp(
-                                        totalDrag.x,
-                                        startBounds.left,
-                                        startBounds.right,
-                                        viewport.left,
-                                        viewport.right,
-                                        edgeInsetPx,
+                                        drag.x,
+                                        originalBounds.left,
+                                        originalBounds.right,
+                                        it.left,
+                                        it.right,
+                                        edgePx,
                                         safeLeftPx,
                                         safeRightPx,
                                     )
-                                } ?: totalDrag.x
-                            val limitedY =
-                                startEditingBounds?.let { viewport ->
+                                } ?: drag.x
+                            val dy =
+                                viewport?.let {
                                     NesDragBounds.clamp(
-                                        totalDrag.y,
-                                        startBounds.top,
-                                        startBounds.bottom,
-                                        viewport.top,
-                                        viewport.bottom,
-                                        edgeInsetPx,
+                                        drag.y,
+                                        originalBounds.top,
+                                        originalBounds.bottom,
+                                        it.top,
+                                        it.bottom,
+                                        edgePx,
                                         safeTopPx,
                                         safeBottomPx,
                                     )
-                                } ?: totalDrag.y
-                            val xDp = limitedX / density.density
-                            val yDp = limitedY / density.density
+                                } ?: drag.y
                             val revised =
-                                if (isLeft) {
-                                    startSettings.copy(
-                                        leftOffsetX =
-                                            (
-                                                startSettings.leftOffsetX +
-                                                    xDp / horizontalRangeDp.coerceAtLeast(0.001f)
-                                            ).coerceIn(-1f, 1f),
-                                        leftOffsetY =
-                                            (
-                                                startSettings.leftOffsetY +
-                                                    yDp / verticalRangeDp.coerceAtLeast(0.001f)
-                                            ).coerceIn(-1f, 1f),
-                                    )
-                                } else {
-                                    startSettings.copy(
-                                        rightOffsetX =
-                                            (
-                                                startSettings.rightOffsetX +
-                                                    xDp / horizontalRangeDp.coerceAtLeast(0.001f)
-                                            ).coerceIn(-1f, 1f),
-                                        rightOffsetY =
-                                            (
-                                                startSettings.rightOffsetY +
-                                                    yDp / verticalRangeDp.coerceAtLeast(0.001f)
-                                            ).coerceIn(-1f, 1f),
-                                    )
-                                }
-                            latestPreview.value(revised)
-                            finalSettings = revised
+                                NesControlDragSettings.move(
+                                    original,
+                                    control,
+                                    dx / density.density,
+                                    dy / density.density,
+                                )
+                            currentPreview.value(revised)
+                            latest = revised
                         },
                     )
                 },
@@ -326,8 +277,7 @@ private fun NesDragTarget(
             color = Color.White,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
+            maxLines = 1,
         )
     }
 }
