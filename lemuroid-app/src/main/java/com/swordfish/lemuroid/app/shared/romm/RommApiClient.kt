@@ -81,6 +81,15 @@ class RommApiClient {
             .followSslRedirects(false)
             .build()
 
+    // Large explicit ROM imports may legitimately exceed the API's 60-second
+    // total call timeout. Still enforce connection/read stall timeouts and
+    // MAX_ROM_BYTES, and allow coroutine cancellation during the copy loop.
+    private val importHttp =
+        http.newBuilder()
+            .callTimeout(0, TimeUnit.MILLISECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+
     /**
      * RomM client-token QR pairing: exchange an expiring code exactly once.
      * Never put the token in a URL, display it or persist it until /users/me
@@ -599,9 +608,12 @@ class RommApiClient {
                 .header("Authorization", "Bearer " + connection.token)
                 .header("User-Agent", "OpenNES/0.1 RomM read-only client")
                 .build()
-        http.newCall(request).execute().use { response ->
+        importHttp.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw httpError(response.code)
             val body = response.body ?: throw IOException("Empty RomM ROM response")
+            if (rom.sizeBytes > MAX_ROM_BYTES) {
+                throw IOException("RomM ROM exceeds import size limit")
+            }
             if (body.contentLength() > MAX_ROM_BYTES) {
                 throw IOException("RomM ROM exceeds import size limit")
             }
