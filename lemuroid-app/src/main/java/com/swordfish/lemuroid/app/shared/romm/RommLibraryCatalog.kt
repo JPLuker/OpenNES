@@ -27,6 +27,7 @@ internal object RommLibraryCatalog {
         val games: List<RommApiClient.Rom> = emptyList(),
         val refreshing: Boolean = false,
         val downloadingIds: Set<Int> = emptySet(),
+        val queuedIds: Set<Int> = emptySet(),
         val awaitingIndexIds: Set<Int> = emptySet(),
         val error: String? = null,
         val downloadError: String? = null,
@@ -276,83 +277,120 @@ internal object RommLibraryCatalog {
         }
     }
 
+    /**
+     * Add a visible queue entry before waiting for the one-at-a-time import
+     * mutex. Previously a second tap could wait invisibly behind a download.
+     * The queue is session-scoped; no ROM is downloaded automatically.
+     */
     suspend fun download(
         context: Context,
         rom: RommApiClient.Rom,
     ) {
-        downloadMutex.withLock {
-            val current = snapshot.value
-            if (rom.id in current.downloadingIds || rom.id in current.awaitingIndexIds) return@withLock
-            val store = RommConnectionStore(context.applicationContext)
-            val source = RommServerIdentity.fingerprint(store.configuredServer())
-            if (
-                source == null ||
-                current.source != source ||
-                credentialRevision != store.credentialRevision() ||
-                current.games.none { it.id == rom.id && it.fileName == rom.fileName }
-            ) {
-                snapshot.value =
-                    current.copy(
-                        downloadFailures =
-                            current.downloadFailures +
-                                (rom.id to "RomM connection changed. Refresh the library and retry."),
-                    )
-                return@withLock
-            }
-            snapshot.value =
+        val old = snapshot.value
+        if (rom.id in old.downloadingIds || rom.id in old.awaitingIndexIds || rom.id in old.queuedIds) {
+            return
+        }
+        snapshot.update { current ->
+            if (rom.id in current.downloadingIds || rom.id in current.awaitingIndexIds || rom.id in current.queuedIds) {
+                current
+            } else {
                 current.copy(
-                    downloadingIds = current.downloadingIds + rom.id,
-                    downloadError = null,
+                    queuedIds = current.queuedIds + rom.id,
                     downloadFailures = current.downloadFailures - rom.id,
-                    transferProgress =
-                        current.transferProgress +
-                            (rom.id to RommApiClient.ImportProgress(RommApiClient.ImportStage.CONNECTING)),
                 )
-            try {
-                val connection =
-                    withContext(Dispatchers.IO) {
-                        store.load() ?: error("RomM credentials unavailable")
-                    }
-                require(RommServerIdentity.fingerprint(connection.serverUrl) == source)
-                RommApiClient().importIntoSelectedNesFolder(
-                    context.applicationContext,
-                    connection,
-                    rom,
-                ) { progress ->
-                    snapshot.update { currentState ->
-                        currentState.copy(
-                            transferProgress = currentState.transferProgress + (rom.id to progress),
-                        )
-                    }
-                }
-                awaitingIndexSince[rom.id] = System.currentTimeMillis()
-                snapshot.update { currentState ->
-                    currentState.copy(
-                        downloadingIds = currentState.downloadingIds - rom.id,
-                        awaitingIndexIds = currentState.awaitingIndexIds + rom.id,
-                        transferProgress =
-                            currentState.transferProgress +
-                                (rom.id to RommApiClient.ImportProgress(RommApiClient.ImportStage.INDEXING)),
-                    )
-                }
-            } catch (cancelled: CancellationException) {
-                snapshot.update { currentState ->
-                    currentState.copy(
-                        downloadingIds = currentState.downloadingIds - rom.id,
-                        transferProgress = currentState.transferProgress - rom.id,
-                    )
-                }
-                throw cancelled
-            } catch (error: Exception) {
-                snapshot.update { currentState ->
-                    currentState.copy(
-                        downloadingIds = currentState.downloadingIds - rom.id,
-                        transferProgress = currentState.transferProgress - rom.id,
-                        downloadFailures =
-                            currentState.downloadFailures + (rom.id to safeDownloadError(error)),
-                    )
-                }
             }
         }
+        try {
+            downloadMutex.withLock {
+                val current = snapshot.value
+                if (rom.id !in current.queuedIds) return@withLock
+                val store = RommConnectionStore(context.applicationContext)
+                val source = RommServerIdentity.fingerprint(store.configuredServer())
+                val revision = store.credentialRevision()
+                if (
+                    source == null ||
+                    current.source != source ||
+                    credentialRevision != revision ||
+                    current.games.none { it.id == rom.id && it.fileName == rom.fileName }
+                ) {
+                    snapshot.update {
+                        it.copy(
+                            downloadFailures =
+                                it.downloadFailures +
+                                    (rom.id to "RomM connection changed. Refresh the library and retry."),
+                        )
+                    }
+                    return@withLock
+                }
+                snapshot.update {
+                    it.copy(
+                        queuedIds = it.queuedIds - rom.id,
+                        downloadingIds = it.downloadingIds + rom.id,
+                        downloadFailures = it.downloadFailures - rom.id,
+                        transferProgress =
+                            it.transferProgress +
+                                (rom.id to RommApiClient.ImportProgress(RommApiClient.ImportStage.CONNECTING)),
+                    )
+                }
+                try {
+                    val connection =
+                        withContext(Dispatchers.IO) {
+                            store.load() ?: error("RomM credentials unavailable")
+                        }
+                    require(RommServerIdentity.fingerprint(connection.serverUrl) == source)
+                    RommApiClient().importIntoSelectedNesFolder(
+                        context.applicationContext,
+                        connection,
+                        rom,
+                    ) { progress ->
+                        snapshot.update {
+                            if (it.source == source && credentialRevision == revision) {
+                                it.copy(transferProgress = it.transferProgress + (rom.id to progress))
+                            } else {
+                                it
+                            }
+                        }
+                    }
+                    awaitingIndexSince[rom.id] = System.currentTimeMillis()
+                    snapshot.update {
+                        if (it.source == source && credentialRevision == revision) {
+                            it.copy(
+                                downloadingIds = it.downloadingIds - rom.id,
+                                awaitingIndexIds = it.awaitingIndexIds + rom.id,
+                                transferProgress =
+                                    it.transferProgress +
+                                        (rom.id to RommApiClient.ImportProgress(RommApiClient.ImportStage.INDEXING)),
+                            )
+                        } else {
+                            it
+                        }
+                    }
+                } catch (cancelled: CancellationException) {
+                    snapshot.update {
+                        it.copy(
+                            downloadingIds = it.downloadingIds - rom.id,
+                            transferProgress = it.transferProgress - rom.id,
+                        )
+                    }
+                    throw cancelled
+                } catch (failure: Exception) {
+                    snapshot.update {
+                        if (it.source == source && credentialRevision == revision) {
+                            it.copy(
+                                downloadingIds = it.downloadingIds - rom.id,
+                                transferProgress = it.transferProgress - rom.id,
+                                downloadFailures =
+                                    it.downloadFailures + (rom.id to safeDownloadError(failure)),
+                            )
+                        } else {
+                            it
+                        }
+                    }
+                }
+            }
+        } finally {
+            snapshot.update { it.copy(queuedIds = it.queuedIds - rom.id) }
+        }
     }
+
 }
