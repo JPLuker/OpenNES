@@ -211,7 +211,11 @@ internal object RommLibraryCatalog {
             }
         } catch (_: Exception) {
             snapshot.update {
-                it.copy(downloadFailures = it.downloadFailures + (romId to "Could not restart library indexing. Check your ROM folder in Settings."))
+                it.copy(
+                    downloadFailures =
+                        it.downloadFailures +
+                            (romId to "Could not restart indexing. Check the ROM folder in Settings."),
+                )
             }
         }
     }
@@ -226,11 +230,13 @@ internal object RommLibraryCatalog {
                 "The ROM file already exists. Rescan your NES library instead of downloading another copy."
             "not writable" in detail || "cannot write" in detail || "choose an opennes rom folder" in detail ->
                 "OpenNES cannot write to the chosen ROM folder. Select a writable NES folder in Settings."
-            "401" in detail || "403" in detail -> "RomM access was denied. Reconnect in Settings and check token permissions."
+            "401" in detail || "403" in detail ->
+                "RomM access was denied. Reconnect in Settings and check token permissions."
             "404" in detail -> "RomM could not find this ROM. Refresh the library and try again."
             "exceeds import size" in detail -> "This ROM exceeds OpenNES's supported file size."
             error is SecurityException -> "ROM folder access expired. Select the folder again in Settings."
-            error is IOException -> "Download or file import failed. Check network access, free space, and folder permissions."
+            error is IOException ->
+                "Download or file import failed. Check the network, free space, and folder permissions."
             else -> "Download failed. Check the RomM connection and your NES folder, then retry."
         }
     }
@@ -253,7 +259,8 @@ internal object RommLibraryCatalog {
                 snapshot.value =
                     current.copy(
                         downloadFailures =
-                            current.downloadFailures + (rom.id to "RomM connection changed. Refresh the library and retry."),
+                            current.downloadFailures +
+                                (rom.id to "RomM connection changed. Refresh the library and retry."),
                     )
                 return@withLock
             }
