@@ -105,6 +105,7 @@ import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
 import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.covers.NesCoverResolutionCache
+import com.swordfish.lemuroid.app.shared.game.ActiveGameSession
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
@@ -136,6 +137,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel,
     onGameClick: (Game) -> Unit,
+    activeSession: ActiveGameSession.Running? = null,
+    onResumeActive: () -> Unit = {},
     onGameLongClick: (Game) -> Unit,
     onPinShortcut: (Game) -> Unit,
     pinShortcutSupported: Boolean,
@@ -194,6 +197,8 @@ fun HomeScreen(
         onRetryRomM = { viewModel.refreshRomMLibrary(force = true) },
         onOpenRemoteStatus = { selectedGame = RommLibraryCatalog.asPreview(it) },
         onGameClick = onGameClick,
+        activeSession = activeSession,
+        onResumeActive = onResumeActive,
         onGameLongClick = { game ->
             if (game.id < 0) {
                 selectedGame = game
@@ -290,6 +295,8 @@ private fun OpenNesLibrary(
     onRetryRomM: () -> Unit,
     onOpenRemoteStatus: (com.swordfish.lemuroid.app.shared.romm.RommApiClient.Rom) -> Unit,
     onGameClick: (Game) -> Unit,
+    activeSession: ActiveGameSession.Running?,
+    onResumeActive: () -> Unit,
     onGameLongClick: (Game) -> Unit,
     onGameDetailsClick: (Game) -> Unit,
     onSearchClick: () -> Unit,
@@ -386,8 +393,34 @@ private fun OpenNesLibrary(
             }
         }
 
-        state.recentGames.firstOrNull()?.let { game ->
-            item { FeaturedGame(game, onGameClick) }
+        if (activeSession != null) {
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = LibraryColors.panel,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("RUNNING GAME", color = LibraryColors.red, fontSize = 11.sp)
+                            Text(
+                                activeSession.title,
+                                color = LibraryColors.foreground,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        Button(onClick = onResumeActive) { Text("Resume") }
+                    }
+                }
+            }
+        } else {
+            state.recentGames.firstOrNull()?.let { game ->
+                item { FeaturedGame(game, onGameClick) }
+            }
         }
         if (state.recentGames.isNotEmpty()) {
             item {
