@@ -26,14 +26,19 @@ internal object NesControlDragSettings {
                 )
             NesEditableControl.A -> settings.copy(aButton = movedButton(settings.aButton, deltaXdp, deltaYdp))
             NesEditableControl.B -> settings.copy(bButton = movedButton(settings.bButton, deltaXdp, deltaYdp))
-            NesEditableControl.START -> settings.copy(startButton = movedButton(settings.startButton, deltaXdp, deltaYdp))
-            NesEditableControl.SELECT -> settings.copy(selectButton = movedButton(settings.selectButton, deltaXdp, deltaYdp))
+            NesEditableControl.START ->
+                settings.copy(
+                    startButton = movedButton(settings.startButton, deltaXdp, deltaYdp),
+                )
+            NesEditableControl.SELECT ->
+                settings.copy(
+                    selectButton = movedButton(settings.selectButton, deltaXdp, deltaYdp),
+                )
             NesEditableControl.MENU -> settings.copy(menuButton = movedButton(settings.menuButton, deltaXdp, deltaYdp))
         }
     }
 
-    private fun adjust(v: Float, delta: Float): Float =
-        (v + delta).coerceIn(-MAX_ABSOLUTE_OFFSET_DP, MAX_ABSOLUTE_OFFSET_DP)
+    private fun adjust(v: Float, delta: Float): Float = (v + delta).coerceIn(-MAX_ABSOLUTE_OFFSET_DP, MAX_ABSOLUTE_OFFSET_DP)
 
     private fun movedButton(
         geometry: TouchControllerSettingsManager.ButtonGeometry,
