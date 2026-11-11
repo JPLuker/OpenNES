@@ -258,7 +258,7 @@
     <string name="tilt_configuration_buttons_l2_r2">L2 - R2</string>
 
     <!-- OpenNES shelf / library, original UI (M2) -->
-    <string name="opennes_library_title">Your NES library</string>
+    <string name="opennes_library_title">Your Library</string>
     <string name="opennes_setup_choose_title">Start your NES collection</string>
     <string name="opennes_setup_choose_description">Choose a folder containing your NES game files. OpenNES will discover compatible ROMs and add available box art and game details automatically. Your ROM files stay on your device.</string>
     <string name="opennes_setup_choose_action">Choose NES folder</string>
@@ -360,7 +360,15 @@
     <string name="opennes_use_catalog_match">Use</string>
     <string name="opennes_recent_shelf">Recently played</string>
     <string name="opennes_favorites_shelf">Your favorites</string>
-    <string name="opennes_discover_shelf">Your NES library</string>
+    <string name="opennes_discover_shelf">Your Library</string>
+    <string name="opennes_library_filter_title">Filter library</string>
+    <string name="opennes_library_filter_location">Location</string>
+    <string name="opennes_library_filter_genre">Genre</string>
+    <string name="opennes_library_filter_sort">Sort by</string>
+    <string name="opennes_library_sort_title">Title (A–Z)</string>
+    <string name="opennes_library_sort_recent">Recently played</string>
+    <string name="opennes_library_sort_year">Release year</string>
+    <string name="opennes_library_genre_unavailable">No genre information is available for these games yet.</string>
     <string name="opennes_achievements_future">RetroAchievements integration is coming later</string>
     <string name="opennes_playtime_not_recorded">Playtime tracking starts with this update</string>
     <string name="opennes_not_played">Not played yet</string>
