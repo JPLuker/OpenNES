@@ -462,6 +462,7 @@
     <string name="opennes_romm_no_description">No description available from RomM.</string>
     <string name="opennes_romm_installed">Installed · Ready to play</string>
     <string name="opennes_romm_phase_queued">Waiting for current download…</string>
+    <string name="opennes_romm_operation_cancelled">Operation cancelled.</string>
     <string name="opennes_romm_cache_offline">RomM unavailable — showing cached games</string>
     <string name="opennes_romm_connection_failed">Cannot load the RomM library</string>
     <string name="opennes_romm_cache_refreshing">Checking RomM — cached games available</string>
