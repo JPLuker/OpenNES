@@ -24,9 +24,19 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
     override suspend fun searchMetadata(title: String): List<GameMetadata> {
         val query = title.trim()
         if (query.length < 3) return emptyList()
+        val multiCart = NesGameTitle.isCompilation(query)
+        val canonical = NesGameTitle.canonicalReleaseName(query)
 
         return runCatching {
-            ovgdbManager.dbInstance.gameDao().searchNesTitles(query)
+            val dao = ovgdbManager.dbInstance.gameDao()
+            NesGameTitle.searchVariants(query)
+                .flatMap { variant -> dao.searchNesTitles(variant) }
+                .filter { candidate ->
+                    !multiCart ||
+                        (
+                            candidate.name?.let { NesGameTitle.canonicalReleaseName(it) == canonical } == true
+                        )
+                }
                 .distinctBy { it.name?.lowercase(Locale.ROOT) }
                 .take(20)
                 .map { convertToGameMetadata(it) }
@@ -91,18 +101,23 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         file: StorageFile,
     ): GameMetadata? {
         val title = file.extensionlessName
-        val cleaned = NesGameTitle.clean(title)
-        val prefix =
-            cleaned.replace(Regex("""^(?:The|An|A)\s+""", RegexOption.IGNORE_CASE), "")
-                .substringBefore('(')
-                .substringBefore('[')
-                .trim()
-
-        if (prefix.length < 4 || prefix.contains('%') || prefix.contains('_')) return null
-
         val canonicalTitle = canonicalNesTitle(title)
+        val prefixes =
+            NesGameTitle.searchVariants(title)
+                .map {
+                    it.replace(Regex("""^(?:The|An|A)\s+""", RegexOption.IGNORE_CASE), "")
+                        .substringBefore('(')
+                        .substringBefore('[')
+                        .trim()
+                }
+                .filter { it.length >= 4 && '%' !in it && '_' !in it }
+                .distinct()
+                .take(8)
+        if (prefixes.isEmpty()) return null
+
         val matches =
-            db.gameDao().findByTitlePrefix(prefix)
+            prefixes.flatMap { db.gameDao().findByTitlePrefix(it) }
+                .distinctBy { it.romName }
                 .filter { candidate ->
                     candidate.name?.let { canonicalNesTitle(it) == canonicalTitle } == true
                 }
@@ -117,8 +132,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
     }
 
     private fun canonicalNesTitle(raw: String): String =
-        NesGameTitle.clean(raw).lowercase(Locale.ROOT)
-            .replace(Regex("[^a-z0-9]"), "")
+        NesGameTitle.canonicalReleaseName(raw)
 
     private suspend fun findByPathAndFilename(
         db: LibretroDatabase,
