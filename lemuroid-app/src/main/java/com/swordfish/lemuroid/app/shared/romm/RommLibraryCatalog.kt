@@ -188,7 +188,7 @@ internal object RommLibraryCatalog {
                 snapshot.value =
                     snapshot.value.copy(
                         refreshing = false,
-                        error = "RomM is unavailable. Previously loaded games remain visible; downloads require a connection.",
+                        error = "RomM is unavailable. Cached games remain visible; downloads need a connection.",
                         showingOfflineCache = snapshot.value.games.isNotEmpty(),
                     )
             }
@@ -199,8 +199,8 @@ internal object RommLibraryCatalog {
      * Keep pending imports visible until Room confirms the scanned file is
      * indexed. A slow scan offers a retry action rather than a silent disabled
      * button. A remote file is never redownloaded just to force indexing.
+     * Pure reducer: no Android or network I/O.
      */
-    /** Pure reducer for Room scan events; testable without a phone. */
     fun reconciled(
         current: State,
         indexedFileNames: Set<String>,
@@ -400,5 +400,4 @@ internal object RommLibraryCatalog {
             snapshot.update { it.copy(queuedIds = it.queuedIds - rom.id) }
         }
     }
-
 }
