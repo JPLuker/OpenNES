@@ -60,6 +60,9 @@ class RommApiClient {
         val total: Int,
         val offset: Int,
         val limit: Int,
+        // Raw API row count, before filtering unsupported files. Required to
+        // advance through every page without silently dropping valid games.
+        val rawCount: Int = items.size,
     )
 
     data class RemoteSave(
@@ -132,6 +135,11 @@ class RommApiClient {
                 ?: throw IOException("RomM did not return a signed-in user")
         }
 
+    // An API adapter is scoped to one active connection during a catalogue
+    // refresh. Avoid re-requesting /api/platforms for every page.
+    private var platformCacheConnection: RommConnection? = null
+    private var platformCacheIds: Set<Int>? = null
+
     suspend fun listNesRoms(
         connection: RommConnection,
         offset: Int = 0,
@@ -139,7 +147,14 @@ class RommApiClient {
     ): Page =
         withContext(Dispatchers.IO) {
             require(offset >= 0 && limit in 1..100) { "Invalid RomM page" }
-            val ids = findNesPlatformIds(connection)
+            val ids =
+                if (platformCacheConnection === connection) {
+                    platformCacheIds ?: findNesPlatformIds(connection)
+                } else {
+                    findNesPlatformIds(connection)
+                }
+            platformCacheConnection = connection
+            platformCacheIds = ids
             if (ids.isEmpty()) return@withContext Page(emptyList(), 0, offset, limit)
             val params =
                 mutableListOf(
@@ -179,9 +194,15 @@ class RommApiClient {
                 }
             Page(
                 items = result,
-                total = document.optInt("total", offset + items.length()),
+                total =
+                    if (document.has("total") && !document.isNull("total")) {
+                        document.optInt("total", -1)
+                    } else {
+                        -1
+                    },
                 offset = offset,
                 limit = limit,
+                rawCount = items.length(),
             )
         }
 
