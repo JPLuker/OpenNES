@@ -28,6 +28,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
@@ -42,8 +44,6 @@ import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncPlanner
 import com.swordfish.lemuroid.app.shared.romm.RommServerIdentity
 import com.swordfish.lemuroid.app.shared.romm.RommVersionedSaveBackupStore
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
