@@ -441,6 +441,7 @@ class RommApiClient {
                 local = local,
                 remote = RommSaveSyncPlanner.Snapshot(backup.sha256, backup.bytes),
                 serverFingerprint = serverFingerprint,
+                sourceAccountId = backup.sourceAccountId,
             )
         }
 

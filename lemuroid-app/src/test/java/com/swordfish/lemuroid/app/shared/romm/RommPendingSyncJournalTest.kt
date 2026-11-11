@@ -8,6 +8,50 @@ import java.io.File
 import java.nio.file.Files
 
 class RommPendingSyncJournalTest {
+    @Test
+    fun sameServerAndGameCanQueueIndependentAccountsWithoutCrossApproval() {
+        val folder = Files.createTempDirectory("romm-account-isolation-").toFile()
+        try {
+            val journal = RommPendingSyncJournal(folder)
+            for (id in listOf(100L, 200L)) {
+                assertTrue(
+                    journal.enqueue(
+                        99,
+                        RommSaveSyncPlanner.Direction.UPLOAD,
+                        snapshot("b"),
+                        snapshot("a"),
+                        serverA,
+                        sourceAccountId = id,
+                    ),
+                )
+            }
+            val reloaded = (journal.list() as RommPendingSyncJournal.ReadResult.Entries).pending
+            assertEquals(setOf(100L, 200L), reloaded.mapNotNull { it.sourceAccountId }.toSet())
+            assertFalse(
+                journal.enqueue(
+                    99,
+                    RommSaveSyncPlanner.Direction.UPLOAD,
+                    snapshot("b"),
+                    snapshot("a"),
+                    serverA,
+                    sourceAccountId = 100L,
+                ),
+            )
+            assertFalse(
+                journal.enqueue(
+                    100,
+                    RommSaveSyncPlanner.Direction.UPLOAD,
+                    snapshot("b"),
+                    snapshot("a"),
+                    serverA,
+                    sourceAccountId = -1L,
+                ),
+            )
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
     private val serverA = "a".repeat(64)
     private val serverB = "b".repeat(64)
 
@@ -155,7 +199,16 @@ class RommPendingSyncJournalTest {
         try {
             val journal = RommPendingSyncJournal(folder)
             assertFalse(journal.enqueue(5, RommSaveSyncPlanner.Direction.UPLOAD, snapshot("b"), snapshot("a"), "bad"))
-            assertTrue(journal.enqueue(5, RommSaveSyncPlanner.Direction.UPLOAD, snapshot("b"), snapshot("a"), serverA))
+            assertTrue(
+                journal.enqueue(
+                    5,
+                    RommSaveSyncPlanner.Direction.UPLOAD,
+                    snapshot("b"),
+                    snapshot("a"),
+                    serverA,
+                    sourceAccountId = 42L,
+                ),
+            )
             val entry = (journal.list() as RommPendingSyncJournal.ReadResult.Entries).pending.single()
             val valid =
                 RommSaveSyncPlanner.Request(
@@ -180,21 +233,25 @@ class RommPendingSyncJournalTest {
             )
             assertEquals(
                 RommSaveSyncPlanner.Decision.Conflict,
-                journal.evaluate(entry, valid.copy(local = snapshot("c")), serverA),
+                journal.evaluate(entry, valid.copy(local = snapshot("c")), serverA, 42L),
+            )
+            assertEquals(
+                RommSaveSyncPlanner.Decision.UnverifiedIdentity,
+                journal.evaluate(entry, valid, serverA, 999L),
             )
             assertEquals(
                 RommSaveSyncPlanner.Decision.RevalidateWhenOnline,
-                journal.evaluate(entry, valid.copy(online = false), serverA),
+                journal.evaluate(entry, valid.copy(online = false), serverA, 42L),
             )
             assertEquals(
                 RommSaveSyncPlanner.Decision.ExplicitApprovalRequired,
-                journal.evaluate(entry, valid.copy(approvedThisOperation = false), serverA),
+                journal.evaluate(entry, valid.copy(approvedThisOperation = false), serverA, 42L),
             )
-            assertTrue(journal.evaluate(entry, valid, serverA) is RommSaveSyncPlanner.Decision.UploadCopy)
+            assertTrue(journal.evaluate(entry, valid, serverA, 42L) is RommSaveSyncPlanner.Decision.UploadCopy)
             assertTrue(journal.discard(entry.id))
             assertEquals(
                 RommSaveSyncPlanner.Decision.Conflict,
-                journal.evaluate(entry, valid, serverA),
+                journal.evaluate(entry, valid, serverA, 42L),
             )
         } finally {
             folder.deleteRecursively()

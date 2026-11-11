@@ -24,6 +24,7 @@ internal class RommPendingSyncJournal(private val directory: File) {
         val observedLocal: RommSaveSyncPlanner.Snapshot,
         val observedRemote: RommSaveSyncPlanner.Snapshot,
         val requestedAtMillis: Long,
+        val sourceAccountId: Long? = null,
     )
 
     sealed interface ReadResult {
@@ -58,7 +59,7 @@ internal class RommPendingSyncJournal(private val directory: File) {
             if (array.length() > MAX_PENDING) return ReadResult.Corrupt
             val entries = ArrayList<Pending>()
             val ids = HashSet<String>()
-            val games = HashSet<Pair<String, Int>>()
+            val games = HashSet<Triple<String, Long?, Int>>()
             for (i in 0 until array.length()) {
                 val item = array.getJSONObject(i)
                 val id = item.getString("id")
@@ -68,15 +69,35 @@ internal class RommPendingSyncJournal(private val directory: File) {
                 val observedLocal = snapshot(item.getJSONObject("local"))
                 val observedRemote = snapshot(item.getJSONObject("remote"))
                 val timestamp = item.getLong("requestedAtMillis")
+                val sourceAccountId =
+                    if (item.has("sourceAccountId") && !item.isNull("sourceAccountId")) {
+                        (item.opt("sourceAccountId") as? Number)
+                            ?.toString()
+                            ?.toLongOrNull()
+                            ?.takeIf { it > 0L }
+                            ?: return ReadResult.Corrupt
+                    } else {
+                        null
+                    }
                 if (!id.matches(ID_PATTERN) ||
                     !RommServerIdentity.validFingerprint(serverFingerprint) ||
                     !ids.add(id) || romId <= 0 ||
-                    !games.add(serverFingerprint to romId) ||
+                    !games.add(Triple(serverFingerprint, sourceAccountId, romId)) ||
                     direction == RommSaveSyncPlanner.Direction.NONE || timestamp <= 0L
                 ) {
                     return ReadResult.Corrupt
                 }
-                entries += Pending(id, serverFingerprint, romId, direction, observedLocal, observedRemote, timestamp)
+                entries +=
+                    Pending(
+                        id = id,
+                        serverFingerprint = serverFingerprint,
+                        romId = romId,
+                        direction = direction,
+                        observedLocal = observedLocal,
+                        observedRemote = observedRemote,
+                        requestedAtMillis = timestamp,
+                        sourceAccountId = sourceAccountId,
+                    )
             }
             ReadResult.Entries(entries)
         } catch (_: Exception) {
@@ -95,15 +116,22 @@ internal class RommPendingSyncJournal(private val directory: File) {
         local: RommSaveSyncPlanner.Snapshot,
         remote: RommSaveSyncPlanner.Snapshot,
         serverFingerprint: String,
+        sourceAccountId: Long? = null,
     ): Boolean {
         if (!RommServerIdentity.validFingerprint(serverFingerprint) ||
-            romId <= 0 || direction == RommSaveSyncPlanner.Direction.NONE
+            romId <= 0 ||
+            (sourceAccountId != null && sourceAccountId <= 0L) ||
+            direction == RommSaveSyncPlanner.Direction.NONE
         ) {
             return false
         }
         val current = (list() as? ReadResult.Entries)?.pending ?: return false
         if (current.size >= MAX_PENDING ||
-            current.any { it.romId == romId && it.serverFingerprint == serverFingerprint }
+            current.any {
+                it.romId == romId &&
+                    it.serverFingerprint == serverFingerprint &&
+                    it.sourceAccountId == sourceAccountId
+            }
         ) {
             return false
         }
@@ -116,6 +144,7 @@ internal class RommPendingSyncJournal(private val directory: File) {
                 observedLocal = local,
                 observedRemote = remote,
                 requestedAtMillis = System.currentTimeMillis(),
+                sourceAccountId = sourceAccountId,
             )
         return persist(current + addition)
     }
@@ -168,10 +197,16 @@ internal class RommPendingSyncJournal(private val directory: File) {
         pending: Pending,
         request: RommSaveSyncPlanner.Request,
         serverFingerprint: String,
+        activeAccountId: Long? = null,
     ): RommSaveSyncPlanner.Decision {
         if (!RommServerIdentity.validFingerprint(serverFingerprint) ||
             pending.serverFingerprint != serverFingerprint
         ) {
+            return RommSaveSyncPlanner.Decision.UnverifiedIdentity
+        }
+        if (pending.sourceAccountId == null || pending.sourceAccountId != activeAccountId) {
+            // An older server-only request can be reviewed or discarded,
+            // but cannot become a candidate transfer under any account.
             return RommSaveSyncPlanner.Decision.UnverifiedIdentity
         }
         val fresh = (list() as? ReadResult.Entries)?.pending ?: return RommSaveSyncPlanner.Decision.Conflict
@@ -190,7 +225,7 @@ internal class RommPendingSyncJournal(private val directory: File) {
         if (!directory.isDirectory && !directory.mkdirs()) return false
         val values = JSONArray()
         pending.forEach { item ->
-            values.put(
+            val json =
                 JSONObject()
                     .put("id", item.id)
                     .put("serverFingerprint", item.serverFingerprint)
@@ -198,8 +233,9 @@ internal class RommPendingSyncJournal(private val directory: File) {
                     .put("direction", item.direction.name)
                     .put("local", serialize(item.observedLocal))
                     .put("remote", serialize(item.observedRemote))
-                    .put("requestedAtMillis", item.requestedAtMillis),
-            )
+                    .put("requestedAtMillis", item.requestedAtMillis)
+            item.sourceAccountId?.let { json.put("sourceAccountId", it) }
+            values.put(json)
         }
         val data = JSONObject().put("pending", values).toString()
         val bytes =
