@@ -167,6 +167,7 @@ fun SearchScreen(
                             onFavorite = {},
                             remote = true,
                             downloading = remote.id in romm.downloadingIds,
+                            queued = remote.id in romm.queuedIds,
                             awaitingIndex = remote.id in romm.awaitingIndexIds,
                             hasRomFolder = hasRomFolder,
                             onDownload = {
@@ -227,6 +228,7 @@ private fun SearchGameRow(
     onFavorite: () -> Unit,
     remote: Boolean = false,
     downloading: Boolean = false,
+    queued: Boolean = false,
     awaitingIndex: Boolean = false,
     hasRomFolder: Boolean = true,
     onDownload: () -> Unit = {},
@@ -296,10 +298,11 @@ private fun SearchGameRow(
             }
             Spacer(modifier = Modifier.width(2.dp))
             if (remote) {
-                Button(onClick = onDownload, enabled = hasRomFolder && !downloading && !awaitingIndex) {
+                Button(onClick = onDownload, enabled = hasRomFolder && !downloading && !queued && !awaitingIndex) {
                     Text(
                         stringResource(
                             when {
+                                queued -> R.string.opennes_romm_phase_queued
                                 downloading -> R.string.opennes_romm_downloading
                                 awaitingIndex -> R.string.opennes_romm_adding_to_library
                                 else -> R.string.opennes_romm_download
