@@ -172,7 +172,7 @@ fun HomeScreen(
         remoteGames = remoteGames,
         onGameClick = onGameClick,
         onGameLongClick = { game ->
-            if (RommLibraryCatalog.remoteFor(game, romm) != null) {
+            if (game.id < 0) {
                 selectedGame = game
             } else {
                 onGameLongClick(game)
@@ -200,7 +200,7 @@ fun HomeScreen(
                 onDismiss = { selectedGame = null },
                 onDownload = { viewModel.downloadFromRomM(remote) },
             )
-        } else {
+        } else if (game.id > 0) {
             GameDetailsSheet(
             game = game,
             onDismiss = { selectedGame = null },
