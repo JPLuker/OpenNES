@@ -395,8 +395,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    private fun currentPlayDuration(): Long =
-        foregroundPlaySession.elapsed(SystemClock.elapsedRealtime())
+    private fun currentPlayDuration(): Long = foregroundPlaySession.elapsed(SystemClock.elapsedRealtime())
 
     override fun onStop() {
         // Even a quick-resumed or backgrounded emulator must downgrade to
