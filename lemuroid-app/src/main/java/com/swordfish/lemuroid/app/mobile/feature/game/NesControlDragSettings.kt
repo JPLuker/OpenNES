@@ -17,15 +17,6 @@ internal object NesControlDragSettings {
         deltaYdp: Float,
     ): TouchControllerSettingsManager.Settings {
         if (!deltaXdp.isFinite() || !deltaYdp.isFinite()) return settings
-        fun adjust(v: Float, delta: Float): Float =
-            (v + delta).coerceIn(-MAX_ABSOLUTE_OFFSET_DP, MAX_ABSOLUTE_OFFSET_DP)
-        fun button(
-            geometry: TouchControllerSettingsManager.ButtonGeometry,
-        ): TouchControllerSettingsManager.ButtonGeometry =
-            geometry.copy(
-                dragX = adjust(geometry.dragX, deltaXdp),
-                dragY = adjust(geometry.dragY, deltaYdp),
-            )
 
         return when (control) {
             NesEditableControl.DPAD ->
@@ -33,11 +24,24 @@ internal object NesControlDragSettings {
                     leftDragX = adjust(settings.leftDragX, deltaXdp),
                     leftDragY = adjust(settings.leftDragY, deltaYdp),
                 )
-            NesEditableControl.A -> settings.copy(aButton = button(settings.aButton))
-            NesEditableControl.B -> settings.copy(bButton = button(settings.bButton))
-            NesEditableControl.START -> settings.copy(startButton = button(settings.startButton))
-            NesEditableControl.SELECT -> settings.copy(selectButton = button(settings.selectButton))
-            NesEditableControl.MENU -> settings.copy(menuButton = button(settings.menuButton))
+            NesEditableControl.A -> settings.copy(aButton = movedButton(settings.aButton, deltaXdp, deltaYdp))
+            NesEditableControl.B -> settings.copy(bButton = movedButton(settings.bButton, deltaXdp, deltaYdp))
+            NesEditableControl.START -> settings.copy(startButton = movedButton(settings.startButton, deltaXdp, deltaYdp))
+            NesEditableControl.SELECT -> settings.copy(selectButton = movedButton(settings.selectButton, deltaXdp, deltaYdp))
+            NesEditableControl.MENU -> settings.copy(menuButton = movedButton(settings.menuButton, deltaXdp, deltaYdp))
         }
     }
+
+    private fun adjust(v: Float, delta: Float): Float =
+        (v + delta).coerceIn(-MAX_ABSOLUTE_OFFSET_DP, MAX_ABSOLUTE_OFFSET_DP)
+
+    private fun movedButton(
+        geometry: TouchControllerSettingsManager.ButtonGeometry,
+        dx: Float,
+        dy: Float,
+    ): TouchControllerSettingsManager.ButtonGeometry =
+        geometry.copy(
+            dragX = adjust(geometry.dragX, dx),
+            dragY = adjust(geometry.dragY, dy),
+        )
 }
