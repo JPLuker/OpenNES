@@ -885,95 +885,96 @@ private fun GameDetailsSheet(
                     Text("Play")
                 }
                 Box {
-                OutlinedIconButton(
-                    onClick = { menuExpanded = true },
-                    modifier = Modifier.size(48.dp),
-                    border = BorderStroke(1.dp, LibraryColors.border),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Menu,
-                        contentDescription = stringResource(R.string.opennes_game_actions_for, game.displayName()),
-                        tint = LibraryColors.foreground,
-                    )
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                    containerColor = LibraryColors.surface,
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.opennes_profile_edit)) },
-                        onClick = {
-                            menuExpanded = false
-                            editingProfile = true
-                            onlineExpanded = false
-                            searchExpanded = false
-                            fixMatchExpanded = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.opennes_online_lookup)) },
-                        onClick = {
-                            menuExpanded = false
-                            onlineExpanded = true
-                            editingProfile = false
-                            searchExpanded = false
-                            fixMatchExpanded = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.opennes_find_game_info)) },
-                        onClick = {
-                            menuExpanded = false
-                            searchExpanded = true
-                            editingProfile = false
-                            onlineExpanded = false
-                            fixMatchExpanded = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.opennes_fix_match)) },
-                        onClick = {
-                            menuExpanded = false
-                            fixMatchExpanded = true
-                            editingProfile = false
-                            onlineExpanded = false
-                            searchExpanded = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (game.isFavorite) {
-                                        R.string.game_context_menu_remove_from_favorites
-                                    } else {
-                                        R.string.game_context_menu_add_to_favorites
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            menuExpanded = false
-                            onFavoriteToggle(!game.isFavorite)
-                        },
-                    )
-                    if (pinShortcutSupported) {
+                    OutlinedIconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.size(48.dp),
+                        border = BorderStroke(1.dp, LibraryColors.border),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Menu,
+                            contentDescription = stringResource(R.string.opennes_game_actions_for, game.displayName()),
+                            tint = LibraryColors.foreground,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                        containerColor = LibraryColors.surface,
+                    ) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.game_context_menu_create_shortcut)) },
+                            text = { Text(stringResource(R.string.opennes_profile_edit)) },
                             onClick = {
                                 menuExpanded = false
-                                onPinShortcut()
+                                editingProfile = true
+                                onlineExpanded = false
+                                searchExpanded = false
+                                fixMatchExpanded = false
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.opennes_online_lookup)) },
+                            onClick = {
+                                menuExpanded = false
+                                onlineExpanded = true
+                                editingProfile = false
+                                searchExpanded = false
+                                fixMatchExpanded = false
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.opennes_find_game_info)) },
+                            onClick = {
+                                menuExpanded = false
+                                searchExpanded = true
+                                editingProfile = false
+                                onlineExpanded = false
+                                fixMatchExpanded = false
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.opennes_fix_match)) },
+                            onClick = {
+                                menuExpanded = false
+                                fixMatchExpanded = true
+                                editingProfile = false
+                                onlineExpanded = false
+                                searchExpanded = false
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    stringResource(
+                                        if (game.isFavorite) {
+                                            R.string.game_context_menu_remove_from_favorites
+                                        } else {
+                                            R.string.game_context_menu_add_to_favorites
+                                        },
+                                    ),
+                                )
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onFavoriteToggle(!game.isFavorite)
+                            },
+                        )
+                        if (pinShortcutSupported) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.game_context_menu_create_shortcut)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onPinShortcut()
+                                },
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.opennes_other_game_actions)) },
+                            onClick = {
+                                menuExpanded = false
+                                onMore()
                             },
                         )
                     }
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.opennes_other_game_actions)) },
-                        onClick = {
-                            menuExpanded = false
-                            onMore()
-                        },
-                    )
                 }
             }
             Row(
