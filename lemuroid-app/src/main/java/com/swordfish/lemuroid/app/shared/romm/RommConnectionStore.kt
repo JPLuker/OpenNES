@@ -7,6 +7,7 @@ import android.util.AtomicFile
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -28,6 +29,10 @@ class RommConnectionStore(context: Context) {
 
     @Synchronized
     fun hasSavedToken(): Boolean = secretFile.baseFile.isFile
+
+    /** Changes with every login, even if the RomM server URL stays the same. */
+    @Synchronized
+    fun credentialRevision(): String? = prefs.getString(CREDENTIAL_REVISION_KEY, null)
 
     @Synchronized
     fun save(
@@ -59,7 +64,10 @@ class RommConnectionStore(context: Context) {
         try {
             stream.write(bytes)
             secretFile.finishWrite(stream)
-            prefs.edit().putString(SERVER_KEY, url).apply()
+            prefs.edit()
+                .putString(SERVER_KEY, url)
+                .putString(CREDENTIAL_REVISION_KEY, UUID.randomUUID().toString())
+                .apply()
         } catch (e: Exception) {
             secretFile.failWrite(stream)
             throw e
@@ -98,7 +106,7 @@ class RommConnectionStore(context: Context) {
     @Synchronized
     fun disconnect() {
         secretFile.delete()
-        prefs.edit().remove(SERVER_KEY).apply()
+        prefs.edit().remove(SERVER_KEY).remove(CREDENTIAL_REVISION_KEY).apply()
     }
 
     private fun getOrCreateKey(): SecretKey {
@@ -122,6 +130,7 @@ class RommConnectionStore(context: Context) {
 
     companion object {
         private const val SERVER_KEY = "server_url"
+        private const val CREDENTIAL_REVISION_KEY = "credential_revision"
         private const val KEY_ALIAS = "opennes_romm_client_token_v1"
         private const val FORMAT_VERSION = 1
     }
