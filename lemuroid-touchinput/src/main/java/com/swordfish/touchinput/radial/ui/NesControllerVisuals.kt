@@ -17,12 +17,16 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalNesControllerPalette
+import com.swordfish.touchinput.radial.layouts.LocalNesControlBoundsReporter
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
+import com.swordfish.touchinput.radial.layouts.NesEditableControl
 
 /**
  * A single, continuous twelve-corner D-pad silhouette replaces five
@@ -169,8 +173,23 @@ fun NesFaceButtonForeground(
     val palette = LocalNesControllerPalette.current
     val opacity = LocalLemuroidPadTheme.current.opacity
     val minimal = LocalNesLandscapeMinimal.current
+    val report = LocalNesControlBoundsReporter.current
+    val control =
+        when (label) {
+            "A" -> NesEditableControl.A
+            "B" -> NesEditableControl.B
+            else -> null
+        }
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .onGloballyPositioned { coordinates ->
+                    control?.let { report(it, coordinates.boundsInRoot()) }
+                },
+        contentAlignment = Alignment.Center,
+    ) {
         Canvas(modifier = Modifier.fillMaxSize().padding(4.dp)) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = (size.minDimension * 0.44f).coerceAtLeast(0f)
