@@ -186,6 +186,7 @@ fun HomeScreen(
         state = state,
         allGames = allGames,
         romm = romm,
+        onRetryRomM = { viewModel.refreshRomMLibrary(force = true) },
         onBrowseAll = { browsingAll = true },
         onOpenRemoteStatus = { selectedGame = RommLibraryCatalog.asPreview(it) },
         onGameClick = onGameClick,
@@ -291,6 +292,7 @@ private fun OpenNesLibrary(
     state: HomeViewModel.UIState,
     allGames: List<Game>,
     romm: RommLibraryCatalog.State,
+    onRetryRomM: () -> Unit,
     onBrowseAll: () -> Unit,
     onOpenRemoteStatus: (com.swordfish.lemuroid.app.shared.romm.RommApiClient.Rom) -> Unit,
     onGameClick: (Game) -> Unit,
@@ -341,6 +343,7 @@ private fun OpenNesLibrary(
         // Remains accessible after the details sheet is dismissed, so a long
         // download or failed scan never becomes an invisible disabled action.
         RommDownloadStatus(catalog = romm, onOpen = onOpenRemoteStatus)
+        RommConnectionNotice(catalog = romm, onRetry = onRetryRomM)
 
         AnimatedVisibility(state.showNoNotificationPermissionCard) {
             LibraryNotice(
