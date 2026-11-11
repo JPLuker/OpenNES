@@ -96,6 +96,12 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // A stale Resume intent must not start a duplicate emulator without
+        // game/core initialization extras.
+        if (!intent.hasExtra(EXTRA_GAME) || !intent.hasExtra(EXTRA_SYSTEM_CORE_CONFIG)) {
+            finish()
+            return
+        }
         setUpExceptionsHandler()
         GameService.startService(applicationContext, intent)
         game = intent.getSerializableExtra(EXTRA_GAME) as Game
@@ -361,7 +367,8 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     open fun onFinishTriggered() {
-        ActiveGameSession.clear(applicationContext)
+        // Keep the session visible until the emulator process actually ends.
+        // GameService clears it; the process lock rejects stale markers.
         finishTriggered = true
     }
 

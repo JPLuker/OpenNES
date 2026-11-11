@@ -25,15 +25,19 @@ object ActiveGameSession {
         game: Game,
     ) {
         if (game.id <= 0) return
-        val json = JSONObject().put("id", game.id).put("title", game.displayName())
-        val destination = file(context)
-        val stream = destination.startWrite()
-        try {
-            stream.write(json.toString().toByteArray(Charsets.UTF_8))
-            destination.finishWrite(stream)
-        } catch (e: Exception) {
-            destination.failWrite(stream)
+        runCatching {
+            val json = JSONObject().put("id", game.id).put("title", game.displayName())
+            val destination = file(context)
+            val stream = destination.startWrite()
+            try {
+                stream.write(json.toString().toByteArray(Charsets.UTF_8))
+                destination.finishWrite(stream)
+            } catch (e: Exception) {
+                destination.failWrite(stream)
+            }
         }
+        // Session marker failures must never interrupt running a game.
+
     }
 
     fun clear(context: Context) {

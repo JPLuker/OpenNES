@@ -350,6 +350,11 @@ internal fun GameMenuCheatsScreen(game: Game) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(candidate.title, fontSize = 13.sp)
                                 Text(candidate.code, color = GameMenuStyle.muted, fontSize = 11.sp)
+                                Text(
+                                    candidate.sourceTitle,
+                                    color = GameMenuStyle.muted,
+                                    fontSize = 10.sp,
+                                )
                             }
                         }
                     }
