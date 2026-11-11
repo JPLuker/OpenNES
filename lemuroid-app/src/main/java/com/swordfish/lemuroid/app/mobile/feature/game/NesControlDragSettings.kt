@@ -8,7 +8,7 @@ import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
  * normalized fine-tune values for old saved layouts and other orientations.
  */
 internal object NesControlDragSettings {
-    private const val MAX_ABSOLUTE_OFFSET_DP = 600f
+    private const val MAX_ABSOLUTE_OFFSET_DP = 2048f
 
     fun move(
         settings: TouchControllerSettingsManager.Settings,

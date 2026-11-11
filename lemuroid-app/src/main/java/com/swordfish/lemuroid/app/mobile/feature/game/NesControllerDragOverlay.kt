@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -67,8 +68,10 @@ internal fun NesControllerDragOverlay(
     onCommit: (TouchControllerSettingsManager.Settings) -> Unit,
     onDone: () -> Unit,
     onFineTune: () -> Unit,
+    onRestoreDefaults: () -> Unit,
 ) {
     val editingBounds = remember { mutableStateOf<Rect?>(null) }
+    val confirmRestore = remember { mutableStateOf(false) }
     BoxWithConstraints(
         modifier =
             Modifier
@@ -139,6 +142,9 @@ internal fun NesControllerDragOverlay(
                         TextButton(onClick = onFineTune, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(R.string.opennes_controls_drag_sliders))
                         }
+                        TextButton(onClick = { confirmRestore.value = true }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(com.swordfish.touchinput.controller.R.string.touch_customize_button_reset))
+                        }
                         TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(TouchInputR.string.touch_customize_button_done))
                         }
@@ -148,6 +154,9 @@ internal fun NesControllerDragOverlay(
                         TextButton(onClick = onFineTune) {
                             Text(stringResource(R.string.opennes_controls_drag_sliders))
                         }
+                        TextButton(onClick = { confirmRestore.value = true }) {
+                            Text(stringResource(com.swordfish.touchinput.controller.R.string.touch_customize_button_reset))
+                        }
                         TextButton(onClick = onDone) {
                             Text(stringResource(TouchInputR.string.touch_customize_button_done))
                         }
@@ -155,6 +164,33 @@ internal fun NesControllerDragOverlay(
                 }
             }
         }
+    }
+    if (confirmRestore.value) {
+        AlertDialog(
+            onDismissRequest = { confirmRestore.value = false },
+            title = { Text("Restore controller defaults?") },
+            text = {
+                Text(
+                    "Reset positions and sizes for this orientation only. " +
+                        "Controller colors and the other orientation will be preserved.",
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmRestore.value = false
+                        onRestoreDefaults()
+                    },
+                ) {
+                    Text("Restore defaults")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestore.value = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }
 

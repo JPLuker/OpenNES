@@ -423,6 +423,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         viewModel.setDragEditMode(false)
                         viewModel.showEditControls(true)
                     },
+                    onRestoreDefaults = viewModel::resetTouchControls,
                 )
             }
         }

@@ -78,7 +78,7 @@ internal fun NesControllerSetupSheet(
     onUseDefaults: () -> Unit,
 ) {
     val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.78f).dp
-    var colorsExpanded by remember { mutableStateOf(false) }
+    var colorsPage by remember { mutableStateOf(false) }
     var selectedColorPart by remember { mutableStateOf<NesColorPart?>(null) }
     ModalBottomSheet(
         onDismissRequest = onUseDefaults,
@@ -94,6 +94,23 @@ internal fun NesControllerSetupSheet(
         ) {
             Text(stringResource(R.string.opennes_setup_step), color = androidx.compose.ui.graphics.Color.Gray)
             Text(stringResource(R.string.opennes_setup_title))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = { colorsPage = false },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(if (colorsPage) "Presets & layout" else "✓ Presets & layout")
+                }
+                OutlinedButton(
+                    onClick = { colorsPage = true },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(if (colorsPage) "✓ Colors" else "Customize colors")
+                }
+            }
             Column(
                 modifier =
                     Modifier
@@ -102,6 +119,30 @@ internal fun NesControllerSetupSheet(
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (colorsPage) {
+                    Text(stringResource(R.string.opennes_setup_color_hint))
+                    ControllerAppearancePreview(currentPalette)
+                    NesColorPart.values().forEach { part ->
+                        TextButton(
+                            onClick = { selectedColorPart = part },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(22.dp)
+                                            .background(currentPalette.color(part), CircleShape),
+                                )
+                                Text(part.label)
+                            }
+                        }
+                    }
+                } else {
                 Text(stringResource(R.string.opennes_setup_explanation))
                 Text(stringResource(R.string.opennes_setup_preview))
                 ControllerAppearancePreview(currentPalette)
@@ -151,34 +192,6 @@ internal fun NesControllerSetupSheet(
                         }
                     }
                 }
-                OutlinedButton(
-                    onClick = { colorsExpanded = !colorsExpanded },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.opennes_setup_custom_colors))
-                }
-                if (colorsExpanded) {
-                    Text(stringResource(R.string.opennes_setup_color_hint))
-                    NesColorPart.values().forEach { part ->
-                        TextButton(
-                            onClick = { selectedColorPart = part },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .size(22.dp)
-                                            .background(currentPalette.color(part), CircleShape),
-                                )
-                                Text(part.label)
-                            }
-                        }
-                    }
                 }
             }
             HorizontalDivider()
