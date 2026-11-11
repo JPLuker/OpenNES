@@ -17,10 +17,11 @@ class StatesPreviewManager(private val directoriesManager: DirectoriesManager) {
         coreID: CoreID,
         index: Int,
         size: Int,
+        profile: GameSaveProfile = GameSaveProfile.CASUAL,
     ): Bitmap? =
         withContext(Dispatchers.IO) {
             val screenshotName = getSlotScreenshotName(game, index)
-            val file = getPreviewFile(screenshotName, coreID.coreName)
+            val file = getPreviewFile(screenshotName, coreID.coreName, profile)
             val bitmap = BitmapFactory.decodeFile(file.absolutePath)
             ThumbnailUtils.extractThumbnail(bitmap, size, size)
         }
@@ -30,9 +31,10 @@ class StatesPreviewManager(private val directoriesManager: DirectoriesManager) {
         bitmap: Bitmap,
         coreID: CoreID,
         index: Int,
+        profile: GameSaveProfile = GameSaveProfile.CASUAL,
     ) = withContext(Dispatchers.IO) {
         val screenshotName = getSlotScreenshotName(game, index)
-        val file = getPreviewFile(screenshotName, coreID.coreName)
+        val file = getPreviewFile(screenshotName, coreID.coreName, profile)
         FileOutputStream(file).use {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it)
         }
@@ -41,10 +43,12 @@ class StatesPreviewManager(private val directoriesManager: DirectoriesManager) {
     private fun getPreviewFile(
         fileName: String,
         coreName: String,
+        profile: GameSaveProfile,
     ): File {
-        val statesDirectories = File(directoriesManager.getStatesPreviewDirectory(), coreName)
-        statesDirectories.mkdirs()
-        return File(statesDirectories, fileName)
+        val root = File(directoriesManager.getStatesPreviewDirectory(), coreName)
+        val directory = SaveProfileDirectories.states(root, profile)
+        check(directory.mkdirs() || directory.isDirectory)
+        return File(directory, fileName)
     }
 
     private fun getSlotScreenshotName(
