@@ -360,7 +360,7 @@
     <string name="opennes_use_catalog_match">Use</string>
     <string name="opennes_recent_shelf">Recently played</string>
     <string name="opennes_favorites_shelf">Your favorites</string>
-    <string name="opennes_discover_shelf">Not yet played</string>
+    <string name="opennes_discover_shelf">Your NES library</string>
     <string name="opennes_achievements_future">RetroAchievements integration is coming later</string>
     <string name="opennes_playtime_not_recorded">Playtime tracking starts with this update</string>
     <string name="opennes_not_played">Not played yet</string>
