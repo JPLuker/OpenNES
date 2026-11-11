@@ -881,13 +881,24 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     }
 
     prepareArchive?.let { selected ->
+        val ownedByCurrentAccount =
+            selected.sourceAccountId != null &&
+                selected.sourceAccountId == store.lastVerifiedUserId()
         AlertDialog(
             onDismissRequest = { prepareArchive = null },
             title = { Text(stringResource(R.string.opennes_romm_pending_prepare)) },
-            text = { Text(stringResource(R.string.opennes_romm_pending_prepare_explanation)) },
+            text = {
+                Text(
+                    if (ownedByCurrentAccount) {
+                        stringResource(R.string.opennes_romm_pending_prepare_explanation)
+                    } else {
+                        "Reconnect with the account that created this backup."
+                    },
+                )
+            },
             confirmButton = {
                 TextButton(
-                    enabled = !busy,
+                    enabled = !busy && ownedByCurrentAccount,
                     onClick = {
                         prepareArchive = null
                         pendingTransferDocument = selected to RommSaveSyncPlanner.Direction.UPLOAD
@@ -898,7 +909,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             dismissButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     TextButton(
-                        enabled = !busy,
+                        enabled = !busy && ownedByCurrentAccount,
                         onClick = {
                             prepareArchive = null
                             pendingTransferDocument = selected to RommSaveSyncPlanner.Direction.DOWNLOAD

@@ -12,6 +12,41 @@ import org.junit.rules.TemporaryFolder
 import java.io.IOException
 
 class RommVersionedSaveBackupStoreTest {
+    @Test
+    fun accountBoundArchivesCannotBeReusedUnderDifferentRomMUser() {
+        val source = temporary.newFile("owned.sav")
+        source.writeBytes(ByteArray(64) { it.toByte() })
+        val folder = temporary.newFolder("account-archives")
+        val store = RommVersionedSaveBackupStore(folder)
+        val server = "a".repeat(64)
+        val alice = store.createVerifiedBackup(11, source, server, 100L)
+        val bob = store.createVerifiedBackup(11, source, server, 200L)
+        val restored = RommVersionedSaveBackupStore(folder).listVerifiedBackups(11)
+        assertEquals(2, restored.size)
+        assertEquals(100L, restored.first { it.file == alice.file }.sourceAccountId)
+        assertEquals(200L, restored.first { it.file == bob.file }.sourceAccountId)
+        assertFalse(store.isCurrentlyArchived(alice.copy(sourceAccountId = 200L)))
+        assertFalse(store.deleteVerifiedBackup(alice.copy(sourceAccountId = 200L)))
+        assertTrue(store.isCurrentlyArchived(alice))
+        assertTrue(store.isCurrentlyArchived(bob))
+    }
+
+    @Test
+    fun accountProvenanceRequiresValidUserAndServerWithoutRewritingLegacyArchives() {
+        val source = temporary.newFile("legacy.sav")
+        source.writeBytes(byteArrayOf(1, 2, 3))
+        val store = RommVersionedSaveBackupStore(temporary.newFolder("mixed-archives"))
+        val legacy = store.createVerifiedBackup(9, source, "b".repeat(64))
+        assertEquals(null, legacy.sourceAccountId)
+        assertThrows(IllegalArgumentException::class.java) {
+            store.createVerifiedBackup(9, source, sourceAccountId = 10L)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            store.createVerifiedBackup(9, source, "b".repeat(64), -1L)
+        }
+        assertTrue(store.isCurrentlyArchived(legacy))
+    }
+
     @get:Rule
     val temporary = TemporaryFolder()
 

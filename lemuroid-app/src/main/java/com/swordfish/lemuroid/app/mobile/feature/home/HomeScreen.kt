@@ -1784,13 +1784,6 @@ private fun GameProfileSection(
                 }
             }
 
-            if (game.genre.isNullOrBlank() && game.releaseYear == null && game.description.isNullOrBlank()) {
-                Text(
-                    text = stringResource(R.string.opennes_profile_empty),
-                    color = LibraryColors.muted,
-                    fontSize = 12.sp,
-                )
-            }
         } else {
             OutlinedTextField(
                 value = genreInput,

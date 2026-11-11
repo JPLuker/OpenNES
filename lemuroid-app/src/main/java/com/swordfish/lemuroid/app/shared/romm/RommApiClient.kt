@@ -354,12 +354,22 @@ class RommApiClient {
         save: RemoteSave,
     ): RommVersionedSaveBackupStore.Backup =
         withContext(Dispatchers.IO) {
+            // A server URL is not an account identity: check the token owner
+            // before producing a new save that might later be synced.
+            val userId =
+                checkAccountProfile(connection).userId
+                    ?: throw IOException("RomM account identity unavailable for save backup")
             val temporary = downloadVerifiedRemoteSave(context, connection, save)
             try {
                 val fingerprint =
                     RommServerIdentity.fingerprint(connection.serverUrl)
                         ?: throw IOException("Invalid RomM server identity")
-                privateBackupStore(context).createVerifiedBackup(save.romId, temporary, fingerprint)
+                privateBackupStore(context).createVerifiedBackup(
+                    romId = save.romId,
+                    original = temporary,
+                    sourceServerFingerprint = fingerprint,
+                    sourceAccountId = userId,
+                )
             } finally {
                 temporary.delete()
             }
@@ -410,7 +420,10 @@ class RommApiClient {
     ): Boolean =
         withContext(Dispatchers.IO) {
             val serverFingerprint = RommServerIdentity.fingerprint(serverUrl) ?: return@withContext false
+            val pinnedUserId = RommConnectionStore(context).lastVerifiedUserId()
             if (backup.sourceServerFingerprint != serverFingerprint ||
+                backup.sourceAccountId == null ||
+                backup.sourceAccountId != pinnedUserId ||
                 direction == RommSaveSyncPlanner.Direction.NONE
             ) {
                 return@withContext false
