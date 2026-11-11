@@ -163,27 +163,31 @@ object GameScreenLayout {
             val gameContainer = createRefFor(CONSTRAINTS_GAME_CONTAINER)
             val leftPad = createRefFor(CONSTRAINTS_LEFT_PAD)
             val rightPad = createRefFor(CONSTRAINTS_RIGHT_PAD)
-            val sideWidth = Dimension.value(sideWidthDp.coerceAtLeast(0f).dp)
 
+            // The virtual input surfaces span the full viewport; only the
+            // video viewport respects the visual side gutters. Otherwise a
+            // moved button is clipped by the original grip's hit-test bounds.
             constrain(leftPad) {
-                width = sideWidth
+                width = Dimension.fillToConstraints
+                height = Dimension.fillToConstraints
                 absoluteLeft.linkTo(parent.absoluteLeft)
-                top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
-            }
-
-            constrain(rightPad) {
-                width = sideWidth
                 absoluteRight.linkTo(parent.absoluteRight)
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
             }
-
+            constrain(rightPad) {
+                width = Dimension.fillToConstraints
+                height = Dimension.fillToConstraints
+                absoluteLeft.linkTo(parent.absoluteLeft)
+                absoluteRight.linkTo(parent.absoluteRight)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+            }
             constrain(gameView) {
                 width = Dimension.fillToConstraints
                 height = Dimension.fillToConstraints
-                absoluteLeft.linkTo(leftPad.absoluteRight)
-                absoluteRight.linkTo(rightPad.absoluteLeft)
+                absoluteLeft.linkTo(parent.absoluteLeft, margin = sideWidthDp.dp)
+                absoluteRight.linkTo(parent.absoluteRight, margin = sideWidthDp.dp)
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
             }

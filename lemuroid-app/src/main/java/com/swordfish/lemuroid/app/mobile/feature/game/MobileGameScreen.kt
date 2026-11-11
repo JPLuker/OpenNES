@@ -371,11 +371,13 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                             NESLandscapeLeft(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD),
                                 settings = touchControllerSettings,
+                                gripWidthDp = sidePanelWidthDp ?: 0f,
                                 onPrimaryBounds = { leftPadBounds.value = it },
                             )
                             NESLandscapeRight(
                                 modifier = Modifier.layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD),
                                 settings = touchControllerSettings,
+                                gripWidthDp = sidePanelWidthDp ?: 0f,
                                 onPrimaryBounds = { rightPadBounds.value = it },
                             )
                         } else {
