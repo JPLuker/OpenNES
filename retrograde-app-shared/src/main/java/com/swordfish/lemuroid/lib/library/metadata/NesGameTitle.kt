@@ -25,8 +25,8 @@ object NesGameTitle {
         )
     private val trailingArticle = Regex("""^(.+),\s*(The|An|A)$""", RegexOption.IGNORE_CASE)
 
-    private val bundlePrefix = Regex("""^(?:2-in-1|2 in 1)\\s*[:\\-]?\\s*""", RegexOption.IGNORE_CASE)
-    private val multiGameSeparator = Regex("""\\s*(?:\\+|/|&|\\band\\b)\\s*""", RegexOption.IGNORE_CASE)
+    private val bundlePrefix = Regex("""^(?:2-in-1|2 in 1)\s*[:-]?\s*""", RegexOption.IGNORE_CASE)
+    private val multiGameSeparator = Regex("""\s*(?:\+|/|&|\band\b)\s*""", RegexOption.IGNORE_CASE)
 
     /**
      * Manual NES search accepts reversed articles and naming differences on
@@ -38,7 +38,7 @@ object NesGameTitle {
         val cleaned = clean(original)
         val withoutPrefix = cleaned.replace(bundlePrefix, "").trim()
         val results = linkedSetOf(original, cleaned, withoutPrefix)
-        val article = Regex("""^(The|An|A)\\s+(.+)$""", RegexOption.IGNORE_CASE)
+        val article = Regex("""^(The|An|A)\s+(.+)$""", RegexOption.IGNORE_CASE)
             .matchEntire(withoutPrefix)
         if (article != null) {
             results += "${article.groupValues[2]}, ${article.groupValues[1]}"
