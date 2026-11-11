@@ -28,6 +28,7 @@
 - [ ] Verify 60Hz audio/frame sync, suspend/resume, audio-focus handoff, fast-forward and save SRAM/autosave/manual states.
 - [ ] Verify portrait and landscape NES touch controls, simultaneous A+B, diagonals, external gamepads and gestures/cutouts.
 - [ ] Verify metadata import/error recovery, offline operation, accessibility, shortcuts and favorites.
+- [ ] Audit all user-facing screens for redundant guidance, repetitive disclaimers, internal/developer terminology, unnecessary empty-state filler and placeholder copy; remove it or replace it with concise actionable status. Keep essential safety and permission information accessible without cluttering ordinary game screens.
 - [ ] Verify RetroAchievements only after approved native `rc_client` integration and actual eligible unlocks are accepted; do not advertise unimplemented features.
 - [ ] Perform smoke testing on multiple Android versions, screen sizes and CPU ABIs.
 - [ ] Sign off changelog, screenshots, download instructions, crash support and release rollback procedure.

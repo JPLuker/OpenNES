@@ -997,13 +997,6 @@ private fun GameDetailsSheet(
                     color = if (launchModeStore.hardcoreAvailable) LibraryColors.foreground else LibraryColors.muted,
                 )
             }
-            if (!launchModeStore.hardcoreAvailable) {
-                Text(
-                    "Hardcore requires emulator approval. Casual uses your existing saves.",
-                    color = LibraryColors.muted,
-                    fontSize = 12.sp,
-                )
-            }
         }
     }
 
