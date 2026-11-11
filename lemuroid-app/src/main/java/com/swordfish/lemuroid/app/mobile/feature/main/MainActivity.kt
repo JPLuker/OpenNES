@@ -8,13 +8,25 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,6 +38,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -159,6 +175,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             val activeSession = remember { mutableStateOf(ActiveGameSession.current(applicationContext)) }
             val pendingSwitch = remember { mutableStateOf<Game?>(null) }
             val switching = remember { mutableStateOf(false) }
+            val switchError = remember { mutableStateOf(false) }
             val scope = rememberCoroutineScope()
 
             ComposableLifecycle { _, event ->
@@ -186,7 +203,10 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 when {
                     running == null -> gameInteractor.onGamePlay(game)
                     running.gameId == game.id -> resumeGame()
-                    else -> pendingSwitch.value = game
+                    else -> {
+                        switchError.value = false
+                        pendingSwitch.value = game
+                    }
                 }
             }
 
@@ -199,68 +219,110 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             }
 
             pendingSwitch.value?.let { next ->
-                AlertDialog(
-                    onDismissRequest = { if (!switching.value) pendingSwitch.value = null },
-                    title = { Text("Another game is running") },
-                    text = {
-                        Text(
-                            "${activeSession.value?.title ?: "A game"} is currently open. " +
-                                "Close it safely before starting ${next.displayName()}?",
-                        )
+                Dialog(
+                    onDismissRequest = {
+                        if (!switching.value) pendingSwitch.value = null
                     },
-                    confirmButton = {
-                        TextButton(
-                            enabled = !switching.value,
-                            onClick = {
-                                switching.value = true
-                                scope.launch {
-                                    GameService.requestCloseRunningGame(applicationContext)
-                                    val stopped =
-                                        withContext(Dispatchers.IO) {
-                                            repeat(150) {
-                                                val locked =
-                                                    runCatching {
-                                                        GameProcessLock.isHeldByAnotherProcess(applicationContext)
-                                                    }.getOrDefault(true)
-                                                if (!locked) return@withContext true
-                                                delay(100)
-                                            }
-                                            false
-                                        }
-                                    switching.value = false
-                                    pendingSwitch.value = null
-                                    activeSession.value = ActiveGameSession.current(applicationContext)
-                                    if (stopped) {
-                                        gameInteractor.onGamePlay(next)
-                                    } else {
-                                        android.widget.Toast.makeText(
-                                            applicationContext,
-                                            "Could not safely close the running game.",
-                                            android.widget.Toast.LENGTH_LONG,
-                                        ).show()
-                                    }
-                                }
-                            },
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            Text(if (switching.value) "Closing…" else "Close & launch")
-                        }
-                    },
-                    dismissButton = {
-                        androidx.compose.foundation.layout.Row {
-                            TextButton(
-                                enabled = !switching.value,
-                                onClick = { pendingSwitch.value = null },
-                            ) { Text("Cancel") }
-                            TextButton(
+                            Text(
+                                "Switch games?",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                "Close ${activeSession.value?.title ?: "the current game"} " +
+                                    "before starting ${next.displayName()}. Your progress will be saved.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 4,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            if (switchError.value) {
+                                Text(
+                                    "The running game did not close. It is still open; no forced shutdown was performed.",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Button(
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                                 enabled = !switching.value,
                                 onClick = {
-                                    pendingSwitch.value = null
-                                    resumeGame()
+                                    switching.value = true
+                                    switchError.value = false
+                                    scope.launch {
+                                        try {
+                                            GameService.requestCloseRunningGame(applicationContext)
+                                            val stopped =
+                                                withContext(Dispatchers.IO) {
+                                                    repeat(150) {
+                                                        val locked =
+                                                            runCatching {
+                                                                GameProcessLock.isHeldByAnotherProcess(
+                                                                    applicationContext,
+                                                                )
+                                                            }.getOrDefault(true)
+                                                        if (!locked) return@withContext true
+                                                        delay(100)
+                                                    }
+                                                    false
+                                                }
+                                            activeSession.value = ActiveGameSession.current(applicationContext)
+                                            if (stopped) {
+                                                pendingSwitch.value = null
+                                                gameInteractor.onGamePlay(next)
+                                            } else {
+                                                switchError.value = true
+                                            }
+                                        } catch (e: kotlinx.coroutines.CancellationException) {
+                                            throw e
+                                        } catch (_: Exception) {
+                                            switchError.value = true
+                                        } finally {
+                                            switching.value = false
+                                        }
+                                    }
                                 },
-                            ) { Text("Resume current") }
+                            ) {
+                                if (switching.value) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.padding(end = 12.dp).size(18.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        strokeWidth = 2.dp,
+                                    )
+                                }
+                                Text(if (switching.value) "Saving and closing…" else "Close & launch")
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                TextButton(
+                                    enabled = !switching.value,
+                                    onClick = { pendingSwitch.value = null },
+                                ) { Text("Cancel") }
+                                OutlinedButton(
+                                    enabled = !switching.value,
+                                    onClick = {
+                                        pendingSwitch.value = null
+                                        resumeGame()
+                                    },
+                                ) { Text("Resume current") }
+                            }
                         }
-                    },
-                )
+                    }
+                }
             }
 
             val mainUIState =
