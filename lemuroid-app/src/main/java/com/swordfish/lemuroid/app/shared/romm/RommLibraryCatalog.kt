@@ -91,6 +91,7 @@ internal object RommLibraryCatalog {
             coverFrontUrl = rom.coverUrl,
             lastIndexedAt = 0,
             description = rom.description,
+            genre = rom.genres.joinToString(", ").takeIf { it.isNotBlank() },
         )
 
     fun remoteFor(
