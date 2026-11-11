@@ -1,5 +1,9 @@
 package com.swordfish.lemuroid.app.mobile.feature.settings.advanced
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -10,9 +14,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.swordfish.lemuroid.BuildConfig
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
@@ -21,6 +27,7 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSlider
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSwitch
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesDiagnosticReport
 import com.swordfish.lemuroid.app.utils.android.settings.booleanPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.indexPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.intPreferenceState
@@ -45,6 +52,7 @@ fun AdvancedSettingsScreen(
 
         InputSettings()
         GeneralSettings(uiState.cache, viewModel, navController)
+        SupportDiagnostics()
     }
 }
 
@@ -124,6 +132,40 @@ private fun GeneralSettings(
 
     if (factoryResetDialogState.value) {
         FactoryResetDialog(factoryResetDialogState, viewModel, navController)
+    }
+}
+
+@Composable
+private fun SupportDiagnostics() {
+    val context = LocalContext.current
+    val copied = remember { mutableStateOf(false) }
+
+    OpenNesSettingsGroup(
+        title = { Text(stringResource(R.string.opennes_support_section)) },
+    ) {
+        OpenNesSettingsLink(
+            title = { Text(stringResource(R.string.opennes_support_copy)) },
+            subtitle = { Text(stringResource(R.string.opennes_support_description)) },
+            onClick = {
+                val clipboard =
+                    context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                val report =
+                    OpenNesDiagnosticReport.build(
+                        appVersion = BuildConfig.VERSION_NAME,
+                        versionCode = BuildConfig.VERSION_CODE.toLong(),
+                        androidSdk = Build.VERSION.SDK_INT,
+                        deviceAbi = Build.SUPPORTED_ABIS.firstOrNull().orEmpty(),
+                        packageVariant = if (BuildConfig.DEBUG) "debug" else "release",
+                    )
+                if (clipboard != null) {
+                    clipboard.setPrimaryClip(ClipData.newPlainText("OpenNES diagnostics", report))
+                    copied.value = true
+                }
+            },
+        )
+        if (copied.value) {
+            Text(stringResource(R.string.opennes_support_copied))
+        }
     }
 }
 

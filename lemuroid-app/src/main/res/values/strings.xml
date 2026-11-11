@@ -424,6 +424,10 @@
     <string name="opennes_controls_reset_confirm_title">Reset this controller layout?</string>
     <string name="opennes_controls_reset_confirm_description">This resets sizes, positions, opacity and rotation for the current orientation. Your other orientation and saved games are not affected.</string>
     <!-- Optional RomM integration. Also needed by M5 APK compile. -->
+    <string name="opennes_support_section">Support diagnostics</string>
+    <string name="opennes_support_copy">Copy diagnostic report</string>
+    <string name="opennes_support_description">Copies app version, Android version and CPU architecture only. No game titles, file paths, accounts or credentials.</string>
+    <string name="opennes_support_copied">Diagnostic report copied to clipboard.</string>
     <string name="opennes_romm_title">RomM library</string>
     <string name="opennes_romm_settings_description">Connect to a RomM server and import NES games</string>
     <string name="opennes_romm_explanation">Connect to your own RomM server to browse and manually import NES or Famicom games. Your ROM folder must be selected first.</string>
