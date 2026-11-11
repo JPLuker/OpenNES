@@ -4,8 +4,8 @@ import android.content.Context
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -64,7 +64,10 @@ internal object RommLibraryCatalog {
             lastIndexedAt = 0,
         )
 
-    fun remoteFor(game: Game, current: State): RommApiClient.Rom? {
+    fun remoteFor(
+        game: Game,
+        current: State,
+    ): RommApiClient.Rom? {
         if (game.id >= 0 || !game.fileUri.startsWith("romm-preview://game/")) return null
         return current.games.firstOrNull {
             it.id == -game.id && it.fileName == game.fileName
@@ -157,10 +160,11 @@ internal object RommLibraryCatalog {
             if (rom.id in current.downloadingIds || rom.id in current.awaitingIndexIds) return@withLock
             val store = RommConnectionStore(context.applicationContext)
             val source = RommServerIdentity.fingerprint(store.configuredServer())
-            if (source == null || current.source != source ||
-                credentialRevision != store.credentialRevision() || current.games.none {
-                    it.id == rom.id && it.fileName == rom.fileName
-                }
+            if (
+                source == null ||
+                current.source != source ||
+                credentialRevision != store.credentialRevision() ||
+                current.games.none { it.id == rom.id && it.fileName == rom.fileName }
             ) {
                 snapshot.value = current.copy(downloadError = "RomM library changed. Refresh and try again.")
                 return@withLock
