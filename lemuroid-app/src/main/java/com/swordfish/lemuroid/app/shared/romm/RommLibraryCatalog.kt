@@ -45,12 +45,27 @@ internal object RommLibraryCatalog {
     private val refreshMutex = Mutex()
     private val downloadMutex = Mutex()
     private var refreshedAt = 0L
+    @Volatile
     private var credentialRevision: String? = null
     private var restoredCacheKey: String? = null
     private val awaitingIndexSince = mutableMapOf<Int, Long>()
     private const val INDEXING_NOTICE_DELAY_MS = 25_000L
     private val snapshot = MutableStateFlow(State())
     val state = snapshot.asStateFlow()
+
+    /**
+     * Called synchronously when credentials change. Prevent the old user's
+     * catalogue from flashing on screen while a fresh network request starts.
+     * Ongoing imports observe this invalidation and fail closed at their next
+     * bounded progress callback, never adopting the new account's credentials.
+     */
+    fun invalidateSession() {
+        credentialRevision = null
+        restoredCacheKey = null
+        refreshedAt = 0L
+        awaitingIndexSince.clear()
+        snapshot.value = State()
+    }
 
     /**
      * Filename is the only identity shared with the existing Room schema.
@@ -353,6 +368,13 @@ internal object RommLibraryCatalog {
                         connection,
                         rom,
                     ) { progress ->
+                        if (
+                            credentialRevision != revision ||
+                            RommServerIdentity.fingerprint(store.configuredServer()) != source ||
+                            !store.hasSavedToken()
+                        ) {
+                            throw CancellationException("RomM account changed during download")
+                        }
                         snapshot.update {
                             if (it.source == source && credentialRevision == revision) {
                                 it.copy(transferProgress = it.transferProgress + (rom.id to progress))
