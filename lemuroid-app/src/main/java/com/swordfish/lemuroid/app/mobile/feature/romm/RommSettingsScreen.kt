@@ -2,17 +2,24 @@ package com.swordfish.lemuroid.app.mobile.feature.romm
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -32,6 +41,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.swordfish.lemuroid.R
@@ -51,6 +62,7 @@ import com.swordfish.lemuroid.app.shared.romm.RommVersionedSaveBackupStore
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -115,10 +127,11 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var operation by remember { mutableStateOf("") }
+    var activeJob by remember { mutableStateOf<Job?>(null) }
 
     val perform: (String, suspend () -> Unit) -> Unit = { title, action ->
         if (!busy) {
-            scope.launch {
+            activeJob = scope.launch {
                 busy = true
                 operation = title
                 status = ""
@@ -142,6 +155,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                 } finally {
                     busy = false
                     operation = ""
+                    activeJob = null
                 }
             }
         }
@@ -300,7 +314,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    OpenNesSettingsPage(modifier = modifier) {
+    OpenNesSettingsPage(modifier = modifier.then(if (busy) Modifier.blur(10.dp) else Modifier)) {
         OpenNesSettingsGroup(
             title = { Text(stringResource(R.string.opennes_romm_title)) },
         ) {
@@ -721,6 +735,45 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                     ) { Text(stringResource(R.string.opennes_romm_pending_discard)) }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (busy) {
+        Dialog(
+            onDismissRequest = {},
+            properties =
+                DialogProperties(
+                    usePlatformDefaultWidth = false,
+                    dismissOnBackPress = false,
+                    dismissOnClickOutside = false,
+                ),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color(0xD0111317)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(0.84f),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0xFF272B33),
+                    border = BorderStroke(1.dp, Color(0xFF414650)),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFFB73439))
+                        Text(
+                            stringResource(R.string.opennes_romm_action_busy, operation),
+                            color = Color(0xFFF2EDE6),
+                        )
+                        TextButton(onClick = { activeJob?.cancel() }) {
+                            Text(stringResource(R.string.cancel))
                         }
                     }
                 }
