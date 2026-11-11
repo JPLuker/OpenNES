@@ -36,6 +36,7 @@ internal object RommLibraryCatalog {
     private val refreshMutex = Mutex()
     private val downloadMutex = Mutex()
     private var refreshedAt = 0L
+    private var credentialRevision: String? = null
     private val snapshot = MutableStateFlow(State())
     val state = snapshot.asStateFlow()
 
@@ -80,9 +81,18 @@ internal object RommLibraryCatalog {
             if (source == null || !store.hasSavedToken()) {
                 snapshot.value = State()
                 refreshedAt = 0L
+                credentialRevision = null
                 return@withLock
             }
-            val previous = snapshot.value.takeIf { it.source == source } ?: State(source = source)
+            val revision = store.credentialRevision()
+            val previous =
+                snapshot.value.takeIf {
+                    it.source == source && credentialRevision == revision
+                } ?: State(source = source)
+            if (credentialRevision != revision || snapshot.value.source != source) {
+                refreshedAt = 0L
+                credentialRevision = revision
+            }
             snapshot.value = previous
             if (!force && !previous.refreshing && refreshedAt > 0 &&
                 System.currentTimeMillis() - refreshedAt < REFRESH_INTERVAL_MS
@@ -113,7 +123,8 @@ internal object RommLibraryCatalog {
                 }
                 require(
                     RommServerIdentity.fingerprint(store.configuredServer()) == source &&
-                        store.hasSavedToken(),
+                        store.hasSavedToken() &&
+                        store.credentialRevision() == revision,
                 ) { "RomM connection changed during refresh" }
                 val latest = snapshot.value
                 snapshot.value =
@@ -146,7 +157,8 @@ internal object RommLibraryCatalog {
             if (rom.id in current.downloadingIds || rom.id in current.awaitingIndexIds) return@withLock
             val store = RommConnectionStore(context.applicationContext)
             val source = RommServerIdentity.fingerprint(store.configuredServer())
-            if (source == null || current.source != source || current.games.none {
+            if (source == null || current.source != source ||
+                credentialRevision != store.credentialRevision() || current.games.none {
                     it.id == rom.id && it.fileName == rom.fileName
                 }
             ) {
