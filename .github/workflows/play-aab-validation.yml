@@ -61,7 +61,7 @@ jobs:
       - name: Assemble unsigned production-ID AAB
         run: ./gradlew :lemuroid-app:bundleFreeBundleRelease --stacktrace
 
-      - name: Inspect AAB and record SHA-256
+      - name: Inspect FCEUmm-only AAB and 16 KiB arm64 ELF page alignment
         run: |
           set -euo pipefail
           mkdir -p dist
