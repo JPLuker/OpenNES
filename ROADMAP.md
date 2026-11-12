@@ -39,7 +39,9 @@ These are approved development tasks, **not shipped capabilities**:
 4. **M8 — Google Play.** Public distribution is a Google Play **Android App Bundle (AAB)** with Play App Signing, Play Console tracks and Play-managed updates. **No in-app updater, GitHub release polling, unknown-source installer or self-sideload prompts** in production. Retain the one GitHub `dev-latest` APK for developer testing only, with its separate `.debug` package and signer. Plan explicit save/export migration from debug to the production identity.
 5. **Google Play compliance:** For a new phone app in November 2026, submission requires target SDK **API 36+**. Current `buildSrc/src/main/java/deps.kt` is **35**, so SDK, native/16 KiB page, graphics and insets compatibility need a separate verified migration. The production app must pass privacy/Data safety, GPL/license and third-party artwork/ROM rights review. Commercial ROMs are not bundled.
 
-**Priority:** Restore/verify gameplay and saves → D-pad and Zapper native input → Casual rewind and Hardcore-policy tests → M6/M7 acceptance → production AAB/Google Play approval. See [new-feature implementation plan](docs/NES_EMULATOR_FEATURE_COMPARISON.md) and [release gate](docs/RELEASE_GATE.md).
+**Priority:** Restore/verify gameplay and saves → D-pad and Zapper native input → Casual rewind and Hardcore-policy tests → M6/M7 acceptance → production AAB/Google Play approval.
+
+**Tracking:** [#11 Casual rewind](https://github.com/JPLuker/OpenNES/issues/11), [#12 Zapper touchscreen](https://github.com/JPLuker/OpenNES/issues/12), [#13 D-pad/controller improvements](https://github.com/JPLuker/OpenNES/issues/13), [#14 Google Play release](https://github.com/JPLuker/OpenNES/issues/14). None of these issues is resolved by this roadmap decision. See [new-feature implementation plan](docs/NES_EMULATOR_FEATURE_COMPARISON.md) and [release gate](docs/RELEASE_GATE.md).
 
 ## Near-term execution while phone testing is unavailable (November 2026)
 

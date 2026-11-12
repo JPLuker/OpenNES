@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Committed Casual-only rewind (#11), per-ROM Zapper touchscreen (#12) and independent controller hitbox improvements (#13) as first public release requirements. These are not yet implemented or device-tested.
+- Committed Google Play AAB / Play App Signing delivery and Play-managed updates (#14); no in-app updater. Added API 36, production privacy/IP and debug-to-Play save migration gates.
+
 - Offer a ROM-folder reconnection action when indexed Documents games lose their selected folder or persisted Android read grant; preserve existing library and saves.
 - Let an already indexed game start during background library scanning, while still guarding concurrent save synchronization; supersede stale queued scans when a new scan is requested.
 - Restyle Tilt Sensor as a consistent pause-menu action with a matching selection dialog.
