@@ -222,4 +222,3 @@ dependencies {
     kapt(deps.libs.dagger.android.processor)
     kapt(deps.libs.dagger.compiler)
 }
-
