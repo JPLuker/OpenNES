@@ -56,3 +56,7 @@ Reported by device test: game details and box art remain in the library after An
 A separate launch gate now blocks on active **save synchronization only**, rather than WorkManager's library-index and core-update jobs. Indexed games can be played while scans continue; requesting a new scan replaces queued stale scans instead of appending more. Validate against a phone while a scan is in progress and while switching games, including old saves and recently moved content URIs.
 
 The Tilt Sensor action uses the same NES palette, card height, spacing, and outlined style as the other pause-menu actions; its selection dialog also uses the same palette. This is only a layout change, and needs visual acceptance for touch and large fonts.
+
+## November 12 — D-pad tilt switch (awaiting device acceptance)
+
+Replaced the Tilt Sensor Disabled/DPAD selection dialog with one in-place switch, **Dpad tilt control**. The switch is available only where D-pad tilt is supported. Its selection is retained alongside audio and fast-forward until the pause menu exits, including state restoration after an Android activity recreation. Added unit coverage for supported mapping and on/off conversion. Test on device: enable, exit menu and tilt to move; reopen and verify ON; disable, exit and confirm tilt no longer moves the D-pad; verify pause-menu navigation and rotation do not discard the selection. Hardware acceptance pending.
