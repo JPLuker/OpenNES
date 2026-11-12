@@ -42,14 +42,16 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
-      - name: Prepare pinned native emulation bridge
-        run: |
-          python3 scripts/prepare-libretrodroid-bridge.py
-
+      # Run formatting before modifying and compiling the pinned native
+      # emulator bridge: import/spacing errors should fail as cheaply as possible.
       - name: Check Kotlin source formatting
         run: |
           chmod +x gradlew
           ./gradlew ktlintCheck --stacktrace
+
+      - name: Prepare pinned native emulation bridge
+        run: |
+          python3 scripts/prepare-libretrodroid-bridge.py
 
       - name: Run offline JVM regression tests
         run: |

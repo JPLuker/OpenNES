@@ -140,3 +140,7 @@ OpenNES now has NES-only packaging, M2–M4 source UI/controller work, native Ca
 The stable source version is stored in the repository-root `VERSION` file. GitHub Actions passes its workflow run number to Gradle as `OPENNES_DEV_RUN_NUMBER`. Each CI debug build has Android `versionCode = 100000 + runNumber` and `versionName = VERSION-dev.runNumber` (for example `0.1.0-dev.844`). The stage that inspects the final APK also reads its actual package badging and refuses publication if the application ID, version name or version code do not match. The APK keeps the same `com.jpluker.opennes.debug` identity and development signing key; install over the preceding **CI development** APK to retain the app's data.
 
 A local Gradle debug build without `OPENNES_DEV_RUN_NUMBER` uses versionCode `1` and the `-local` suffix. Android may reject installing it over a newer CI debug build as a downgrade; use the CI APK for normal upgrade tests. Do not uninstall the existing app merely to clear a version error, since that would discard local data. The separate production package and signing process are still pending.
+
+## Faster CI failure detection
+
+The Python verification suite and Kotlin formatting gate run before the more expensive native bridge patch, Android compilation and APK packaging. A simple source formatting problem therefore fails early, without producing or replacing a release. This does not weaken the native revision guard, JVM tests, manifest verification or signing/release gates.
