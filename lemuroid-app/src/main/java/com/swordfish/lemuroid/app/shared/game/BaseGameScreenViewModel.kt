@@ -44,6 +44,7 @@ import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import gg.padkit.inputevents.InputEvent
 import gg.padkit.inputstate.InputState
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -357,7 +358,7 @@ class BaseGameScreenViewModel(
         if (!rewind.beginHold()) return
         holdRewindRequested = true
         holdRewindJob =
-            viewModelScope.launch {
+            viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
                     while (holdRewindRequested && !loadingState.value && !finishRequestPending.get()) {
                         val restored = saves.withExclusiveSessionState { rewind.rewind(1) }
@@ -378,6 +379,14 @@ class BaseGameScreenViewModel(
 
     fun stopHoldRewind() {
         holdRewindRequested = false
+    }
+
+    /** Screen readers use activation rather than pointer down/up. */
+    fun rewindAccessibleStep() {
+        if (loadingState.value || finishRequestPending.get() || holdRewindJob?.isActive == true) return
+        viewModelScope.launch {
+            saves.withExclusiveSessionState { rewind.rewind(1) }
+        }
     }
 
     suspend fun rewind() {
