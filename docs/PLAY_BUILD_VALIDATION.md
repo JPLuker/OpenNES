@@ -9,6 +9,8 @@ The project now specifies Android compile and target API 36 and uses Android
 Gradle Plugin 8.10.1 with Gradle 8.11.1. Development APK builds continue under
 `com.jpluker.opennes.debug` with their existing debug signing identity.
 
+The strict 16 KiB ELF/unsigned AAB structural checks passed in [CI run 43257644960](https://github.com/JPLuker/OpenNES/actions/runs/43257644960). This is build evidence, not device or Play acceptance.
+
 Run the isolated manual GitHub workflow:
 [OpenNES Play AAB Validation (Unsigned)](https://github.com/JPLuker/OpenNES/actions/workflows/play-aab-validation.yml).
 
