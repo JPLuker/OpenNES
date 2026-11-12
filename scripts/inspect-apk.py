@@ -27,7 +27,6 @@ REQUIRED_NATIVE_SYMBOLS = (
 )
 
 
-
 # Compressed game-data containers require manual license review. Recognizable
 # bare NES ROM images may never ship inside the application.
 GAME_ROM_SUFFIXES = (".nes", ".fds", ".unf", ".unif", ".nsf", ".nsfe")
@@ -35,7 +34,7 @@ GAME_ROM_SUFFIXES = (".nes", ".fds", ".unf", ".unif", ".nsf", ".nsfe")
 
 def invalid_archive_names(names: list[str]) -> bool:
     for name in names:
-        if name.startswith("/") or "\\\\" in name or "//" in name:
+        if name.startswith("/") or chr(92) in name or "//" in name:
             return True
         if any(component in (".", "..") for component in name.split("/")):
             return True
