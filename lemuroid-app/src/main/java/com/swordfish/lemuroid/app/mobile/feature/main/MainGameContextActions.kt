@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -31,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -45,11 +47,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
+import com.swordfish.lemuroid.app.shared.game.NesZapperPreferences
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import timber.log.Timber
 
@@ -119,6 +123,10 @@ private fun ContextActionContent(
     val context = LocalContext.current
     var showCustomNameDialog by remember(selectedGame.id) { mutableStateOf(false) }
     var coverPermissionError by remember(selectedGame.id) { mutableStateOf(false) }
+    val zapperPreferences = remember(context) { NesZapperPreferences(context.applicationContext) }
+    var zapperEnabled by remember(selectedGame.id) {
+        mutableStateOf(zapperPreferences.isEnabled(selectedGame.id))
+    }
 
     val imagePickerLauncher =
         rememberLauncherForActivityResult(
@@ -155,6 +163,13 @@ private fun ContextActionContent(
     ) {
         ContextActionHeader(game = selectedGame)
         Divider(color = MaterialTheme.colorScheme.outline)
+        ContextZapperSwitch(
+            checked = zapperEnabled,
+            onCheckedChange = { enabled ->
+                zapperPreferences.setEnabled(selectedGame.id, enabled)
+                zapperEnabled = enabled
+            },
+        )
         ContextActionEntry(
             label = stringResource(id = R.string.game_context_menu_resume),
             icon = Icons.Default.PlayArrow,
@@ -269,6 +284,36 @@ private fun ContextActionContent(
                 onSetCustomName(selectedGame, newName)
                 selectedGameState.value = null
             },
+        )
+    }
+}
+
+@Composable
+private fun ContextZapperSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .toggleable(
+                    value = checked,
+                    role = Role.Switch,
+                    onValueChange = onCheckedChange,
+                )
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = stringResource(R.string.opennes_zapper_game_switch),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
         )
     }
 }
