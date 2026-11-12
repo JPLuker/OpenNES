@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Replaced inherited Lemuroid issue templates with OpenNES Android-specific bug and feature reports, including safe log/screenshot guidance.
+
 - Bounded RomM pending-request journal parsing, preserving damaged data without replaying or overwriting it.
 
 - Reviewed leading Android NES emulator gameplay capabilities and documented a scoped OpenNES comparison with rewind and Zapper candidates (not yet implemented).

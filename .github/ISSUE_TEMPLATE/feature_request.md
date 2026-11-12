@@ -1,25 +1,23 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
-
+name: OpenNES feature request
+about: Suggest an NES-specific feature or workflow improvement
+title: ""
+labels: enhancement
+assignees: ""
 ---
 
-**Disclamer**
-In order to keep this bug tracker manageable, you need to keep a few things in mind:
-*Any feature request not following this template will be closed as invalid
-*Is the issue already opened? Try out a search before filing one.
+**Problem or use case**
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+What would this let you do that OpenNES cannot do today?
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+**Proposed behavior**
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+Describe the action, settings, and any effect on ROMs, saves, or controllers.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+**Alternatives or references**
+
+Optional links or examples. Do not request copied artwork, another app's copyrighted UI, or unlicensed ROM distribution.
+
+**Device considerations**
+
+If relevant, note portrait/landscape, touch/gamepad, accessibility, and offline behavior.

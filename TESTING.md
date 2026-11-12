@@ -1,6 +1,6 @@
 # OpenNES testing and acceptance
 
-The current rolling APK is a **development preview**, not a release candidate. A passed workflow proves Kotlin source formatting, JVM regressions, Android compilation, native bridge exports, NES-only packaging, version identity and SHA-256 publication. It does **not** prove gameplay stability, safe upgrades, actual RemoteAchievements awards or compatibility with the user's live RomM server.
+The current rolling APK is a **development preview**, not a release candidate. A passed workflow proves Kotlin source formatting, JVM regressions, Android compilation, native bridge exports, NES-only packaging, version identity and SHA-256 publication. It does **not** prove gameplay stability, safe upgrades, actual RetroAchievements awards or compatibility with the user's live RomM server.
 
 ## Automated checks
 

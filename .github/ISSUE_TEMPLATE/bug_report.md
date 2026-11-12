@@ -1,44 +1,37 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+name: OpenNES bug report
+about: Report a reproducible Android NES emulation or app problem
+title: ""
+labels: bug
+assignees: ""
 ---
 
-**Disclamer**
-In order to keep this bug tracker manageable, you need to keep a few things in mind:
-* Any issue not following this template will be closed as invalid
-* Is the issue reproducible on RetroArch with the same core? If so, it's very likely a core issue and the upstream core repository is a better place to file it
-* Is the issue already opened? Try out a search before filing one.
+**What happened?**
 
-**Describe the bug**
-A clear and concise description of what the bug is.
-
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Describe the problem and what it affected (gameplay, controls, saves, artwork, RetroAchievements, or RomM).
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+What should have happened?
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**Steps to reproduce**
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+1.
+2.
+3.
 
-**Additional context**
-Add any other context about the problem here.
+**Build and device**
+
+- OpenNES version / short commit (Settings → Advanced → Copy diagnostics):
+- Android version:
+- Phone / tablet model:
+- Portrait or landscape:
+- Touch controls or physical controller:
+
+**Evidence**
+
+Attach a screenshot or a small **redacted** log if useful. Do not upload copyrighted ROM files, game saves, RetroAchievements/RomM tokens, server URLs, or private account data. Check screenshot content before submitting.
+
+**What was tested?**
+
+State whether the problem reproduces with another legally obtained NES ROM, and whether the same FCEUmm core behaves differently in another frontend, **if known**. Neither is required to file the issue.
