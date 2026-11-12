@@ -731,6 +731,11 @@ private fun MenuEditTouchControls(
                             )
                         },
                     )
+                    MenuEditIndividualDpadHitboxes(
+                        settings = touchControllerSettings,
+                        onPreview = viewModel::previewTouchControllerSettings,
+                        onCommit = viewModel::updateTouchControllerSettings,
+                    )
                 }
                 1 -> {
                     MenuEditControllerCluster(
@@ -1059,6 +1064,75 @@ private fun MenuEditControllerCluster(
     TextButton(onClick = onReset) {
         Text(text = resetLabel)
     }
+}
+
+/**
+ * Fine-tune each real directional PadKit hitbox without splitting the visible
+ * molded D-pad into four disconnected buttons. Settings remain orientation-
+ * specific because the existing controller SettingsManager stores each view.
+ */
+@Composable
+private fun MenuEditIndividualDpadHitboxes(
+    settings: TouchControllerSettingsManager.Settings,
+    onPreview: (TouchControllerSettingsManager.Settings) -> Unit,
+    onCommit: (TouchControllerSettingsManager.Settings) -> Unit,
+) {
+    val direction = remember { mutableStateOf(0) }
+    Text(
+        text = stringResource(com.swordfish.lemuroid.R.string.opennes_editor_directional_hitboxes),
+        fontWeight = FontWeight.Bold,
+    )
+    Text(
+        text = stringResource(com.swordfish.lemuroid.R.string.opennes_editor_directional_hitboxes_hint),
+        fontSize = 12.sp,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        listOf("UP", "DOWN", "LEFT", "RIGHT").forEachIndexed { index, label ->
+            FilterChip(
+                selected = direction.value == index,
+                onClick = { direction.value = index },
+                label = { Text(label) },
+            )
+        }
+    }
+    val geometry =
+        when (direction.value) {
+            0 -> settings.dpadUp
+            1 -> settings.dpadDown
+            2 -> settings.dpadLeft
+            else -> settings.dpadRight
+        }
+    val update: (TouchControllerSettingsManager.ButtonGeometry) ->
+    TouchControllerSettingsManager.Settings = { value ->
+        when (direction.value) {
+            0 -> settings.copy(individualDpadHitboxes = true, dpadUp = value)
+            1 -> settings.copy(individualDpadHitboxes = true, dpadDown = value)
+            2 -> settings.copy(individualDpadHitboxes = true, dpadLeft = value)
+            else -> settings.copy(individualDpadHitboxes = true, dpadRight = value)
+        }
+    }
+    MenuEditSecondaryButton(
+        geometry = geometry,
+        onPreview = { onPreview(update(it)) },
+        onCommit = { onCommit(update(it)) },
+        onReset = {
+            val reset = update(TouchControllerSettingsManager.ButtonGeometry())
+            val defaults = TouchControllerSettingsManager.ButtonGeometry()
+            onCommit(
+                if (
+                    reset.dpadUp == defaults && reset.dpadDown == defaults &&
+                    reset.dpadLeft == defaults && reset.dpadRight == defaults
+                ) {
+                    reset.copy(individualDpadHitboxes = false)
+                } else {
+                    reset
+                },
+            )
+        },
+    )
 }
 
 @Composable
