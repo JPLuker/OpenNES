@@ -13,6 +13,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -37,11 +39,35 @@ internal class GameViewModelRewind(
     @Volatile
     private var captureEnabled = false
 
+    @Volatile
+    private var holdActive = false
+
+    private val canHoldRewindState = MutableStateFlow(false)
+
+    fun canHoldRewind(): StateFlow<Boolean> = canHoldRewindState
+
+    fun beginHold(): Boolean {
+        if (!canRewindStep()) return false
+        holdActive = true
+        return true
+    }
+
+    fun endHold() {
+        holdActive = false
+        canHoldRewindState.value = canRewindStep()
+    }
+
+    private fun canRewindStep(): Boolean =
+        captureEnabled &&
+            HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND) &&
+            history.canRewind(1)
+
     override fun onResume(owner: LifecycleOwner) {
         captureJob?.cancel()
         captureJob =
             scope.launch {
                 captureEnabled = settingsManager.rewindEnabled()
+                canHoldRewindState.value = canRewindStep()
                 if (!captureEnabled) {
                     history.clear()
                     return@launch
@@ -52,9 +78,10 @@ internal class GameViewModelRewind(
                     .sample(1000L)
                     .collect {
                         if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND)) {
-                            history.clear()
+                            clear()
                             return@collect
                         }
+                        if (holdActive) return@collect
                         try {
                             stateMutex.withLock {
                                 // FCEUmm serialization is synchronized by the
@@ -63,12 +90,15 @@ internal class GameViewModelRewind(
                                     withContext(Dispatchers.IO) {
                                         view.serializeState(useEmulationThread = false)
                                     }
-                                history.record(state)
+                                if (!holdActive) {
+                                    history.record(state)
+                                    canHoldRewindState.value = canRewindStep()
+                                }
                             }
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
-                            history.clear()
+                            clear()
                             Timber.w(e, "Rewind snapshot capture failed")
                         }
                     }
@@ -76,6 +106,7 @@ internal class GameViewModelRewind(
     }
 
     override fun onPause(owner: LifecycleOwner) {
+        endHold()
         captureJob?.cancel()
         captureJob = null
     }
@@ -91,19 +122,26 @@ internal class GameViewModelRewind(
             HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND) &&
             history.canRewind(REWIND_INTERVALS)
 
-    suspend fun rewind(): Boolean {
+    suspend fun rewind(stepsBack: Int = REWIND_INTERVALS): Boolean {
+        if (stepsBack !in 1..REWIND_INTERVALS) return false
         if (!captureEnabled || !HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND)) return false
         return stateMutex.withLock {
             // Recheck at the native call boundary, not only in the pause UI.
             if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND)) return@withLock false
-            val target = history.candidate(REWIND_INTERVALS) ?: return@withLock false
+            val target = history.candidate(stepsBack) ?: return@withLock false
             val view = retroGameView.retroGameView ?: return@withLock false
             try {
                 val restored =
                     withContext(Dispatchers.IO) {
                         view.unserializeState(target.state, useEmulationThread = false)
                     }
-                if (restored) history.commit(target) else false
+                if (restored) {
+                    val committed = history.commit(target)
+                    canHoldRewindState.value = canRewindStep()
+                    committed
+                } else {
+                    false
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -114,7 +152,9 @@ internal class GameViewModelRewind(
     }
 
     fun clear() {
+        holdActive = false
         history.clear()
+        canHoldRewindState.value = false
     }
 
     companion object {
