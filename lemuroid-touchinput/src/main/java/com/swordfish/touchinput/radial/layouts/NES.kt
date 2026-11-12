@@ -48,15 +48,22 @@ fun PadKitScope.NESLeft(
         settings = settings,
         modifier = modifier,
         primaryDial = {
-            LemuroidControlCross(
-                modifier = Modifier.onGloballyPositioned { report(NesEditableControl.DPAD, it.boundsInRoot()) },
-                id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
-                allowDiagonals = true,
-                expandedTouchArea = true,
-                // Remove the inherited square backplate, not the hit target.
-                background = {},
-                foreground = { NesCrossForeground(directionState = it) },
-            )
+            val padModifier =
+                Modifier.onGloballyPositioned { report(NesEditableControl.DPAD, it.boundsInRoot()) }
+            if (settings.individualDpadHitboxes || LocalNesDpadEditMode.current) {
+                NesDirectionalDpad(modifier = padModifier, settings = settings)
+            } else {
+                LemuroidControlCross(
+                    modifier = padModifier,
+                    id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
+                    allowDiagonals = true,
+                    expandedTouchArea = true,
+                    // Original hit regions remain unchanged until the player
+                    // opts into independently adjusted directional targets.
+                    background = {},
+                    foreground = { NesCrossForeground(directionState = it) },
+                )
+            }
         },
         secondaryDials = {
             NesSecondarySelect(settings)
