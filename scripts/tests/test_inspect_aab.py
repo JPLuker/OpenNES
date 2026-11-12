@@ -84,6 +84,25 @@ class InspectAabTest(unittest.TestCase):
                 self.names() + ["base/lib/arm64-v8a/libsnes9x_libretro_android.so"]
             )
 
+    def test_refuses_emulator_core_in_another_module_or_asset(self):
+        for member in (
+            "dynamic_core/lib/arm64-v8a/libsnes9x_libretro_android.so",
+            "base/assets/libsnes9x_libretro_android.so",
+            "dynamic_core/lib/arm64-v8a/libfceumm_libretro_android.so",
+        ):
+            with self.subTest(member=member), self.assertRaises(ValueError):
+                MODULE.validate_names(self.names() + [member])
+
+    def test_refuses_bundled_game_rom_images(self):
+        for member in ("base/assets/game.nes", "base/assets/demo.FDS"):
+            with self.subTest(member=member), self.assertRaises(ValueError):
+                MODULE.validate_names(self.names() + [member])
+
+    def test_refuses_archive_member_traversal(self):
+        for member in ("base/assets/../tokens", r"base\\lib\\core.so", "/base/extra"):
+            with self.subTest(member=member), self.assertRaises(ValueError):
+                MODULE.validate_names(self.names() + [member])
+
     def test_refuses_mismatched_bridge_abis(self):
         with self.assertRaises(ValueError):
             MODULE.validate_names([
