@@ -9,6 +9,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.shared.game.NesZapperPreferences
 import com.swordfish.lemuroid.app.shared.input.InputDeviceManager
 import com.swordfish.lemuroid.app.shared.input.InputKey
 import com.swordfish.lemuroid.app.shared.input.inputclass.getInputClass
@@ -235,14 +236,30 @@ class GameViewModelInput(
     }
 
     private fun updateControllers(controllers: Map<Int, ControllerConfig>) {
-        retroGameView.retroGameView
-            ?.getControllers()?.toIndexedMap()
-            ?.zipOnKeys(controllers, this::findControllerId)
-            ?.filterNotNullValues()
-            ?.forEach { (port, controllerId) ->
+        val gameView = retroGameView.retroGameView ?: return
+        val supported = gameView.getControllers()
+        supported.toIndexedMap()
+            .zipOnKeys(controllers, this::findControllerId)
+            .filterNotNullValues()
+            .forEach { (port, controllerId) ->
                 Timber.i("Controls setting $port to $controllerId")
-                retroGameView.retroGameView?.setControllerType(port, controllerId)
+                gameView.setControllerType(port, controllerId)
             }
+
+        // FCEUmm autodetection remains the default. A player may explicitly
+        // force Zapper on controller port 2 for a combination cartridge or
+        // homebrew that the core's database does not recognize.
+        if (NesZapperPreferences(appContext).isEnabled(retroGameView.selectedGameId())) {
+            val zapper =
+                supported.getOrNull(1)?.firstOrNull {
+                    it.description?.contains("Zapper", ignoreCase = true) == true
+                }
+            if (zapper != null) {
+                gameView.setControllerType(1, zapper.id)
+            } else {
+                Timber.w("This NES core does not expose a port 2 Zapper")
+            }
+        }
     }
 
     private fun findControllerId(
