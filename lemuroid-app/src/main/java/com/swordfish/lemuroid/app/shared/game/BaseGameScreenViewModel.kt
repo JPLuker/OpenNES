@@ -308,14 +308,18 @@ class BaseGameScreenViewModel(
     }
 
     suspend fun saveSlot(index: Int) {
-        if (loadingState.value) return
+        if (loadingState.value || finishRequestPending.get()) return
+        stopHoldRewind()
         withLoading {
-            saves.saveSlot(index)
+            saves.withExclusiveSessionState {
+                saves.saveSlot(index)
+                true
+            }
         }
     }
 
     suspend fun loadSlot(index: Int) {
-        if (loadingState.value) return
+        if (loadingState.value || finishRequestPending.get()) return
         stopHoldRewind()
         withLoading {
             saves.withExclusiveSessionState {
@@ -328,19 +332,30 @@ class BaseGameScreenViewModel(
 
     fun saveQuickSave() {
         Timber.d("Saving quick save")
-        if (loadingState.value) return
-        withLoading {
-            saves.saveQuickSave()
+        if (loadingState.value || finishRequestPending.get()) return
+        stopHoldRewind()
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            withLoading {
+                saves.withExclusiveSessionState {
+                    saves.saveQuickSave()
+                    true
+                }
+            }
         }
     }
 
     fun loadQuickSave() {
         Timber.d("Loading quick save")
-        if (loadingState.value) return
+        if (loadingState.value || finishRequestPending.get()) return
         stopHoldRewind()
-        rewind.clear()
-        withLoading {
-            saves.loadQuickSave()
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            withLoading {
+                saves.withExclusiveSessionState {
+                    rewind.clear()
+                    saves.loadQuickSave()
+                    true
+                }
+            }
         }
     }
 
@@ -390,7 +405,7 @@ class BaseGameScreenViewModel(
     }
 
     suspend fun rewind() {
-        if (loadingState.value) return
+        if (loadingState.value || finishRequestPending.get()) return
         withLoading {
             if (!saves.withExclusiveSessionState { rewind.rewind() }) {
                 sideEffects.showToast(appContext.getString(R.string.opennes_rewind_unavailable))
@@ -399,7 +414,7 @@ class BaseGameScreenViewModel(
     }
 
     fun toggleFastForward() {
-        Timber.d("Loading quick save")
+        Timber.d("Toggling NES fast forward")
         retroGameView.retroGameView?.apply {
             frameSpeed = if (frameSpeed == 1) 2 else 1
         }
