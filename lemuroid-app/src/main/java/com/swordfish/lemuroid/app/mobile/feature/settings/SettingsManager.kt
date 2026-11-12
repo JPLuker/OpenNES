@@ -19,6 +19,7 @@ class SettingsManager(private val context: Context, sharedPreferences: Lazy<Shar
     private fun getString(resId: Int) = context.getString(resId)
 
     suspend fun autoSave() = booleanPreference(R.string.pref_key_autosave, true)
+    suspend fun rewindEnabled() = booleanPreference(R.string.pref_key_rewind_enabled, true)
 
     suspend fun hapticFeedbackMode() = stringPreference(R.string.pref_key_haptic_feedback_mode, "press")
 
