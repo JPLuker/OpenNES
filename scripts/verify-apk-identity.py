@@ -33,6 +33,10 @@ def verify_badging(badging: str, version: str, run_number: int) -> tuple[int, st
         raise ValueError("Unexpected APK versionCode; update install could be rejected")
     if fields.get("versionName") != expected_name:
         raise ValueError("Unexpected APK versionName; Gradle and release numbering differ")
+    target_lines = re.findall(r"^targetSdkVersion:'([0-9]+)'$", badging, re.MULTILINE)
+    if target_lines != ["36"]:
+        raise ValueError("APK must target Android API 36 for Google Play")
+
     permissions = set(
         re.findall(r"^uses-permission(?:-sdk-23)?: name='([^']+)'", badging, re.MULTILINE)
     )
