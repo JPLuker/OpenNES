@@ -5,6 +5,10 @@ import androidx.compose.ui.geometry.Rect
 
 enum class NesEditableControl {
     DPAD,
+    DPAD_UP,
+    DPAD_DOWN,
+    DPAD_LEFT,
+    DPAD_RIGHT,
     A,
     B,
     START,
@@ -13,5 +17,7 @@ enum class NesEditableControl {
 }
 
 /** Real rendered control bounds shared with the non-interactive drag editor. */
+val LocalNesDpadEditMode = compositionLocalOf { false }
+
 val LocalNesControlBoundsReporter =
     compositionLocalOf<(NesEditableControl, Rect) -> Unit> { { _, _ -> } }
