@@ -14,8 +14,7 @@ internal class NesZapperPreferences(context: Context) {
             Context.MODE_PRIVATE,
         )
 
-    fun isEnabled(gameId: Int): Boolean =
-        if (gameId > 0) preferences.getBoolean(keyFor(gameId), false) else false
+    fun isEnabled(gameId: Int): Boolean = if (gameId > 0) preferences.getBoolean(keyFor(gameId), false) else false
 
     fun setEnabled(
         gameId: Int,
