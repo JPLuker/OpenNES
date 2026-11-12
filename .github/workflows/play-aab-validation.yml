@@ -5,7 +5,13 @@ on:
   push:
     branches: [master]
     paths:
+      # Run the expensive unsigned Play check only when bundle packaging,
+      # production build variants or the release inspectors change.
       - .github/workflows/play-aab-validation.yml
+      - lemuroid-app/build.gradle.kts
+      - settings.gradle.kts
+      - scripts/inspect-aab.py
+      - scripts/tests/test_inspect_aab.py
 
 # Separate from the rolling debug APK. This run is deliberately non-publishing.
 concurrency:
