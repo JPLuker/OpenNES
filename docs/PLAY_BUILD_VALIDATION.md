@@ -6,7 +6,9 @@ through Google Play. **Nothing in this workflow is a production release**.
 ## Source validation
 
 The project now specifies Android compile and target API 36 and uses Android
-Gradle Plugin 8.10.1 with Gradle 8.11.1. Development APK builds continue under
+Gradle Plugin 8.10.1 with Gradle 8.11.1. The supported release build remains
+`freeBundleRelease`; inherited Play/dynamic core flavors are no longer configured.
+This removes unused alternatives without changing existing debug package IDs. Development APK builds continue under
 `com.jpluker.opennes.debug` with their existing debug signing identity.
 
 The strict 16 KiB ELF/unsigned AAB structural checks passed in [CI run 43257644960](https://github.com/JPLuker/OpenNES/actions/runs/43257644960). This is build evidence, not device or Play acceptance.
@@ -19,7 +21,9 @@ JVM tests, NES metadata trimming and
 `./gradlew :lemuroid-app:bundleFreeBundleRelease`. It verifies the resulting
 AAB is a valid ZIP structure with `BundleConfig.pb`, the base manifest,
 only FCEUmm libretro cores, a 64-bit ARM core, and matching emulator bridge ABIs.
-Its strict pass also requires each ARM64 ELF shared library's loadable segments to have 16 KiB-compatible alignment; the check rejects truncated or malformed ELF headers. That static ELF inspection is necessary but is not a runtime test on a 16 KiB-page Android device.
+Its strict pass also rejects other emulation-core binaries anywhere in the AAB, unsafe ZIP member paths, and recognizable bundled NES ROM images. Those filename checks do not replace a full content/IP audit. Each ARM64 ELF shared library's loadable segments must have 16 KiB-compatible alignment; the check rejects truncated or malformed ELF headers. That static ELF inspection is necessary but is not a runtime test on a 16 KiB-page Android device.
+The workflow runs manually or when packaging Gradle files, the workflow itself, or the AAB inspector/tests change. It is intentionally not run on every gameplay source commit to avoid unnecessary release-build jobs.
+
 The resulting artifact is named `opennes-unsigned-play-validation` and expires
 in seven days. Never submit or install this **unsigned** validation build as a
 normal user-facing update.
