@@ -25,6 +25,10 @@
 - **Storage safety:** prevent case-insensitive duplicate imports, reject renamed SAF-created files, never overwrite a local ROM or save, and retain successful file imports in the indexing-recovery state if scan scheduling fails. A ROM stream retains connection/read stall limits plus a strict size bound without the JSON API's 60-second overall timeout.
 - **Verification:** all work is a source candidate pending the latest CI build and an actual phone/RomM server session. Tests now cover offline cache corruption/account isolation, album-art host restrictions, paging, deduplication and index completion. Do not mark M7 complete or publish M8 stable until real-device acceptance is performed.
 
+## Functional NES emulator comparison (November 12, 2026)
+
+[Issue #9 comparison and implementation shortlist](docs/NES_EMULATOR_FEATURE_COMPARISON.md) evaluates NES.emu, Nostalgia.NES and FCEUmm. Rewind and opt-in Zapper touch input are candidates **after** save/session correctness, not completed or enabled features. Do not copy another emulator's design or promote Wi-Fi multiplayer into the 1.0 gate without a separate decision.
+
 ## Near-term execution while phone testing is unavailable (November 2026)
 
 1. **M2/M4: stabilize the most recent test feedback.** Finalize the keyboard-aware Fix Match dialog and its alternate-title search, keep active search fields visible above the IME, preserve game metadata and saves on application, and test off-screen drag constraints with normalized touch coordinates. Once CI passes, freeze speculative controller design changes until physical-device feedback returns.

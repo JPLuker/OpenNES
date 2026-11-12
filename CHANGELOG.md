@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Reviewed leading Android NES emulator gameplay capabilities and documented a scoped OpenNES comparison with rewind and Zapper candidates (not yet implemented).
+
 - Pin Libretro cheat index and file downloads to the same immutable upstream revision, with filename traversal guards.
 
 - Cancel optional NES cheat catalogue HTTP calls when the finder closes; bound response reads and reject stalled remote streams.
