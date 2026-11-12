@@ -25,6 +25,16 @@
 
 ## Package & source compliance
 
+### Implemented static packaging checks (source; exact-commit CI required)
+
+- [x] The supported build variant is `freeBundle` only. The old Play/dynamic variant definitions and unused app-extension module are no longer in the configured app project.
+- [x] APK and AAB inspectors reject hidden Libretro core libraries, recognizable bare NES/FDS/NSF ROM images and ZIP paths with traversal or platform-incompatible separators. Synthetic fixtures test these failure paths.
+- [x] The isolated unsigned AAB workflow is triggered by changes to the packaging variant and AAB inspection scripts, in addition to explicit manual runs.
+- [ ] Audit all transitive resources, archives, third-party cover art and source licenses. Static filename checks **cannot** establish ownership of artwork or catch all disguised commercial ROMs.
+- [ ] Compare the final production release bundle and Google Play generated APK splits with the signing, source and native ABI requirements after release credentials are supplied.
+
+## Package & source compliance
+
 - [ ] Validate release application ID `com.jpluker.opennes`, labels, icons, versioning, supported SDK and versionCode.
 - [ ] Inspect final APK: only FCEUmm emulator core, correct ABIs, valid 16KiB page alignment and acceptable binary size.
 - [ ] Inspect upstream Lemuroid, LibretroDroid, FCEUmm and other dependencies for applicable GPL/MIT notices, source availability and license text.
