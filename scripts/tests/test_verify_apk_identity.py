@@ -16,7 +16,7 @@ class VerifyApkIdentityTest(unittest.TestCase):
     @staticmethod
     def badge(package: str = "com.jpluker.opennes.debug", code: int = 100_844, name: str = "0.1.0-dev.844") -> str:
         return (
-            f"package: name='{package}' versionCode='{code}' versionName='{name}'\nsdkVersion:'26'\n"
+            f"package: name='{package}' versionCode='{code}' versionName='{name}'\nsdkVersion:'26'\ntargetSdkVersion:'36'\n"
             "uses-permission: name='android.permission.FOREGROUND_SERVICE'\n"
             "uses-permission: name='android.permission.FOREGROUND_SERVICE_DATA_SYNC'\n"
         )
@@ -32,6 +32,16 @@ class VerifyApkIdentityTest(unittest.TestCase):
             self.badge() + self.badge(),
             "sdkVersion:'26'",
             self.badge().replace("versionCode='100844'", "versionCode='100844' versionCode='100844'"),
+        ):
+            with self.subTest(badging=badging):
+                with self.assertRaises(ValueError):
+                    MODULE.verify_badging(badging, "0.1.0", 844)
+
+    def test_api_36_is_required_from_the_built_manifest(self):
+        for badging in (
+            self.badge().replace("targetSdkVersion:'36'", "targetSdkVersion:'35'"),
+            self.badge().replace("targetSdkVersion:'36'\\n", ""),
+            self.badge() + "targetSdkVersion:'36'\\n",
         ):
             with self.subTest(badging=badging):
                 with self.assertRaises(ValueError):
