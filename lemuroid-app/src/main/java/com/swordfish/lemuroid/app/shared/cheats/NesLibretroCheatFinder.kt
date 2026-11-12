@@ -2,13 +2,19 @@ package com.swordfish.lemuroid.app.shared.cheats
 
 import com.swordfish.lemuroid.lib.library.metadata.NesGameTitle
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Read-only, unauthenticated lookup of public NES .cht files from Libretro's
@@ -59,7 +65,7 @@ internal object NesLibretroCheatFinder {
             }.distinctBy { it.code }.take(150)
         }
 
-    private fun loadIndex(): List<FileEntry> {
+    private suspend fun loadIndex(): List<FileEntry> {
         val root = fetchTree("master")
         val cheats = childSha(root, "cht")
         val platforms = fetchTree(cheats)
@@ -95,12 +101,12 @@ internal object NesLibretroCheatFinder {
         error("Libretro NES cheat directory not available")
     }
 
-    private fun fetchTree(reference: String): JSONObject {
+    private suspend fun fetchTree(reference: String): JSONObject {
         require(reference == "master" || reference.matches(Regex("[a-f0-9]{40}")))
         return JSONObject(fetch(API + reference))
     }
 
-    private fun fetch(url: String): String {
+    private suspend fun fetch(url: String): String {
         require(
             url.startsWith(API) ||
                 url.startsWith(RAW + "Nintendo%20-%20Nintendo%20Entertainment%20System/"),
@@ -110,21 +116,45 @@ internal object NesLibretroCheatFinder {
                 .header("Accept", "application/vnd.github+json")
                 .header("User-Agent", "OpenNES/0.1 (NES cheat lookup)")
                 .build()
-        client.newCall(request).execute().use { response ->
-            check(response.isSuccessful) { "Cheat database unavailable: HTTP ${response.code}" }
-            val body = response.body ?: error("Cheat database response missing")
-            require(body.contentLength() <= MAX_RESPONSE) { "Cheat database response too large" }
-            val buffer = ByteArray(8192)
-            val output = ByteArrayOutputStream()
-            body.byteStream().use { input ->
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    require(output.size() + count <= MAX_RESPONSE) { "Cheat database response too large" }
-                    output.write(buffer, 0, count)
-                }
-            }
-            return output.toString(Charsets.UTF_8.name())
+        return suspendCancellableCoroutine { continuation ->
+            val call = client.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(
+                object : Callback {
+                    override fun onFailure(
+                        call: Call,
+                        failure: IOException,
+                    ) {
+                        if (continuation.isActive) continuation.resumeWithException(failure)
+                    }
+
+                    override fun onResponse(
+                        call: Call,
+                        response: Response,
+                    ) {
+                        try {
+                            val result =
+                                response.use {
+                                    if (!it.isSuccessful) {
+                                        throw IOException("Cheat database unavailable: HTTP ${it.code}")
+                                    }
+                                    val body = it.body ?: throw IOException("Cheat database response missing")
+                                    if (body.contentLength() > MAX_RESPONSE) {
+                                        throw IOException("Cheat database response too large")
+                                    }
+                                    val bytes =
+                                        body.byteStream().use { input ->
+                                            NesCheatResponseReader.readBounded(input, MAX_RESPONSE)
+                                        }
+                                    String(bytes, Charsets.UTF_8)
+                                }
+                            if (continuation.isActive) continuation.resume(result)
+                        } catch (failure: Exception) {
+                            if (continuation.isActive) continuation.resumeWithException(failure)
+                        }
+                    }
+                },
+            )
         }
     }
 

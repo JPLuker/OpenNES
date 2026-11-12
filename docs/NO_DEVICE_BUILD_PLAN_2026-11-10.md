@@ -98,3 +98,7 @@ Wikidata/Wikipedia metadata lookups now cancel the underlying OkHttp call when t
 ## November 12 — Fix Match and lookup lifecycle cancellation
 
 The game-details UI now retains cancellable coroutine Jobs returned by the metadata ViewModel. Closing the Fix Match or online lookup sheet cancels the associated Jobs; editing the title stops the old search and selected-candidate preview; changing the release-year filter stops the prior candidate preview; and retry cancels an older lookup. The underlying Wikidata/Wikipedia OkHttp calls are cancelled by the coroutine transport. Existing request-serial guards still reject late callbacks. This wiring requires a physical-device check of system Back, keyboard dismissal and search/retry timing; it has no effect on saved game metadata unless the user explicitly selects Apply.
+
+## November 12 — Cancellable Libretro cheat lookup
+
+The optional Libretro NES cheat-index lookup now uses cancellable OkHttp callbacks instead of blocking `execute()` calls inside a coroutine. Dismissing the cheat finder cancels the coroutine and its underlying HTTP call. Index/cheat text reads have an explicit 2.5 MiB cap even when the server does not supply a content length; repeated zero-byte reads fail closed. An invalid, oversized or partial response cannot activate cheats, and existing explicit import/disabled-by-default behavior is unchanged. New JVM tests cover exact-size, oversized, stalled and transient reads. Actual network cancellation timing and game activation remain device acceptance checks.

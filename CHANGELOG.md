@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Bounded encrypted RomM/RetroAchievements credential file reads before allocation; malformed or stalled files fail closed without rewriting credentials or saves.
+- Cancel optional NES cheat catalogue HTTP calls when the finder closes; bound response reads and reject stalled remote streams.
 
 - Replaced unbounded RomM catalogue cache reads with a verified size-limited reader and stalled-stream tests.
 - Updated project status documentation to distinguish native Casual RetroAchievements implementation from unverified live awards and server sync.
