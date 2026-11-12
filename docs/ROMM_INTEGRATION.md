@@ -139,3 +139,7 @@ Manifest listing now enforces the 200-byte checksum-manifest maximum **during** 
 ## November 12 — Bounded pending-request journal reads
 
 The non-executing RomM request journal now caps file reads at 64 KiB even when the private JSON grows after the initial file-length check. Journal canonical containment is checked before reading; stalled input and oversized files fail closed as `Corrupt`. The original file is retained for manual recovery instead of being silently overwritten or replayed. Regression tests verify that an oversized journal remains untouched and cannot be discarded or used for synchronization.
+
+## November 12 — Recovery re-verification read cap
+
+The final SHA-256 verification of a staged recovery no longer trusts a single file-length check. Its byte reader refuses to consume more data than the immutable archive's recorded length, even if a file changes between the size check and streaming. Staging also aborts as soon as input exceeds the verified archive size. Invalid, truncated or stalled streams fail safely, the temporary recovery is discarded and the original live save remains untouched. New JVM tests cover exact, oversized, truncated, wrong-digest and stalled inputs.

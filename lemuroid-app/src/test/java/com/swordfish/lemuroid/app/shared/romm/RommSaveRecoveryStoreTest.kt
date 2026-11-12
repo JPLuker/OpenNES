@@ -15,6 +15,46 @@ class RommSaveRecoveryStoreTest {
     val folder = TemporaryFolder()
 
     @Test
+    fun recoveryVerificationCannotReadPastVerifiedByteCount() {
+        val contents = ByteArray(64) { it.toByte() }
+        val expected =
+            java.security.MessageDigest.getInstance("SHA-256")
+                .digest(contents)
+                .joinToString("") { "%02x".format(it.toInt() and 255) }
+        val recovery =
+            RommSaveRecoveryStore(
+                RommVersionedSaveBackupStore(folder.newFolder("blank-archive")),
+            )
+        assertTrue(recovery.verifyStream(java.io.ByteArrayInputStream(contents), 64L, expected))
+        assertFalse(recovery.verifyStream(java.io.ByteArrayInputStream(contents), 63L, expected))
+        assertFalse(recovery.verifyStream(java.io.ByteArrayInputStream(contents.copyOf(63)), 64L, expected))
+        assertFalse(recovery.verifyStream(java.io.ByteArrayInputStream(contents), 64L, "0".repeat(64)))
+    }
+
+    @Test
+    fun recoveryVerificationFailsClosedOnStalledInput() {
+        val recovery =
+            RommSaveRecoveryStore(
+                RommVersionedSaveBackupStore(folder.newFolder("stalled-archive")),
+            )
+        assertThrows(IOException::class.java) {
+            recovery.verifyStream(
+                object : java.io.InputStream() {
+                    override fun read(): Int = 0
+
+                    override fun read(
+                        bytes: ByteArray,
+                        offset: Int,
+                        length: Int,
+                    ): Int = 0
+                },
+                64L,
+                "0".repeat(64),
+            )
+        }
+    }
+
+    @Test
     fun createsVerifiedNewCopyWithoutTouchingLiveSave() {
         val current = folder.newFile("running.sav")
         val original = ByteArray(4096) { (it * 3).toByte() }

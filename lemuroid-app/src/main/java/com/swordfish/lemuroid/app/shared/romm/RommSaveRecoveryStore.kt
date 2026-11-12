@@ -3,6 +3,7 @@ package com.swordfish.lemuroid.app.shared.romm
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.security.MessageDigest
 import java.util.UUID
 
@@ -50,7 +51,9 @@ internal class RommSaveRecoveryStore(
                         if (count < 0) break
                         if (count == 0) continue
                         bytes += count
-                        if (bytes > MAX_SAVE_BYTES) throw IOException("Recovery exceeds safe save size")
+                        if (bytes > MAX_SAVE_BYTES || bytes > backup.bytes) {
+                            throw IOException("Recovery size differs from verified backup")
+                        }
                         digest.update(buffer, 0, count)
                         sink.write(buffer, 0, count)
                     }
@@ -88,16 +91,33 @@ internal class RommSaveRecoveryStore(
         expectedHash: String,
     ): Boolean {
         if (!file.isFile || file.length() != expectedSize) return false
-        val digest = MessageDigest.getInstance("SHA-256")
-        file.inputStream().buffered().use { source ->
-            val buffer = ByteArray(16 * 1024)
-            while (true) {
-                val count = RommSafeStreamRead.next(source, buffer)
-                if (count < 0) break
-                if (count > 0) digest.update(buffer, 0, count)
-            }
+        return file.inputStream().buffered().use { source ->
+            verifyStream(source, expectedSize, expectedHash)
         }
-        return hex(digest.digest()) == expectedHash
+    }
+
+    /**
+     * Reverify a committed recovery without trusting a file-length check:
+     * the file can grow after it was inspected. Failure never deletes or
+     * overwrites an unrelated save.
+     */
+    internal fun verifyStream(
+        source: InputStream,
+        expectedSize: Long,
+        expectedHash: String,
+    ): Boolean {
+        if (expectedSize !in 1..MAX_SAVE_BYTES) return false
+        val digest = MessageDigest.getInstance("SHA-256")
+        val buffer = ByteArray(16 * 1024)
+        var total = 0L
+        while (true) {
+            val count = RommSafeStreamRead.next(source, buffer)
+            if (count < 0) break
+            if (count > expectedSize - total) return false
+            total += count
+            digest.update(buffer, 0, count)
+        }
+        return total == expectedSize && hex(digest.digest()) == expectedHash
     }
 
     private fun hex(bytes: ByteArray): String =
