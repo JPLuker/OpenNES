@@ -24,6 +24,7 @@
     <string name="setting_fceumm_overscan_h">Crop horizontal overscan</string>
     <string name="setting_fceumm_overscan_v">Crop vertical overscan</string>
     <string name="setting_fceumm_nospritelimit">No sprite limit</string>
+    <string name="setting_fceumm_zapper_mode">Zapper input mode</string>
     <string name="setting_genesis_plus_gx_blargg_ntsc_filter">TV effect</string>
     <string name="setting_genesis_plus_gx_overscan">Borders</string>
     <string name="setting_genesis_plus_gx_lcd_filter">LCD ghosting</string>
