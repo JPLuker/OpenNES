@@ -27,6 +27,23 @@ REQUIRED_NATIVE_SYMBOLS = (
 )
 
 
+
+# Compressed game-data containers require manual license review. Recognizable
+# bare NES ROM images may never ship inside the application.
+GAME_ROM_SUFFIXES = (".nes", ".fds", ".unf", ".unif", ".nsf", ".nsfe")
+
+
+def invalid_archive_names(names: list[str]) -> bool:
+    for name in names:
+        if name.startswith("/") or "\\\\" in name or "//" in name:
+            return True
+        if any(component in (".", "..") for component in name.split("/")):
+            return True
+        if name.lower().endswith(GAME_ROM_SUFFIXES):
+            return True
+    return False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("apk", type=Path)
@@ -53,6 +70,19 @@ def main() -> int:
             return 1
         if archive.testzip() is not None:
             print("ERROR: APK contains a corrupt ZIP entry.", file=sys.stderr)
+            return 1
+        # The release APK must never contain game content or a second
+        # downloadable Libretro core concealed outside the native lib folder.
+        # This is an exact-file safety gate, not a substitute for license audit.
+        if invalid_archive_names(names):
+            print("ERROR: APK includes an unsafe path or bundled game ROM.", file=sys.stderr)
+            return 1
+        if any(
+            name.endswith("_libretro_android.so") and
+            not name.startswith("lib/")
+            for name in names
+        ):
+            print("ERROR: APK contains a hidden emulator core.", file=sys.stderr)
             return 1
         native = [
             info
