@@ -15,9 +15,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import java.util.concurrent.TimeUnit
 
 /**
  * Key-free read-only lookup against Wikidata (CC0) and verified Wikipedia summaries.
