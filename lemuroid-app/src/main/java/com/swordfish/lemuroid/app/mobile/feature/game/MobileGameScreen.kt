@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
@@ -184,6 +185,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 currentControllerConfig != null &&
                 touchControlsVisibleState.value
         val isLoading = viewModel.loadingState.collectAsState(true).value
+        val rewindHoldAvailable = viewModel.canHoldRewind().collectAsState(false).value
 
         // First-game onboarding waits until real NES controls are visible.
         // A paired physical gamepad does not cause an unusable setup popup.
@@ -435,6 +437,25 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     onRestoreDefaults = viewModel::resetTouchControls,
                 )
             }
+        }
+
+        // This independent surface consumes its own touches, never PadKit
+        // D-pad/A/B events. It is hidden during the editor and first-run flow.
+        if (rewindHoldAvailable && !dragEditMode && !isLoading && !onboardingVisible.value) {
+            NesRewindHoldButton(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(
+                                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                            ),
+                        )
+                        .padding(12.dp),
+                onPress = viewModel::startHoldRewind,
+                onRelease = viewModel::stopHoldRewind,
+                onAccessibleStep = viewModel::rewindAccessibleStep,
+            )
         }
 
         if (onboardingVisible.value && showTouchPads && !isLoading) {
