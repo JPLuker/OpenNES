@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **M0–M4 source-finalization audit:** the branded foundation, NES-only build, library UI, portrait controller and three landscape presentation modes have source implementations. M1 is functionally complete; physical-device acceptance remains separate for M0/M2/M3/M4.
+- **M5 save coordination:** manual slot and quick save/load operations now use the same exclusive session mutex as in-memory rewind and final Quit snapshots. Added repeated held-rewind, stale candidate and invalid snapshot regression tests. Source build and device verification are separate requirements.
+- **M8 packaging:** removed unused play/dynamic variants while retaining `freeBundle`, the existing development application ID and signing identity. Added strict APK/AAB archive path, bundled bare-ROM and hidden emulation-core rejection with regression fixtures. The standalone unsigned Play bundle workflow also runs on changes to core packaging and its inspectors. Final license/security/ROM audit, Play signing and device verification remain open.
+
 - Add an in-game **hold-to-rewind** surface for Casual sessions. It restores prior volatile snapshots one interval at a time, suppresses new captures while held, releases on touch cancellation/navigation, and coordinates with save/reset. A single accessible activation restores one interval. Device gameplay/audio acceptance is pending.
 - Add opt-in independent Up/Down/Left/Right D-pad touch regions with editable bounded directional targets. Untouched layouts preserve the original PadKit cross. Rendered pressed highlights reflect the same four digital input IDs, with composite one-thumb diagonals. Separate portrait/landscape settings remain unchanged; hardware ergonomics are unverified.
 
