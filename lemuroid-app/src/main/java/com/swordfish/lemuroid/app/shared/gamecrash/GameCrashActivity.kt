@@ -4,8 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
-import com.google.android.material.button.MaterialButton
 import androidx.core.view.isVisible
+import com.google.android.material.button.MaterialButton
 import com.swordfish.lemuroid.R
 
 class GameCrashActivity : Activity() {
