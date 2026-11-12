@@ -68,6 +68,7 @@ fun GameMenuHomeScreen(
     onAudioChanged: (Boolean) -> Unit,
     fastForwardEnabled: Boolean,
     onFastForwardChanged: (Boolean) -> Unit,
+    rewindAvailable: Boolean,
     tiltEnabled: Boolean,
     onTiltChanged: (Boolean) -> Unit,
     onResult: KFunction1<Intent.() -> Unit, Unit>,
@@ -194,6 +195,13 @@ fun GameMenuHomeScreen(
                 title = stringResource(R.string.game_menu_fast_forward),
                 checked = fastForwardEnabled,
                 onCheckedChange = onFastForwardChanged,
+            )
+        }
+        if (rewindAvailable && !hardcoreActive) {
+            GameMenuAction(
+                title = stringResource(R.string.opennes_rewind_action),
+                icon = R.drawable.ic_menu_load,
+                onClick = { onResult { putExtra(GameMenuContract.RESULT_REWIND, true) } },
             )
         }
 
