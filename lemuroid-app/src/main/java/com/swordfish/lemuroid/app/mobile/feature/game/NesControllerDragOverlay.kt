@@ -228,6 +228,10 @@ private fun NesDragTarget(
     val label =
         when (control) {
             NesEditableControl.DPAD -> "D-PAD"
+            NesEditableControl.DPAD_UP -> "UP"
+            NesEditableControl.DPAD_DOWN -> "DOWN"
+            NesEditableControl.DPAD_LEFT -> "LEFT"
+            NesEditableControl.DPAD_RIGHT -> "RIGHT"
             NesEditableControl.A -> "A"
             NesEditableControl.B -> "B"
             NesEditableControl.START -> "START"
