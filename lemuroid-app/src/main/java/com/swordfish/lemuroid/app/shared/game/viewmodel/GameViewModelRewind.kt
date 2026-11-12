@@ -2,6 +2,7 @@ package com.swordfish.lemuroid.app.shared.game.viewmodel
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.libretrodroid.GLRetroView
@@ -26,16 +27,23 @@ import timber.log.Timber
 @OptIn(FlowPreview::class)
 internal class GameViewModelRewind(
     private val retroGameView: GameViewModelRetroGameView,
+    private val settingsManager: SettingsManager,
     private val scope: CoroutineScope,
 ) : DefaultLifecycleObserver {
     private val history = BoundedRewindHistory()
     private val stateMutex = Mutex()
     private var captureJob: Job? = null
+    @Volatile private var captureEnabled = false
 
     override fun onResume(owner: LifecycleOwner) {
         captureJob?.cancel()
         captureJob =
             scope.launch {
+                captureEnabled = settingsManager.rewindEnabled()
+                if (!captureEnabled) {
+                    history.clear()
+                    return@launch
+                }
                 val view = retroGameView.retroGameViewFlow()
                 view.getGLRetroEvents()
                     .filterIsInstance<GLRetroView.GLRetroEvents.FrameRendered>()
@@ -77,11 +85,12 @@ internal class GameViewModelRewind(
     }
 
     fun canRewind(): Boolean =
+        captureEnabled &&
         HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND) &&
             history.canRewind(REWIND_INTERVALS)
 
     suspend fun rewind(): Boolean {
-        if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND)) return false
+        if (!captureEnabled || !HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND)) return false
         return stateMutex.withLock {
             // Recheck at the native call boundary, not only in the pause UI.
             if (!HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND)) return@withLock false
