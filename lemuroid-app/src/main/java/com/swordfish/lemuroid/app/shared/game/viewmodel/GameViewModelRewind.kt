@@ -33,7 +33,8 @@ internal class GameViewModelRewind(
     private val history = BoundedRewindHistory()
     private val stateMutex = Mutex()
     private var captureJob: Job? = null
-    @Volatile private var captureEnabled = false
+    @Volatile
+    private var captureEnabled = false
 
     override fun onResume(owner: LifecycleOwner) {
         captureJob?.cancel()
