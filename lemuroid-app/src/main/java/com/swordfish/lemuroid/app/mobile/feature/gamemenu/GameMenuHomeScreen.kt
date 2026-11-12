@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,7 +24,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -49,7 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.alorma.compose.settings.storage.memory.rememberMemoryIntSettingState
 import com.swordfish.lemuroid.R
-import com.swordfish.lemuroid.app.mobile.feature.gamemenu.tilt.TiltConfigurationMenuEntry
+import com.swordfish.lemuroid.app.mobile.feature.gamemenu.tilt.DpadTiltControl
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.GameMenuContract
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
@@ -71,6 +68,8 @@ fun GameMenuHomeScreen(
     onAudioChanged: (Boolean) -> Unit,
     fastForwardEnabled: Boolean,
     onFastForwardChanged: (Boolean) -> Unit,
+    tiltEnabled: Boolean,
+    onTiltChanged: (Boolean) -> Unit,
     onResult: KFunction1<Intent.() -> Unit, Unit>,
 ) {
     var confirmation by remember { mutableStateOf<Confirmation?>(null) }
@@ -215,66 +214,12 @@ fun GameMenuHomeScreen(
             )
         }
 
-        if (gameMenuRequest.allTiltConfigurations.isNotEmpty()) {
-            val entries =
-                gameMenuRequest.allTiltConfigurations
-                    .map { TiltConfigurationMenuEntry.fromTiltConfiguration(it) }
-            var showTiltDialog by remember { mutableStateOf(false) }
-            val selectedEntry =
-                entries.firstOrNull { it.configuration == gameMenuRequest.currentTiltConfiguration }
-
-            GameMenuAction(
-                title = stringResource(R.string.game_menu_tilt_sensor),
-                icon = R.drawable.ic_menu_controls,
-                detail = selectedEntry?.let { stringResource(it.descriptionId) },
-                onClick = { showTiltDialog = true },
+        if (DpadTiltControl.isAvailable(gameMenuRequest.allTiltConfigurations)) {
+            GameMenuSwitchAction(
+                title = stringResource(R.string.opennes_dpad_tilt_control),
+                checked = tiltEnabled,
+                onCheckedChange = onTiltChanged,
             )
-
-            if (showTiltDialog) {
-                AlertDialog(
-                    onDismissRequest = { showTiltDialog = false },
-                    title = { Text(stringResource(R.string.game_menu_tilt_sensor)) },
-                    text = {
-                        Column(modifier = Modifier.fillMaxWidth().selectableGroup()) {
-                            entries.forEach { entry ->
-                                val selected = entry.configuration == gameMenuRequest.currentTiltConfiguration
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .selectable(
-                                                selected = selected,
-                                                role = Role.RadioButton,
-                                                onClick = {
-                                                    showTiltDialog = false
-                                                    onResult {
-                                                        putExtra(
-                                                            GameMenuContract.RESULT_CHANGE_TILT_CONFIG,
-                                                            entry.configuration,
-                                                        )
-                                                    }
-                                                },
-                                            )
-                                            .padding(vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    RadioButton(selected = selected, onClick = null)
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(stringResource(entry.descriptionId))
-                                }
-                            }
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = { showTiltDialog = false }) {
-                            Text(stringResource(R.string.cancel))
-                        }
-                    },
-                    containerColor = GameMenuStyle.surface,
-                    titleContentColor = GameMenuStyle.foreground,
-                    textContentColor = GameMenuStyle.foreground,
-                )
-            }
         }
 
         Row(
