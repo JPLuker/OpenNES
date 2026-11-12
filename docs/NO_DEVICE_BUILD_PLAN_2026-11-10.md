@@ -106,3 +106,5 @@ The optional Libretro NES cheat-index lookup now uses cancellable OkHttp callbac
 ## November 12 — Immutable Libretro cheat catalogue revision
 
 The GitHub cheats index is now resolved from one verified upstream commit SHA. Any selected `.cht` file is fetched from that **same immutable commit**, avoiding the previous race where a cached `master` index could load a file changed on upstream `master`. The official GitHub API ref and NES-only raw file URLs remain the only request targets; the raw URL rejects mutable refs and directory traversal. No content is installed or enabled automatically. JVM tests verify the SHA URL and traversal rejection; live GitHub availability is still an integration acceptance item.
+
+**Immutable Git tree resolution:** Resolve `git/ref/heads/master` to a commit ID, request that commit's exact tree SHA from GitHub's Git commit endpoint, then enumerate subtrees by tree SHA. This avoids assuming the tree endpoint accepts a commit SHA as its tree object identifier.

@@ -76,7 +76,10 @@ internal object NesLibretroCheatFinder {
         val ref = JSONObject(fetch(API_MASTER_REF))
         val commitSha = ref.getJSONObject("object").getString("sha")
         require(commitSha.matches(Regex("[a-f0-9]{40}"))) { "Invalid Libretro commit revision" }
-        val root = fetchTree(commitSha)
+        val commit = JSONObject(fetch(API_ROOT + "commits/" + commitSha))
+        val rootTreeSha = commit.getJSONObject("tree").getString("sha")
+        require(rootTreeSha.matches(Regex("[a-f0-9]{40}")))
+        val root = fetchTree(rootTreeSha)
         val cheats = childSha(root, "cht")
         val platforms = fetchTree(cheats)
         val nes = childSha(platforms, NES_DIRECTORY)
@@ -143,11 +146,15 @@ internal object NesLibretroCheatFinder {
             url == API_MASTER_REF ||
                 url.startsWith(API_TREE) ||
                 (
+                    url.startsWith(API_ROOT + "commits/") &&
+                        url.removePrefix(API_ROOT + "commits/").matches(Regex("[a-f0-9]{40}"))
+                ) ||
+                (
                     url.startsWith(RAW_ROOT) &&
                         Regex(
                             "^https://raw\\.githubusercontent\\.com/libretro/libretro-database/" +
                                 "[a-f0-9]{40}/cht/Nintendo%20-%20Nintendo%20Entertainment%20System/" +
-                                "[A-Za-z0-9_.%\\-]+$",
+                                "[A-Za-z0-9_.%*\\-]+$",
                         ).matches(url)
                 ),
         )
