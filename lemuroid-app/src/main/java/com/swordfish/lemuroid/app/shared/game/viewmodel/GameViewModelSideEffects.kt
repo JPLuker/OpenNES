@@ -1,5 +1,6 @@
 package com.swordfish.lemuroid.app.shared.game.viewmodel
 
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +21,10 @@ class GameViewModelSideEffects(private val scope: CoroutineScope) {
 
         data object SuccessfulFinish : UiEffect
 
-        data class FailureFinish(val message: String) : UiEffect
+        data class FailureFinish(
+            val message: String,
+            val category: OpenNesFailureCategory,
+        ) : UiEffect
 
         data object LoadQuickSave : UiEffect
 
@@ -73,10 +77,13 @@ class GameViewModelSideEffects(private val scope: CoroutineScope) {
         }
     }
 
-    fun requestFailureFinish(message: String) {
+    fun requestFailureFinish(
+        message: String,
+        category: OpenNesFailureCategory = OpenNesFailureCategory.UNEXPECTED,
+    ) {
         scope.launch {
             withContext(Dispatchers.Main) {
-                uiEffects.emit(UiEffect.FailureFinish(message))
+                uiEffects.emit(UiEffect.FailureFinish(message, category))
             }
         }
     }

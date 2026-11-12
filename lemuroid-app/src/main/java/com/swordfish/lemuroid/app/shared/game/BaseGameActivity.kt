@@ -271,7 +271,8 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                         )
                     is GameViewModelSideEffects.UiEffect.ShowToast -> displayToast(it.message)
                     is GameViewModelSideEffects.UiEffect.SuccessfulFinish -> performSuccessfulActivityFinish()
-                    is GameViewModelSideEffects.UiEffect.FailureFinish -> performErrorFinish(it.message)
+                    is GameViewModelSideEffects.UiEffect.FailureFinish ->
+                        performErrorFinish(it.category)
                     is GameViewModelSideEffects.UiEffect.SaveQuickSave -> performSaveQuickSave()
                     is GameViewModelSideEffects.UiEffect.LoadQuickSave -> performLoadQuickSave()
                     is GameViewModelSideEffects.UiEffect.ToggleFastForward -> performToggleFastForward()
@@ -348,12 +349,11 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         finishAndExitProcess()
     }
 
-    private fun performErrorFinish(message: String) {
-        // Expected game-load errors may contain private ROM URIs too.
-        Timber.w("Game loading failed (details withheld from UI)")
+    private fun performErrorFinish(category: OpenNesFailureCategory) {
+        Timber.w("Game loading failed: %s", category.name)
         val resultIntent =
             Intent().apply {
-                putExtra(PLAY_GAME_RESULT_ERROR_CATEGORY, OpenNesFailureCategory.UNEXPECTED.name)
+                putExtra(PLAY_GAME_RESULT_ERROR_CATEGORY, category.name)
             }
 
         setResult(RESULT_ERROR, resultIntent)

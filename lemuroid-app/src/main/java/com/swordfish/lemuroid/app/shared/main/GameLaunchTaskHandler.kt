@@ -38,9 +38,17 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
                         OpenNesFailureCategory.ACCESS -> R.string.opennes_support_error_access
                         OpenNesFailureCategory.IO -> R.string.opennes_support_error_io
                         OpenNesFailureCategory.INVALID_INPUT -> R.string.opennes_support_error_input
+                        OpenNesFailureCategory.CORE -> R.string.opennes_game_error_core
+                        OpenNesFailureCategory.ROM -> R.string.opennes_game_error_rom
+                        OpenNesFailureCategory.SAVE -> R.string.opennes_game_error_save
+                        OpenNesFailureCategory.GRAPHICS -> R.string.opennes_game_error_graphics
                         OpenNesFailureCategory.UNEXPECTED -> R.string.opennes_support_error_emulator
                     }
-                handleUnsuccessfulGameFinish(activity, activity.getString(message), null)
+                handleUnsuccessfulGameFinish(
+                    activity,
+                    activity.getString(message),
+                    activity.getString(R.string.opennes_game_error_code, category.name),
+                )
             }
         }
     }

@@ -11,6 +11,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.game.ShaderChooser
 import com.swordfish.lemuroid.app.shared.rumble.RumbleManager
 import com.swordfish.lemuroid.app.shared.settings.HDModeQuality
@@ -129,7 +130,13 @@ class GameViewModelRetroGameView(
                     } else {
                         ""
                     }
-                sideEffects.requestFailureFinish(message)
+                val category =
+                    if (it is GameLoaderException) {
+                        OpenNesFailureCategory.fromLoader(it.error)
+                    } else {
+                        OpenNesFailureCategory.classify(it)
+                    }
+                sideEffects.requestFailureFinish(message, category)
             }
             .debounce(200)
             .collect { loadingState ->
@@ -372,7 +379,10 @@ class GameViewModelRetroGameView(
                 else -> GameLoaderError.Generic
             }
 
-        sideEffects.requestFailureFinish(getErrorMessage(gameLoaderError))
+        sideEffects.requestFailureFinish(
+            getErrorMessage(gameLoaderError),
+            OpenNesFailureCategory.fromLoader(gameLoaderError),
+        )
     }
 
     private fun getErrorMessage(gameError: GameLoaderError): String {
