@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Remove the redundant setup wizard panel from root Settings, keeping initial setup in onboarding and controller setup access under Controller Appearance.
+- Add a dedicated Hardcore mode information page covering current availability, restrictions, separate-save requirement, and Casual play. It does not falsely expose a functioning Hardcore switch.
+- Move the Android toolchain toward API 36 (Gradle 8.11.1 / Android Gradle Plugin 8.10.1), with debug APK target verification and a separate **unsigned** Play AAB validation workflow. Native 16 KiB, signing and device acceptance remain open.
+
 - Replace the two-choice Tilt Sensor pause dialog with a single **Dpad tilt control** switch, preserving the selected on/off state until the pause menu closes and restricting it to supported NES D-pad tilt input.
 
 - Committed Casual-only rewind (#11), per-ROM Zapper touchscreen (#12) and independent controller hitbox improvements (#13) as first public release requirements. These are not yet implemented or device-tested.
