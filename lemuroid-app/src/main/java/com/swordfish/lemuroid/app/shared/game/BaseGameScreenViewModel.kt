@@ -19,6 +19,7 @@ import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameSessi
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelInput
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelRetroGameView
+import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelRewind
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelSaves
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelSideEffects
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelTilt
@@ -112,6 +113,7 @@ class BaseGameScreenViewModel(
             rumbleManager,
             viewModelScope,
         )
+    private val rewind = GameViewModelRewind(retroGameView, viewModelScope)
     private val tilt = GameViewModelTilt(appContext, settingsManager)
     private val inputs =
         GameViewModelInput(
@@ -308,6 +310,7 @@ class BaseGameScreenViewModel(
 
     suspend fun loadSlot(index: Int) {
         if (loadingState.value) return
+        rewind.clear() // A manual state load replaces the timeline.
         withLoading {
             saves.loadSlot(index)
         }
@@ -324,8 +327,20 @@ class BaseGameScreenViewModel(
     fun loadQuickSave() {
         Timber.d("Loading quick save")
         if (loadingState.value) return
+        rewind.clear()
         withLoading {
             saves.loadQuickSave()
+        }
+    }
+
+    fun canRewind(): Boolean = rewind.canRewind()
+
+    suspend fun rewind() {
+        if (loadingState.value) return
+        withLoading {
+            if (!rewind.rewind()) {
+                sideEffects.showToast(appContext.getString(R.string.opennes_rewind_unavailable))
+            }
         }
     }
 
@@ -338,6 +353,7 @@ class BaseGameScreenViewModel(
 
     suspend fun reset() =
         withLoading {
+            rewind.clear()
             try {
                 delay(appContext.longAnimationDuration().toLong())
                 retroGameView.retroGameViewFlow().reset()
@@ -400,6 +416,7 @@ class BaseGameScreenViewModel(
         owner.lifecycle.addObserver(tilt)
         owner.lifecycle.addObserver(inputs)
         owner.lifecycle.addObserver(retroGameView)
+        owner.lifecycle.addObserver(rewind)
         owner.lifecycle.addObserver(touchControls)
     }
 
@@ -415,6 +432,7 @@ class BaseGameScreenViewModel(
     }
 
     override fun onCleared() {
+        rewind.clear()
         NesCheatSession.end(activeGameUri)
         HardcoreRuntime.end(activeGameUri)
         super.onCleared()
