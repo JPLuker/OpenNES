@@ -63,7 +63,7 @@ jobs:
           AAB="$(find lemuroid-app/build/outputs/bundle/freeBundleRelease -maxdepth 1 -type f -name '*.aab' -print -quit)"
           test -n "$AAB"
           cp "$AAB" dist/OpenNES-UNSIGNED-Play-validation.aab
-          python3 scripts/inspect-aab.py dist/OpenNES-UNSIGNED-Play-validation.aab
+          python3 scripts/inspect-aab.py --require-16k dist/OpenNES-UNSIGNED-Play-validation.aab
           (cd dist && sha256sum OpenNES-UNSIGNED-Play-validation.aab > OpenNES-UNSIGNED-Play-validation.aab.sha256)
           (cd dist && sha256sum -c OpenNES-UNSIGNED-Play-validation.aab.sha256)
 
