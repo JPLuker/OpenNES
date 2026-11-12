@@ -105,6 +105,10 @@ class GameViewModelSaves(
         return SaveSnapshot(sramState, autoSaveState)
     }
 
+    /** Rewind and background/quit saves must never race over core state. */
+    suspend fun withExclusiveSessionState(block: suspend () -> Boolean): Boolean =
+        sessionSnapshotWriteMutex.withLock { block() }
+
     suspend fun persistSessionSnapshot(useEmulationThread: Boolean): Boolean =
         sessionSnapshotWriteMutex.withLock {
             val snapshot = captureSaveSnapshot(useEmulationThread) ?: return@withLock false
