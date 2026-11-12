@@ -75,7 +75,7 @@ The [debug build](https://github.com/JPLuker/OpenNES/actions/runs/43255947765) p
 
 **Rewind on-device acceptance:** In Casual, play a game for at least six seconds and confirm a Rewind item appears in the pause menu. Use it after visible progression; it should restore approximately five seconds without overwriting any manual save slot or battery SRAM. Confirm normal sound and frame pacing afterward. Test no history on fresh load, graceful handling of paused/short games, resets, quick loads, ROM switching, app backgrounding and low memory. Explicitly test Quit after rewind and reload SRAM/autosave to ensure user-intended state is preserved. Current UI is a single pause-menu action; the planned hold-to-rewind gameplay control is not yet implemented. Hardcore remains unavailable; no official hardcore compliance claim.
 
-**Play packaging:** Separate unsigned AAB CI has already passed source/ZIP and ABI inspection, but a subsequent strict `--require-16k` ELF PT_LOAD alignment gate was added and needs a fresh green run. This does not replace installation of signed Play-generated splits on actual Android 16 hardware, and does not establish user-data migration from debug to production.
+**Play packaging:** Separate unsigned AAB CI has already passed source/ZIP and ABI inspection, and the strict `--require-16k` ELF PT_LOAD alignment gate passed [CI 43257644960](https://github.com/JPLuker/OpenNES/actions/runs/43257644960). This does not replace installation of signed Play-generated splits on actual Android 16 hardware, and does not establish user-data migration from debug to production.
 
 ## November 12 — Rewind performance preference and Zapper touch cancellation
 
