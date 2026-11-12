@@ -83,6 +83,7 @@ import com.swordfish.touchinput.radial.NesColorPart
 import com.swordfish.touchinput.radial.NesControllerAppearanceStore
 import com.swordfish.touchinput.radial.NesControllerPresets
 import com.swordfish.touchinput.radial.layouts.LocalNesControlBoundsReporter
+import com.swordfish.touchinput.radial.layouts.LocalNesDpadEditMode
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
@@ -338,6 +339,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         LocalNesControlBoundsReporter provides { id, bounds ->
                             if (controlBounds[id] != bounds) controlBounds[id] = bounds
                         },
+                        LocalNesDpadEditMode provides dragEditMode,
                         LocalNesPortraitLayout provides !isLandscape,
                         LocalNesLandscapeHandheld provides handheldActive,
                         LocalNesLandscapeMinimal provides (
