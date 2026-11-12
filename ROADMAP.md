@@ -27,7 +27,19 @@
 
 ## Functional NES emulator comparison (November 12, 2026)
 
-[Issue #9 comparison and implementation shortlist](docs/NES_EMULATOR_FEATURE_COMPARISON.md) evaluates NES.emu, Nostalgia.NES and FCEUmm. Rewind and opt-in Zapper touch input are candidates **after** save/session correctness, not completed or enabled features. Do not copy another emulator's design or promote Wi-Fi multiplayer into the 1.0 gate without a separate decision.
+[Issue #9 comparison and implementation shortlist](docs/NES_EMULATOR_FEATURE_COMPARISON.md) evaluates NES.emu, Nostalgia.NES and FCEUmm. **Decision (2026-11-12): Casual-only rewind, per-ROM Zapper touchscreen support and independent controller/D-pad improvements are committed first-release requirements.** They are NOT implemented or device-accepted. Do not copy another emulator's design or add Wi-Fi multiplayer by implication.
+
+## Confirmed new first-release scope — November 12, 2026
+
+These are approved development tasks, **not shipped capabilities**:
+
+1. **M5-R — Casual-only rewind.** Implement a bounded, RAM-only rolling history of FCEUmm serialize/unserialize snapshots using the native core/session lock. Add hold-to-rewind gameplay input and a pause-menu action; never overwrite durable saves or reuse save-state slots. Cap memory/time, handle corrupt frames and low memory, and clear the history on game switch, reset, load-state, core teardown and process death. **Hardcore must prohibit recording, access and native restore**, not just hide a button. Verify Zelda and a fast-moving game on a phone, including audio and save integrity.
+2. **M5-Z — NES Zapper.** Add an opt-in per-ROM light-gun/touchscreen peripheral (usually port 2). Use FCEUmm's supported `fceumm_zapper_mode=touchscreen` plus a verified native input bridge. Convert taps to NES game-frame coordinates after letterboxing, screen rotation and cutouts; ignore touches outside the video frame. Do not introduce a nonworking toggle. Verify Duck Hunt and another light-gun game on a phone; ordinary ROMs retain normal controls.
+3. **M3/M4-C — Controller improvements.** Independently adjust D-pad Up/Down/Left/Right geometry and hit regions without breaking diagonals or coherent visual housing. Preserve independent portrait/landscape position, scaling, opacity and theme, all-axis drag into the safe area, per-orientation restore-defaults and legible previews. Test A+B/D-pad multitouch, real notch/gesture boundaries, gamepad takeover and persistence.
+4. **M8 — Google Play.** Public distribution is a Google Play **Android App Bundle (AAB)** with Play App Signing, Play Console tracks and Play-managed updates. **No in-app updater, GitHub release polling, unknown-source installer or self-sideload prompts** in production. Retain the one GitHub `dev-latest` APK for developer testing only, with its separate `.debug` package and signer. Plan explicit save/export migration from debug to the production identity.
+5. **Google Play compliance:** For a new phone app in November 2026, submission requires target SDK **API 36+**. Current `buildSrc/src/main/java/deps.kt` is **35**, so SDK, native/16 KiB page, graphics and insets compatibility need a separate verified migration. The production app must pass privacy/Data safety, GPL/license and third-party artwork/ROM rights review. Commercial ROMs are not bundled.
+
+**Priority:** Restore/verify gameplay and saves → D-pad and Zapper native input → Casual rewind and Hardcore-policy tests → M6/M7 acceptance → production AAB/Google Play approval. See [new-feature implementation plan](docs/NES_EMULATOR_FEATURE_COMPARISON.md) and [release gate](docs/RELEASE_GATE.md).
 
 ## Near-term execution while phone testing is unavailable (November 2026)
 
@@ -142,10 +154,13 @@
 - [x] Independently adjust Start, Select and Menu geometry, while preserving orientation-specific layouts and saved themes.
 - [x] Independent A/B button size/position uses corresponding PadKit touch anchors (with A+B combination retained); layouts remain separated by orientation.
 - [x] Reuse the full controller preview and color wheel directly in the in-game editor.
-- [ ] Independent D-pad segment geometry/touch-hitbox controls; the D-pad remains a shared cluster.
+- [ ] **First-release requirement:** independent D-pad directional geometry and hit regions with correct diagonals, portrait/landscape isolation and restore-defaults; currently the D-pad is a shared cluster.
 - [ ] Complete real-device acceptance of onboarding previews, color persistence, all D-pad directions, multitouch, landscape/portrait layouts and controller ergonomics.
 
 ## M5 — Gameplay, saves, and quality
+
+- [ ] **M5-R (approved):** bounded, in-memory **Casual-only rewind** with native locking, safe teardown, memory limits and Hardcore-policy enforcement. Not yet implemented.
+- [ ] **M5-Z (approved):** per-ROM **touchscreen Zapper** and native light-gun input mapping; verify port selection and Duck Hunt in portrait/landscape. Not yet implemented.
 
 - [ ] Maintain accurate audio/video synchronization and stable frame pacing.
 - [ ] Validate save RAM, save states, optional auto-save, reset, fast-forward, and sensible graphics options.
@@ -244,7 +259,8 @@ See [Hardcore compliance audit](docs/HARDCORE_COMPLIANCE_AUDIT.md) for implement
 - [ ] Configure **OpenNES-specific** release signing securely. Never commit signing keys or secrets.
 - [ ] Publish GitHub release APKs and changelog; document minimum Android version and supported formats.
 - [ ] Add bug-report templates, reproducible test cases, and NES-only regression checks.
-- [ ] Optional later: in-app update checks with explicit user consent/Android install flow.
+- [ ] **Google Play AAB distribution:** target API 36+, Play App Signing and private upload key, production-only version codes, ABI/native compliance, Play Console internal/closed testing and license/privacy/listing review.
+- [ ] **No in-app updates:** public users receive updates via Google Play. Keep the GitHub rolling debug APK solely for testing. Include an explicit debug-to-Play save/profile export-import path.
 
 **Exit criteria:** A reproducible, installable public OpenNES release with documented known limitations, only after M7 RomM acceptance.
 

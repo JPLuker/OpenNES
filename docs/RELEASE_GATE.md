@@ -13,6 +13,16 @@
 - [x] Add a verified SHA-256 sidecar to rolling debug release assets (workflow source; not manually run).
 - [ ] Generate and verify reproducible signed production artifacts and archived manifest/SHA-256/checksums.
 
+## Google Play distribution (required before 1.0)
+
+- [ ] **API 36+ target SDK** for new phone apps: currently `buildSrc/src/main/java/deps.kt` specifies 35. Update SDK/build tools and verify Android 16, edge-to-edge, foreground-service and native behavior.
+- [ ] **Release Android App Bundle (`.aab`)** containing only FCEUmm, with correct ABI and 16 KiB page support. Confirm the installed Play-generated split APKs.
+- [ ] **Play App Signing:** configure a private upload key and permanent production ID `com.jpluker.opennes`; never use or publish the repository debug key.
+- [ ] Google Play internal/closed testing, Data safety, privacy policy, content rating, permissions, Store listing, versionCode progression, crash/ANR and source-license compliance.
+- [ ] Audit third-party ROM/game imagery and screenshots used in the app/Store listing. Ship no commercial ROMs and do not use unlicensed Nintendo imagery as official app branding.
+- [ ] Provide verified explicit backup/export and import to migrate testers from `com.jpluker.opennes.debug`; Google Play's separately signed production package cannot update the debug app in place.
+- [ ] **No in-app updater, self-download or unknown-sources APK installation** in public builds; Play Store manages updates. The rolling GitHub APK remains developer-only.
+
 ## Package & source compliance
 
 - [ ] Validate release application ID `com.jpluker.opennes`, labels, icons, versioning, supported SDK and versionCode.
@@ -27,6 +37,9 @@
 - [ ] Run known-good, legally obtained NES ROMs across several mapper types and zip/non-zip imports.
 - [ ] Verify 60Hz audio/frame sync, suspend/resume, audio-focus handoff, fast-forward and save SRAM/autosave/manual states.
 - [ ] Verify portrait and landscape NES touch controls, simultaneous A+B, diagonals, external gamepads and gestures/cutouts.
+- [ ] Verify independently editable D-pad hit regions and safe per-orientation defaults, preserving diagonals and multitouch.
+- [ ] Verify Casual-only rewind under save restoration, low memory, ROM switching and Hardcore policy; prove no save corruption.
+- [ ] Verify touchscreen Zapper in Duck Hunt and another title, including real-viewport mapping and per-ROM persistence.
 - [ ] Verify metadata import/error recovery, offline operation, accessibility, shortcuts and favorites.
 - [ ] Audit all user-facing screens for redundant guidance, repetitive disclaimers, internal/developer terminology, unnecessary empty-state filler and placeholder copy; remove it or replace it with concise actionable status. Keep essential safety and permission information accessible without cluttering ordinary game screens.
 - [ ] Verify RetroAchievements only after approved native `rc_client` integration and actual eligible unlocks are accepted; do not advertise unimplemented features.

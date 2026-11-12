@@ -90,6 +90,12 @@ CI already runs this tool with `--nes-only --native-bridge` to reject unexpected
 
 Open a [GitHub issue](https://github.com/JPLuker/OpenNES/issues) with your Android version, device, emulator build/commit, reproduction steps and logs or screenshots when relevant. Do not upload copyrighted ROMs, RetroAchievements credentials, or other sensitive data. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Distribution and new feature scope
+
+OpenNES will launch publicly through **Google Play**. Updates will be managed by the Play Store; there is **no in-app updater**. GitHub's `dev-latest` debug APK remains for development testing only, with a different app ID and signing identity. Preserve saves by exporting them before moving between debug and Play releases.
+
+Casual-only rewind, touchscreen Zapper input and individual D-pad hitbox customization are **planned first-release features, not yet implemented**.
+
 ## Privacy
 
 OpenNES can play locally imported NES games without an OpenNES account or internet connection. The RomM and RetroAchievements integrations are optional. ROM files, save states and local game settings remain on your device unless you choose to import, export or synchronize through a supported service. **Automatic RomM save uploads and overwrites are not enabled.** Do not use development backups as your only copy of a save.
