@@ -62,6 +62,8 @@ def inspect_arm64_elf_page_size(blob: bytes) -> bool:
     """
     if len(blob) < 64 or blob[:4] != b"\x7fELF" or blob[4] != 2 or blob[5] != 1:
         return False
+    if struct.unpack_from("<H", blob, 18)[0] != 183:  # EM_AARCH64
+        return False
     ph_offset = struct.unpack_from("<Q", blob, 32)[0]
     ph_size = struct.unpack_from("<H", blob, 54)[0]
     ph_count = struct.unpack_from("<H", blob, 56)[0]
