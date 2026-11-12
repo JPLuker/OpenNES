@@ -10,6 +10,7 @@ on:
       - .github/workflows/play-aab-validation.yml
       - lemuroid-app/build.gradle.kts
       - settings.gradle.kts
+      - VERSION
       - scripts/inspect-aab.py
       - scripts/tests/test_inspect_aab.py
 
