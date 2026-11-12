@@ -48,5 +48,7 @@ dependencies {
 
     implementation(kotlin(deps.libs.kotlin.stdlib))
 
+    testImplementation("junit:junit:4.13.2")
+
     kapt(deps.libs.androidx.lifecycle.processor)
 }
