@@ -1,6 +1,6 @@
 # OpenNES — Development Roadmap
 
-**Status (2026-11-10):** M0/M1 have a CI-verified NES-only rolling debug APK; additional debloat and release signing remain. M2/M3/M4 keyboard, metadata and controller changes are implemented in source, but latest notch/editor behavior still requires phone acceptance. M5 saves, audio and input are manual-test gates. **M6 now has a game-owned, authenticated native `rc_client` for NES ROMs**, with emulated-frame evaluation, RAM validation before activation, native achievement events, cancellable HTTPS callbacks, disconnect/reconnect gating and pause-time idle processing under the core lock. FDS native awards remain disabled pending memory mapping validation. **A real achievement award and server-side persistence have not yet been verified on a phone.** M7 RomM read-only import, manual offline save archives and explicit export are available in source; two-way sync and real-server testing remain. **M7 acceptance precedes M8 public release.** See [module progress](docs/MODULE_PROGRESS.md) and [the no-device plan](docs/NO_DEVICE_BUILD_PLAN_2026-11-10.md).
+**Status (2026-11-10):** M0 and M1 have completed the functional NES-only conversion with a CI-verified rolling debug APK. Remaining inherited source/dependency cleanup and production signing are tracked under M8. M2/M3/M4 keyboard, metadata and controller changes are implemented in source, but latest notch/editor behavior still requires phone acceptance. M5 saves, audio and input are manual-test gates. **M6 now has a game-owned, authenticated native `rc_client` for NES ROMs**, with emulated-frame evaluation, RAM validation before activation, native achievement events, cancellable HTTPS callbacks, disconnect/reconnect gating and pause-time idle processing under the core lock. FDS native awards remain disabled pending memory mapping validation. **A real achievement award and server-side persistence have not yet been verified on a phone.** M7 RomM read-only import, manual offline save archives and explicit export are available in source; two-way sync and real-server testing remain. **M7 acceptance precedes M8 public release.** See [module progress](docs/MODULE_PROGRESS.md) and [the no-device plan](docs/NO_DEVICE_BUILD_PLAN_2026-11-10.md).
 
 **M2/M6 no-device refinement (2026-11-10):** Source candidate includes Fix Match IME/focus handling, invalidation of stale year/title previews, bounded qualifier fallback searches, durable SAF permission for custom covers, edit/replace actions, official NES-only catalogue result filtering and deduplication, persistent successful artwork fallback selection, encoded Libretro NES gallery support, and smaller progressive achievement/leaderboard lists with collapsible emulator warnings. This source batch passed CI 42923112381; phone acceptance remains open before the milestone closes.
 
@@ -50,7 +50,7 @@ These are approved development tasks, **not shipped capabilities**:
 1. **M2/M4: stabilize the most recent test feedback.** Finalize the keyboard-aware Fix Match dialog and its alternate-title search, keep active search fields visible above the IME, preserve game metadata and saves on application, and test off-screen drag constraints with normalized touch coordinates. Once CI passes, freeze speculative controller design changes until physical-device feedback returns.
 2. **M6: verify native achievements on hardware.** The separate game-owned `rc_client` now authenticates a saved emulator token, loads an officially recognized NES ROM, validates the core RAM map, evaluates every emulated frame and emits native unlock/network events. It pumps idle callbacks while paused with emulator memory protected by the same core lock. FDS awards fail closed. **Next critical step:** verify a real NES unlock on the device and confirm server-side persistence. Test offline, pause, reset, rotation, fast-forward, sign-out and restart before acceptance.
 3. **M7: harden RomM integration.** The Settings page now supports user-requested remote save downloads into an app-private, versioned SHA-256 archive, with integrity-checked offline listings and explicit SAF export. Existing local backup, recovery, snapshot and fail-closed conflict-planning infrastructure remains non-destructive; **nothing uploads to RomM or modifies live saves automatically**. Two-way sync still requires verified RomM account/server identities, remote snapshots, conflict decisions, opt-in and live-server acceptance. A persistent **non-executing** sync-intent journal now records bounded offline requests and fails closed on corruption or changed hashes. A user can prepare a new server-bound intent from a verified archived backup plus a local document: this stores fingerprints only, not the selected document or any approval. No uploads or live-save overwrites are enabled.
-4. **M1/M8: cleanup and release engineering.** Audit remaining non-NES resources/dependencies, upstream licenses and native artifacts, build reproducibility and production signing. Preserve migration paths and saved user data.
+4. **M8: final source cleanup and release engineering.** M1's NES-only functional conversion is complete. Audit inherited optional flavors, non-NES source/resources, upstream licenses and native artifacts, build reproducibility and production signing without breaking working NES functionality or user data.
 5. **When physical testing resumes:** execute the [M0–M5 acceptance matrix](docs/M5_FINAL_TESTING.md), including the newly reported keyboard/notch issues; then perform genuine RetroAchievements and RomM server acceptance. Do not mark a device gate completed because lint or compilation passed.
 
 ## Non-negotiable product direction
@@ -92,21 +92,23 @@ These are approved development tasks, **not shipped capabilities**:
 
 **Exit criteria:** Baseline OpenNES-branded debug APK installs alongside Lemuroid and runs an NES ROM. CI builds reliably.
 
-## M1 — True NES-only debloat (priority: HIGH)
+## M1 — NES-only conversion (FUNCTIONALLY COMPLETE; CI VERIFIED)
 
 **Goal:** A lean, single-system application, not a multi-emulator with other systems hidden.
 
-- [ ] Inventory every system entry, core, dynamic feature module, system icon, metadata record, core downloader, BIOS flow, and system-specific setting.
-- [ ] Change the supported system registry to NES/Famicom only; constrain ROM scanning to relevant NES formats (e.g., `.nes` and verified supported archives).
-- [ ] Retain **FCEUmm** as the only emulator core selected and packaged; remove/disable all other core build modules and download paths.
-- [ ] Reduce the cores submodule/build pipeline to its NES dependency chain; do not assume removal of root settings alone removes core binaries.
-- [ ] Remove unused non-NES assets, UI navigation, controller layouts, BIOS features, and system-specific services where safe.
-- [ ] Trim the multi-system metadata database or replace it with an NES-only metadata strategy, preserving necessary game matching.
-- [ ] Audit transitive dependencies and packaged APK/AAB contents. Remove unused libraries and resources without breaking shared code.
-- [ ] Simplify product flavors and release pipeline to one open-source NES APK, ideally with the core bundled for offline use.
-- [ ] Measure before/after APK size and inspect the final APK to verify that only NES emulator native libraries are present.
+**Disposition (November 12, 2026): M1's functional implementation is complete and CI-verified.** The shipped debug APK registers NES only, bundles FCEUmm as its only Libretro core, prunes metadata to NES, and passes an automated NES-only binary inspection. This satisfies the single-system *behavior and packaged-core* milestone. Inherited source assets, exclusion rules, optional product flavors and transitive dependency pruning remain release hygiene under M8; their existence does not reopen the completed NES-only conversion. Gameplay, saves and migration require the separate M5/M8 acceptance gates. A pre-fork size baseline was not recorded, so no percentage size-reduction claim is made.
 
-**Exit criteria:** OpenNES lists and runs NES games, contains no other console core binaries or system navigation, installs offline, and is measurably leaner than the baseline. Existing NES saves remain functional.
+- [ ] Inventory every system entry, core, dynamic feature module, system icon, metadata record, core downloader, BIOS flow, and system-specific setting.
+- [x] Change the supported system registry to NES/Famicom only; constrain ROM scanning to relevant NES formats (e.g., `.nes` and verified supported archives).
+- [x] Retain **FCEUmm** as the only emulator core selected and packaged; disable other cores in the selected build. Remove obsolete optional source/build paths under M8.
+- [x] Restrict the actual APK native-core pipeline to FCEUmm and inspect packaged libraries in CI. Inherited source submodule files are left for safe M8 cleanup.
+- [ ] Remove unused non-NES assets, UI navigation, controller layouts, BIOS features, and system-specific services where safe.
+- [x] Trim the multi-system metadata database or replace it with an NES-only metadata strategy, preserving necessary game matching.
+- [ ] Audit and prune remaining inherited transitive dependencies/resources without breaking shared NES code (**carried forward to M8 release hygiene**).
+- [x] Produce a single user-facing rolling NES APK with FCEUmm bundled for offline use. Obsolete inherited build flavors remain to be simplified under M8.
+- [x] Inspect the final APK to verify that only NES emulator native libraries are present (enforced by CI). **No historical baseline size comparison exists**, so the before/after measurement remains unverified and is not claimed.
+
+**Functional exit criteria:** NES-only navigation and FCEUmm-only offline APK packaging are implemented and CI-verified. Recent physical-device play/save regression testing remains part of M5. Baseline size reduction was not measurable from retained evidence, and the final inherited-source/license audit is part of M8 rather than a reason to keep M1 open.
 
 ## M2 — Complete OpenNES UI replacement
 
