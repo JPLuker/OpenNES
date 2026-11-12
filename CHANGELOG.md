@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Add an in-game **hold-to-rewind** surface for Casual sessions. It restores prior volatile snapshots one interval at a time, suppresses new captures while held, releases on touch cancellation/navigation, and coordinates with save/reset. A single accessible activation restores one interval. Device gameplay/audio acceptance is pending.
+- Add opt-in independent Up/Down/Left/Right D-pad touch regions with editable bounded directional targets. Untouched layouts preserve the original PadKit cross. Rendered pressed highlights reflect the same four digital input IDs, with composite one-thumb diagonals. Separate portrait/landscape settings remain unchanged; hardware ergonomics are unverified.
+
 - Add a bounded RAM-only Casual rewind candidate: a five-second pause-menu action backed by a 32 MiB / 30-state ring, one-second snapshots, successful-restore timeline commit, session reset guards and exclusive synchronization with Quit/background saves. Advanced Settings can disable rewind snapshot capture and its runtime cost. This is source/CI verified at the initial stage, not yet verified on a phone; hold-to-rewind remains open.
 - Add per-game NES Zapper touchscreen opt-in, FCEUmm touchscreen default, native viewport pointer routing for ports 1 and 2, controller-port capability matching and switch persistence. Input cancellation releases the pointer; light-gun accuracy needs device acceptance.
 - Add an ARM64 ELF 16 KiB PT_LOAD alignment gate for unsigned Play AAB source validation, passing CI 43257644960. Real Android 16 and Play split installation still require testing.
