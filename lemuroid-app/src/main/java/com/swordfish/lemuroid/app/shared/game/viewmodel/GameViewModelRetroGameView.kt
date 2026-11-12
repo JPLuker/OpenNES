@@ -78,6 +78,9 @@ class GameViewModelRetroGameView(
 
     private val retroGameViewFlow = MutableStateFlow<GLRetroView?>(null)
     var retroGameView: GLRetroView? by MutableStateProperty(retroGameViewFlow)
+    private var selectedGameId: Int = 0
+
+    fun selectedGameId(): Int = selectedGameId
 
     fun getGameState(): Flow<GameState> {
         return gameState.debounce(200)
@@ -92,6 +95,8 @@ class GameViewModelRetroGameView(
     ) {
         val currentState = gameState.value
         if (currentState != GameState.Uninitialized) return
+
+        selectedGameId = game.id
 
         val autoSaveEnabled = settingsManager.autoSave()
         val filter = settingsManager.screenFilter()
