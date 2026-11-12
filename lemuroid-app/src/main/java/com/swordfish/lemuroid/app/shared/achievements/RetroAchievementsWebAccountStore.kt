@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.AtomicFile
+import com.swordfish.lemuroid.app.shared.security.SecretBlobReader
 import org.json.JSONObject
 import java.io.File
 import java.nio.ByteBuffer
@@ -71,7 +72,7 @@ class RetroAchievementsWebAccountStore(context: Context) {
     fun load(): RetroAchievementsWebAccount? {
         if (!secretFile.baseFile.isFile) return null
         try {
-            val bytes = secretFile.readFully()
+            val bytes = secretFile.openRead().use { SecretBlobReader.readBounded(it) }
             require(bytes.size in 31..4096) { "Invalid credential payload" }
             val input = ByteBuffer.wrap(bytes)
             require((input.get().toInt() and 0xff) == VERSION) { "Unsupported credential format" }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.AtomicFile
+import com.swordfish.lemuroid.app.shared.security.SecretBlobReader
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
@@ -86,7 +87,8 @@ class RommConnectionStore(context: Context) {
         val serverUrl = configuredServer() ?: return null
         if (!secretFile.baseFile.isFile) return null
         try {
-            val payload = ByteBuffer.wrap(secretFile.readFully())
+            val payload =
+                ByteBuffer.wrap(secretFile.openRead().use { SecretBlobReader.readBounded(it) })
             require(payload.remaining() >= 2) { "Invalid credential format" }
             require((payload.get().toInt() and 0xFF) == FORMAT_VERSION) {
                 "Unsupported credential format"

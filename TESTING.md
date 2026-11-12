@@ -28,6 +28,7 @@ Only the next applicable items should be requested in a test round; never send t
 - [ ] Sign in to RetroAchievements, play a recognized NES game and earn a **new** achievement; check the in-game banner and the official server record. Previous achievements appearing in a list are insufficient proof.
 - [ ] Disconnect the network while a game is running; make sure local play and saves still work, and RetroAchievements errors do not show false awards.
 - [ ] Connect to the user's actual RomM server, browse/import an NES ROM, download a manual backup, export and restore it; verify that different accounts cannot access each other's saves.
+- [ ] Check that an unusable or oversized encrypted account file asks for reconnection without altering saved games.
 - [ ] Validate fast-forward, audio focus, sleep/background-resume and external gamepad transitions on real hardware.
 - [ ] Confirm in-app version, package ID and build revision are available in diagnostics before stable release.
 

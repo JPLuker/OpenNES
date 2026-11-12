@@ -49,3 +49,11 @@ This log records fixes and lessons supported by OpenNES source, CI or reported d
 **Change:** Follow Kotlin import ordering, test the actual CI compiler path, derive rolling debug codes from the GitHub Actions run number, and inspect packaged identity before publishing.
 
 **Check:** Negative identity tests, the full CI result and an Android in-place upgrade retaining saves.
+
+## 7. Encrypted credentials still need bounded file reads
+
+**Problem:** A file can grow or become malformed before an encrypted account store reads it. Checking size only after `AtomicFile.readFully()` has already allocated the bytes.
+
+**Change:** Read no more than the accepted encrypted blob capacity before decrypting in the RomM and both RetroAchievements account stores, and reject stalled streams.
+
+**Check:** Exact-limit, oversized, stalled and transient-zero-read tests. Existing account formats and save data stay unchanged.

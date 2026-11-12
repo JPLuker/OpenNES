@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Bounded encrypted RomM/RetroAchievements credential file reads before allocation; malformed or stalled files fail closed without rewriting credentials or saves.
+
 - Replaced unbounded RomM catalogue cache reads with a verified size-limited reader and stalled-stream tests.
 - Updated project status documentation to distinguish native Casual RetroAchievements implementation from unverified live awards and server sync.
 

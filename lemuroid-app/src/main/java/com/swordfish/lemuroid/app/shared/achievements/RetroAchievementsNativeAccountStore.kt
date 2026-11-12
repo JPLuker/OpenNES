@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.AtomicFile
+import com.swordfish.lemuroid.app.shared.security.SecretBlobReader
 import org.json.JSONObject
 import java.io.File
 import java.nio.ByteBuffer
@@ -67,7 +68,7 @@ internal class RetroAchievementsNativeAccountStore(context: Context) {
     fun load(): NativeCredentials? {
         if (!file.baseFile.isFile) return null
         try {
-            val bytes = file.readFully()
+            val bytes = file.openRead().use { SecretBlobReader.readBounded(it) }
             require(bytes.size in 31..4096) { "Invalid native credential payload" }
             val buffer = ByteBuffer.wrap(bytes)
             require((buffer.get().toInt() and 0xFF) == FORMAT_VERSION) { "Unsupported credential version" }
