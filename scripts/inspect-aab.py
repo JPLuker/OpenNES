@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Check an unsigned OpenNES Play-validation App Bundle without publishing it.
 
-This inspects ZIP structure and native core inclusion. A passing result is not
-proof of Play signing, 16 KiB alignment, ownership of ROM artwork, or acceptance
-on a physical device.
+This inspects ZIP structure, core inclusion, known ROM extensions and unsafe
+member paths. With --require-16k it also validates ARM64 ELF load alignment.
+Neither mode proves Play signing, ownership of artwork, runtime compatibility
+or acceptance on a physical device.
 """
 from __future__ import annotations
 
