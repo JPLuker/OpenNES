@@ -66,7 +66,6 @@ class RommVersionedSaveBackupStoreTest {
         assertEquals(1, store.audit().unverifiedArchives)
     }
 
-
     @Test
     fun createsDistinctVerifiedBackupsWithoutChangingOriginal() {
         val original = temporary.newFile("live.sav")
