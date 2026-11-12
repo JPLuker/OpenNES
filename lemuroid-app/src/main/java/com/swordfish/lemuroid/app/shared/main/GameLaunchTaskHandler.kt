@@ -48,6 +48,7 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
                     activity,
                     activity.getString(message),
                     activity.getString(R.string.opennes_game_error_code, category.name),
+                    category == OpenNesFailureCategory.ROM,
                 )
             }
         }
@@ -69,8 +70,9 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
         activity: Activity,
         message: String,
         messageDetail: String?,
+        showRomFolderAction: Boolean,
     ) {
-        GameCrashActivity.launch(activity, message, messageDetail)
+        GameCrashActivity.launch(activity, message, messageDetail, showRomFolderAction)
     }
 
     private suspend fun handleSuccessfulGameFinish(data: Intent?) {

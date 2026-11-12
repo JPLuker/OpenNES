@@ -269,6 +269,7 @@
     <string name="opennes_setup_no_games_description">The scan finished without finding compatible NES games. Check for .nes files in your selected folder, then rescan, or choose a different folder.</string>
     <string name="opennes_setup_folder_error_title">NES folder unavailable</string>
     <string name="opennes_setup_folder_error_description">Android cannot read your selected NES folder. The folder may have moved, or access may have been revoked. Choose the folder again to restore access. Previously indexed games have been preserved.</string>
+    <string name="opennes_rom_folder_missing_play">Your games are still listed, but OpenNES no longer has access to the ROM folder. Select the folder again to restore access. Existing saves will not be deleted.</string>
     <string name="opennes_setup_scan_error_title">NES library scan failed</string>
     <string name="opennes_setup_scan_error_description">OpenNES could not finish scanning your NES folder. Existing games have been preserved. Try rescanning or select a different folder.</string>
     <string name="opennes_setup_rescan_action">Rescan</string>
@@ -438,7 +439,8 @@
     <string name="opennes_support_error_generic">The operation failed. Check the configuration and retry.</string>
     <string name="opennes_support_error_emulator">The game could not start. Try again or check your ROM folder and game settings.</string>
     <string name="opennes_game_error_core">The NES emulator core could not load. Install the latest OpenNES build and retry.</string>
-    <string name="opennes_game_error_rom">The ROM could not be opened. Check that the file still exists and OpenNES can access its folder.</string>
+    <string name="opennes_game_error_rom">The NES game file could not be opened. If Android lost access to your Documents folder, choose the ROM folder again. Otherwise, check that the game file still exists.</string>
+    <string name="opennes_game_error_choose_folder">Choose ROM folder</string>
     <string name="opennes_game_error_save">Saved data could not be loaded. Keep your saves and check save settings before retrying.</string>
     <string name="opennes_game_error_graphics">The NES emulator could not initialize graphics on this device.</string>
     <string name="opennes_game_error_code">Game error code: %1$s</string>

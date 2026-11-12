@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Offer a ROM-folder reconnection action when indexed Documents games lose their selected folder or persisted Android read grant; preserve existing library and saves.
+- Let an already indexed game start during background library scanning, while still guarding concurrent save synchronization; supersede stale queued scans when a new scan is requested.
+- Restyle Tilt Sensor as a consistent pause-menu action with a matching selection dialog.
+
 - Fix missing Android foreground-service base permission for game startup and enforce both permissions in the APK inspection gate.
 - Replace the generic dead-end game error with a safe category for core, ROM, save and rendering failures, plus a return-to-library control.
 
