@@ -23,7 +23,10 @@ class ApkIntegrityTests(unittest.TestCase):
         self.addCleanup(self.workspace.cleanup)
         self.apk = Path(self.workspace.name) / "OpenNES.apk"
 
-    def package(self, *, bridge=SYMBOL_BYTES, other_core=False, missing_abi=False, duplicate=False):
+    def package(
+        self, *, bridge=SYMBOL_BYTES, other_core=False, missing_abi=False,
+        duplicate=False, extra_members=(),
+    ):
         with zipfile.ZipFile(self.apk, "w", zipfile.ZIP_DEFLATED) as archive:
             archive.writestr("lib/arm64-v8a/libfceumm_libretro_android.so", b"NES core")
             archive.writestr("lib/arm64-v8a/liblibretrodroid.so", bridge)
@@ -31,6 +34,8 @@ class ApkIntegrityTests(unittest.TestCase):
                 archive.writestr("lib/arm64-v8a/libmgba_libretro_android.so", b"wrong core")
             if missing_abi:
                 archive.writestr("lib/x86_64/liblibretrodroid.so", bridge)
+            for member in extra_members:
+                archive.writestr(member, b"fixture")
             if duplicate:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", UserWarning)
@@ -67,6 +72,22 @@ class ApkIntegrityTests(unittest.TestCase):
     def test_duplicate_zip_members_fail(self):
         self.package(duplicate=True)
         self.assertNotEqual(0, self.inspect().returncode)
+
+    def test_bundled_game_rom_is_refused(self):
+        for name in ("assets/bundled.nes", "assets/game.FDS", "res/raw/demo.nsf"):
+            with self.subTest(name=name):
+                self.package(extra_members=(name,))
+                self.assertNotEqual(0, self.inspect().returncode)
+
+    def test_hidden_core_is_refused(self):
+        self.package(extra_members=("assets/native/libsnes9x_libretro_android.so",))
+        self.assertNotEqual(0, self.inspect().returncode)
+
+    def test_archive_path_traversal_is_refused(self):
+        for name in ("assets/../secret.bin", r"assets\\bad.bin", "/assets/rom.bin"):
+            with self.subTest(name=name):
+                self.package(extra_members=(name,))
+                self.assertNotEqual(0, self.inspect().returncode)
 
 
 if __name__ == "__main__":
