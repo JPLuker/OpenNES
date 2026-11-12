@@ -86,17 +86,18 @@ internal object NesLibretroCheatFinder {
         val files = fetchTree(nes)
         require(!files.optBoolean("truncated", false)) { "Incomplete Libretro cheat directory" }
         val entries = files.getJSONArray("tree")
-        val filesAtRevision = (0 until entries.length()).mapNotNull { index ->
-            val entry = entries.optJSONObject(index) ?: return@mapNotNull null
-            if (entry.optString("type") != "blob") return@mapNotNull null
-            val name = entry.optString("path")
-            name.takeIf {
-                it.length in 5..180 &&
-                    it.endsWith(".cht", ignoreCase = true) &&
-                    !it.contains('/') &&
-                    !it.contains('\\')
-            }?.let(::FileEntry)
-        }.also { require(it.isNotEmpty()) }
+        val filesAtRevision =
+            (0 until entries.length()).mapNotNull { index ->
+                val entry = entries.optJSONObject(index) ?: return@mapNotNull null
+                if (entry.optString("type") != "blob") return@mapNotNull null
+                val name = entry.optString("path")
+                name.takeIf {
+                    it.length in 5..180 &&
+                        it.endsWith(".cht", ignoreCase = true) &&
+                        !it.contains('/') &&
+                        !it.contains('\\')
+                }?.let(::FileEntry)
+            }.also { require(it.isNotEmpty()) }
         return CheatIndex(commitSha, filesAtRevision)
     }
 
