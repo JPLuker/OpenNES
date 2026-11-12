@@ -34,29 +34,14 @@ android {
     }
     flavorDimensions += listOf("opensource", "cores")
 
-    if (usePlayDynamicFeatures()) {
-        dynamicFeatures.add(":lemuroid_core_fceumm")
-    }
-
-    // Since some dependencies are closed source we make a completely free as in free speech variant.
-
+    // Preserve the historical freeBundle task name for developer upgrades
+    // and Play AAB validation. Unsupported Play/dynamic combinations are no
+    // longer generated; every OpenNES build bundles FCEUmm for offline use.
     productFlavors {
-
         create("free") {
             dimension = "opensource"
         }
-
-        create("play") {
-            dimension = "opensource"
-        }
-
-        // Include cores in the final apk
         create("bundle") {
-            dimension = "cores"
-        }
-
-        // Download cores on demand (from GooglePlay or GitHub)
-        create("dynamic") {
             dimension = "cores"
         }
     }
@@ -166,7 +151,6 @@ dependencies {
     "bundleImplementation"(project(":bundled-cores"))
 
     "freeImplementation"(project(":lemuroid-app-ext-free"))
-    "playImplementation"(project(":lemuroid-app-ext-play"))
 
     implementation(deps.libs.androidx.navigation.navigationFragment)
     implementation(deps.libs.androidx.navigation.navigationUi)
@@ -239,7 +223,3 @@ dependencies {
     kapt(deps.libs.dagger.compiler)
 }
 
-fun usePlayDynamicFeatures(): Boolean {
-    val task = gradle.startParameter.taskRequests.toString()
-    return task.contains("Play") && task.contains("Dynamic")
-}
