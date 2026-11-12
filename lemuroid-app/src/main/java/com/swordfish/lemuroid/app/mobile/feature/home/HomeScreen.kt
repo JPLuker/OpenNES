@@ -1322,18 +1322,19 @@ private fun FixMatchSection(
             preview = null
             candidates = emptyList()
             status = null
-            searchJob = onSearch(titleQuery.trim()) { results ->
-                if (searchVersion == currentVersion) {
-                    searching = false
-                    when (results) {
-                        is WikidataNesMetadataSource.CandidateResults.Found -> candidates = results.candidates
-                        WikidataNesMetadataSource.CandidateResults.NoMatch ->
-                            status = R.string.opennes_fix_match_none
-                        WikidataNesMetadataSource.CandidateResults.Unavailable ->
-                            status = R.string.opennes_online_unavailable
+            searchJob =
+                onSearch(titleQuery.trim()) { results ->
+                    if (searchVersion == currentVersion) {
+                        searching = false
+                        when (results) {
+                            is WikidataNesMetadataSource.CandidateResults.Found -> candidates = results.candidates
+                            WikidataNesMetadataSource.CandidateResults.NoMatch ->
+                                status = R.string.opennes_fix_match_none
+                            WikidataNesMetadataSource.CandidateResults.Unavailable ->
+                                status = R.string.opennes_online_unavailable
+                        }
                     }
                 }
-            }
         }
     }
 
@@ -1510,20 +1511,21 @@ private fun FixMatchSection(
                             preview = null
                             resolving = true
                             status = null
-                            resolveJob = onResolve(candidate.entityId) { resolved ->
-                                if (resolveVersion == currentResolveVersion &&
-                                    selected?.entityId == candidate.entityId
-                                ) {
-                                    resolving = false
-                                    when (resolved) {
-                                        is WikidataNesMetadataSource.Result.Match -> preview = resolved
-                                        WikidataNesMetadataSource.Result.NoMatch ->
-                                            status = R.string.opennes_fix_match_none
-                                        WikidataNesMetadataSource.Result.Unavailable ->
-                                            status = R.string.opennes_online_unavailable
+                            resolveJob =
+                                onResolve(candidate.entityId) { resolved ->
+                                    if (resolveVersion == currentResolveVersion &&
+                                        selected?.entityId == candidate.entityId
+                                    ) {
+                                        resolving = false
+                                        when (resolved) {
+                                            is WikidataNesMetadataSource.Result.Match -> preview = resolved
+                                            WikidataNesMetadataSource.Result.NoMatch ->
+                                                status = R.string.opennes_fix_match_none
+                                            WikidataNesMetadataSource.Result.Unavailable ->
+                                                status = R.string.opennes_online_unavailable
+                                        }
                                     }
                                 }
-                            }
                         },
                         enabled = !searching && !resolving && !applying,
                         border = BorderStroke(1.dp, LibraryColors.border),
@@ -1621,16 +1623,17 @@ private fun WikidataLookupSection(
 
     LaunchedEffect(game.id) {
         searching = true
-        lookupJob = onLookup { result ->
-            searching = false
-            when (result) {
-                is WikidataNesMetadataSource.Result.Match -> candidate = result
-                WikidataNesMetadataSource.Result.NoMatch ->
-                    statusMessage = R.string.opennes_online_no_match
-                WikidataNesMetadataSource.Result.Unavailable ->
-                    statusMessage = R.string.opennes_online_unavailable
+        lookupJob =
+            onLookup { result ->
+                searching = false
+                when (result) {
+                    is WikidataNesMetadataSource.Result.Match -> candidate = result
+                    WikidataNesMetadataSource.Result.NoMatch ->
+                        statusMessage = R.string.opennes_online_no_match
+                    WikidataNesMetadataSource.Result.Unavailable ->
+                        statusMessage = R.string.opennes_online_unavailable
+                }
             }
-        }
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1647,16 +1650,17 @@ private fun WikidataLookupSection(
                     candidate = null
                     statusMessage = null
                     lookupJob?.cancel()
-                    lookupJob = onLookup { result ->
-                        searching = false
-                        when (result) {
-                            is WikidataNesMetadataSource.Result.Match -> candidate = result
-                            WikidataNesMetadataSource.Result.NoMatch ->
-                                statusMessage = R.string.opennes_online_no_match
-                            WikidataNesMetadataSource.Result.Unavailable ->
-                                statusMessage = R.string.opennes_online_unavailable
+                    lookupJob =
+                        onLookup { result ->
+                            searching = false
+                            when (result) {
+                                is WikidataNesMetadataSource.Result.Match -> candidate = result
+                                WikidataNesMetadataSource.Result.NoMatch ->
+                                    statusMessage = R.string.opennes_online_no_match
+                                WikidataNesMetadataSource.Result.Unavailable ->
+                                    statusMessage = R.string.opennes_online_unavailable
+                            }
                         }
-                    }
                 },
                 enabled = !applying,
                 border = BorderStroke(1.dp, LibraryColors.border),
