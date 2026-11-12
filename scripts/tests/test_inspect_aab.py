@@ -56,6 +56,11 @@ class InspectAabTest(unittest.TestCase):
             MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(18000))
         )
         self.assertFalse(MODULE.inspect_arm64_elf_page_size(b"not an ELF"))
+        self.assertFalse(
+            MODULE.inspect_arm64_elf_page_size(
+                self.elf_with_load_alignment(16384, machine=62),
+            )
+        )
 
     def test_arm64_elf_rejects_truncated_program_header(self):
         self.assertFalse(MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(16384)[:80]))
