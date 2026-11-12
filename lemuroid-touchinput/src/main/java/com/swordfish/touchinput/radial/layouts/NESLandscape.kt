@@ -62,22 +62,27 @@ fun PadKitScope.NESLandscapeLeft(
             NesLandscapeDragLimits.verticalTravelDp(sideHeight.value, dialSize.value).dp *
                 settings.leftOffsetY.coerceIn(-1f, 1f) + settings.leftDragY.dp
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            LemuroidControlCross(
-                modifier =
-                    Modifier
-                        .size(dialSize)
-                        .offset(x = x, y = y)
-                        .onGloballyPositioned {
-                            val rect = it.boundsInRoot()
-                            onPrimaryBounds?.invoke(rect)
-                            report(NesEditableControl.DPAD, rect)
-                        },
-                id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
-                allowDiagonals = true,
-                expandedTouchArea = true,
-                background = {},
-                foreground = { NesCrossForeground(directionState = it) },
-            )
+            val dpadModifier =
+                Modifier
+                    .size(dialSize)
+                    .offset(x = x, y = y)
+                    .onGloballyPositioned {
+                        val rect = it.boundsInRoot()
+                        onPrimaryBounds?.invoke(rect)
+                        report(NesEditableControl.DPAD, rect)
+                    }
+            if (settings.individualDpadHitboxes || LocalNesDpadEditMode.current) {
+                NesDirectionalDpad(modifier = dpadModifier, settings = settings)
+            } else {
+                LemuroidControlCross(
+                    modifier = dpadModifier,
+                    id = Id.DiscreteDirection(ComposeTouchLayouts.MOTION_SOURCE_DPAD),
+                    allowDiagonals = true,
+                    expandedTouchArea = true,
+                    background = {},
+                    foreground = { NesCrossForeground(directionState = it) },
+                )
+            }
             NESLandscapeSecondaryButton(
                 modifier = Modifier.align(Alignment.Center),
                 keyCode = KeyEvent.KEYCODE_BUTTON_SELECT,
