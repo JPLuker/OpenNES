@@ -44,6 +44,7 @@ import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import gg.padkit.inputevents.InputEvent
 import gg.padkit.inputstate.InputState
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,6 +155,10 @@ class BaseGameScreenViewModel(
     private val activeGameUri = game.fileUri
     val loadingState = MutableStateFlow(false)
     private val finishRequestPending = AtomicBoolean(false)
+    private var holdRewindJob: Job? = null
+
+    @Volatile
+    private var holdRewindRequested = false
 
     private inline fun withLoading(block: () -> Unit) {
         loadingState.value = true
@@ -310,9 +315,13 @@ class BaseGameScreenViewModel(
 
     suspend fun loadSlot(index: Int) {
         if (loadingState.value) return
-        rewind.clear() // A manual state load replaces the timeline.
+        stopHoldRewind()
         withLoading {
-            saves.loadSlot(index)
+            saves.withExclusiveSessionState {
+                rewind.clear() // A manual state load replaces the timeline.
+                saves.loadSlot(index)
+                true
+            }
         }
     }
 
@@ -327,6 +336,7 @@ class BaseGameScreenViewModel(
     fun loadQuickSave() {
         Timber.d("Loading quick save")
         if (loadingState.value) return
+        stopHoldRewind()
         rewind.clear()
         withLoading {
             saves.loadQuickSave()
@@ -334,6 +344,41 @@ class BaseGameScreenViewModel(
     }
 
     fun canRewind(): Boolean = rewind.canRewind()
+
+    fun canHoldRewind(): Flow<Boolean> = rewind.canHoldRewind()
+
+    /**
+     * Touch down starts incremental, one-second native state restores. Touch
+     * release stops scheduling new steps and allows the current locked restore
+     * to finish before normal capture resumes.
+     */
+    fun startHoldRewind() {
+        if (loadingState.value || finishRequestPending.get() || holdRewindJob?.isActive == true) return
+        if (!rewind.beginHold()) return
+        holdRewindRequested = true
+        holdRewindJob =
+            viewModelScope.launch {
+                try {
+                    while (holdRewindRequested && !loadingState.value && !finishRequestPending.get()) {
+                        val restored = saves.withExclusiveSessionState { rewind.rewind(1) }
+                        if (!restored) break
+                        delay(320L)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.w(e, "Held NES rewind stopped after native restore error")
+                } finally {
+                    holdRewindRequested = false
+                    rewind.endHold()
+                    holdRewindJob = null
+                }
+            }
+    }
+
+    fun stopHoldRewind() {
+        holdRewindRequested = false
+    }
 
     suspend fun rewind() {
         if (loadingState.value) return
@@ -353,10 +398,14 @@ class BaseGameScreenViewModel(
 
     suspend fun reset() =
         withLoading {
-            rewind.clear()
+            stopHoldRewind()
             try {
                 delay(appContext.longAnimationDuration().toLong())
-                retroGameView.retroGameViewFlow().reset()
+                saves.withExclusiveSessionState {
+                    rewind.clear()
+                    retroGameView.retroGameViewFlow().reset()
+                    true
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -365,6 +414,7 @@ class BaseGameScreenViewModel(
         }
 
     fun requestFinish(useEmulationThread: Boolean = true) {
+        stopHoldRewind()
         // A remote Close & Launch arrives while the game Activity is stopped.
         // Its GL thread may no longer process synchronous save requests; use
         // the same non-GL snapshot path as ordinary background autosave.
@@ -395,6 +445,7 @@ class BaseGameScreenViewModel(
     }
 
     fun requestBackgroundSave() {
+        stopHoldRewind()
         if (loadingState.value || finishRequestPending.get()) return
         GameService.schedule {
             // A queued background task may start after the player requested
@@ -404,6 +455,10 @@ class BaseGameScreenViewModel(
                 Timber.w("Could not capture NES save while moving to background")
             }
         }
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        stopHoldRewind()
     }
 
     fun handleVirtualInputEvent(events: List<InputEvent>) {
@@ -432,6 +487,8 @@ class BaseGameScreenViewModel(
     }
 
     override fun onCleared() {
+        stopHoldRewind()
+        holdRewindJob?.cancel()
         rewind.clear()
         NesCheatSession.end(activeGameUri)
         HardcoreRuntime.end(activeGameUri)
