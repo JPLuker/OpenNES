@@ -1,6 +1,7 @@
 """Regression tests for Play AAB structure and emulator-core exclusions."""
 import importlib.util
 from pathlib import Path
+import struct
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / "inspect-aab.py"
@@ -21,6 +22,43 @@ class InspectAabTest(unittest.TestCase):
             "base/lib/armeabi-v7a/libfceumm_libretro_android.so",
             "base/lib/armeabi-v7a/liblibretrodroid.so",
         ]
+
+    @staticmethod
+    def elf_with_load_alignment(align: int, *, machine: int = 183) -> bytes:
+        blob = bytearray(120)
+        blob[0:4] = b"\x7fELF"
+        blob[4] = 2  # ELFCLASS64
+        blob[5] = 1  # little endian
+        struct.pack_into("<H", blob, 18, machine)
+        struct.pack_into("<Q", blob, 32, 64)  # e_phoff
+        struct.pack_into("<H", blob, 54, 56)  # e_phentsize
+        struct.pack_into("<H", blob, 56, 1)  # e_phnum
+        struct.pack_into("<I", blob, 64, 1)  # PT_LOAD
+        struct.pack_into("<Q", blob, 72, 0)  # p_offset
+        struct.pack_into("<Q", blob, 80, 0)  # p_vaddr
+        struct.pack_into("<Q", blob, 112, align)  # p_align
+        return bytes(blob)
+
+    def test_arm64_elf_requires_16k_load_segments(self):
+        self.assertTrue(
+            MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(16384))
+        )
+        self.assertTrue(
+            MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(65536))
+        )
+        self.assertFalse(
+            MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(4096))
+        )
+        self.assertFalse(
+            MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(0))
+        )
+        self.assertFalse(
+            MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(18000))
+        )
+        self.assertFalse(MODULE.inspect_arm64_elf_page_size(b"not an ELF"))
+
+    def test_arm64_elf_rejects_truncated_program_header(self):
+        self.assertFalse(MODULE.inspect_arm64_elf_page_size(self.elf_with_load_alignment(16384)[:80]))
 
     def test_valid_nes_only_bundle(self):
         self.assertEqual(
