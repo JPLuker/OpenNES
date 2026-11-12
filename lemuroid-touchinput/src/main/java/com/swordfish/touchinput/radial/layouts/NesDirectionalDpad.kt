@@ -103,10 +103,12 @@ internal fun nesDpadAnchor(
     baseY: Float,
     geometry: TouchControllerSettingsManager.ButtonGeometry,
 ): Anchor<Id.Key> {
-    val dx = (geometry.offsetX.coerceIn(-1f, 1f) * 0.16f + geometry.dragX.coerceIn(-32f, 32f) / 125f)
-        .coerceIn(-0.30f, 0.30f)
-    val dy = (geometry.offsetY.coerceIn(-1f, 1f) * 0.16f + geometry.dragY.coerceIn(-32f, 32f) / 125f)
-        .coerceIn(-0.30f, 0.30f)
+    val fineX = geometry.offsetX.coerceIn(-1f, 1f) * 0.16f
+    val fineY = geometry.offsetY.coerceIn(-1f, 1f) * 0.16f
+    val draggedX = geometry.dragX.coerceIn(-32f, 32f) / 125f
+    val draggedY = geometry.dragY.coerceIn(-32f, 32f) / 125f
+    val dx = (fineX + draggedX).coerceIn(-0.30f, 0.30f)
+    val dy = (fineY + draggedY).coerceIn(-0.30f, 0.30f)
     val size = 0.38f * geometry.size.coerceIn(0.75f, 1.25f)
     return Anchor(
         position = Offset((baseX + dx).coerceIn(-1f, 1f), (baseY + dy).coerceIn(-1f, 1f)),
@@ -115,7 +117,7 @@ internal fun nesDpadAnchor(
     )
 }
 
-private fun nesDpadDiagonal(
+internal fun nesDpadDiagonal(
     first: Anchor<Id.Key>,
     second: Anchor<Id.Key>,
 ): Anchor<Id.Key> {
