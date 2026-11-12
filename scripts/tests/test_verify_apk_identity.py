@@ -40,8 +40,8 @@ class VerifyApkIdentityTest(unittest.TestCase):
     def test_api_36_is_required_from_the_built_manifest(self):
         for badging in (
             self.badge().replace("targetSdkVersion:'36'", "targetSdkVersion:'35'"),
-            self.badge().replace("targetSdkVersion:'36'\\n", ""),
-            self.badge() + "targetSdkVersion:'36'\\n",
+            self.badge().replace("targetSdkVersion:'36'\n", ""),
+            self.badge() + "targetSdkVersion:'36'\n",
         ):
             with self.subTest(badging=badging):
                 with self.assertRaises(ValueError):
