@@ -7,7 +7,7 @@ import java.io.IOException
  * Support-safe error categories. Never copy Throwable.message, stack traces,
  * file paths, server URLs, tokens or arbitrary response bodies into UI.
  */
-internal enum class OpenNesFailureCategory {
+enum class OpenNesFailureCategory {
     ACCESS,
     IO,
     INVALID_INPUT,

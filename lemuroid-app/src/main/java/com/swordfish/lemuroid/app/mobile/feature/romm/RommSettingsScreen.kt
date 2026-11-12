@@ -156,7 +156,12 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                     OpenNesFailureCategory.IO -> R.string.opennes_support_error_io
                                     OpenNesFailureCategory.INVALID_INPUT ->
                                         R.string.opennes_support_error_input
-                                    OpenNesFailureCategory.UNEXPECTED -> R.string.opennes_support_error_generic
+                                    OpenNesFailureCategory.CORE,
+                                    OpenNesFailureCategory.ROM,
+                                    OpenNesFailureCategory.SAVE,
+                                    OpenNesFailureCategory.GRAPHICS,
+                                    OpenNesFailureCategory.UNEXPECTED,
+                                    -> R.string.opennes_support_error_generic
                                 },
                             )
                     } finally {
