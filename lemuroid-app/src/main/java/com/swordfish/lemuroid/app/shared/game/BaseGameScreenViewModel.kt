@@ -338,7 +338,7 @@ class BaseGameScreenViewModel(
     suspend fun rewind() {
         if (loadingState.value) return
         withLoading {
-            if (!rewind.rewind()) {
+            if (!saves.withExclusiveSessionState { rewind.rewind() }) {
                 sideEffects.showToast(appContext.getString(R.string.opennes_rewind_unavailable))
             }
         }
