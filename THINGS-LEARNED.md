@@ -1,0 +1,51 @@
+# Things learned from OpenNES
+
+This log records fixes and lessons supported by OpenNES source, CI or reported device behavior. It is not a list of claims that Android acceptance has passed. Cross-project lessons can later be reviewed for incorporation into InternalDesignGuidelines/LESSONS.md.
+
+## 1. A passing build cannot prove a usable touch layout
+
+**Problem:** A row of weighted launch actions squeezed “Play Casual” into multiple one-letter lines on a phone. Other controller controls were limited by layout bounds and camera cutouts.
+
+**Change:** Use a full-width Play action with a separate ROM-specific Casual/Hardcore selector; keep controller geometry and hit-testing separate per orientation.
+
+**Check:** Build/test responsive layouts with large fonts, then verify visible controls and actual touch behavior on a device. Do not infer visual correctness from Kotlin compilation.
+
+## 2. A paused game cannot rely on its active graphics thread to save and close
+
+**Problem:** “Close & launch” could fail when the emulator Activity had paused and a synchronous save depended on the emulation thread.
+
+**Change:** Keep quit requests pending through busy operations and use the background-safe save path when closing an inactive game.
+
+**Check:** Switch ROMs, inspect persisted SRAM/autosaves, and verify failure leaves the original session intact. Real hardware acceptance remains open.
+
+## 3. Storage providers and networks may stop making progress
+
+**Problem:** Repeated zero-byte reads can spin forever when hashing, backing up or restoring a save. Unbounded metadata responses can consume excessive memory.
+
+**Change:** Bound zero-progress retries and response sizes, reject malformed results, and add tests for stalled streams and transient zero reads.
+
+**Check:** Exercise corrupt, stalled and truncated inputs, plus a valid retry. No partial result may be reported as a verified backup.
+
+## 4. RomM ownership must bind both server and account
+
+**Problem:** A hostname alone cannot distinguish two users on the same RomM server, especially when using queued offline save requests.
+
+**Change:** Require a verified numeric account identity tied to the server fingerprint and credential revision. Account-bound archives and requests never authorize automatic uploads or overwrites.
+
+**Check:** Test account switching and same-ROM identities, preserve legacy backups for review, and fail closed when identity cannot be verified.
+
+## 5. Cancelling a UI result is not the same as cancelling the request
+
+**Problem:** A metadata search could outlive Fix Match and continue its network work, even when late callbacks were ignored.
+
+**Change:** Use cancellable HTTP requests and return coroutine Jobs so the UI can cancel search/preview work on edit, retry or dismissal.
+
+**Check:** Confirm closing the dialog cancels the request; a late response must not overwrite a later query. Physical-device timing is still pending.
+
+## 6. Pushes need preflight checks and increasing Android versions
+
+**Problem:** Import-order lint failures blocked several builds, and debug APKs previously reused `versionCode = 1`.
+
+**Change:** Follow Kotlin import ordering, test the actual CI compiler path, derive rolling debug codes from the GitHub Actions run number, and inspect packaged identity before publishing.
+
+**Check:** Negative identity tests, the full CI result and an Android in-place upgrade retaining saves.

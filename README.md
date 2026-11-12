@@ -90,8 +90,26 @@ Once NES-only cleanup is complete, this tool will also be used with `--nes-only`
 
 Open a [GitHub issue](https://github.com/JPLuker/OpenNES/issues) with your Android version, device, emulator build/commit, reproduction steps and logs or screenshots when relevant. Do not upload copyrighted ROMs, RetroAchievements credentials, or other sensitive data. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Privacy
+
+OpenNES can play locally imported NES games without an OpenNES account or internet connection. The RomM and RetroAchievements integrations are optional. ROM files, save states and local game settings remain on your device unless you choose to import, export or synchronize through a supported service. **Automatic RomM save uploads and overwrites are not enabled.** Do not use development backups as your only copy of a save.
+
+### Network connections
+
+| Destination | When used | Information sent or retrieved |
+| --- | --- | --- |
+| `retroachievements.org` | When connecting a RetroAchievements account or playing an eligible game while signed in | Login token and game/achievement requests required by the service; no ROM file upload |
+| Your configured RomM server | Only when RomM is connected and its features are used | The chosen server account credential and requests to browse/download NES entries and explicit backups |
+| `thumbnails.libretro.com` | When resolving or caching library artwork | Artwork filename requests |
+| `www.wikidata.org`, `en.wikipedia.org` | When online metadata lookup or enrichment is requested/enabled | Game-title and verified Wikidata entity queries; no ROM bytes |
+| `api.github.com`, `raw.githubusercontent.com` | When searching the optional Libretro cheat catalogue | Cheat index and selected game cheat-file requests; imported cheats start disabled |
+
+These external services may receive normal HTTPS connection metadata such as an IP address. Their own privacy policies apply. A separate OpenNES-hosted account, analytics account or required cloud backend is not part of the intended local-play flow. Full inherited dependency and network audits are release gates, not completed certifications.
+
+For security concerns, see [SECURITY.md](SECURITY.md). The current implementation and unresolved hardware checks are listed in [TESTING.md](TESTING.md).
+
 ## Licensing and acknowledgments
 
 OpenNES is forked from [Lemuroid](https://github.com/Swordfish90/Lemuroid), based on Libretro and [LibretroDroid](https://github.com/Swordfish90/LibretroDroid); the intended NES core is [FCEUmm](https://github.com/libretro/libretro-fceumm). Lemuroid is licensed under **GNU GPL version 3**. This fork retains `COPYING` and source notices; its dependencies and included native code must retain their applicable licensing and attribution. Wikimedia metadata is credited per game: Wikidata data is CC0 and Wikipedia extracts require CC BY-SA attribution and link to the original article.
 
-OpenNES is not endorsed by or affiliated with Nintendo, Pizza Boy, Lemuroid's maintainers, or RetroAchievements. RetroAchievements integration is planned, not currently shipped.
+OpenNES is not endorsed by or affiliated with Nintendo, Pizza Boy, Lemuroid's maintainers, or RetroAchievements. Native Casual RetroAchievements support is implemented in development builds, but a new server-persisted award is not yet verified on hardware. Official Hardcore support remains disabled.

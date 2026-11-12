@@ -1,0 +1,43 @@
+# OpenNES testing and acceptance
+
+The current rolling APK is a **development preview**, not a release candidate. A passed workflow proves Kotlin source formatting, JVM regressions, Android compilation, native bridge exports, NES-only packaging, version identity and SHA-256 publication. It does **not** prove gameplay stability, safe upgrades, actual RemoteAchievements awards or compatibility with the user's live RomM server.
+
+## Automated checks
+
+Run locally with the Android SDK, JDK 17 and recursive submodules:
+
+```sh
+python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+./gradlew ktlintCheck
+./gradlew :lemuroid-app:testFreeBundleDebugUnitTest
+./gradlew :lemuroid-app:assembleFreeBundleDebug
+python3 scripts/inspect-apk.py --nes-only --native-bridge PATH_TO_APK
+```
+
+CI performs the same relevant checks on every `master` push and verifies the actual debug package/version before publishing. An unsuccessful run must leave the previous published APK intact. The actual artifact is at the [rolling development release](https://github.com/JPLuker/OpenNES/releases/tag/dev-latest).
+
+## Latest device-test checklist (current functionality, not a claim of completion)
+
+Only the next applicable items should be requested in a test round; never send the whole list as a playtest request.
+
+- [ ] Install the latest CI development APK **over** the previous signed development APK, without uninstalling; verify installed version increased and local saves remain.
+- [ ] Open a game, leave it running, select a second ROM, and use **Close & launch**; check that the first game's SRAM/autosave survives.
+- [ ] Open the pause menu in portrait and landscape; check that every action, including Quit, is reachable and text is readable without unintended clipping.
+- [ ] Edit portrait and landscape controller positions across display cutouts, then restart and verify independent persistence.
+- [ ] In **Fix Match**, start an online search, edit the query, close with system Back, and retry; verify the last request does not overwrite the new result.
+- [ ] Sign in to RetroAchievements, play a recognized NES game and earn a **new** achievement; check the in-game banner and the official server record. Previous achievements appearing in a list are insufficient proof.
+- [ ] Disconnect the network while a game is running; make sure local play and saves still work, and RetroAchievements errors do not show false awards.
+- [ ] Connect to the user's actual RomM server, browse/import an NES ROM, download a manual backup, export and restore it; verify that different accounts cannot access each other's saves.
+- [ ] Validate fast-forward, audio focus, sleep/background-resume and external gamepad transitions on real hardware.
+- [ ] Confirm in-app version, package ID and build revision are available in diagnostics before stable release.
+
+## Unverified until tested on hardware or an authenticated server
+
+- Real Nintendo/Famicom mapper compatibility and frame/audio pacing.
+- The exact responsiveness and positioning of touch controls across fonts, orientations and cutouts.
+- Android process death, activity recreation and save restoration under memory pressure.
+- Real RetroAchievements unlock persistence and all reconnect paths; Hardcore is disabled pending approval.
+- RomM server schema, account ownership and remote write permissions. Uploads and automatic two-way sync remain disabled.
+- Production signing and update/rollback against production builds; the current APK is a debug test build.
+
+Record a failed scenario with the APK's source commit, Android version, steps, expected behavior, actual result and a sanitized screenshot/log. Keep the associated issue open until the actual failure is reproduced and its fix verified.

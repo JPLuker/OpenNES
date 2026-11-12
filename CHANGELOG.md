@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Linked Fix Match and online metadata lookup cancellations to their running coroutine jobs, stopping network work when search UI is dismissed or changed.
+- Documented the security boundary, privacy/network endpoints, proof-based device test matrix and developer handoff expectations.
+
 - Version each CI debug APK using the workflow run number and a single `VERSION` source file; reject APKs whose built package ID, versionCode or versionName differs before publishing.
 - Keep the debug signing identity and package ID stable across upgrades; release signing remains separate.
 
