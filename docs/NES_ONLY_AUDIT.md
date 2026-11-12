@@ -1,6 +1,6 @@
 # OpenNES — NES-only debloat audit
 
-**Status:** M1 cleanup in progress. NES-only native APK packaging and size improvement verified; full source removal and device testing remain.  
+**Status (2026-11-12): M1 functionally complete, CI verified.** Only NES/Famicom and the FCEUmm core are supported/packaged, with NES-only metadata and a CI-inspected debug artifact. Final upstream source/dependency pruning and production-binary licensing are **M8**, while physical gameplay/save acceptance is **M5**.  
 **Initial inspection:** 2026-11-06  
 **Target:** Keep a full, usable FCEUmm NES emulator, remove all other console support and unnecessary platform features.
 
@@ -71,7 +71,11 @@ M2 also added safe-drawing insets to the main navigation, top bars and pause men
 
 ## M2 closure handoff (2026-11-09)
 
-M2's source-only UI cleanup is marked code-complete. The remaining dependency/source debloat, including the shared `LeanbackPreferenceFragment` storage-provider interface and compatibility identifiers, stays in **M1**, while licensing/release acceptance stays in **M7**. The remaining empty shared `styles_leanback.xml` resource was removed without altering retained dependency/API types. No build or runtime verification has been performed during the final M2 pass.
+M2's UI source implementation is complete. The remaining inherited dependency/source cleanup, including the shared `LeanbackPreferenceFragment` storage-provider interface and compatibility identifiers, belongs to **M8**. Production licensing belongs to **M8**, and RomM account/server acceptance to **M7**. The remaining empty shared `styles_leanback.xml` resource was removed without altering retained dependency/API types. No build or runtime verification has been performed during the final M2 pass.
+
+## November 12 — M8 build-variant cleanup
+
+The supported `freeBundle` APK/AAB tasks now remain the only enabled flavor combination; unused `play` and `dynamic` variants were removed without changing `com.jpluker.opennes.debug`, the published rolling APK location, or bundled FCEUmm. CI tests now assert that neither orphaned flavor can return. The release inspectors also reject game ROM images and emulator cores hidden outside the normal native library directory. This hardening is **M8** follow-up, not a reopening of M1.
 
 ## Build and functional gates
 
@@ -87,4 +91,4 @@ M2's source-only UI cleanup is marked code-complete. The remaining dependency/so
 
 ## What is **not** done yet
 
-**Verified:** APK reduced from 222,012,846 to **32,367,426 bytes** after additional CI metadata trimming. All 76 non-NES Libretro core binaries were excluded. Source cleanup removed 23 other-console touch layouts and 20 console artwork XML files. The NES library and metadata provider have been restricted to NES. **Verified:** CI retained 29,246 NES metadata entries and reduced the SQLite asset from 12,775,424 to 3,706,880 bytes. The source DB itself remains unchanged. **Still pending:** real-device NES ROM launch/audio/saves, inherited shared API cleanup, and final UI accessibility/device acceptance. Android TV's app-specific source and UI resources have now been removed.
+**Verified:** APK reduced from 222,012,846 to **32,367,426 bytes** after additional CI metadata trimming. All 76 non-NES Libretro core binaries were excluded. Source cleanup removed 23 other-console touch layouts and 20 console artwork XML files. The NES library and metadata provider have been restricted to NES. **Verified:** CI retained 29,246 NES metadata entries and reduced the SQLite asset from 12,775,424 to 3,706,880 bytes. The source DB itself remains unchanged. **Still pending (separate gates):** M5 real-device NES ROM launch/audio/saves; M8 inherited shared-API pruning and production source/license audit; M2–M4 accessibility and controller acceptance. Android TV's app-specific source and UI resources have now been removed.
