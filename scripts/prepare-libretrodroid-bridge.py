@@ -242,6 +242,17 @@ bool LibretroDroid::replaceCoreCheats(
 void LibretroDroid::step() {""",
         "libretrodroid.cpp bridge functions",
     )
+    # NES Zapper games normally use controller port 2. Forward the same
+    # viewport-mapped pointer to both ports: ordinary joypads ignore pointer
+    # events, while FCEUmm's touchscreen Zapper consumes port 2. Keep the
+    # original port 1 pointer for legacy behavior.
+    c = replace_once(
+        c,
+        "        input->onMotionEvent(0, Input::MOTION_SOURCE_POINTER, x, y);",
+        "        input->onMotionEvent(0, Input::MOTION_SOURCE_POINTER, x, y);\\n"
+        "        input->onMotionEvent(1, Input::MOTION_SOURCE_POINTER, x, y);",
+        "libretrodroid.cpp NES Zapper pointer routing",
+    )
     files[cpp] = c
 
     j = files[jni]
