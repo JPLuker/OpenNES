@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Replace the two-choice Tilt Sensor pause dialog with a single **Dpad tilt control** switch, preserving the selected on/off state until the pause menu closes and restricting it to supported NES D-pad tilt input.
+
 - Committed Casual-only rewind (#11), per-ROM Zapper touchscreen (#12) and independent controller hitbox improvements (#13) as first public release requirements. These are not yet implemented or device-tested.
 - Committed Google Play AAB / Play App Signing delivery and Play-managed updates (#14); no in-app updater. Added API 36, production privacy/IP and debug-to-Play save migration gates.
 
