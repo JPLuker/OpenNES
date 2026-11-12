@@ -21,6 +21,7 @@ package com.swordfish.lemuroid.lib.library
 
 import androidx.annotation.StringRes
 import com.swordfish.lemuroid.lib.R
+import com.swordfish.lemuroid.lib.core.CoreVariable
 import java.util.Locale
 
 data class GameSystem(
@@ -50,6 +51,9 @@ data class GameSystem(
                     listOf(
                         SystemCoreConfig(
                             CoreID.FCEUMM,
+                            // Use actual viewport touches for Zapper-compatible NES games.
+                            // A user's explicit advanced choice can override this default.
+                            defaultSettings = listOf(CoreVariable("fceumm_zapper_mode", "touchscreen")),
                             exposedSettings =
                                 listOf(
                                     ExposedSetting(
@@ -67,6 +71,10 @@ data class GameSystem(
                                         "fceumm_nospritelimit",
                                         R.string.setting_fceumm_nospritelimit,
                                     ),
+                                    ExposedSetting(
+                                        "fceumm_zapper_mode",
+                                        R.string.setting_fceumm_zapper_mode,
+                                    ),
                                 ),
                             controllerConfigs =
                                 hashMapOf(
@@ -75,6 +83,10 @@ data class GameSystem(
                         ),
                     ),
                     uniqueExtensions = listOf("nes"),
+                    // Permits GLRetroView to forward touch down/up in the
+                    // actual game viewport. Controller overlay still owns
+                    // virtual buttons; non-Zapper games ignore pointer input.
+                    hasTouchScreen = true,
                 ),
             )
 
