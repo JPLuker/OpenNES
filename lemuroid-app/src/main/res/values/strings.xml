@@ -141,6 +141,7 @@
     <string name="game_menu_change_disk_disk">Disk %1$s</string>
     <string name="game_menu_tilt_sensor">Tilt Sensor</string>
     <string name="opennes_dpad_tilt_control">Dpad tilt control</string>
+    <string name="opennes_zapper_game_switch">Zapper touchscreen (next launch)</string>
 
     <string name="game_loading_preparing_game">Preparing game…</string>
 
