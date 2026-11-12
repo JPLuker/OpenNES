@@ -60,7 +60,7 @@ jobs:
 
       - name: Run offline JVM regression tests
         run: |
-          ./gradlew :lemuroid-app:testFreeBundleDebugUnitTest --stacktrace
+          ./gradlew :lemuroid-touchinput:testDebugUnitTest :lemuroid-app:testFreeBundleDebugUnitTest --stacktrace
 
       - name: Retain only NES metadata in the build
         run: |
