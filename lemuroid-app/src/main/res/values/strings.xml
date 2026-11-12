@@ -144,6 +144,8 @@
     <string name="opennes_zapper_game_switch">Zapper touchscreen (next launch)</string>
     <string name="opennes_rewind_action">Rewind</string>
     <string name="opennes_rewind_hold_label">HOLD TO REWIND</string>
+    <string name="opennes_editor_directional_hitboxes">D-pad directional hitboxes</string>
+    <string name="opennes_editor_directional_hitboxes_hint">Adjust the real touch zones for each direction. The visible D-pad remains connected.</string>
     <string name="opennes_rewind_hold_accessibility">Hold to rewind gameplay; activate for one rewind step</string>
     <string name="opennes_rewind_unavailable">Not enough rewind history yet</string>
     <string name="pref_key_rewind_enabled">pref_key_rewind_enabled</string>
