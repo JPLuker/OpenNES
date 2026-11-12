@@ -101,6 +101,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         val audioEnabled: Boolean,
         val fastForwardSupported: Boolean,
         val fastForwardEnabled: Boolean,
+        val rewindAvailable: Boolean,
         val numDisks: Int,
         val currentDisk: Int,
         val currentTiltConfiguration: TiltConfiguration,
@@ -151,6 +152,8 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     extras?.getBoolean(GameMenuContract.EXTRA_FAST_FORWARD_SUPPORTED, false) ?: false,
                 fastForwardEnabled =
                     extras?.getBoolean(GameMenuContract.EXTRA_FAST_FORWARD, false) ?: false,
+                rewindAvailable =
+                    extras?.getBoolean(GameMenuContract.EXTRA_REWIND_AVAILABLE, false) ?: false,
                 numDisks =
                     extras?.getInt(GameMenuContract.EXTRA_DISKS, 0) ?: 0,
                 currentDisk =
@@ -265,6 +268,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                                 pendingFastForwardEnabled = enabled
                                 setResult(RESULT_OK, Intent().apply { putPendingSwitches() })
                             },
+                            rewindAvailable = gameMenuRequest.rewindAvailable,
                             tiltEnabled = dpadTiltEnabled,
                             onTiltChanged = { enabled ->
                                 dpadTiltEnabled = enabled
