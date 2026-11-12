@@ -762,4 +762,14 @@
     <string name="opennes_ra_game_match_unavailable">Game lookup unavailable</string>
     <string name="opennes_ra_game_match_unknown">No RetroAchievements match found</string>
     <string name="opennes_ra_live_unlock_toast">Achievement triggered: %1$s</string>
+    <string name="opennes_hardcore_settings_title">Hardcore mode</string>
+    <string name="opennes_hardcore_settings_subtitle">Rules and availability</string>
+    <string name="opennes_hardcore_status_title">Availability</string>
+    <string name="opennes_hardcore_unavailable">Hardcore mode is not available yet. Official RetroAchievements Hardcore support needs native enforcement and verification before it can be enabled.</string>
+    <string name="opennes_hardcore_rules_title">Hardcore rules</string>
+    <string name="opennes_hardcore_rules_body">Hardcore play must prevent cheats, rewind, loading save states and other disallowed gameplay assistance. These restrictions must work in the emulator core, not only in the menus.</string>
+    <string name="opennes_hardcore_saves_title">Separate saves</string>
+    <string name="opennes_hardcore_saves_body">Casual and Hardcore progress must remain separate when Hardcore becomes available. This separation is not active yet. Regular in-game cartridge saves are different from emulator save states.</string>
+    <string name="opennes_hardcore_casual_title">Casual mode</string>
+    <string name="opennes_hardcore_casual_body">Casual play remains available with existing emulator features. Rewind is planned but not yet implemented. RetroAchievements currently operates in Casual mode only.</string>
 </resources>
