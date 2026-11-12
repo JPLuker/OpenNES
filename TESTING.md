@@ -42,3 +42,9 @@ Only the next applicable items should be requested in a test round; never send t
 - Production signing and update/rollback against production builds; the current APK is a debug test build.
 
 Record a failed scenario with the APK's source commit, Android version, steps, expected behavior, actual result and a sanitized screenshot/log. Keep the associated issue open until the actual failure is reproduced and its fix verified.
+
+## November 12 — Universal NES game launch failure (P0)
+
+**Reported on device:** Multiple ROMs trigger the same generic failure screen on build 853. Gameplay is **not accepted**. The manifest declared the specific `FOREGROUND_SERVICE_DATA_SYNC` permission but omitted Android's base `FOREGROUND_SERVICE` permission, despite starting a foreground game service. Both are now explicitly declared, and a CI APK identity gate checks the merged manifest for both. This is a concrete defect and a possible launch failure, not confirmation of the sole root cause.
+
+The game-load error result now carries one constrained non-sensitive reason: CORE, ROM, SAVE, GRAPHICS, ACCESS, IO, INVALID_INPUT or UNEXPECTED. The user can return to the library. Raw exception text, file paths and credentials are not passed through the Android result. Two ROMs must successfully launch on the user's device, and saved data must survive, before marking the regression fixed. If another failure occurs, the visible error code plus a locally redacted Android log are needed to isolate the cause.

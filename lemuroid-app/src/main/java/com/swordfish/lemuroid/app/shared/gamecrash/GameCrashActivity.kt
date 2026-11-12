@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
+import com.google.android.material.button.MaterialButton
 import androidx.core.view.isVisible
 import com.swordfish.lemuroid.R
 
@@ -24,6 +25,7 @@ class GameCrashActivity : Activity() {
             isVisible = !messageDetail.isNullOrEmpty()
             text = messageDetail
         }
+        findViewById<MaterialButton>(R.id.back_to_library).setOnClickListener { finish() }
     }
 
     companion object {

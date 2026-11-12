@@ -15,7 +15,11 @@ SPEC.loader.exec_module(MODULE)
 class VerifyApkIdentityTest(unittest.TestCase):
     @staticmethod
     def badge(package: str = "com.jpluker.opennes.debug", code: int = 100_844, name: str = "0.1.0-dev.844") -> str:
-        return f"package: name='{package}' versionCode='{code}' versionName='{name}'\nsdkVersion:'26'\n"
+        return (
+            f"package: name='{package}' versionCode='{code}' versionName='{name}'\nsdkVersion:'26'\n"
+            "uses-permission: name='android.permission.FOREGROUND_SERVICE'\n"
+            "uses-permission: name='android.permission.FOREGROUND_SERVICE_DATA_SYNC'\n"
+        )
 
     def test_known_good_ci_apk_passes(self):
         self.assertEqual((100_844, "0.1.0-dev.844"), MODULE.verify_badging(self.badge(), "0.1.0", 844))
@@ -32,6 +36,13 @@ class VerifyApkIdentityTest(unittest.TestCase):
             with self.subTest(badging=badging):
                 with self.assertRaises(ValueError):
                     MODULE.verify_badging(badging, "0.1.0", 844)
+
+    def test_refuses_missing_foreground_game_service_permission(self):
+        for name in ("android.permission.FOREGROUND_SERVICE", "android.permission.FOREGROUND_SERVICE_DATA_SYNC"):
+            with self.subTest(name=name):
+                without = self.badge().replace(f"uses-permission: name='{name}'\n", "")
+                with self.assertRaises(ValueError):
+                    MODULE.verify_badging(without, "0.1.0", 844)
 
     def test_refuses_bad_release_version_and_invalid_run_number(self):
         for version, run in (("0.1.0-debug", 844), ("0.1.0", 0), ("0.1.0", 1_000_001)):

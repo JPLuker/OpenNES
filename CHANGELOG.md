@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Fix missing Android foreground-service base permission for game startup and enforce both permissions in the APK inspection gate.
+- Replace the generic dead-end game error with a safe category for core, ROM, save and rendering failures, plus a return-to-library control.
+
 - Replaced inherited Lemuroid issue templates with OpenNES Android-specific bug and feature reports, including safe log/screenshot guidance.
 
 - Bounded RomM pending-request journal parsing, preserving damaged data without replaying or overwriting it.

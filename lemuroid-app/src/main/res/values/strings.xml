@@ -436,7 +436,13 @@
     <string name="opennes_support_error_io">A storage or network operation failed. Check the connection or selected file and retry.</string>
     <string name="opennes_support_error_input">That input or file is unsupported or invalid.</string>
     <string name="opennes_support_error_generic">The operation failed. Check the configuration and retry.</string>
-    <string name="opennes_support_error_emulator">The emulator could not finish the game session. No personal error details were collected.</string>
+    <string name="opennes_support_error_emulator">The game could not start. Try again or check your ROM folder and game settings.</string>
+    <string name="opennes_game_error_core">The NES emulator core could not load. Install the latest OpenNES build and retry.</string>
+    <string name="opennes_game_error_rom">The ROM could not be opened. Check that the file still exists and OpenNES can access its folder.</string>
+    <string name="opennes_game_error_save">Saved data could not be loaded. Keep your saves and check save settings before retrying.</string>
+    <string name="opennes_game_error_graphics">The NES emulator could not initialize graphics on this device.</string>
+    <string name="opennes_game_error_code">Game error code: %1$s</string>
+    <string name="opennes_game_error_back">Return to library</string>
     <string name="opennes_support_section">Support diagnostics</string>
     <string name="opennes_support_copy">Copy diagnostic report</string>
     <string name="opennes_support_description">Copies app version, Android version and CPU architecture only. No game titles, file paths, accounts or credentials.</string>

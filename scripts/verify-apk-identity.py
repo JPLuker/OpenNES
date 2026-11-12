@@ -33,6 +33,16 @@ def verify_badging(badging: str, version: str, run_number: int) -> tuple[int, st
         raise ValueError("Unexpected APK versionCode; update install could be rejected")
     if fields.get("versionName") != expected_name:
         raise ValueError("Unexpected APK versionName; Gradle and release numbering differ")
+    permissions = set(
+        re.findall(r"^uses-permission(?:-sdk-23)?: name='([^']+)'", badging, re.MULTILINE)
+    )
+    required = {
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
+    }
+    missing = required - permissions
+    if missing:
+        raise ValueError(f"APK lacks foreground game service permissions: {sorted(missing)}")
     return expected_code, expected_name
 
 
