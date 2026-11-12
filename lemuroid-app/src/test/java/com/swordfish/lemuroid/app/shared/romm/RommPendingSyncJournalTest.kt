@@ -9,6 +9,31 @@ import java.nio.file.Files
 
 class RommPendingSyncJournalTest {
     @Test
+    fun oversizedJournalIsRejectedWithoutClearingThePriorRequest() {
+        val folder = Files.createTempDirectory("romm-bounded-journal-").toFile()
+        try {
+            val journal = RommPendingSyncJournal(folder)
+            assertTrue(
+                journal.enqueue(
+                    12,
+                    RommSaveSyncPlanner.Direction.DOWNLOAD,
+                    snapshot("a"),
+                    snapshot("b"),
+                    serverA,
+                ),
+            )
+            val file = File(folder, "romm-pending-sync-v2.json")
+            file.appendBytes(ByteArray(65_536))
+            assertEquals(RommPendingSyncJournal.ReadResult.Corrupt, journal.list())
+            assertFalse(journal.discard("not-a-real-id"))
+            assertTrue(file.exists())
+            assertTrue(file.length() > 64 * 1024)
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
     fun sameServerAndGameCanQueueIndependentAccountsWithoutCrossApproval() {
         val folder = Files.createTempDirectory("romm-account-isolation-").toFile()
         try {

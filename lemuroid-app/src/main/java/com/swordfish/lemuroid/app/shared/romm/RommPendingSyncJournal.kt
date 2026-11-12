@@ -51,7 +51,12 @@ internal class RommPendingSyncJournal(private val directory: File) {
         if (!file.exists()) return ReadResult.Entries(emptyList())
         if (!file.isFile || file.length() !in 1..MAX_FILE_BYTES.toLong()) return ReadResult.Corrupt
         return try {
-            val root = JSONObject(file.readText(Charsets.UTF_8))
+            if (file.canonicalFile.parentFile != directory.canonicalFile) return ReadResult.Corrupt
+            val bytes =
+                file.inputStream().use { input ->
+                    RommSafeStreamRead.readBounded(input, MAX_FILE_BYTES)
+                }
+            val root = JSONObject(String(bytes, Charsets.UTF_8))
             if (root.getInt("version") != VERSION) return ReadResult.Corrupt
             val data = root.getString("data")
             if (sha256(data) != root.getString("sha256")) return ReadResult.Corrupt

@@ -135,3 +135,7 @@ The private RomM metadata cache now uses a bounded reader rather than `InputStre
 ## November 12 — Backup manifest and verifying-reader bounds
 
 Manifest listing now enforces the 200-byte checksum-manifest maximum **during** the read, not only through a pre-read file-size check. Manifest canonical containment is verified before parsing. Backup SHA-256 verification stops if an archive grows beyond its previously verified byte count during a read. A malformed manifest remains intact for manual recovery and cannot authorize deletion, recovery or a pending transfer. New regression coverage checks rejection without data loss.
+
+## November 12 — Bounded pending-request journal reads
+
+The non-executing RomM request journal now caps file reads at 64 KiB even when the private JSON grows after the initial file-length check. Journal canonical containment is checked before reading; stalled input and oversized files fail closed as `Corrupt`. The original file is retained for manual recovery instead of being silently overwritten or replayed. Regression tests verify that an oversized journal remains untouched and cannot be discarded or used for synchronization.
