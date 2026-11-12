@@ -1,8 +1,14 @@
 # OpenNES — Development progress
 
-Updated: 2026-11-11
+Updated: 2026-11-12
 
 This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The current source baseline passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071), including archive integrity, sync-policy and RomM 5.4 protocol regression tests, native/Android compilation and rolling APK publication. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
+
+## November 12 — M3/M4 directional D-pad and M5 held rewind source candidate
+
+- **Controller:** existing PadKit cross is still used unless the player edits a directional hitbox. New per-orientation serialized Up/Down/Left/Right hitboxes use a real four-key PadKit control with composite diagonal anchors and matching pressed-state feedback; the editor measures the input regions rather than inventing visual-only drag handles. Live geometry, touch interaction, orientation saving and restore defaults await device acceptance.
+- **Rewind:** optional in-game hold control performs one-second native state restores while pressed, pauses new snapshot captures during hold, and releases on cancel/navigation. Single-step accessibility is provided. Save/reset locks remain authoritative. Hardware audio, responsiveness and SRAM safety are unverified.
+- **Verification:** this batch requires a clean latest debug workflow run and physical-phone acceptance; neither feature should be marked complete based solely on source commits.
 
 ## November 10–11 — RomM full-library and offline reliability candidate
 
