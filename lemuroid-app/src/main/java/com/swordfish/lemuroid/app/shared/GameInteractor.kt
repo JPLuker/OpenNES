@@ -7,7 +7,10 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.shortcuts.ShortcutsGenerator
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.swordfish.lemuroid.app.shared.game.GameLauncher
+import com.swordfish.lemuroid.app.shared.library.RomFolderAccess
+import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.app.shared.main.BusyActivity
 import com.swordfish.lemuroid.common.displayToast
 import com.swordfish.lemuroid.lib.library.covers.CustomCoverManager
@@ -25,7 +28,7 @@ class GameInteractor(
     private val customCoverManager: CustomCoverManager,
 ) {
     fun onGamePlay(game: Game) {
-        if (!ensureNotBusy()) {
+        if (!ensureRomFolderAccessible(game) || !ensureNotBusy()) {
             return
         }
         if (!ensureNotificationsPermissionAvailable()) {
@@ -35,7 +38,7 @@ class GameInteractor(
     }
 
     fun onGameRestart(game: Game) {
-        if (!ensureNotBusy()) {
+        if (!ensureRomFolderAccessible(game) || !ensureNotBusy()) {
             return
         }
         if (!ensureNotificationsPermissionAvailable()) {
@@ -102,6 +105,23 @@ class GameInteractor(
             customCoverManager.deleteCover(game.id)
             retrogradeDb.gameDao().update(game.copy(customCoverUri = null))
         }
+    }
+
+    /** A cached library record is not evidence that Android still grants ROM access. */
+    private fun ensureRomFolderAccessible(game: Game): Boolean {
+        val context = activity.activity()
+        if (RomFolderAccess.check(context.applicationContext, game.fileUri) == RomFolderAccess.Status.AVAILABLE) {
+            return true
+        }
+        MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.opennes_setup_folder_error_title)
+            .setMessage(R.string.opennes_rom_folder_missing_play)
+            .setPositiveButton(R.string.opennes_setup_choose_action) { _, _ ->
+                StorageFrameworkPickerLauncher.pickFolder(context)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+        return false
     }
 
     private fun ensureNotificationsPermissionAvailable(): Boolean {

@@ -110,6 +110,7 @@ import com.swordfish.lemuroid.app.shared.covers.NesCoverResolutionCache
 import com.swordfish.lemuroid.app.shared.game.ActiveGameSession
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
+import com.swordfish.lemuroid.app.shared.library.RomFolderAccess
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionPreferences
@@ -163,6 +164,10 @@ fun HomeScreen(
     val state = viewModel.getViewStates().collectAsState(HomeViewModel.UIState()).value
     val romm = RommLibraryCatalog.state.collectAsState().value
     val localFileNames = viewModel.indexedNesFileNames.collectAsState(emptySet()).value
+    val missingRomFolder =
+        state.discoveryGames.any {
+            RomFolderAccess.check(context.applicationContext, it.fileUri) != RomFolderAccess.Status.AVAILABLE
+        }
     val remoteGames =
         remember(romm.games, localFileNames) {
             RommLibraryCatalog.available(romm.games, localFileNames)
@@ -190,6 +195,7 @@ fun HomeScreen(
         allGames = allGames,
         romm = romm,
         showRommWarnings = showRommWarnings,
+        missingRomFolder = missingRomFolder,
         onRetryRomM = { viewModel.refreshRomMLibrary(force = true) },
         onOpenRemoteStatus = { selectedGame = RommLibraryCatalog.asPreview(it) },
         onGameClick = onGameClick,
@@ -288,6 +294,7 @@ private fun OpenNesLibrary(
     allGames: List<Game>,
     romm: RommLibraryCatalog.State,
     showRommWarnings: Boolean,
+    missingRomFolder: Boolean,
     onRetryRomM: () -> Unit,
     onOpenRemoteStatus: (com.swordfish.lemuroid.app.shared.romm.RommApiClient.Rom) -> Unit,
     onGameClick: (Game) -> Unit,
@@ -375,12 +382,14 @@ private fun OpenNesLibrary(
         }
 
         if (
+            missingRomFolder ||
             (state.showNoGamesCard && (allGames.isEmpty() || !state.hasRomDirectory)) ||
             (state.scanError != null && !state.scanInProgress)
         ) {
             item {
                 LibrarySetupCard(
                     hasRomDirectory = state.hasRomDirectory,
+                    missingRomFolder = missingRomFolder,
                     scanInProgress = state.scanInProgress,
                     scanError = state.scanError,
                     onChooseFolder = onSetDirectoryClicked,
@@ -2114,6 +2123,7 @@ private fun playTimeLabel(game: Game): String {
 @Composable
 private fun LibrarySetupCard(
     hasRomDirectory: Boolean,
+    missingRomFolder: Boolean,
     scanInProgress: Boolean,
     scanError: String?,
     onChooseFolder: () -> Unit,
@@ -2134,6 +2144,7 @@ private fun LibrarySetupCard(
         ) {
             val title =
                 when {
+                    missingRomFolder -> R.string.opennes_setup_folder_error_title
                     !hasRomDirectory -> R.string.opennes_setup_choose_title
                     scanInProgress -> R.string.opennes_setup_scanning_title
                     scanError == LibraryScanStatus.FOLDER_UNAVAILABLE -> R.string.opennes_setup_folder_error_title
@@ -2142,6 +2153,7 @@ private fun LibrarySetupCard(
                 }
             val message =
                 when {
+                    missingRomFolder -> R.string.opennes_rom_folder_missing_play
                     !hasRomDirectory -> R.string.opennes_setup_choose_description
                     scanInProgress -> R.string.opennes_setup_scanning_description
                     scanError == LibraryScanStatus.FOLDER_UNAVAILABLE -> R.string.opennes_setup_folder_error_description
@@ -2162,7 +2174,7 @@ private fun LibrarySetupCard(
             )
 
             when {
-                !hasRomDirectory -> {
+                missingRomFolder || !hasRomDirectory -> {
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = onChooseFolder,

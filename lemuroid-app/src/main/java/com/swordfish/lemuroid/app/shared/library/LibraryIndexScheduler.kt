@@ -13,7 +13,9 @@ object LibraryIndexScheduler {
         WorkManager.getInstance(applicationContext)
             .beginUniqueWork(
                 LIBRARY_INDEX_WORK_ID,
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                // Replacing a selected folder supersedes the old scan. Do not queue
+                // stale scans that prevent a reselected ROM from appearing.
+                ExistingWorkPolicy.REPLACE,
                 OneTimeWorkRequestBuilder<LibraryIndexWork>().build(),
             )
             .enqueue()

@@ -31,7 +31,9 @@ class MainViewModel(appContext: Context, private val saveSyncManager: SaveSyncMa
 
     private val currentRouteFlow = MutableStateFlow(MainRoute.HOME)
     private val saveSyncEnabledFlow = MutableStateFlow(false)
-    private val operationInProgressFlow = PendingOperationsMonitor(appContext).anyOperationInProgress()
+    // Indexing and core discovery may proceed alongside gameplay. Save sync
+    // still blocks overlapping save writes until it finishes or is cancelled.
+    private val operationInProgressFlow = PendingOperationsMonitor(appContext).anySaveOperationInProgress()
     private val searchQueryFlow = MutableStateFlow("")
 
     val state = buildStateFlow()
