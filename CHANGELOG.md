@@ -2,18 +2,21 @@
 
 ## [Unreleased]
 
+- Add a bounded RAM-only Casual rewind candidate: a five-second pause-menu action backed by a 32 MiB / 30-state ring, one-second snapshots, successful-restore timeline commit, session reset guards and exclusive synchronization with Quit/background saves. This is source/CI verified, not yet verified on a phone; hold-to-rewind remains open.
+- Add per-game NES Zapper touchscreen opt-in, FCEUmm touchscreen default, native viewport pointer routing for ports 1 and 2, controller-port capability matching and switch persistence. Input cancellation releases the pointer; light-gun accuracy needs device acceptance.
+- Add an ARM64 ELF 16 KiB PT_LOAD alignment gate for unsigned Play AAB source validation (real Android 16 and Play split installation still require testing).
+
 - Remove the redundant setup wizard panel from root Settings, keeping initial setup in onboarding and controller setup access under Controller Appearance.
 - Add a dedicated Hardcore mode information page covering current availability, restrictions, separate-save requirement, and Casual play. It does not falsely expose a functioning Hardcore switch.
 - Move the Android toolchain toward API 36 (Gradle 8.11.1 / Android Gradle Plugin 8.10.1), with debug APK target verification and a separate **unsigned** Play AAB validation workflow. Native 16 KiB, signing and device acceptance remain open.
 
 - Replace the two-choice Tilt Sensor pause dialog with a single **Dpad tilt control** switch, preserving the selected on/off state until the pause menu closes and restricting it to supported NES D-pad tilt input.
 
-- Committed Casual-only rewind (#11), per-ROM Zapper touchscreen (#12) and independent controller hitbox improvements (#13) as first public release requirements. These are not yet implemented or device-tested.
+- Tracked Casual rewind (#11), Zapper touchscreen (#12) and independent controller hitbox improvements (#13) as first-release requirements. Rewind and Zapper now have source implementations, with hardware acceptance pending; controller hitboxes remain open.
 - Committed Google Play AAB / Play App Signing delivery and Play-managed updates (#14); no in-app updater. Added API 36, production privacy/IP and debug-to-Play save migration gates.
 
 - Offer a ROM-folder reconnection action when indexed Documents games lose their selected folder or persisted Android read grant; preserve existing library and saves.
 - Let an already indexed game start during background library scanning, while still guarding concurrent save synchronization; supersede stale queued scans when a new scan is requested.
-- Restyle Tilt Sensor as a consistent pause-menu action with a matching selection dialog.
 
 - Fix missing Android foreground-service base permission for game startup and enforce both permissions in the APK inspection gate.
 - Replace the generic dead-end game error with a safe category for core, ROM, save and rendering failures, plus a return-to-library control.
