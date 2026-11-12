@@ -24,6 +24,26 @@ internal object NesControlDragSettings {
                     leftDragX = adjust(settings.leftDragX, deltaXdp),
                     leftDragY = adjust(settings.leftDragY, deltaYdp),
                 )
+            NesEditableControl.DPAD_UP ->
+                settings.copy(
+                    individualDpadHitboxes = true,
+                    dpadUp = movedDpadTarget(settings.dpadUp, deltaXdp, deltaYdp),
+                )
+            NesEditableControl.DPAD_DOWN ->
+                settings.copy(
+                    individualDpadHitboxes = true,
+                    dpadDown = movedDpadTarget(settings.dpadDown, deltaXdp, deltaYdp),
+                )
+            NesEditableControl.DPAD_LEFT ->
+                settings.copy(
+                    individualDpadHitboxes = true,
+                    dpadLeft = movedDpadTarget(settings.dpadLeft, deltaXdp, deltaYdp),
+                )
+            NesEditableControl.DPAD_RIGHT ->
+                settings.copy(
+                    individualDpadHitboxes = true,
+                    dpadRight = movedDpadTarget(settings.dpadRight, deltaXdp, deltaYdp),
+                )
             NesEditableControl.A -> settings.copy(aButton = movedButton(settings.aButton, deltaXdp, deltaYdp))
             NesEditableControl.B -> settings.copy(bButton = movedButton(settings.bButton, deltaXdp, deltaYdp))
             NesEditableControl.START ->
@@ -42,6 +62,21 @@ internal object NesControlDragSettings {
         v: Float,
         delta: Float,
     ): Float = (v + delta).coerceIn(-MAX_ABSOLUTE_OFFSET_DP, MAX_ABSOLUTE_OFFSET_DP)
+
+    /**
+     * Directional touch targets may be tuned within their D-pad arm.
+     * Bound the offset so a hitbox cannot be dragged into another direction
+     * or into the gameplay viewport while the visible cross stays fixed.
+     */
+    private fun movedDpadTarget(
+        geometry: TouchControllerSettingsManager.ButtonGeometry,
+        dx: Float,
+        dy: Float,
+    ): TouchControllerSettingsManager.ButtonGeometry =
+        geometry.copy(
+            dragX = (geometry.dragX + dx).coerceIn(-32f, 32f),
+            dragY = (geometry.dragY + dy).coerceIn(-32f, 32f),
+        )
 
     private fun movedButton(
         geometry: TouchControllerSettingsManager.ButtonGeometry,
