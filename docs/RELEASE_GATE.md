@@ -15,8 +15,8 @@
 
 ## Google Play distribution (required before 1.0)
 
-- [ ] **API 36+ target SDK** for new phone apps: currently `buildSrc/src/main/java/deps.kt` specifies 35. Update SDK/build tools and verify Android 16, edge-to-edge, foreground-service and native behavior.
-- [ ] **Release Android App Bundle (`.aab`)** containing only FCEUmm, with correct ABI and 16 KiB page support. Confirm the installed Play-generated split APKs.
+- [ ] **API 36+ target SDK** for new phone apps: the source now targets/compiles API 36 and debug CI checks its packaged target. CI build success and Android 16 edge-to-edge, foreground-service and native behavior still require verification.
+- [ ] **Release Android App Bundle (`.aab`)** containing only FCEUmm, with correct ABI and 16 KiB page support. An isolated unsigned AAB build/ZIP inspection workflow is in source; native 16 KiB validation and installed Play-generated splits are still unverified. See [Play build validation](PLAY_BUILD_VALIDATION.md).
 - [ ] **Play App Signing:** configure a private upload key and permanent production ID `com.jpluker.opennes`; never use or publish the repository debug key.
 - [ ] Google Play internal/closed testing, Data safety, privacy policy, content rating, permissions, Store listing, versionCode progression, crash/ANR and source-license compliance.
 - [ ] Audit third-party ROM/game imagery and screenshots used in the app/Store listing. Ship no commercial ROMs and do not use unlicensed Nintendo imagery as official app branding.
