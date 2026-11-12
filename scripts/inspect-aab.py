@@ -8,6 +8,7 @@ on a physical device.
 from __future__ import annotations
 
 import argparse
+import struct
 import sys
 import zipfile
 from pathlib import Path
@@ -53,9 +54,45 @@ def validate_names(names: list[str]) -> list[str]:
     return sorted(core_abis)
 
 
+def inspect_arm64_elf_page_size(blob: bytes) -> bool:
+    """True if every loadable ELF64 segment is compatible with 16 KiB pages.
+
+    This checks ELF PT_LOAD alignment, not the AAB ZIP layout or runtime behavior.
+    Invalid or truncated binaries fail closed rather than passing as empty ELF.
+    """
+    if len(blob) < 64 or blob[:4] != b"\\x7fELF" or blob[4] != 2 or blob[5] != 1:
+        return False
+    ph_offset = struct.unpack_from("<Q", blob, 32)[0]
+    ph_size = struct.unpack_from("<H", blob, 54)[0]
+    ph_count = struct.unpack_from("<H", blob, 56)[0]
+    if ph_size < 56 or ph_count == 0 or ph_count > 1024:
+        return False
+    if ph_offset > len(blob) or ph_count * ph_size > len(blob) - ph_offset:
+        return False
+    saw_load = False
+    for index in range(ph_count):
+        start = ph_offset + index * ph_size
+        if struct.unpack_from("<I", blob, start)[0] != 1:
+            continue
+        saw_load = True
+        offset = struct.unpack_from("<Q", blob, start + 8)[0]
+        vaddr = struct.unpack_from("<Q", blob, start + 16)[0]
+        align = struct.unpack_from("<Q", blob, start + 48)[0]
+        if align < 16384 or align & (align - 1):
+            return False
+        if offset % align != vaddr % align:
+            return False
+    return saw_load
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("aab", type=Path)
+    parser.add_argument(
+        "--require-16k",
+        action="store_true",
+        help="Require 16 KiB ELF PT_LOAD alignment for every arm64 shared library.",
+    )
     args = parser.parse_args()
     if not args.aab.is_file():
         parser.error(f"Missing AAB: {args.aab}")
@@ -65,6 +102,19 @@ def main() -> int:
             if bundle.testzip() is not None:
                 raise ValueError("App Bundle has a corrupt ZIP entry")
             abis = validate_names(names)
+            if args.require_16k:
+                arm64_libs = [
+                    entry for entry in bundle.infolist()
+                    if entry.filename.startswith("base/lib/arm64-v8a/")
+                    and entry.filename.endswith(".so")
+                ]
+                if not arm64_libs:
+                    raise ValueError("Missing arm64 shared libraries")
+                for entry in arm64_libs:
+                    if entry.file_size > 256 * 1024 * 1024:
+                        raise ValueError(f"Oversized native library: {entry.filename}")
+                    if not inspect_arm64_elf_page_size(bundle.read(entry)):
+                        raise ValueError(f"arm64 library lacks 16 KiB ELF load alignment: {entry.filename}")
     except (OSError, zipfile.BadZipFile, ValueError) as exc:
         print(f"ERROR: AAB check failed: {exc}", file=sys.stderr)
         return 1
