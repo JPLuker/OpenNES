@@ -9,6 +9,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.shared.game.NesZapperController
 import com.swordfish.lemuroid.app.shared.game.NesZapperPreferences
 import com.swordfish.lemuroid.app.shared.input.InputDeviceManager
 import com.swordfish.lemuroid.app.shared.input.InputKey
@@ -250,12 +251,9 @@ class GameViewModelInput(
         // force Zapper on controller port 2 for a combination cartridge or
         // homebrew that the core's database does not recognize.
         if (NesZapperPreferences(appContext).isEnabled(retroGameView.selectedGameId())) {
-            val zapper =
-                supported.getOrNull(1)?.firstOrNull {
-                    it.description?.contains("Zapper", ignoreCase = true) == true
-                }
-            if (zapper != null) {
-                gameView.setControllerType(1, zapper.id)
+            val zapperId = NesZapperController.portTwoZapperId(supported)
+            if (zapperId != null) {
+                gameView.setControllerType(1, zapperId)
             } else {
                 Timber.w("This NES core does not expose a port 2 Zapper")
             }
