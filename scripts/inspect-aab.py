@@ -60,7 +60,7 @@ def inspect_arm64_elf_page_size(blob: bytes) -> bool:
     This checks ELF PT_LOAD alignment, not the AAB ZIP layout or runtime behavior.
     Invalid or truncated binaries fail closed rather than passing as empty ELF.
     """
-    if len(blob) < 64 or blob[:4] != b"\\x7fELF" or blob[4] != 2 or blob[5] != 1:
+    if len(blob) < 64 or blob[:4] != b"\x7fELF" or blob[4] != 2 or blob[5] != 1:
         return False
     ph_offset = struct.unpack_from("<Q", blob, 32)[0]
     ph_size = struct.unpack_from("<H", blob, 54)[0]
