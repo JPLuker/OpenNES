@@ -192,9 +192,15 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
                 if (romId != null && archiveRomId != romId) return@mapNotNull null
                 val manifest = File(directory, file.name + MANIFEST_SUFFIX)
                 if (!manifest.isFile || manifest.length() !in 1..200) return@mapNotNull null
+                if (manifest.canonicalFile.parentFile != directory.canonicalFile) return@mapNotNull null
                 val fields =
-                    runCatching { manifest.readText(Charsets.US_ASCII).trim().split(" ") }
-                        .getOrNull() ?: return@mapNotNull null
+                    runCatching {
+                        val bytes =
+                            manifest.inputStream().use { input ->
+                                RommSafeStreamRead.readBounded(input, 200)
+                            }
+                        String(bytes, Charsets.US_ASCII).trim().split(" ")
+                    }.getOrNull() ?: return@mapNotNull null
                 if (fields.size !in 2..4 || !fields[0].matches(SHA256_PATTERN)) {
                     return@mapNotNull null
                 }
@@ -265,15 +271,20 @@ internal class RommVersionedSaveBackupStore(private val directory: File) {
         }
         if (!backup.file.isFile || backup.file.length() != backup.bytes) return false
         val digest = MessageDigest.getInstance("SHA-256")
+        var verifiedBytes = 0L
         backup.file.inputStream().buffered().use { input ->
             val buffer = ByteArray(16 * 1024)
             while (true) {
                 val length = RommSafeStreamRead.next(input, buffer)
                 if (length < 0) break
-                if (length > 0) digest.update(buffer, 0, length)
+                verifiedBytes += length
+                // The source can grow after length() was checked. Never keep
+                // hashing a changed backup past its original verified size.
+                if (verifiedBytes > backup.bytes) return false
+                digest.update(buffer, 0, length)
             }
         }
-        return hex(digest.digest()) == backup.sha256
+        return verifiedBytes == backup.bytes && hex(digest.digest()) == backup.sha256
     }
 
     private fun hex(bytes: ByteArray): String =

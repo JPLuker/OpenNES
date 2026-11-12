@@ -131,3 +131,7 @@ The existing v2 offline-intent format now supports an optional verified positive
 ## November 12 — Bounded private catalogue-cache reads
 
 The private RomM metadata cache now uses a bounded reader rather than `InputStream.readBytes()`. A changed, malformed or stalled file cannot allocate arbitrarily past the 12 MiB catalogue limit; repeated zero-progress reads fail closed. A valid file of exactly the maximum size still decodes, and corrupt files remain recoverable by the existing online cache refresh. No changes are made to ROMs or save files. New JVM tests exercise empty, exact-sized, oversized, stalled and transient-zero-read inputs.
+
+## November 12 — Backup manifest and verifying-reader bounds
+
+Manifest listing now enforces the 200-byte checksum-manifest maximum **during** the read, not only through a pre-read file-size check. Manifest canonical containment is verified before parsing. Backup SHA-256 verification stops if an archive grows beyond its previously verified byte count during a read. A malformed manifest remains intact for manual recovery and cannot authorize deletion, recovery or a pending transfer. New regression coverage checks rejection without data loss.

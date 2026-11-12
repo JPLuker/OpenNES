@@ -51,6 +51,23 @@ class RommVersionedSaveBackupStoreTest {
     val temporary = TemporaryFolder()
 
     @Test
+    fun oversizedManifestRemainsUnverifiedWithoutDamagingArchive() {
+        val input = temporary.newFile("bounded.sav")
+        input.writeBytes(ByteArray(256) { it.toByte() })
+        val folder = temporary.newFolder("bounded-manifests")
+        val store = RommVersionedSaveBackupStore(folder)
+        val backup = store.createVerifiedBackup(77, input)
+        val manifest = java.io.File(folder, backup.file.name + ".sha256")
+        manifest.appendText("x".repeat(1024))
+        assertTrue(store.listVerifiedBackups(77).isEmpty())
+        assertFalse(store.deleteVerifiedBackup(backup))
+        assertTrue(backup.file.exists())
+        assertTrue(manifest.exists())
+        assertEquals(1, store.audit().unverifiedArchives)
+    }
+
+
+    @Test
     fun createsDistinctVerifiedBackupsWithoutChangingOriginal() {
         val original = temporary.newFile("live.sav")
         val bytes = ByteArray(8192) { it.toByte() }
