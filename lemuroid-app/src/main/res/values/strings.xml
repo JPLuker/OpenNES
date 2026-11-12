@@ -143,6 +143,8 @@
     <string name="opennes_dpad_tilt_control">Dpad tilt control</string>
     <string name="opennes_zapper_game_switch">Zapper touchscreen (next launch)</string>
     <string name="opennes_rewind_action">Rewind</string>
+    <string name="opennes_rewind_hold_label">HOLD TO REWIND</string>
+    <string name="opennes_rewind_hold_accessibility">Hold to rewind gameplay; activate for one rewind step</string>
     <string name="opennes_rewind_unavailable">Not enough rewind history yet</string>
     <string name="pref_key_rewind_enabled">pref_key_rewind_enabled</string>
     <string name="settings_title_rewind_enabled">Casual rewind</string>
