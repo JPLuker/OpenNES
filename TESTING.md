@@ -60,3 +60,9 @@ The Tilt Sensor action uses the same NES palette, card height, spacing, and outl
 ## November 12 — D-pad tilt switch (awaiting device acceptance)
 
 Replaced the Tilt Sensor Disabled/DPAD selection dialog with one in-place switch, **Dpad tilt control**. The switch is available only where D-pad tilt is supported. Its selection is retained alongside audio and fast-forward until the pause menu exits, including state restoration after an Android activity recreation. Added unit coverage for supported mapping and on/off conversion. Test on device: enable, exit menu and tilt to move; reopen and verify ON; disable, exit and confirm tilt no longer moves the D-pad; verify pause-menu navigation and rotation do not discard the selection. Hardware acceptance pending.
+
+## November 12 — Settings cleanup and Play/API 36 source preparation
+
+Removed the redundant Getting started panel from root Settings. The first-run wizard remains available on initial setup; controller onboarding is separately re-requestable from Controller Appearance. Added a dedicated Hardcore information page without an enable switch. Hardware review: verify all Settings and navigation back buttons in portrait/landscape, large fonts and dark theme; confirm no misleading Hardcore activation is possible.
+
+Android compile/target SDK is now 36, with corresponding Gradle/Android plugin upgrades. The CI Python manifest test rejects a debug APK below API 36. A new isolated `play-aab-validation.yml` action builds an **unsigned** `freeBundleRelease` App Bundle and checks its ZIP, NES-only core and bridge ABI structure. This does not verify Play signing, 16 KiB ELF behavior, production package installation or data migration; those remain blocked in `docs/RELEASE_GATE.md`. Verify clean debug APK upgrade preserves user data and gameplay on Android 16 before merging public release behavior.
