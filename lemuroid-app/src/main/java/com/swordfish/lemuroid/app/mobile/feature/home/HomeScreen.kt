@@ -64,6 +64,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -117,6 +118,7 @@ import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -838,10 +840,10 @@ private fun GameDetailsSheet(
     onApplyMetadata: (GameMetadata, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
     onSaveProfile: (String?, Int?, String?, (Game?) -> Unit) -> Unit,
-    onLookupOnline: ((WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onLookupOnline: ((WikidataNesMetadataSource.Result) -> Unit) -> Job,
     onApplyOnline: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
-    onSearchFixMatch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Unit,
-    onResolveFixMatch: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onSearchFixMatch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Job,
+    onResolveFixMatch: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Job,
     onApplyFixMatch: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
 ) {
     var fixMatchExpanded by remember(game.id) { mutableStateOf(false) }
@@ -1260,8 +1262,8 @@ private fun GameDetailsSheet(
 @Composable
 private fun FixMatchSection(
     game: Game,
-    onSearch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Unit,
-    onResolve: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onSearch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Job,
+    onResolve: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Job,
     onApply: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
     onCancel: () -> Unit,
@@ -1277,7 +1279,16 @@ private fun FixMatchSection(
     var status by remember(game.id) { mutableStateOf<Int?>(null) }
     var searchVersion by remember(game.id) { mutableStateOf(0) }
     var resolveVersion by remember(game.id) { mutableStateOf(0) }
+    var searchJob by remember(game.id) { mutableStateOf<Job?>(null) }
+    var resolveJob by remember(game.id) { mutableStateOf<Job?>(null) }
     var focusedField by remember(game.id) { mutableStateOf(0) }
+
+    DisposableEffect(game.id) {
+        onDispose {
+            searchJob?.cancel()
+            resolveJob?.cancel()
+        }
+    }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -1299,6 +1310,9 @@ private fun FixMatchSection(
 
     val startSearch: () -> Unit = {
         if (!searching && titleQuery.trim().length in 3..120) {
+            searchJob?.cancel()
+            resolveJob?.cancel()
+            resolveJob = null
             searchVersion++
             val currentVersion = searchVersion
             searching = true
@@ -1308,7 +1322,7 @@ private fun FixMatchSection(
             preview = null
             candidates = emptyList()
             status = null
-            onSearch(titleQuery.trim()) { results ->
+            searchJob = onSearch(titleQuery.trim()) { results ->
                 if (searchVersion == currentVersion) {
                     searching = false
                     when (results) {
@@ -1352,8 +1366,11 @@ private fun FixMatchSection(
                 value = titleQuery,
                 onValueChange = {
                     titleQuery = it.take(120)
-                    // Ignore an earlier request after the user changes the
-                    // query. Never let a slow response replace newer intent.
+                    // Stop the network call as well as rejecting late results.
+                    searchJob?.cancel()
+                    resolveJob?.cancel()
+                    searchJob = null
+                    resolveJob = null
                     searchVersion++
                     resolveVersion++
                     searching = false
@@ -1399,6 +1416,8 @@ private fun FixMatchSection(
                         yearQuery = next
                         // A previous preview is no longer necessarily in the
                         // filtered results. Never apply a hidden old match.
+                        resolveJob?.cancel()
+                        resolveJob = null
                         resolveVersion++
                         selected = null
                         preview = null
@@ -1484,13 +1503,14 @@ private fun FixMatchSection(
                 filtered.forEach { candidate ->
                     OutlinedButton(
                         onClick = {
+                            resolveJob?.cancel()
                             resolveVersion++
                             val currentResolveVersion = resolveVersion
                             selected = candidate
                             preview = null
                             resolving = true
                             status = null
-                            onResolve(candidate.entityId) { resolved ->
+                            resolveJob = onResolve(candidate.entityId) { resolved ->
                                 if (resolveVersion == currentResolveVersion &&
                                     selected?.entityId == candidate.entityId
                                 ) {
@@ -1585,7 +1605,7 @@ private fun FixMatchSection(
 @Composable
 private fun WikidataLookupSection(
     game: Game,
-    onLookup: ((WikidataNesMetadataSource.Result) -> Unit) -> Unit,
+    onLookup: ((WikidataNesMetadataSource.Result) -> Unit) -> Job,
     onApply: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
 ) {
@@ -1593,10 +1613,15 @@ private fun WikidataLookupSection(
     var applying by remember(game.id) { mutableStateOf(false) }
     var candidate by remember(game.id) { mutableStateOf<WikidataNesMetadataSource.Result.Match?>(null) }
     var statusMessage by remember(game.id) { mutableStateOf<Int?>(null) }
+    var lookupJob by remember(game.id) { mutableStateOf<Job?>(null) }
+
+    DisposableEffect(game.id) {
+        onDispose { lookupJob?.cancel() }
+    }
 
     LaunchedEffect(game.id) {
         searching = true
-        onLookup { result ->
+        lookupJob = onLookup { result ->
             searching = false
             when (result) {
                 is WikidataNesMetadataSource.Result.Match -> candidate = result
@@ -1621,7 +1646,8 @@ private fun WikidataLookupSection(
                     searching = true
                     candidate = null
                     statusMessage = null
-                    onLookup { result ->
+                    lookupJob?.cancel()
+                    lookupJob = onLookup { result ->
                         searching = false
                         when (result) {
                             is WikidataNesMetadataSource.Result.Match -> candidate = result

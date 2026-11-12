@@ -239,7 +239,7 @@ class HomeViewModel(
     fun lookupWikidata(
         title: String,
         onResult: (WikidataNesMetadataSource.Result) -> Unit,
-    ) {
+    ): Job =
         viewModelScope.launch {
             val result =
                 withContext(Dispatchers.IO) {
@@ -247,7 +247,6 @@ class HomeViewModel(
                 }
             onResult(result)
         }
-    }
 
     /**
      * The user confirms the verified online record before it is applied.
@@ -294,22 +293,20 @@ class HomeViewModel(
     fun searchFixMatch(
         query: String,
         onResult: (WikidataNesMetadataSource.CandidateResults) -> Unit,
-    ) {
+    ): Job =
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) { wikidataSource.searchManualCandidates(query) }
             onResult(result)
         }
-    }
 
     fun resolveFixMatch(
         candidateId: String,
         onResult: (WikidataNesMetadataSource.Result) -> Unit,
-    ) {
+    ): Job =
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) { wikidataSource.resolveManualCandidate(candidateId) }
             onResult(result)
         }
-    }
 
     /** A selected, verified candidate replaces editorial metadata only. */
     fun applyFixMatch(
