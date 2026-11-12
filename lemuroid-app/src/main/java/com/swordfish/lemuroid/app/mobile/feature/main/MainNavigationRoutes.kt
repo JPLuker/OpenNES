@@ -78,6 +78,11 @@ enum class MainRoute(
         titleId = R.string.opennes_ra_settings_title,
         parent = SETTINGS,
     ),
+    SETTINGS_HARDCORE(
+        route = "settings/hardcore",
+        titleId = R.string.opennes_hardcore_settings_title,
+        parent = SETTINGS,
+    ),
     ;
 
     companion object {
