@@ -4,6 +4,12 @@ Updated: 2026-11-12
 
 This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The current source baseline passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071), including archive integrity, sync-policy and RomM 5.4 protocol regression tests, native/Android compilation and rolling APK publication. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
 
+## November 12 — M1 functional closure confirmed
+
+- **Milestone status:** M1's NES-only conversion is complete in source and in the CI-inspected shipping debug artifact. The system registry exposes NES only; only FCEUmm is bundled; NES-only metadata is generated; the rolling APK is inspected for unwanted Libretro cores.
+- **What has not been claimed:** no retained quantitative pre-fork APK size baseline, no current whole-device gameplay/save acceptance, and no complete removal of every inherited upstream source file, optional Gradle flavor or transitive dependency.
+- **Ownership of outstanding work:** final dead-code, source/dependency pruning, license/provenance, production packaging and binary size audit are M8 release hardening; gameplay and save integrity remain M5. Neither should keep reopening the functional M1 milestone.
+
 ## November 12 — M3/M4 directional D-pad and M5 held rewind source candidate
 
 - **Controller:** existing PadKit cross is still used unless the player edits a directional hitbox. New per-orientation serialized Up/Down/Left/Right hitboxes use a real four-key PadKit control with composite diagonal anchors and matching pressed-state feedback; the editor measures the input regions rather than inventing visual-only drag handles. Live geometry, touch interaction, orientation saving and restore defaults await device acceptance.
@@ -27,7 +33,7 @@ This tracker distinguishes **source implementation**, **verified CI**, and **rea
 | Module | Implementation status | Next acceptance/development gate |
 | --- | --- | --- |
 | M0 — Foundation and OpenNES branding | Implemented: dedicated package and one CI-verified rolling debug APK/checksum workflow | Real-device regression and production signing still pending |
-| M1 — NES-only debloat | Mostly implemented: FCEUmm-only APK, NES metadata/scanning, removed console UI | Finish safe source/dependency pruning and audit legacy paths |
+| **M1 — NES-only conversion** | **FUNCTIONALLY COMPLETE; CI VERIFIED**: one supported NES system, FCEUmm-only offline APK, trimmed NES metadata, non-NES console UI removed, native-core inspection enforced in CI | Remaining inherited source/build-flavor and dependency cleanup moved to M8; physical gameplay/save tests remain M5 |
 | **M2 — UI completion and cleanup** | **SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: library, menus, settings, ROM recovery, theme/onboarding previews and color-picker UI | CI passed; verify previews, colors and navigation on phones |
 | **M3 — Portrait NES controller** | **SOURCE IMPLEMENTED, DEVICE ACCEPTANCE OPEN**: live theme previews/HEX wheel, independent A/B and Start/Select/Menu geometry; first-game onboarding has a fully expanded sheet with a fixed Save controller & continue action and optional drag-editor handoff | Verify first-run confirmation, A/B hit targets, orientation persistence and multitouch on a phone |
 | M4 — Landscape NES controller | **THREE SOURCE MODES, DEVICE ACCEPTANCE OPEN**: Overlay, Framed and new NES Handheld shell around the measured game viewport, sharing the controller palette with saved landscape geometry | Verify 4:3 gameplay is unobstructed, portrait/landscape rotation, control touch targets, handheld bezel appearance and compact-device fallback |
