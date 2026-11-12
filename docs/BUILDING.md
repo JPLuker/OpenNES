@@ -1,6 +1,6 @@
 # Building and testing OpenNES
 
-OpenNES is an early-stage fork of Lemuroid. These instructions build its development APK. The current NES-only source paths package FCEUmm. The consolidated `master` workflow passed lint, build, NES-only inspection and publication on [commit `5dd2fac`](https://github.com/JPLuker/OpenNES/commit/5dd2fac586863858b6b1d1f71fa44a387bf10007); **full device acceptance remains open**.
+OpenNES is an early-stage fork of Lemuroid. These instructions build its development APK, which packages only FCEUmm as its Libretro core. Consult [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) for the latest exact source commit that passed formatting, tests, compilation, APK identity inspection, NES-only validation and publication. **Full device acceptance remains open**.
 
 ## Requirements
 
@@ -133,7 +133,7 @@ The CI-packaged database has 29,246 NES records (3,706,880 bytes), down from 104
 
 ## Known limitations
 
-OpenNES now has NES-only packaging and the M2–M4 source UI/controller implementation, but native RetroAchievements are not integrated. Production APK signing, native dependency audit, and all build and device acceptance remain outstanding. See [ROADMAP.md](../ROADMAP.md).
+OpenNES now has NES-only packaging, M2–M4 source UI/controller work, native Casual RetroAchievements integration and account-scoped RomM groundwork. These still need real-device and real-server acceptance; official Hardcore remains disabled. Production signing, native dependency/license audits and the release gate are outstanding. See [ROADMAP.md](../ROADMAP.md) and [TESTING.md](../TESTING.md).
 
 ## Development APK versioning and upgrade checks
 

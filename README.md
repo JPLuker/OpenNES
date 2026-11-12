@@ -17,7 +17,7 @@ The goal is the convenience and polish of a dedicated Android emulator, designed
 - **NES-inspired controller skin:** original, polished warm-gray, charcoal and deep-red tactile controls, with classic D-pad, A/B, Start and Select.
 - **Designed twice for phones:** portrait should feel like a dedicated handheld; landscape should frame a large game viewport with controls on both sides. Each orientation independently saves D-pad and A/B sizes and X/Y positions, plus shared visual settings. Direct on-screen cluster dragging and slider-based fine-tuning are implemented; their ergonomics still need real-device testing.
 - **Entirely new UI:** game library, onboarding, game details, menus, settings, quick actions and achievement overlays will be redesigned under the OpenNES identity.
-- **RetroAchievements:** planned native sign-in, game identification, achievement tracking and notifications. Hardcore support will follow RetroAchievements' actual emulator-approval rules.
+- **RetroAchievements:** native Casual login, game identification, achievement lists and an in-game unlock banner are implemented in development builds. Real award persistence remains a device test; Hardcore is disabled until emulator approval.
 - **Natively Android:** touchscreen play, external gamepads, local ROM folders, save data and convenient installation.
 - **Truly NES-only distribution:** remove unused emulator cores, non-NES system routes, files and packaged assets, not just hide other systems in the interface.
 - **Open source:** preserve applicable GPL and third-party notices. No commercial ROMs are included.
@@ -36,12 +36,12 @@ The visual direction takes inspiration from Pizza Boy's level of polish, **not i
 | --- | --- |
 | M0 — Own Android package/name and reproducible APK workflow | CI complete; device testing pending |
 | M1 — Remove non-NES cores, assets and system selection | In progress; NES-only binaries, controls and system artwork cleaned |
-| M2 — Replace the complete Lemuroid user interface | **Code-complete (source scope)**: NES library, details, menus, settings, import recovery, accessible layouts and Android TV UI removal; build and on-device acceptance deferred |
+| M2 — Replace the complete Lemuroid user interface | NES library, details, menus, settings, import recovery and Android TV UI removal are present in passing development APK builds; full on-device acceptance remains open |
 | M3 — Premium NES portrait controller skin | Six themes, real-time in-game preview/HEX wheel, swatch palette icons, fixed D-pad visuals, independent A/B and Start/Select/Menu positioning with PadKit touch anchors; hardware acceptance pending |
 | M4 — Dedicated landscape controller skin | Overlay, Framed and optional NES Handheld landscape layouts, controller palette integration, compact-screen fallback and independent orientation settings; real-device acceptance pending |
 | M5 — Gameplay, saves, input and performance polish | CI-verified test build includes immutable queued hardware-input snapshots and save reliability fixes; expanded manual input/save/audio/controller regression testing remains |
-| M6 — RetroAchievements integration | Local ROM hashing, in-game Achievements screen and optional encrypted, read-only website progress lookup implemented in source; native rc_client login/runtime and new unlock awards not implemented |
-| M7 — RomM integration (pre-release requirement) | Source implementation underway: secure read-only connection and local NES import screen; untested against a server, save sync/conflicts not implemented |
+| M6 — RetroAchievements integration | Native Casual rc_client game sessions, achievement lists and unlock notifications are implemented; a new officially persisted award and reconnect behavior still require hardware verification; Hardcore disabled |
+| M7 — RomM integration (pre-release requirement) | Authenticated NES browsing/import, account-bound offline backups, conflict planning and non-executing sync intents are implemented; live server verification, uploads and automatic sync remain outstanding |
 | M8 — Production releases and maintenance | Source hardening underway: inherited release credentials removed, secret-provided optional production signing configured; debug APK/checksum distribution retained; production audits/QA and M7 RomM acceptance pending |
 
 See the [module progress tracker](docs/MODULE_PROGRESS.md) for the current implementation checklist, M2 code-complete disposition and deferred device acceptance; the [full roadmap](ROADMAP.md) retains original acceptance gates.
@@ -84,7 +84,7 @@ For more details and troubleshooting, see [docs/BUILDING.md](docs/BUILDING.md). 
 python3 scripts/inspect-apk.py path/to/OpenNES-debug.apk
 ```
 
-Once NES-only cleanup is complete, this tool will also be used with `--nes-only` to reject non-NES libretro cores.
+CI already runs this tool with `--nes-only --native-bridge` to reject unexpected emulator cores or missing native achievement-bridge exports.
 
 ## Contributing and reporting bugs
 

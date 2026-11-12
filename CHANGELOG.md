@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Replaced unbounded RomM catalogue cache reads with a verified size-limited reader and stalled-stream tests.
+- Updated project status documentation to distinguish native Casual RetroAchievements implementation from unverified live awards and server sync.
+
 - Linked Fix Match and online metadata lookup cancellations to their running coroutine jobs, stopping network work when search UI is dismissed or changed.
 - Documented the security boundary, privacy/network endpoints, proof-based device test matrix and developer handoff expectations.
 
