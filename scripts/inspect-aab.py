@@ -18,14 +18,27 @@ def validate_names(names: list[str]) -> list[str]:
     if len(set(names)) != len(names):
         raise ValueError("App Bundle has duplicate ZIP entries")
 
+    for name in names:
+        if (
+            name.startswith("/") or chr(92) in name or "//" in name or
+            any(part in (".", "..") for part in name.split("/"))
+        ):
+            raise ValueError("Unsafe App Bundle member path")
+        if name.lower().endswith((".nes", ".fds", ".unf", ".unif", ".nsf", ".nsfe")):
+            raise ValueError("App Bundle contains a game ROM image")
+
     for required in ("BundleConfig.pb", "base/manifest/AndroidManifest.xml"):
         if required not in names:
             raise ValueError(f"Missing App Bundle member: {required}")
 
-    cores = sorted(
-        name for name in names
-        if name.startswith("base/lib/") and name.endswith("_libretro_android.so")
+    # Inspect the whole bundle, not just base/. A non-NES dynamic feature or
+    # an asset-embedded native core must not bypass the first-release gate.
+    all_cores = sorted(
+        name for name in names if name.endswith("_libretro_android.so")
     )
+    cores = [name for name in all_cores if name.startswith("base/lib/")]
+    if len(all_cores) != len(cores):
+        raise ValueError("Libretro core outside the base native-library directory")
     if not cores:
         raise ValueError("No NES FCEUmm core found in App Bundle")
     for member in cores:
