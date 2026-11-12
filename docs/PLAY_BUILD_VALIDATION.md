@@ -17,6 +17,7 @@ JVM tests, NES metadata trimming and
 `./gradlew :lemuroid-app:bundleFreeBundleRelease`. It verifies the resulting
 AAB is a valid ZIP structure with `BundleConfig.pb`, the base manifest,
 only FCEUmm libretro cores, a 64-bit ARM core, and matching emulator bridge ABIs.
+Its strict pass also requires each ARM64 ELF shared library's loadable segments to have 16 KiB-compatible alignment; the check rejects truncated or malformed ELF headers. That static ELF inspection is necessary but is not a runtime test on a 16 KiB-page Android device.
 The resulting artifact is named `opennes-unsigned-play-validation` and expires
 in seven days. Never submit or install this **unsigned** validation build as a
 normal user-facing update.
@@ -31,8 +32,8 @@ declares both required foreground-service permissions.
   may be reused as the release key.
 - Production versionCode policy, policy declarations, Data safety, privacy
   documentation, license/source availability and the Store listing.
-- Core/bridge 16 KiB memory-page compatibility, app runtime behavior under
-  Android 16, edge-to-edge, back navigation and display cutouts.
+- Physical-device 16 KiB page runtime compatibility, app behavior under
+  Android 16, edge-to-edge, back navigation and display cutouts. A static ELF gate cannot prove these.
 - Installation and verification of Google Play generated splits from a
   **signed** AAB on supported devices and Android ABIs.
 - Separate tested export/import path for saves from the debug package to the
