@@ -127,3 +127,7 @@ Newly downloaded and verified offline save backups now contain both the normaliz
 ## November 11 — Account-scoped pending requests
 
 The existing v2 offline-intent format now supports an optional verified positive RomM account ID. New requests created from owner-bound archives persist the account ID and reject duplicates only within the same server, user and ROM ID. Existing older server-only requests stay readable and discardable, but they never pass the planner's account-binding check. A different authenticated user cannot turn a pending request into an upload/download decision. These entries remain non-executing: no credentials, save payload, standing approval, remote upload or automatic replay is stored or enabled.
+
+## November 12 — Bounded private catalogue-cache reads
+
+The private RomM metadata cache now uses a bounded reader rather than `InputStream.readBytes()`. A changed, malformed or stalled file cannot allocate arbitrarily past the 12 MiB catalogue limit; repeated zero-progress reads fail closed. A valid file of exactly the maximum size still decodes, and corrupt files remain recoverable by the existing online cache refresh. No changes are made to ROMs or save files. New JVM tests exercise empty, exact-sized, oversized, stalled and transient-zero-read inputs.

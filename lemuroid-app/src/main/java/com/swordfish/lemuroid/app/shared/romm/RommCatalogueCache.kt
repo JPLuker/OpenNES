@@ -25,7 +25,7 @@ internal class RommCatalogueCache(context: Context) {
         return try {
             val bytes =
                 file.openRead().use { input ->
-                    input.readBytes().takeIf { it.size <= RommCatalogueCodec.MAX_BYTES } ?: return null
+                    RommSafeStreamRead.readBounded(input, RommCatalogueCodec.MAX_BYTES)
                 }
             RommCatalogueCodec.decode(bytes, serverFingerprint, credentialRevision)
         } catch (_: Exception) {

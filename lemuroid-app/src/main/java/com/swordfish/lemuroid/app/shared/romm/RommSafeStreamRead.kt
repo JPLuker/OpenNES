@@ -1,5 +1,6 @@
 package com.swordfish.lemuroid.app.shared.romm
 
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 
@@ -20,6 +21,27 @@ internal object RommSafeStreamRead {
             if (++emptyReads >= MAX_EMPTY_READS) {
                 throw IOException("RomM save source stopped making progress")
             }
+        }
+    }
+
+    /**
+     * Never call InputStream.readBytes() for a file whose size can change
+     * between the size check and the actual read.
+     */
+    fun readBounded(
+        input: InputStream,
+        maxBytes: Int,
+    ): ByteArray {
+        require(maxBytes > 0)
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        while (true) {
+            val count = next(input, buffer)
+            if (count < 0) return output.toByteArray()
+            if (count > maxBytes - output.size()) {
+                throw IOException("RomM catalogue cache exceeds safe size")
+            }
+            output.write(buffer, 0, count)
         }
     }
 
