@@ -151,6 +151,22 @@ internal class GameViewModelRewind(
         }
     }
 
+    /**
+     * Call only while holding the save-session mutex. Its order is always
+     * session mutex -> rewind state mutex -> FCEUmm native core lock.
+     * Capture cannot cross an external load/reset, even if it had already
+     * received a frame before the state mutation began.
+     */
+    suspend fun <T> withTimelineReset(block: suspend () -> T): T =
+        stateMutex.withLock {
+            clear()
+            try {
+                block()
+            } finally {
+                clear()
+            }
+        }
+
     fun clear() {
         holdActive = false
         history.clear()
