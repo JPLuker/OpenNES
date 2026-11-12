@@ -113,7 +113,7 @@ class BaseGameScreenViewModel(
             rumbleManager,
             viewModelScope,
         )
-    private val rewind = GameViewModelRewind(retroGameView, viewModelScope)
+    private val rewind = GameViewModelRewind(retroGameView, settingsManager, viewModelScope)
     private val tilt = GameViewModelTilt(appContext, settingsManager)
     private val inputs =
         GameViewModelInput(
