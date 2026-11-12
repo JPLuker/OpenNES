@@ -9,12 +9,20 @@ Run locally with the Android SDK, JDK 17 and recursive submodules:
 ```sh
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 ./gradlew ktlintCheck
-./gradlew :lemuroid-app:testFreeBundleDebugUnitTest
+./gradlew :lemuroid-touchinput:testDebugUnitTest :lemuroid-app:testFreeBundleDebugUnitTest
 ./gradlew :lemuroid-app:assembleFreeBundleDebug
 python3 scripts/inspect-apk.py --nes-only --native-bridge PATH_TO_APK
 ```
 
 CI performs the same relevant checks on every `master` push and verifies the actual debug package/version before publishing. An unsuccessful run must leave the previous published APK intact. The actual artifact is at the [rolling development release](https://github.com/JPLuker/OpenNES/releases/tag/dev-latest).
+
+## November 12 — Source milestone and packaging regression batch
+
+**M0–M4 source status:** branded NES-only APK, OpenNES interface, portrait controller, and landscape Overlay/Framed/Handheld source paths are present in the debug build. M1 is functionally complete. M0/M2/M3/M4 still need the device matrix; **do not close the P0 game-launch issue without a real ROM launch**.
+
+**M5 manual save / rewind race:** Save Slot, Quick Save, Quick Load, Load Slot, reset, and final Quit must not overlap an active held rewind state restore. Tests cover stale rewind candidates, empty/oversized state buffers, and repeated one-step rewinds. Device acceptance: enter gameplay, hold Rewind, attempt a save/load through the pause menu, release, quit, relaunch and compare SRAM/manual/autosave results to a known prior save. Also test failed saves and interrupted Quit; the latest save failure must remain retryable.
+
+**M8 package and build variants:** the app has only the `freeBundle` supported variant; the APK and AAB validators reject recognized bare game ROM extensions, hidden Libretro cores, unsafe ZIP member paths, and unwanted ABI combinations. The new Python tests cover negative fixtures. This is **not** a complete copyright audit: ROM data inside less obvious archives, third-party artwork, license notices, production signing and user data migration still require separate checks. The unsigned Play AAB workflow is a validation artifact only.
 
 ## Latest device-test checklist (current functionality, not a claim of completion)
 
