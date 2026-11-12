@@ -58,6 +58,7 @@ import androidx.navigation.compose.rememberNavController
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.achievements.GameMenuAchievementsScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.cheats.GameMenuCheatsScreen
+import com.swordfish.lemuroid.app.mobile.feature.gamemenu.tilt.DpadTiltControl
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.states.GameMenuStatesScreen
@@ -81,6 +82,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     // when the player resumes, quits or closes the menu by system Back.
     private var pendingAudioEnabled: Boolean? = null
     private var pendingFastForwardEnabled: Boolean? = null
+    private var pendingDpadTiltEnabled: Boolean? = null
 
     @Inject
     lateinit var inputDeviceManager: InputDeviceManager
@@ -113,7 +115,10 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         if (savedInstanceState?.containsKey(PENDING_SPEED_KEY) == true) {
             pendingFastForwardEnabled = savedInstanceState.getBoolean(PENDING_SPEED_KEY)
         }
-        if (pendingAudioEnabled != null || pendingFastForwardEnabled != null) {
+        if (savedInstanceState?.containsKey(PENDING_DPAD_TILT_KEY) == true) {
+            pendingDpadTiltEnabled = savedInstanceState.getBoolean(PENDING_DPAD_TILT_KEY)
+        }
+        if (pendingAudioEnabled != null || pendingFastForwardEnabled != null || pendingDpadTiltEnabled != null) {
             setResult(RESULT_OK, Intent().apply { putPendingSwitches() })
         }
 
@@ -167,6 +172,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         pendingAudioEnabled?.let { outState.putBoolean(PENDING_AUDIO_KEY, it) }
         pendingFastForwardEnabled?.let { outState.putBoolean(PENDING_SPEED_KEY, it) }
+        pendingDpadTiltEnabled?.let { outState.putBoolean(PENDING_DPAD_TILT_KEY, it) }
         super.onSaveInstanceState(outState)
     }
 
@@ -179,6 +185,11 @@ class GameMenuActivity : RetrogradeComponentActivity() {
             }
             var fastForwardEnabled by rememberSaveable {
                 mutableStateOf(pendingFastForwardEnabled ?: gameMenuRequest.fastForwardEnabled)
+            }
+            var dpadTiltEnabled by rememberSaveable {
+                mutableStateOf(
+                    pendingDpadTiltEnabled ?: DpadTiltControl.isEnabled(gameMenuRequest.currentTiltConfiguration),
+                )
             }
             val navController = rememberNavController()
             val navBackStackEntry = navController.currentBackStackEntryAsState()
@@ -252,6 +263,12 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                             onFastForwardChanged = { enabled ->
                                 fastForwardEnabled = enabled
                                 pendingFastForwardEnabled = enabled
+                                setResult(RESULT_OK, Intent().apply { putPendingSwitches() })
+                            },
+                            tiltEnabled = dpadTiltEnabled,
+                            onTiltChanged = { enabled ->
+                                dpadTiltEnabled = enabled
+                                pendingDpadTiltEnabled = enabled
                                 setResult(RESULT_OK, Intent().apply { putPendingSwitches() })
                             },
                             onResult = ::onResult,
@@ -384,11 +401,15 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     private fun Intent.putPendingSwitches() {
         pendingAudioEnabled?.let { putExtra(GameMenuContract.RESULT_ENABLE_AUDIO, it) }
         pendingFastForwardEnabled?.let { putExtra(GameMenuContract.RESULT_ENABLE_FAST_FORWARD, it) }
+        pendingDpadTiltEnabled?.let {
+            putExtra(GameMenuContract.RESULT_CHANGE_TILT_CONFIG, DpadTiltControl.configurationFor(it))
+        }
     }
 
     companion object {
         private const val PENDING_AUDIO_KEY = "opennes_menu_pending_audio_enabled"
         private const val PENDING_SPEED_KEY = "opennes_menu_pending_fast_forward_enabled"
+        private const val PENDING_DPAD_TILT_KEY = "opennes_menu_pending_dpad_tilt_enabled"
     }
 
     @dagger.Module
