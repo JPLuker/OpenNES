@@ -47,7 +47,17 @@ def main() -> int:
     javautils = SRC / "cpp" / "utils" / "javautils.h"
     rumble = SRC / "cpp" / "rumble.h"
     cmake = SRC / "cpp" / "CMakeLists.txt"
-    files = {path: path.read_text() for path in (cpp, header, jni, java, javautils, rumble, cmake)}
+    gl_retro_view = SRC / "java" / "com" / "swordfish" / "libretrodroid" / "GLRetroView.kt"
+    files = {path: path.read_text() for path in (cpp, header, jni, java, javautils, rumble, cmake, gl_retro_view)}
+
+    # Android can cancel a touch mid-shot (e.g., edge gesture or rotation).
+    # Release the Zapper trigger rather than leaving its pointer pressed.
+    files[gl_retro_view] = replace_once(
+        files[gl_retro_view],
+        "            MotionEvent.ACTION_UP -> {",
+        "            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {",
+        "GLRetroView.kt touch cancellation",
+    )
 
     # The pinned v0.14.0 library relied on transitive C++ includes, which
     # modern Android NDK Clang correctly rejects when building from source.
