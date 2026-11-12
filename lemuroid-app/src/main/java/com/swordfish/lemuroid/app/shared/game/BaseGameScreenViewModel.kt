@@ -221,8 +221,15 @@ class BaseGameScreenViewModel(
         // Persisted code definitions are intentionally never auto-enabled.
         NesCheatSession.begin(gameData.game.fileUri)
         viewModelScope.launch {
-            gameData.quickSaveData?.let {
-                saves.restoreAutoSaveAsync(it)
+            gameData.quickSaveData?.let { autoSave ->
+                saves.withExclusiveSessionState {
+                    // A first-frame rewind sample must not survive the
+                    // asynchronous startup autosave restoration.
+                    rewind.withTimelineReset {
+                        saves.restoreAutoSaveAsync(autoSave)
+                    }
+                    true
+                }
             }
         }
         // Attach after an actual rendered frame, not a one-time surface
@@ -323,8 +330,7 @@ class BaseGameScreenViewModel(
         stopHoldRewind()
         withLoading {
             saves.withExclusiveSessionState {
-                rewind.clear() // A manual state load replaces the timeline.
-                saves.loadSlot(index)
+                rewind.withTimelineReset { saves.loadSlot(index) }
                 true
             }
         }
@@ -351,8 +357,7 @@ class BaseGameScreenViewModel(
         viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             withLoading {
                 saves.withExclusiveSessionState {
-                    rewind.clear()
-                    saves.loadQuickSave()
+                    rewind.withTimelineReset { saves.loadQuickSave() }
                     true
                 }
             }
@@ -426,8 +431,9 @@ class BaseGameScreenViewModel(
             try {
                 delay(appContext.longAnimationDuration().toLong())
                 saves.withExclusiveSessionState {
-                    rewind.clear()
-                    retroGameView.retroGameViewFlow().reset()
+                    rewind.withTimelineReset {
+                        retroGameView.retroGameViewFlow().reset()
+                    }
                     true
                 }
             } catch (e: CancellationException) {
