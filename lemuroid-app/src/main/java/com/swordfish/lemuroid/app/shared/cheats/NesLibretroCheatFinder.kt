@@ -33,8 +33,15 @@ internal object NesLibretroCheatFinder {
         val name: String,
     )
 
-    private const val API = "https://api.github.com/repos/libretro/libretro-database/git/trees/"
-    private const val RAW = "https://raw.githubusercontent.com/libretro/libretro-database/master/cht/"
+    private data class CheatIndex(
+        val commitSha: String,
+        val entries: List<FileEntry>,
+    )
+
+    private const val API_ROOT = "https://api.github.com/repos/libretro/libretro-database/git/"
+    private const val API_TREE = API_ROOT + "trees/"
+    private const val API_MASTER_REF = API_ROOT + "ref/heads/master"
+    private const val RAW_ROOT = "https://raw.githubusercontent.com/libretro/libretro-database/"
     private const val NES_DIRECTORY = "Nintendo - Nintendo Entertainment System"
     private const val MAX_RESPONSE = 2_500_000
     private val client =
@@ -46,7 +53,7 @@ internal object NesLibretroCheatFinder {
             .build()
 
     @Volatile
-    private var cachedIndex: List<FileEntry>? = null
+    private var cachedIndex: CheatIndex? = null
 
     suspend fun find(title: String): List<Candidate> =
         withContext(Dispatchers.IO) {
@@ -54,26 +61,29 @@ internal object NesLibretroCheatFinder {
             if (query.length < 3) return@withContext emptyList()
             val index = cachedIndex ?: loadIndex().also { cachedIndex = it }
             val matching =
-                index.filter { normalizeTitle(it.name.removeSuffix(".cht")) == query }
+                index.entries.filter { normalizeTitle(it.name.removeSuffix(".cht")) == query }
                     .take(8)
             matching.flatMap { entry ->
-                val url =
-                    RAW + "Nintendo%20-%20Nintendo%20Entertainment%20System/" +
-                        java.net.URLEncoder.encode(entry.name, Charsets.UTF_8.name())
-                            .replace("+", "%20")
+                val url = pinnedCheatUrl(index.commitSha, entry.name)
                 parseCheatText(fetch(url), entry.name.removeSuffix(".cht"))
             }.distinctBy { it.code }.take(150)
         }
 
-    private suspend fun loadIndex(): List<FileEntry> {
-        val root = fetchTree("master")
+    private suspend fun loadIndex(): CheatIndex {
+        // Resolve the branch once, then fetch the tree AND its cheat files
+        // from that immutable commit. Never mix a cached index with a newer
+        // moving /master/raw file.
+        val ref = JSONObject(fetch(API_MASTER_REF))
+        val commitSha = ref.getJSONObject("object").getString("sha")
+        require(commitSha.matches(Regex("[a-f0-9]{40}"))) { "Invalid Libretro commit revision" }
+        val root = fetchTree(commitSha)
         val cheats = childSha(root, "cht")
         val platforms = fetchTree(cheats)
         val nes = childSha(platforms, NES_DIRECTORY)
         val files = fetchTree(nes)
         require(!files.optBoolean("truncated", false)) { "Incomplete Libretro cheat directory" }
         val entries = files.getJSONArray("tree")
-        return (0 until entries.length()).mapNotNull { index ->
+        val filesAtRevision = (0 until entries.length()).mapNotNull { index ->
             val entry = entries.optJSONObject(index) ?: return@mapNotNull null
             if (entry.optString("type") != "blob") return@mapNotNull null
             val name = entry.optString("path")
@@ -84,6 +94,28 @@ internal object NesLibretroCheatFinder {
                     !it.contains('\\')
             }?.let(::FileEntry)
         }.also { require(it.isNotEmpty()) }
+        return CheatIndex(commitSha, filesAtRevision)
+    }
+
+    /**
+     * Only a specific commit and flat .cht filename may be requested from the
+     * trusted Libretro NES path. No mutable branch or remote path components.
+     */
+    internal fun pinnedCheatUrl(
+        commitSha: String,
+        fileName: String,
+    ): String {
+        require(commitSha.matches(Regex("[a-f0-9]{40}")))
+        require(
+            fileName.length in 5..180 &&
+                fileName.endsWith(".cht", ignoreCase = true) &&
+                !fileName.contains('/') &&
+                !fileName.contains('\\'),
+        )
+        val encoded =
+            java.net.URLEncoder.encode(fileName, Charsets.UTF_8.name())
+                .replace("+", "%20")
+        return RAW_ROOT + commitSha + "/cht/Nintendo%20-%20Nintendo%20Entertainment%20System/" + encoded
     }
 
     private fun childSha(
@@ -102,14 +134,22 @@ internal object NesLibretroCheatFinder {
     }
 
     private suspend fun fetchTree(reference: String): JSONObject {
-        require(reference == "master" || reference.matches(Regex("[a-f0-9]{40}")))
-        return JSONObject(fetch(API + reference))
+        require(reference.matches(Regex("[a-f0-9]{40}")))
+        return JSONObject(fetch(API_TREE + reference))
     }
 
     private suspend fun fetch(url: String): String {
         require(
-            url.startsWith(API) ||
-                url.startsWith(RAW + "Nintendo%20-%20Nintendo%20Entertainment%20System/"),
+            url == API_MASTER_REF ||
+                url.startsWith(API_TREE) ||
+                (
+                    url.startsWith(RAW_ROOT) &&
+                        Regex(
+                            "^https://raw\\.githubusercontent\\.com/libretro/libretro-database/" +
+                                "[a-f0-9]{40}/cht/Nintendo%20-%20Nintendo%20Entertainment%20System/" +
+                                "[A-Za-z0-9_.%\\-]+$",
+                        ).matches(url)
+                ),
         )
         val request =
             Request.Builder().url(url)

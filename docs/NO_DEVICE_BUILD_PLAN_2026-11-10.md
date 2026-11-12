@@ -102,3 +102,7 @@ The game-details UI now retains cancellable coroutine Jobs returned by the metad
 ## November 12 — Cancellable Libretro cheat lookup
 
 The optional Libretro NES cheat-index lookup now uses cancellable OkHttp callbacks instead of blocking `execute()` calls inside a coroutine. Dismissing the cheat finder cancels the coroutine and its underlying HTTP call. Index/cheat text reads have an explicit 2.5 MiB cap even when the server does not supply a content length; repeated zero-byte reads fail closed. An invalid, oversized or partial response cannot activate cheats, and existing explicit import/disabled-by-default behavior is unchanged. New JVM tests cover exact-size, oversized, stalled and transient reads. Actual network cancellation timing and game activation remain device acceptance checks.
+
+## November 12 — Immutable Libretro cheat catalogue revision
+
+The GitHub cheats index is now resolved from one verified upstream commit SHA. Any selected `.cht` file is fetched from that **same immutable commit**, avoiding the previous race where a cached `master` index could load a file changed on upstream `master`. The official GitHub API ref and NES-only raw file URLs remain the only request targets; the raw URL rejects mutable refs and directory traversal. No content is installed or enabled automatically. JVM tests verify the SHA URL and traversal rejection; live GitHub availability is still an integration acceptance item.

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Pin Libretro cheat index and file downloads to the same immutable upstream revision, with filename traversal guards.
+
 - Cancel optional NES cheat catalogue HTTP calls when the finder closes; bound response reads and reject stalled remote streams.
 
 - Replaced unbounded RomM catalogue cache reads with a verified size-limited reader and stalled-stream tests.
