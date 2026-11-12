@@ -49,6 +49,11 @@ jobs:
           chmod +x gradlew
           ./gradlew ktlintCheck --stacktrace
 
+      - name: Show Kotlin formatting violations
+        if: failure()
+        run: |
+          find . -type f -path '*/build/reports/ktlint/*/*.txt' -print -exec sed -n '1,120p' {} \;
+
       - name: Prepare pinned native emulation bridge
         run: |
           python3 scripts/prepare-libretrodroid-bridge.py
