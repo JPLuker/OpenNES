@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- Version each CI debug APK using the workflow run number and a single `VERSION` source file; reject APKs whose built package ID, versionCode or versionName differs before publishing.
+- Keep the debug signing identity and package ID stable across upgrades; release signing remains separate.
+
+
 ## Unreleased — Library box art and conditional Favorites
 
 - Standardize box art at the original NES retail package proportions (5 × 7.125 inches) across the featured game, library shelves, search, and details.

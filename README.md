@@ -62,7 +62,7 @@ Each successful push to `master` builds and publishes a new APK at this same add
 2. On first launch, choose the folder containing your own legally obtained NES ROM files (such as `.nes`). OpenNES scans it and adds supported games to your shelves. If none are detected, the home screen offers **Rescan** and **Change folder**. You can also change the folder from Settings.
 3. To update, download from the **same link** and install over the existing OpenNES debug build.
 
-This is a **debug/test APK**, not a production-signed release. Package ID: `com.jpluker.opennes.debug`. The project will add separately signed production releases later. No commercial ROMs are provided. Android will reject an in-place update if a build uses a different signing certificate.
+This is a **debug/test APK**, not a production-signed release. Package ID: `com.jpluker.opennes.debug`. Development APKs use a persistent test signing identity and an increasing Android build code (`100000 + CI run number`) so successive CI builds can install over each other without deleting saves. The project will add separately signed production releases later. No commercial ROMs are provided. Android rejects an in-place update if the signer or application ID changes.
 
 For diagnostics, the [GitHub Actions](https://github.com/JPLuker/OpenNES/actions) page provides build, lint and APK-inspection logs. The APK itself has one normal location: `dev-latest`.
 

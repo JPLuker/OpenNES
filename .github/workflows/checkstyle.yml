@@ -20,6 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      # GitHub Actions numbers increase with each workflow run. The checked
+      # development APK receives versionCode 100000 + this value.
+      OPENNES_DEV_RUN_NUMBER: ${{ github.run_number }}
 
     steps:
       - name: Check out source and emulator cores
@@ -67,6 +71,11 @@ jobs:
           test -n "$APK"
           cp "$APK" dist/OpenNES-debug.apk
           python3 scripts/inspect-apk.py --nes-only --native-bridge dist/OpenNES-debug.apk
+          AAPT="$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -type f -name aapt -print | sort -V | tail -1)"
+          test -x "$AAPT"
+          set -o pipefail
+          "$AAPT" dump badging dist/OpenNES-debug.apk |
+            python3 scripts/verify-apk-identity.py --version-file VERSION --run-number "$OPENNES_DEV_RUN_NUMBER"
           (cd dist && sha256sum OpenNES-debug.apk > OpenNES-debug.apk.sha256)
 
       - name: Publish rolling OpenNES development release

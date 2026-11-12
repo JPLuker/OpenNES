@@ -8,10 +8,22 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// The stable version is stored once. CI supplies a monotonically increasing
+// development build number, so each rolling APK installs over the previous one.
+val openNesVersion = rootProject.file("VERSION").readText().trim()
+require(openNesVersion.matches(Regex("""[0-9]+\.[0-9]+\.[0-9]+"""))) {
+    "VERSION must be a semantic major.minor.patch version"
+}
+val developmentRunRaw = System.getenv("OPENNES_DEV_RUN_NUMBER")
+val developmentRun = developmentRunRaw?.toIntOrNull()
+require(developmentRunRaw == null || (developmentRun != null && developmentRun in 1..1_000_000)) {
+    "OPENNES_DEV_RUN_NUMBER must be a positive CI run number"
+}
+
 android {
     defaultConfig {
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = developmentRun?.plus(100_000) ?: 1
+        versionName = openNesVersion
         applicationId = "com.jpluker.opennes"
         // Private-free source revision in user-copied diagnostics, not a signing identity.
         val sourceSha = System.getenv("GITHUB_SHA").orEmpty()
@@ -114,7 +126,7 @@ android {
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
-            versionNameSuffix = "-DEBUG"
+            versionNameSuffix = developmentRun?.let { "-dev.$it" } ?: "-local"
             resValue("string", "lemuroid_name", "OpenNES Debug")
         }
     }
