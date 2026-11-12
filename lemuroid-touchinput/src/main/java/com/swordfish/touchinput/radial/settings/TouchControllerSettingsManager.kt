@@ -72,6 +72,13 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val menuButton: ButtonGeometry = ButtonGeometry(),
         val aButton: ButtonGeometry = ButtonGeometry(),
         val bButton: ButtonGeometry = ButtonGeometry(),
+        // Opt-in independent D-pad direction targets. Unmodified users retain
+        // PadKit's original discrete-direction cross and saved layout.
+        val individualDpadHitboxes: Boolean = false,
+        val dpadUp: ButtonGeometry = ButtonGeometry(),
+        val dpadDown: ButtonGeometry = ButtonGeometry(),
+        val dpadLeft: ButtonGeometry = ButtonGeometry(),
+        val dpadRight: ButtonGeometry = ButtonGeometry(),
     )
 
     private fun computeInsetsPaddings(
