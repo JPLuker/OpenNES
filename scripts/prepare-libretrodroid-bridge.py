@@ -249,7 +249,7 @@ void LibretroDroid::step() {""",
     c = replace_once(
         c,
         "        input->onMotionEvent(0, Input::MOTION_SOURCE_POINTER, x, y);",
-        "        input->onMotionEvent(0, Input::MOTION_SOURCE_POINTER, x, y);\\n"
+        "        input->onMotionEvent(0, Input::MOTION_SOURCE_POINTER, x, y);\n"
         "        input->onMotionEvent(1, Input::MOTION_SOURCE_POINTER, x, y);",
         "libretrodroid.cpp NES Zapper pointer routing",
     )
