@@ -33,6 +33,7 @@ internal class GameViewModelRewind(
     private val history = BoundedRewindHistory()
     private val stateMutex = Mutex()
     private var captureJob: Job? = null
+
     @Volatile
     private var captureEnabled = false
 
@@ -87,7 +88,7 @@ internal class GameViewModelRewind(
 
     fun canRewind(): Boolean =
         captureEnabled &&
-        HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND) &&
+            HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND) &&
             history.canRewind(REWIND_INTERVALS)
 
     suspend fun rewind(): Boolean {
