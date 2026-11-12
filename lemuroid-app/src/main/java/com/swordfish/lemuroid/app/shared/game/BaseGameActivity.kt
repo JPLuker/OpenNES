@@ -235,6 +235,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                     baseGameScreenViewModel.retroGameView.retroGameView?.audioEnabled,
                 )
                 this.putExtra(GameMenuContract.EXTRA_FAST_FORWARD_SUPPORTED, system.fastForwardSupport)
+                this.putExtra(GameMenuContract.EXTRA_REWIND_AVAILABLE, baseGameScreenViewModel.canRewind())
                 this.putExtra(
                     GameMenuContract.EXTRA_FAST_FORWARD,
                     (baseGameScreenViewModel.retroGameView.retroGameView?.frameSpeed ?: 1) > 1,
@@ -425,6 +426,11 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             if (data?.getBooleanExtra(GameMenuContract.RESULT_RESET, false) == true) {
                 lifecycleScope.launch {
                     baseGameScreenViewModel.reset()
+                }
+            }
+            if (data?.getBooleanExtra(GameMenuContract.RESULT_REWIND, false) == true) {
+                lifecycleScope.launch {
+                    baseGameScreenViewModel.rewind()
                 }
             }
             if (data?.hasExtra(GameMenuContract.RESULT_SAVE) == true) {
