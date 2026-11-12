@@ -58,6 +58,45 @@ class BoundedRewindHistoryTest {
     }
 
     @Test
+    fun staleSnapshotCannotBeCommittedAfterClearAndNewTimeline() {
+        val history = BoundedRewindHistory(maxBytes = 16, maxSnapshots = 6)
+        history.record(byteArrayOf(1))
+        history.record(byteArrayOf(2))
+        val old = history.candidate(1)!!
+        history.clear()
+        history.record(byteArrayOf(3))
+        history.record(byteArrayOf(4))
+        assertFalse(history.commit(old))
+        assertEquals(0, history.storedBytes())
+    }
+
+    @Test
+    fun oversizedOrEmptyCapturePreservesUsablePreviousTimeline() {
+        val history = BoundedRewindHistory(maxBytes = 4, maxSnapshots = 4)
+        history.record(byteArrayOf(1))
+        history.record(byteArrayOf(2))
+        assertFalse(history.record(ByteArray(5)))
+        assertFalse(history.record(byteArrayOf()))
+        assertEquals(2, history.storedBytes())
+        assertArrayEquals(byteArrayOf(1), history.candidate(1)?.state)
+    }
+
+    @Test
+    fun repeatedOneStepRewindsCannotCrossOldestSnapshot() {
+        val history = BoundedRewindHistory(maxBytes = 16, maxSnapshots = 8)
+        repeat(6) { history.record(byteArrayOf(it.toByte())) }
+        repeat(5) {
+            val candidate = history.candidate(1)!!
+            assertTrue(history.commit(candidate))
+        }
+        assertEquals(1, history.storedBytes())
+        assertFalse(history.canRewind(1))
+        assertNull(history.candidate(1))
+        assertTrue(history.record(byteArrayOf(9)))
+        assertArrayEquals(byteArrayOf(0), history.candidate(1)?.state)
+    }
+
+    @Test
     fun rejectedOrEvictedCandidateClearsUnsafeHistory() {
         val history = BoundedRewindHistory(maxBytes = 8, maxSnapshots = 2)
         history.record(byteArrayOf(1))
