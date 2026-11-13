@@ -9,7 +9,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
+import com.swordfish.lemuroid.app.mobile.feature.main.OpenNesStartupGate
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
+import com.swordfish.lemuroid.app.shared.covers.NesFixMatchCover
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
@@ -343,6 +345,12 @@ class HomeViewModel(
                         ) {
                             return@runCatching null
                         }
+                        // Show the corrected game's box art too. Only an exact
+                        // title in the bundled catalogue is used; otherwise the
+                        // current cover stays.
+                        fixMatchCover(selectedTitle.trim())?.let { cover ->
+                            dao.updateCatalogueCover(gameId, cover)
+                        }
                         dao.selectById(gameId)
                     }.onFailure {
                         Timber.e(it, "Could not apply selected NES Fix Match result")
@@ -360,6 +368,13 @@ class HomeViewModel(
      * This job belongs to the screen's ViewModel, not an indefinite background
      * worker: leaving the activity/process stops requests. No ROM data is sent.
      */
+    private suspend fun fixMatchCover(selectedTitle: String): String? {
+        val catalogue =
+            NesFixMatchCover.searchTerms(selectedTitle)
+                .flatMap { term -> metadataProvider.searchMetadata(term) }
+        return NesFixMatchCover.choose(selectedTitle, catalogue)
+    }
+
     fun startOnlineBatch() {
         if (onlineBatchJob?.isActive == true || uiStates.value.indexInProgress) return
 
@@ -593,6 +608,7 @@ class HomeViewModel(
                     // produce a snapshot. Do not briefly present an empty
                     // shelf as if no games exist at startup.
                     uiStates.value = state.copy(libraryReady = true)
+                    OpenNesStartupGate.markLibraryReady()
                     val games = state.recentGames + state.favoritesGames + state.discoveryGames
                     // Cache just shelf covers; never download an entire ROM collection.
                     launch(Dispatchers.IO) { coverPrefetcher.prefetch(games) }

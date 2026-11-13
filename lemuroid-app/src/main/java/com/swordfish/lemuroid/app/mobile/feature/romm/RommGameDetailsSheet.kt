@@ -170,9 +170,22 @@ internal fun RommGameDetailsSheet(
                                 queued -> stringResource(R.string.opennes_romm_phase_queued)
                                 downloading -> stringResource(R.string.opennes_romm_phase_downloading)
                                 indexing -> stringResource(R.string.opennes_romm_phase_indexing)
+                                error != null -> stringResource(R.string.opennes_romm_retry_download)
                                 else -> stringResource(R.string.opennes_romm_download)
                             },
                         )
+                    }
+                    // Anything blocking or failing the download is stated
+                    // beside the button, not below a long description.
+                    if (!hasRomFolder) {
+                        Text(
+                            stringResource(R.string.opennes_romm_download_requires_folder),
+                            color = red,
+                            fontSize = 13.sp,
+                        )
+                    }
+                    if (error != null) {
+                        Text(error, color = red, fontSize = 13.sp)
                     }
                 }
 
@@ -197,16 +210,6 @@ internal fun RommGameDetailsSheet(
                         color = muted,
                         fontSize = 12.sp,
                     )
-                }
-                if (installedGame == null && !hasRomFolder) {
-                    Text(
-                        stringResource(R.string.opennes_romm_download_requires_folder),
-                        color = red,
-                        fontSize = 13.sp,
-                    )
-                }
-                if (installedGame == null && error != null) {
-                    Text(error, color = red, fontSize = 13.sp)
                 }
                 if (installedGame == null && delayed) {
                     Text(

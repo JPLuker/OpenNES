@@ -23,6 +23,15 @@ object CoverUtils {
      */
     fun coverMemoryKey(artworkUrl: String): String = "opennes:nes-cover:$artworkUrl"
 
+    /**
+     * One decode size for every cover surface, in the 5 x 7.125 NES box
+     * proportion. Coil rejects a cached bitmap that is smaller than the size
+     * a surface asks for, so shelves, details and the prefetcher must all
+     * request the same size or each navigation decodes the cover again.
+     */
+    const val COVER_DECODE_WIDTH_PX = 400
+    const val COVER_DECODE_HEIGHT_PX = 570
+
     fun loadCover(
         game: Game,
         imageView: ImageView?,
@@ -35,6 +44,7 @@ object CoverUtils {
             if (!artworkUrl.isNullOrBlank()) {
                 memoryCacheKey(coverMemoryKey(artworkUrl))
                 placeholderMemoryCacheKey(coverMemoryKey(artworkUrl))
+                size(COVER_DECODE_WIDTH_PX, COVER_DECODE_HEIGHT_PX)
             }
             fallback(fallbackDrawable)
             error(fallbackDrawable)

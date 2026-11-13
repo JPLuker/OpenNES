@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- **Library fixes from the last phone test (device acceptance pending):**
+  - **Fix Match updates the cover.** Confirming a match (for example Zelda → Zelda II) now also switches to that game's box art when the built-in catalogue has an entry with exactly that title. A cover you picked yourself is kept; a near-miss title never replaces the art.
+  - **Covers no longer reload when navigating.** Every cover surface and the prefetcher now decode at one shared size, so a cover decoded once is reused on shelves, details and search. A cover that has already been shown stays on screen while it is re-requested instead of flashing the generated title card.
+  - **Opening loading screen.** The startup screen now stays until the first library snapshot is ready (at least 0.45 s, at most 4 s) instead of a fixed 0.55 s, so the app does not open onto an empty shelf. It never waits for RomM or cover downloads.
+  - **RomM games are marked on their cover** with a download badge and "On RomM · Tap to download". A failed download shows its reason and "Retry download" beside the button instead of below the description.
+  - **Library responsiveness:** the ROM-folder permission check ran once per game on every screen update; it now runs once per library change or app resume.
+
 - **Controller editor, A and B (#13, device acceptance pending):** dragging A or B now moves the painted button and its touch target together, by the distance dragged, anywhere on screen. Previously the drag was divided by 96 and clipped at the edge of the A/B dial, so the buttons lagged the finger and stopped at the dial rim. Buttons left close together still share one control with one-thumb A+B zones; buttons moved far apart become separate targets. A/B drag positions saved by older builds are reset once (sizes, fine-tune sliders and all other controls are kept), and no saved position can place a button outside the window.
 
 - **Next development batch (device acceptance pending):** add a bounded OpenNES cold-start loading surface while Compose builds the first screen, without waiting on RomM or all cover downloads. Move RomM Download/Play immediately after the cover/title header, before lengthy descriptions, using the same primary action position for installed and remote games.

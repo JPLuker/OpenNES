@@ -201,7 +201,8 @@ interface GameDao {
     /**
      * Explicit Fix Match confirmation may replace only the game's editorial
      * metadata, provenance and the selected library display name. The ROM
-     * identity, indexed title, cover art, favorites, saves and playtime remain unchanged.
+     * identity, indexed title, favorites, saves and playtime remain unchanged.
+     * Matching box art is applied separately by updateCatalogueCover.
      */
     @Query(
         """
@@ -227,6 +228,17 @@ interface GameDao {
         sourceId: String,
         wikipediaTitle: String?,
         checkedAt: Long,
+    ): Int
+
+    /**
+     * Catalogue box art for a title confirmed in Fix Match. A cover the
+     * player chose themselves (customCoverUri) is stored separately and
+     * still takes priority when shown.
+     */
+    @Query("UPDATE games SET coverFrontUrl = :coverFrontUrl WHERE id = :gameId AND systemId = 'nes'")
+    suspend fun updateCatalogueCover(
+        gameId: Int,
+        coverFrontUrl: String,
     ): Int
 
     @Update

@@ -540,6 +540,9 @@
     <string name="opennes_romm_failed_tap">Download failed — tap for details</string>
     <string name="opennes_romm_view_status">Details</string>
     <string name="opennes_romm_download">Download</string>
+    <string name="opennes_romm_retry_download">Retry download</string>
+    <string name="opennes_romm_tile_remote">On RomM · Tap to download</string>
+    <string name="opennes_romm_tile_offline">On RomM · Server offline</string>
     <string name="opennes_romm_downloading">Downloading…</string>
     <string name="opennes_romm_adding_to_library">Adding to library…</string>
     <string name="opennes_romm_available_remote">Available from RomM · Not downloaded</string>
@@ -690,7 +693,7 @@
     <string name="opennes_library_loading_covers">Loading game covers</string>
     <string name="opennes_ra_settings_connected_hint">Web account saved. You can view your existing achievement history from a game’s pause menu. Live earning is not yet active.</string>
     <string name="opennes_fix_match">Fix Match…</string>
-    <string name="opennes_fix_match_explanation">Search for the correct NES game. Select a verified result, review its description, then apply it. OpenNES will not change your ROM, saves, cover art, or favorite status.</string>
+    <string name="opennes_fix_match_explanation">Search for the correct NES game. Select a verified result, review its description, then apply it. OpenNES will not change your ROM, saves, a cover you chose yourself, or favorite status.</string>
     <string name="opennes_fix_match_title">Game title</string>
     <string name="opennes_fix_match_year">Release year (optional filter)</string>
     <string name="opennes_fix_match_search">Search for matches</string>
@@ -699,7 +702,7 @@
     <string name="opennes_fix_match_results">Select the correct game</string>
     <string name="opennes_fix_match_year_none">No result matches that year. Clear the year filter to see other candidates.</string>
     <string name="opennes_fix_match_preview">Review: %1$s</string>
-    <string name="opennes_fix_match_confirm_notice">Applying replaces available genre, release year, and description with the selected record. Existing values are kept if the record has no replacement. This cannot change your game ROM, title, artwork, or save data.</string>
+    <string name="opennes_fix_match_confirm_notice">Applying uses the selected game\'s name and replaces available genre, release year, and description. Existing values are kept if the record has no replacement. Matching box art is used when the built-in catalogue has it; a cover you chose yourself is kept. This cannot change your game ROM or save data.</string>
     <string name="opennes_fix_match_apply">Use this match</string>
     <string name="opennes_romm_archive_title">Offline save archive</string>
     <string name="opennes_romm_archive_description">Backups saved here are private, versioned copies verified with SHA-256. They are available offline and are never imported into gameplay or uploaded to RomM automatically.</string>

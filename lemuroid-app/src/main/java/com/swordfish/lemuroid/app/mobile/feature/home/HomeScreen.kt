@@ -44,6 +44,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -101,6 +102,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.memory.MemoryCache
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.swordfish.lemuroid.R
@@ -147,8 +150,11 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
 
+    // Folder access can be revoked while the app is in the background.
+    var resumeCount by remember { mutableStateOf(0) }
     ComposableLifecycle { _, event ->
         if (event == Lifecycle.Event.ON_RESUME) {
+            resumeCount++
             viewModel.updatePermissions(context.applicationContext)
             viewModel.refreshRomMLibrary()
             viewModel.checkRomMConnectivity()
@@ -167,9 +173,18 @@ fun HomeScreen(
     val state = viewModel.getViewStates().collectAsState(HomeViewModel.UIState()).value
     val romm = RommLibraryCatalog.state.collectAsState().value
     val localFileNames = viewModel.indexedNesFileNames.collectAsState(emptySet()).value
+    // The answer is the same for every game in the selected folder, and
+    // each check is a system call: ask once per library change or resume
+    // rather than once per game on every recomposition.
     val missingRomFolder =
-        state.discoveryGames.any {
-            RomFolderAccess.check(context.applicationContext, it.fileUri) != RomFolderAccess.Status.AVAILABLE
+        remember(state.discoveryGames, resumeCount) {
+            state.discoveryGames
+                .firstOrNull { it.fileUri.startsWith("content:") }
+                ?.let {
+                    RomFolderAccess.check(context.applicationContext, it.fileUri) !=
+                        RomFolderAccess.Status.AVAILABLE
+                }
+                ?: false
         }
     val remoteGames =
         remember(romm.games, localFileNames) {
@@ -499,14 +514,32 @@ private fun OpenNesLibrary(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            NesBoxArtwork(
-                                game = game,
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .alpha(if (game.id < 0 && romm.serverReachable == false) 0.55f else 1f)
-                                        .clickable { onGameDetailsClick(game) },
-                            )
+                            Box {
+                                NesBoxArtwork(
+                                    game = game,
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .alpha(if (game.id < 0 && romm.serverReachable == false) 0.55f else 1f)
+                                            .clickable { onGameDetailsClick(game) },
+                                )
+                                // A game that is only on the RomM server is
+                                // marked on its cover, not just in small text.
+                                if (game.id < 0) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CloudDownload,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier =
+                                            Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(6.dp)
+                                                .size(26.dp)
+                                                .background(Color(0xD9111317), RoundedCornerShape(8.dp))
+                                                .padding(4.dp),
+                                    )
+                                }
+                            }
                             Text(
                                 game.displayName(),
                                 color = LibraryColors.foreground,
@@ -517,9 +550,9 @@ private fun OpenNesLibrary(
                             if (game.id < 0) {
                                 Text(
                                     if (romm.serverReachable == false) {
-                                        "RomM offline"
+                                        stringResource(R.string.opennes_romm_tile_offline)
                                     } else {
-                                        stringResource(R.string.opennes_romm_download)
+                                        stringResource(R.string.opennes_romm_tile_remote)
                                     },
                                     color = LibraryColors.muted,
                                     fontSize = 11.sp,
@@ -2068,24 +2101,31 @@ fun GameCover(
     val artworkUrl =
         if (primaryArtwork.isNullOrBlank() || usingRomArtwork) romArtwork ?: primaryArtwork else primaryArtwork
 
-    val hasKnownArtwork = !artworkUrl.isNullOrBlank()
     // Do not allow a late failure from an old request to change the source
     // after this game has already switched to its filename fallback.
     val requestArtworkUrl = artworkUrl
     val currentArtworkUrl = rememberUpdatedState(artworkUrl)
+    val context = LocalContext.current
+    val coverKey = artworkUrl?.takeIf { it.isNotBlank() }?.let(CoverUtils::coverMemoryKey)
+    // An explicit placeholder painter replaces Coil's cached-bitmap
+    // placeholder. Only paint the generated title card while loading when
+    // this cover has never been decoded; otherwise keep showing the cover.
+    val alreadyDecoded =
+        remember(coverKey) {
+            coverKey != null && context.imageLoader.memoryCache?.get(MemoryCache.Key(coverKey)) != null
+        }
     AsyncImage(
         model =
-            ImageRequest.Builder(LocalContext.current)
+            ImageRequest.Builder(context)
                 .data(artworkUrl)
                 .apply {
-                    if (hasKnownArtwork) {
-                        // The same key is used by the library prefetcher and
-                        // every other cover surface. On screen recreation,
-                        // use the previous decoded cover as the placeholder
-                        // rather than briefly painting a generated title card.
-                        val key = CoverUtils.coverMemoryKey(artworkUrl!!)
-                        memoryCacheKey(key)
-                        placeholderMemoryCacheKey(key)
+                    if (coverKey != null) {
+                        // The same key and decode size are used by the
+                        // library prefetcher and every other cover surface,
+                        // so a cover decoded once is reused everywhere.
+                        memoryCacheKey(coverKey)
+                        placeholderMemoryCacheKey(coverKey)
+                        size(CoverUtils.COVER_DECODE_WIDTH_PX, CoverUtils.COVER_DECODE_HEIGHT_PX)
                     }
                     crossfade(false)
                 }
@@ -2111,10 +2151,9 @@ fun GameCover(
         // Preserve the full printed NES carton rather than cropping it.
         modifier = modifier.aspectRatio(NES_BOX_ART_ASPECT_RATIO),
         contentScale = ContentScale.Fit,
-        // Only titles genuinely missing cover data should show a title
-        // placeholder. Known URLs display the previous cached artwork or
-        // the neutral box surface while loading, without a title-card flash.
-        placeholder = fallbackPainter,
+        // A cover seen before stays on screen while it is requested again;
+        // a title card is shown only for a first load or missing artwork.
+        placeholder = if (alreadyDecoded) null else fallbackPainter,
         fallback = fallbackPainter,
         error = fallbackPainter,
     )

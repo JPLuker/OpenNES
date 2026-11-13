@@ -38,7 +38,7 @@ class NesCoverPrefetcher(context: Context) {
                         imageLoader.execute(
                             ImageRequest.Builder(appContext)
                                 .data(url)
-                                .size(320, 440)
+                                .size(CoverUtils.COVER_DECODE_WIDTH_PX, CoverUtils.COVER_DECODE_HEIGHT_PX)
                                 .memoryCacheKey(CoverUtils.coverMemoryKey(url))
                                 .build(),
                         )

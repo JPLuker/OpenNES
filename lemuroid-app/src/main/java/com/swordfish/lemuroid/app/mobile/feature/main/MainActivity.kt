@@ -143,10 +143,14 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
         setContent {
             val navController = rememberNavController()
             var showingStartup by remember { mutableStateOf(savedInstanceState == null) }
+            // First-run setup opens instead of the library, so there is no
+            // library snapshot to wait for.
+            val opensLibrary = remember { !OpenNesFirstRunStore(applicationContext).shouldShow() }
             LaunchedEffect(showingStartup) {
                 if (showingStartup) {
-                    // Bounded visual handoff, never a network-dependent gate.
-                    delay(550L)
+                    // Stay up until the first library snapshot (bounded),
+                    // never for RomM or cover downloads.
+                    OpenNesStartupGate.awaitHandoff(waitForLibrary = opensLibrary)
                     showingStartup = false
                 }
             }
@@ -172,6 +176,12 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                 modifier = Modifier.padding(top = 24.dp).size(26.dp),
                                 color = ComposeColor(0xFFD77B80),
                                 strokeWidth = 2.dp,
+                            )
+                            Text(
+                                stringResource(R.string.opennes_library_loading),
+                                modifier = Modifier.padding(top = 18.dp),
+                                color = ComposeColor(0xFFB9BAC0),
+                                style = MaterialTheme.typography.bodySmall,
                             )
                         }
                     }
