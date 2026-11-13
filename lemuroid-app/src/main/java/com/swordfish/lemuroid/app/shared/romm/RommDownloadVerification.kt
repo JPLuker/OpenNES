@@ -174,9 +174,9 @@ object RommDownloadVerification {
         file.inputStream().use { it.read(signature) }
         val zipPrefix = signature[0] == 0x50.toByte() && signature[1] == 0x4B.toByte()
         val knownSignature =
-            signature[2] == 0x03.toByte() ||
-                signature[2] == 0x05.toByte() ||
-                signature[2] == 0x07.toByte()
+            (signature[2] == 0x03.toByte() && signature[3] == 0x04.toByte()) ||
+                (signature[2] == 0x05.toByte() && signature[3] == 0x06.toByte()) ||
+                (signature[2] == 0x07.toByte() && signature[3] == 0x08.toByte())
         return zipPrefix && knownSignature
     }
 
