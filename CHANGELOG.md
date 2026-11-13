@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Fix Match cover selection:** recognize combined and additional region tags (such as `(USA, Europe)` and `(Germany)`) without discarding meaningful parenthesized game subtitles.
+
 - **RomM ZIP path validation:** reject `.` directory segments in downloaded ROM and save archives, preventing alternate paths from bypassing duplicate-entry checks.
 
 - **RomM save archive validation:** reject empty or directory-only remote save ZIPs even when their content hash matches, so unusable backups cannot pass verification.
