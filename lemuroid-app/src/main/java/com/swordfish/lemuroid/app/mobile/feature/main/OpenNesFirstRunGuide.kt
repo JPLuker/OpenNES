@@ -39,10 +39,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import com.swordfish.lemuroid.R
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.game.NesLandscapeStyle
 import com.swordfish.lemuroid.app.mobile.feature.game.NesLandscapeStylePicker
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
@@ -111,7 +111,14 @@ fun OpenNesFirstRunGuide(
     var step by rememberSaveable { mutableStateOf(0) }
     var customColors by rememberSaveable { mutableStateOf(false) }
     var selectedPart by remember { mutableStateOf<NesColorPart?>(null) }
-    val headers = listOf(stringResource(R.string.onboarding_controller_layout), stringResource(R.string.onboarding_controller_theme), stringResource(R.string.onboarding_rom_library), stringResource(R.string.onboarding_retroachievements), stringResource(R.string.onboarding_romm_library))
+    val headers =
+        listOf(
+            stringResource(R.string.onboarding_controller_layout),
+            stringResource(R.string.onboarding_controller_theme),
+            stringResource(R.string.onboarding_rom_library),
+            stringResource(R.string.onboarding_retroachievements),
+            stringResource(R.string.onboarding_romm_library),
+        )
     val explanations =
         listOf(
             stringResource(R.string.onboarding_layout_explanation),
@@ -147,7 +154,10 @@ fun OpenNesFirstRunGuide(
                 0 -> {
                     Text(stringResource(R.string.onboarding_portrait), style = MaterialTheme.typography.titleMedium)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        listOf(stringResource(R.string.onboarding_standard) to 0.57f, stringResource(R.string.onboarding_compact) to 0.42f).forEach { (title, scale) ->
+                        listOf(
+                            stringResource(R.string.onboarding_standard) to 0.57f,
+                            stringResource(R.string.onboarding_compact) to 0.42f,
+                        ).forEach { (title, scale) ->
                             OutlinedButton(
                                 modifier = Modifier.weight(1f),
                                 onClick = {
@@ -278,13 +288,25 @@ fun OpenNesFirstRunGuide(
                 onClick = {
                     if (step == headers.lastIndex) onFinish() else step++
                 },
-            ) { Text(if (step == headers.lastIndex) stringResource(R.string.onboarding_skip_finish) else stringResource(R.string.onboarding_skip)) }
+            ) { Text(
+                    if (step == headers.lastIndex) {
+                        stringResource(R.string.onboarding_skip_finish)
+                    } else {
+                        stringResource(R.string.onboarding_skip)
+                    },
+                ) }
             Button(
                 modifier = Modifier.weight(1f),
                 onClick = {
                     if (step == headers.lastIndex) onFinish() else step++
                 },
-            ) { Text(if (step == headers.lastIndex) stringResource(R.string.onboarding_finish) else stringResource(R.string.onboarding_next)) }
+            ) { Text(
+                    if (step == headers.lastIndex) {
+                        stringResource(R.string.onboarding_finish)
+                    } else {
+                        stringResource(R.string.onboarding_next)
+                    },
+                ) }
         }
     }
     selectedPart?.let { part ->
