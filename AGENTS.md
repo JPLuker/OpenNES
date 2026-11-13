@@ -1,5 +1,6 @@
 # OpenNES developer instructions
 
+> **Handoff update — 2026-11-13:** See [AGENT_HANDOFF.md](AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.\n\n
 Read this file, the current [roadmap](ROADMAP.md), [testing status](TESTING.md), release gates, and open [GitHub issues](https://github.com/JPLuker/OpenNES/issues) before changing code. The shared [InternalDesignGuidelines](https://github.com/JPLuker/InternalDesignGuidelines) are default engineering guidance, **not** permission to change this project's NES-controller visual direction.
 
 ## Project decisions

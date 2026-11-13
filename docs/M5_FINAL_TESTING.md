@@ -1,5 +1,6 @@
 # OpenNES — M0–M5 final-testing handoff
 
+> **Handoff update — 2026-11-13:** See [../AGENT_HANDOFF.md](../AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.\n\n
 **Scope:** Native Android NES-only foundation, library/UI, portrait/landscape touch controls, audio, input, save RAM, save states, quick saves, resume and session lifecycle through M5.
 
 **State:** Source stabilization candidate; **not yet accepted**. Passing GitHub Actions proves compilation, formatting and APK inspection, not real-game behavior. The first test run must record a specific commit and APK SHA-256, not merely the mutable `dev-latest` release URL.
