@@ -224,6 +224,18 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun zipLikeSavePrefixIsNotMistakenForAnArchive() {
+        val save = temporary.newFile("prefix.sav")
+        val content = byteArrayOf(0x50, 0x4B, 0x03, 0x00, 0x12, 0x34)
+        save.writeBytes(content)
+        val md5 =
+            java.security.MessageDigest.getInstance("MD5")
+                .digest(content)
+                .joinToString("") { (it.toInt() and 0xFF).toString(16).padStart(2, '0') }
+        RommDownloadVerification.checkRemoteSaveHash(save, md5)
+    }
+
+    @Test
     fun verifiesStandaloneSaveHashAndRejectsMismatch() {
         val save = temporary.newFile("game.sav")
         save.writeBytes(byteArrayOf(1, 2, 3, 4))
