@@ -1,6 +1,7 @@
 package com.swordfish.lemuroid.app.shared.covers
 
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -18,6 +19,14 @@ class NesBoxArtUrlsTest {
         lastIndexedAt = 0L,
         customCoverUri = customCover,
     )
+
+    @Test
+    fun regularNesArtworkStillPrefetches() {
+        assertEquals(
+            listOf("https://thumbnails.libretro.com/example.png"),
+            NesBoxArtUrls.remoteCandidates(game()),
+        )
+    }
 
     @Test
     fun customArtworkSuppressesRemotePrefetch() {
