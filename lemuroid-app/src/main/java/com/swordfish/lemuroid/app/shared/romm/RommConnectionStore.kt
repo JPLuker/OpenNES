@@ -76,6 +76,8 @@ class RommConnectionStore(context: Context) {
             // A token rotation invalidates metadata from the previous account.
             RommCatalogueCache(app).clear()
             RommLibraryCatalog.invalidateSession()
+            // A token rotation must never reuse an old account's device ID.
+            RommDeviceIdentityStore(app).clearBinding()
         } catch (e: Exception) {
             secretFile.failWrite(stream)
             throw e
@@ -176,6 +178,7 @@ class RommConnectionStore(context: Context) {
             .apply()
         RommCatalogueCache(app).clear()
         RommLibraryCatalog.invalidateSession()
+        RommDeviceIdentityStore(app).clearBinding()
     }
 
     private fun getOrCreateKey(): SecretKey {
