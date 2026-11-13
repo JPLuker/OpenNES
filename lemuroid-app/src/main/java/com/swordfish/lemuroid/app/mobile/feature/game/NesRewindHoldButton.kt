@@ -55,7 +55,11 @@ internal fun NesRewindHoldButton(
             modifier
                 .size(36.dp)
                 .background(
-                    if (pressed) androidx.compose.ui.graphics.Color(0xFF66666E) else androidx.compose.ui.graphics.Color(0xFF45454B),
+                    if (pressed) {
+                        androidx.compose.ui.graphics.Color(0xFF66666E)
+                    } else {
+                        androidx.compose.ui.graphics.Color(0xFF45454B)
+                    },
                     RoundedCornerShape(18.dp),
                 )
                 .semantics {
