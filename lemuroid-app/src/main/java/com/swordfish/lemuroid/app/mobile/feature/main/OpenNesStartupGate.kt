@@ -2,6 +2,7 @@ package com.swordfish.lemuroid.app.mobile.feature.main
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -17,6 +18,11 @@ object OpenNesStartupGate {
     const val MAXIMUM_MS = 4_000L
 
     private val libraryReady = MutableStateFlow(false)
+    private val remoteReady = MutableStateFlow(false)
+
+    fun markRemoteReady() {
+        remoteReady.value = true
+    }
 
     /** The library has produced its first real snapshot in this process. */
     fun markLibraryReady() {
@@ -30,7 +36,10 @@ object OpenNesStartupGate {
     suspend fun awaitHandoff(waitForLibrary: Boolean) {
         delay(MINIMUM_MS)
         if (waitForLibrary) {
-            withTimeoutOrNull(MAXIMUM_MS - MINIMUM_MS) { libraryReady.first { it } }
+            withTimeoutOrNull(MAXIMUM_MS - MINIMUM_MS) {
+                combine(libraryReady, remoteReady) { library, remote -> library && remote }
+                    .first { it }
+            }
         }
     }
 }

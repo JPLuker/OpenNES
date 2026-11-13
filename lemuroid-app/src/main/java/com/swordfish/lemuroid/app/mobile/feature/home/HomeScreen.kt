@@ -107,6 +107,7 @@ import coil.memory.MemoryCache
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.main.OpenNesStartupGate
 import com.swordfish.lemuroid.app.mobile.feature.romm.RommGameDetailsSheet
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.covers.NesArtwork
@@ -199,7 +200,12 @@ fun HomeScreen(
         }
 
     LaunchedEffect(Unit) {
-        viewModel.refreshRomMLibrary()
+        try {
+            RommLibraryCatalog.refresh(context.applicationContext)
+            RommLibraryCatalog.checkConnectivity(context.applicationContext)
+        } finally {
+            OpenNesStartupGate.markRemoteReady()
+        }
         // Only while the library is visible; no background connection service.
         while (true) {
             delay(60_000L)
@@ -547,17 +553,7 @@ private fun OpenNesLibrary(
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            if (game.id < 0) {
-                                Text(
-                                    if (romm.serverReachable == false) {
-                                        stringResource(R.string.opennes_romm_tile_offline)
-                                    } else {
-                                        stringResource(R.string.opennes_romm_tile_remote)
-                                    },
-                                    color = LibraryColors.muted,
-                                    fontSize = 11.sp,
-                                )
-                            }
+
                         }
                     }
                     repeat(columns - rows[index].size) {
