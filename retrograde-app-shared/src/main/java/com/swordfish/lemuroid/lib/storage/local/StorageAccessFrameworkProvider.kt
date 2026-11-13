@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
-import androidx.leanback.preference.LeanbackPreferenceFragment
 import com.swordfish.lemuroid.common.kotlin.extractEntryToFile
 import com.swordfish.lemuroid.common.kotlin.isZipped
 import com.swordfish.lemuroid.common.kotlin.writeToFile
@@ -30,8 +29,6 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
     override val name: String = context.getString(R.string.local_storage)
 
     override val uriSchemes = listOf("content")
-
-    override val prefsFragmentClass: Class<LeanbackPreferenceFragment>? = null
 
     override val enabledByDefault = true
 
