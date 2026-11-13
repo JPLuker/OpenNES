@@ -100,6 +100,17 @@ internal fun NesControllerDragOverlay(
                     it == NesEditableControl.DPAD_RIGHT
             }
         movableControls.forEach { control ->
+            // The face-button group encloses A and B. Rendering its drag
+            // target above those individual targets intercepts their gestures,
+            // making the painted buttons appear impossible to move separately.
+            // Keep the group handle only as a fallback for layouts that do
+            // not report individual A/B bounds.
+            if (control == NesEditableControl.FACE_BUTTONS &&
+                controlBounds[NesEditableControl.A] != null &&
+                controlBounds[NesEditableControl.B] != null
+            ) {
+                return@forEach
+            }
             val bounds =
                 controlBounds[control]
                     ?: when (control) {
