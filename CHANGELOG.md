@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **RomM save archive validation:** reject empty or directory-only remote save ZIPs even when their content hash matches, so unusable backups cannot pass verification.
+
 - **RomM save archive integrity:** reject duplicate normalized ZIP paths (including backslash aliases and directory entries) before accepting a remote save hash. Added regression tests for ambiguous archive entries.
 
 - **FDS download safety:** standalone Famicom Disk System files now respect the same 64 MiB maximum as NES ROMs, preventing oversized direct downloads from bypassing the ZIP and NES limits.
