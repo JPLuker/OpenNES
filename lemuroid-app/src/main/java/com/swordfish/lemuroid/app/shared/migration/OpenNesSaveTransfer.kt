@@ -339,10 +339,12 @@ internal object OpenNesSaveTransfer {
         return sha256(file.readBytes()) == item.sha256 && file.length() == item.bytes
     }
 
-    private fun sha256(bytes: ByteArray): String =
-        hex(MessageDigest.getInstance("SHA-256").digest(bytes))
+    private fun sha256(bytes: ByteArray): String = hex(MessageDigest.getInstance("SHA-256").digest(bytes))
 
-    private fun hex(bytes: ByteArray): String = bytes.joinToString("") { (it.toInt() and 255).toString(16).padStart(2, '0') }
+    private fun hex(bytes: ByteArray): String =
+        bytes.joinToString("") {
+            (it.toInt() and 255).toString(16).padStart(2, '0')
+        }
 
     private fun copyBounded(
         source: InputStream,
