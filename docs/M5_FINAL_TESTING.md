@@ -15,6 +15,8 @@
 5. Use locally owned/legally obtained NES test content. Include at least one battery-backed SRAM title, a title with no SRAM, and a game that exercises diagonal+A/B input. Do not attach ROMs or private RetroAchievements/RomM tokens to test reports.
 6. Record device model, Android version, ABI, controller type, source commit and whether the test was an upgrade or clean install.
 
+**November 13 source change:** GameLauncher now dispatches from the originating Activity's lifecycle on the main thread instead of an unstructured Default-thread `GlobalScope`. It checks destruction before launch, propagates cancellation, gives a typed error screen for failed core resolution and reschedules suspended background work if the Activity never launches. This change is a source candidate until the F-03 real-device lifecycle test passes.
+
 ## Manual test matrix
 
 Mark each row **Pass / Fail / Blocked / Not tested** and include evidence for failures. A launch is not sufficient to pass a save/resume test.
@@ -23,6 +25,7 @@ Mark each row **Pass / Fail / Blocked / Not tested** and include evidence for fa
 | --- | --- | --- |
 | F-01 | Fresh install, choose NES ROM directory, scan and launch | OpenNES opens, only eligible NES files appear and game starts offline |
 | F-02 | Upgrade from an existing debug APK without wiping data | Game library, custom artwork, settings, favorites, layouts and existing saves survive |
+| F-03 | Select Play then immediately rotate, background or close the launching Activity while the core preferences are resolving | No stale Activity is launched, no duplicate emulator, no crash, and background maintenance resumes if launch was canceled |
 | UI-01 | Open game details, Play, search, recent, conditional Favorites, hamburger actions | Navigation remains usable; no duplicate actions, blank blocking screens or incorrect bottom navigation |
 | UI-02 | From an active NES game, open Pause → Achievements; inspect local fingerprint, return to pause and resume play | Screen opens without leaving the game; hash status is accurate and no fake unlock progress appears; gameplay resumes normally |
 | UI-04 | Open Achievements after loading website progress, scroll to the final entry, test long titles, and use the bottom Resume game action | Full-width list remains readable, connection notices are concise, Advanced diagnostics stay accessible, and Resume is always reachable without scrolling |

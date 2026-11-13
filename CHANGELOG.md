@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **M5 game launch lifecycle:** Core preference resolution and emulator Activity dispatch now run in the originating lifecycle-owned main-thread coroutine rather than a detached GlobalScope. The app declines launches from destroyed Activities, propagates cancellation, shows a typed failure for unexpected core configuration errors without logging ROM paths and restores background maintenance work if dispatch did not complete. This eliminates a potential rotation/backgrounding race at launch; device acceptance remains required.
+
 - **M7 read-only device sync preview:** a registered RomM user can select a local NES SRAM file, double-check its MD5/SHA-256 fingerprint, and receive one ROM-scoped RomM 5.4 negotiation preview in Settings. Proposed upload/download/conflict/delete/no-op operations are displayed; all non-no-op actions are reported as unexecuted when the short-lived session is closed. No local or remote save content is modified, and a server/account change clears the preview. Live RomM acceptance is still required.
 
 

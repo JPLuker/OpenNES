@@ -1,21 +1,24 @@
 package com.swordfish.lemuroid.app.shared.game
 
 import android.app.Activity
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
+import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
 import com.swordfish.lemuroid.app.shared.main.GameLaunchTaskHandler
 import com.swordfish.lemuroid.common.displayToast
 import com.swordfish.lemuroid.lib.core.CoresSelection
 import com.swordfish.lemuroid.lib.library.GameSystem
 import com.swordfish.lemuroid.lib.library.db.entity.Game
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class GameLauncher(
     private val coresSelection: CoresSelection,
     private val gameLaunchTaskHandler: GameLaunchTaskHandler,
 ) {
-    @OptIn(DelicateCoroutinesApi::class)
     fun launchGameAsync(
         activity: Activity,
         game: Game,
@@ -27,13 +30,50 @@ class GameLauncher(
             return false
         }
 
-        GlobalScope.launch {
-            val system = GameSystem.findById(game.systemId)
-            val coreConfig = coresSelection.getCoreConfigForSystem(system)
-            gameLaunchTaskHandler.handleGameStart(activity.applicationContext)
-            BaseGameActivity.launchGame(activity, coreConfig, game, loadSave, leanback)
+        // The core selection comes from a suspending preferences flow. Never
+        // launch the emulator from an unstructured GlobalScope or a worker
+        // thread: activity launch must occur on Main and must be cancelled
+        // if the originating Activity is destroyed during folder selection.
+        val host = activity as? LifecycleOwner
+        if (host == null || activity.isFinishing || activity.isDestroyed) {
+            return false
         }
-
+        host.lifecycleScope.launch {
+            var backgroundWorkPaused = false
+            var launchDispatched = false
+            try {
+                val system = GameSystem.findById(game.systemId)
+                val coreConfig = coresSelection.getCoreConfigForSystem(system)
+                if (activity.isFinishing || activity.isDestroyed) return@launch
+                gameLaunchTaskHandler.handleGameStart(activity.applicationContext)
+                backgroundWorkPaused = true
+                BaseGameActivity.launchGame(activity, coreConfig, game, loadSave, leanback)
+                launchDispatched = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Do not log untrusted exception messages (ROM paths, URIs).
+                Timber.w("NES launch preparation failed: %s", e.javaClass.simpleName)
+                if (!activity.isFinishing && !activity.isDestroyed) {
+                    GameCrashActivity.launch(
+                        activity,
+                        activity.getString(R.string.opennes_game_error_core),
+                        activity.getString(
+                            R.string.opennes_game_error_code,
+                            OpenNesFailureCategory.CORE.name,
+                        ),
+                    )
+                }
+            } finally {
+                // Lifecycle cancellation between background-work suspension
+                // and Activity dispatch must not permanently disable work.
+                if (backgroundWorkPaused && !launchDispatched) {
+                    runCatching {
+                        gameLaunchTaskHandler.handleGameLaunchFailure(activity.applicationContext)
+                    }
+                }
+            }
+        }
         return true
     }
 }
