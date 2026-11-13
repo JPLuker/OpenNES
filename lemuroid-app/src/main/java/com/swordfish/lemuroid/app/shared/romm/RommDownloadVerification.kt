@@ -76,9 +76,8 @@ object RommDownloadVerification {
                     var headerLength = 0
                     var entryLength = 0L
                     while (true) {
-                        val count = archive.read(buffer)
+                        val count = RommSafeStreamRead.next(archive, buffer)
                         if (count < 0) break
-                        if (count == 0) continue
                         if (headerLength < header.size) {
                             val bytes = minOf(header.size - headerLength, count)
                             buffer.copyInto(header, headerLength, 0, bytes)
@@ -146,9 +145,8 @@ object RommDownloadVerification {
                 val hash = MessageDigest.getInstance("MD5")
                 archive.getInputStream(entry).use { stream ->
                     while (true) {
-                        val count = stream.read(buffer)
+                        val count = RommSafeStreamRead.next(stream, buffer)
                         if (count < 0) break
-                        if (count == 0) continue
                         total += count
                         if (total > MAX_SAVE_UNCOMPRESSED) {
                             throw IOException("RomM save ZIP expands beyond safe size limit")
@@ -199,9 +197,9 @@ object RommDownloadVerification {
         file.inputStream().buffered().use { input ->
             val buffer = ByteArray(16 * 1024)
             while (true) {
-                val count = input.read(buffer)
+                val count = RommSafeStreamRead.next(input, buffer)
                 if (count < 0) break
-                if (count > 0) digest.update(buffer, 0, count)
+                digest.update(buffer, 0, count)
             }
         }
         return hex(digest.digest())
