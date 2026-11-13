@@ -17,6 +17,14 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
         cancelBackgroundWork(context)
     }
 
+    /**
+     * Startup work was canceled, but Android never accepted the game launch.
+     * Restore maintenance scheduling rather than leaving auto-sync disabled.
+     */
+    fun handleGameLaunchFailure(context: Context) {
+        rescheduleBackgroundWork(context)
+    }
+
     suspend fun handleGameFinish(
         activity: Activity,
         resultCode: Int,
