@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Artwork prefetch fairness:** use limited background requests for the primary cover of each visible NES game before fetching alternate artwork for earlier games, reducing empty covers further down the shelf.
+
 - **RomM save detection:** require a complete ZIP magic signature before interpreting downloaded save bytes as an archive, preventing raw save files with ZIP-like prefixes from being rejected incorrectly.
 
 - **Fix Match cover selection:** recognize combined and additional region tags (such as `(USA, Europe)` and `(Germany)`) without discarding meaningful parenthesized game subtitles.
