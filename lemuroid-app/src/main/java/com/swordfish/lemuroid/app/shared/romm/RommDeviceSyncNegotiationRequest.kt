@@ -78,7 +78,7 @@ internal object RommDeviceSyncNegotiationRequest {
                     save.fingerprint.sha256.matches(sha256Pattern) &&
                     save.fingerprint.bytes in 1..MAX_SAVE_BYTES,
             ) { "A stable double-read save fingerprint is required" }
-            require(timestampPattern.matches(save.updatedAt)) { "Invalid UTC save timestamp" }
+            require(validUtcTimestamp(save.updatedAt)) { "Invalid UTC save timestamp" }
             saves.put(
                 JSONObject()
                     .put("rom_id", save.romId)
@@ -91,7 +91,7 @@ internal object RommDeviceSyncNegotiationRequest {
             )
         }
         val ids = JSONArray()
-        requestedRomIds.sorted().forEach(ids::put)
+        requestedRomIds.sorted().forEach { ids.put(it) }
         return JSONObject()
             .put("device_id", deviceId)
             .put("saves", saves)
@@ -101,6 +101,29 @@ internal object RommDeviceSyncNegotiationRequest {
             .put("restore_unlisted", false)
             .put("emulators", JSONObject.NULL)
             .toString()
+    }
+
+    private fun validUtcTimestamp(value: String): Boolean {
+        if (!timestampPattern.matches(value)) return false
+        val year = value.substring(0, 4).toInt()
+        val month = value.substring(5, 7).toInt()
+        val day = value.substring(8, 10).toInt()
+        val hour = value.substring(11, 13).toInt()
+        val minute = value.substring(14, 16).toInt()
+        val second = value.substring(17, 19).toInt()
+        if (year !in 1..9999 || month !in 1..12 ||
+            hour !in 0..23 || minute !in 0..59 || second !in 0..59
+        ) {
+            return false
+        }
+        val leapYear = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+        val days =
+            when (month) {
+                2 -> if (leapYear) 29 else 28
+                4, 6, 9, 11 -> 30
+                else -> 31
+            }
+        return day in 1..days
     }
 
     private fun safeFileName(name: String): Boolean =
