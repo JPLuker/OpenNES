@@ -179,7 +179,7 @@ object RommDownloadVerification {
             normalized.isBlank() ||
                 normalized.startsWith("/") ||
                 Regex("^[A-Za-z]:").containsMatchIn(normalized) ||
-                normalized.split('/').any { it == ".." || it.isEmpty() } ||
+                normalized.trimEnd('/').split('/').any { it == ".." || it.isEmpty() } ||
                 name.any { it.isISOControl() } ||
                 name.length > 512
         if (unsafe) {
