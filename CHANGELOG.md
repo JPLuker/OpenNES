@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **RomM archive path safety:** reject drive-qualified and malformed ZIP paths while allowing legitimate nested directories. Regression tests cover Windows absolute paths, repeated separators, and directory entries.
+
 - **RomM import validation:** reject standalone NES files with incomplete 16-byte iNES headers or over the 64 MiB import cap, and reject zipped NES entries with truncated headers. JVM tests cover these boundaries; device acceptance remains pending.
 
 - **Artwork cancellation safety:** background cover prefetch now propagates coroutine cancellation immediately instead of treating it as a failed download and consuming a retry. This is source hardening pending CI and device acceptance.
