@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **RomM offline cache integrity:** reject malformed MD5 hashes before writing the account-bound catalogue; previously such a write could succeed but the same snapshot could not be decoded after restart. Regression tests cover malformed, uppercase and absent hashes.
+
 - **Cover prefetch safety:** custom artwork now suppresses unnecessary remote catalogue requests, and non-NES entries cannot request NES covers. JVM regression tests cover custom covers, unrelated systems and ordinary NES artwork. Device acceptance remains pending.
 
 - **Play listing:** replaced the inherited Lemuroid store description ("All in one emulator", 23 systems) with OpenNES text, and removed the Lemuroid screenshot and TV banner. `docs/PLAY_LISTING.md` has ready answers for the Data safety form, permissions, content rating and emulator policy notes. Original screenshots and icon artwork are still needed.
