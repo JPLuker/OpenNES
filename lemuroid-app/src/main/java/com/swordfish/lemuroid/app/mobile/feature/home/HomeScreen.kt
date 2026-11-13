@@ -526,7 +526,7 @@ private fun OpenNesLibrary(
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
-                                            .alpha(if (game.id < 0 && romm.serverReachable == false) 0.55f else 1f)
+                                            .alpha(if (game.id < 0 && romm.serverReachable != true) 0.55f else 1f)
                                             .clickable { onGameDetailsClick(game) },
                                 )
                                 // A game that is only on the RomM server is
