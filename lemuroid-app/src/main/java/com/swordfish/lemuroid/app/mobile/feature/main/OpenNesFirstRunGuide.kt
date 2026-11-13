@@ -202,7 +202,10 @@ fun OpenNesFirstRunGuide(
                 }
                 1 -> {
                     ControllerAppearancePreview(appearance.palette)
-                    Text(stringResource(R.string.onboarding_preset_themes), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.onboarding_preset_themes),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
                     NesControllerPresets.all.chunked(2).forEach { group ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             group.forEach { preset ->
@@ -288,25 +291,29 @@ fun OpenNesFirstRunGuide(
                 onClick = {
                     if (step == headers.lastIndex) onFinish() else step++
                 },
-            ) { Text(
+            ) {
+                Text(
                     if (step == headers.lastIndex) {
                         stringResource(R.string.onboarding_skip_finish)
                     } else {
                         stringResource(R.string.onboarding_skip)
                     },
-                ) }
+                )
+            }
             Button(
                 modifier = Modifier.weight(1f),
                 onClick = {
                     if (step == headers.lastIndex) onFinish() else step++
                 },
-            ) { Text(
+            ) {
+                Text(
                     if (step == headers.lastIndex) {
                         stringResource(R.string.onboarding_finish)
                     } else {
                         stringResource(R.string.onboarding_next)
                     },
-                ) }
+                )
+            }
         }
     }
     selectedPart?.let { part ->
