@@ -180,6 +180,7 @@ internal object RommCatalogueCodec {
             rom.name.isNotBlank() &&
             rom.name.length <= 500 &&
             rom.sizeBytes in 0..MAX_ROM_BYTES &&
+            (rom.md5 == null || rom.md5.matches(Regex("[a-f0-9]{32}"))) &&
             RommApiClient.safeRomFileName(rom.fileName) &&
             (rom.coverUrl == null || RommCoverUrl.trusted(rom.coverUrl) != null) &&
             rom.genres.size <= 12 &&
