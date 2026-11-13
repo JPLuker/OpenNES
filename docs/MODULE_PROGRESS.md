@@ -4,6 +4,11 @@ Updated: 2026-11-12
 
 This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The last verified feature baseline passed [CI run 43323713762](https://github.com/JPLuker/OpenNES/actions/runs/43323713762), including source formatting, JVM tests, native/Android compilation, NES-only inspection and rolling APK publication. The latest M5 save synchronization and M8 package/build guards must pass their exact-commit CI before being called verified. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
 
+## November 13 — RomM compare-only device sync source candidate
+
+- **M7 user-visible comparison:** Registered RomM users can explicitly select a local NES SRAM file for the matching game. The app double-reads a bounded digest, submits an account-bound RomM 5.4 negotiation request and displays proposed upload/download/conflict/delete/no-op actions without transferring save bytes. It completes the server's short-lived session with the unperformed operations marked unsuccessful. Local and remote save content is not altered.
+- **Safety:** Switching accounts invalidates old comparisons. File timestamps, device ownership, server permissions, response format and compatibility still require live verification. No upload/download executor or automatic replay is enabled.
+
 ## November 12 — Explicit debug-to-Play save migration source candidate
 
 - **M8 source:** one user-initiated, ZIP-based Casual NES SRAM/FCEUmm state export/import is now reachable from Settings, without ROMs, user credentials, Hardcore files or app preferences. The archive has a versioned SHA-256 manifest, bounded entry/file/total sizes, safe paths, double-read fingerprinting, immutable staging and only-new-file commit. A confirmation is required. Existing destination save files are never overwritten, and the shared game-process lock prevents copying while the NES core is active.

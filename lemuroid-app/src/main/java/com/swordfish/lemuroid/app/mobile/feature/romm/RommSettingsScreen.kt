@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.documentfile.provider.DocumentFile
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.swordfish.lemuroid.R
@@ -57,6 +58,8 @@ import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionPreferences
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
 import com.swordfish.lemuroid.app.shared.romm.RommDeviceIdentityStore
+import com.swordfish.lemuroid.app.shared.romm.RommDeviceSyncNegotiationRequest
+import com.swordfish.lemuroid.app.shared.romm.RommDeviceSyncProtocol
 import com.swordfish.lemuroid.app.shared.romm.RommPairing
 import com.swordfish.lemuroid.app.shared.romm.RommPendingReviewSummary
 import com.swordfish.lemuroid.app.shared.romm.RommPendingSyncJournal
@@ -70,6 +73,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Optional RomM NES-only remote library. Never imports automatically.
@@ -121,6 +129,8 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
     var page by remember { mutableStateOf<RommApiClient.Page?>(null) }
     var remoteSaves by remember { mutableStateOf<List<RommApiClient.RemoteSave>?>(null) }
     var selectedSaveGame by remember { mutableStateOf<RommApiClient.Rom?>(null) }
+    var pendingSyncPreviewRom by remember { mutableStateOf<RommApiClient.Rom?>(null) }
+    var syncPreview by remember { mutableStateOf<RommDeviceSyncProtocol.Negotiation?>(null) }
     var pendingSave by remember { mutableStateOf<RommApiClient.RemoteSave?>(null) }
     var pendingArchive by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
     var pendingArchiveDeletion by remember { mutableStateOf<RommVersionedSaveBackupStore.Backup?>(null) }
@@ -290,6 +300,58 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             }
         }
 
+    val syncPreviewPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument(),
+        ) { source ->
+            val selectedRom = pendingSyncPreviewRom
+            pendingSyncPreviewRom = null
+            if (source != null && selectedRom != null) {
+                perform("Comparing RomM saves without transfer") {
+                    val document =
+                        DocumentFile.fromSingleUri(context, source)
+                            ?: throw IOException("No selected local save")
+                    val displayName = document.name ?: throw IOException("Save name unavailable")
+                    val modifiedAt = document.lastModified()
+                    if (modifiedAt <= 0L || modifiedAt > System.currentTimeMillis() + 86_400_000L) {
+                        throw IOException("Unknown save modification time")
+                    }
+                    val updatedAt =
+                        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
+                            timeZone = TimeZone.getTimeZone("UTC")
+                        }.format(Date(modifiedAt))
+                    val fingerprint =
+                        withContext(Dispatchers.IO) {
+                            RommDeviceSyncProtocol.fingerprint {
+                                context.contentResolver.openInputStream(source)
+                            }
+                        }
+                    val connection =
+                        withContext(Dispatchers.IO) {
+                            store.load() ?: throw IOException("Reconnect to RomM")
+                        }
+                    // This request opens and then completes a comparison
+                    // session on RomM. No save bytes are uploaded, downloaded,
+                    // deleted or applied to the running NES emulator.
+                    syncPreview =
+                        client.previewDeviceSaveSync(
+                            context = context,
+                            connection = connection,
+                            romId = selectedRom.id,
+                            selectedSave =
+                                RommDeviceSyncNegotiationRequest.LocalSave(
+                                    romId = selectedRom.id,
+                                    fileName = displayName,
+                                    slot = "autosave",
+                                    fingerprint = fingerprint,
+                                    updatedAt = updatedAt,
+                                ),
+                        )
+                    status = context.getString(R.string.opennes_romm_preview_ready)
+                }
+            }
+        }
+
     val qrScanner =
         rememberLauncherForActivityResult(ScanContract()) { result ->
             result.contents?.let { contents ->
@@ -315,6 +377,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             page = client.listNesRoms(connection, offset = offset)
             remoteSaves = null
             selectedSaveGame = null
+            syncPreview = null
         }
     }
 
@@ -329,6 +392,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             configured = true
             signedInAs = user.username
             registeredDeviceId = null
+            syncPreview = null
             page = null
             remoteSaves = null
             selectedSaveGame = null
@@ -472,6 +536,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                     tokenInput = ""
                                     signedInAs = null
                                     registeredDeviceId = null
+                                    syncPreview = null
                                     page = null
                                     remoteSaves = null
                                     selectedSaveGame = null
@@ -571,6 +636,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                             }
                                         remoteSaves = client.listRemoteSaves(connection, rom.id)
                                         selectedSaveGame = rom
+                                        syncPreview = null
                                     }
                                 },
                                 onImport = {
@@ -609,6 +675,39 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                 ) {
                     Text(stringResource(R.string.opennes_romm_save_backups_note))
                     if (saves.isEmpty()) Text(stringResource(R.string.opennes_romm_no_saves))
+                    Text(stringResource(R.string.opennes_romm_preview_description))
+                    OutlinedButton(
+                        enabled = !busy && registeredDeviceId != null,
+                        onClick = {
+                            pendingSyncPreviewRom = game
+                            syncPreview = null
+                            syncPreviewPicker.launch(arrayOf("*/*"))
+                        },
+                    ) {
+                        Text(stringResource(R.string.opennes_romm_preview_button))
+                    }
+                    syncPreview?.let { preview ->
+                        Text(stringResource(R.string.opennes_romm_preview_count, preview.operations.size))
+                        preview.operations.take(12).forEach { proposed ->
+                            val textId =
+                                when (proposed.action) {
+                                    RommDeviceSyncProtocol.Action.UPLOAD ->
+                                        R.string.opennes_romm_preview_upload
+                                    RommDeviceSyncProtocol.Action.DOWNLOAD ->
+                                        R.string.opennes_romm_preview_download
+                                    RommDeviceSyncProtocol.Action.CONFLICT ->
+                                        R.string.opennes_romm_preview_conflict
+                                    RommDeviceSyncProtocol.Action.DELETE ->
+                                        R.string.opennes_romm_preview_delete
+                                    RommDeviceSyncProtocol.Action.NO_OP ->
+                                        R.string.opennes_romm_preview_noop
+                                }
+                            Text(stringResource(textId, proposed.fileName))
+                        }
+                        if (preview.operations.size > 12) {
+                            Text(stringResource(R.string.opennes_romm_preview_more))
+                        }
+                    }
                     saves.forEach { save ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -928,6 +1027,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                             configured = true
                             signedInAs = user.username
                             registeredDeviceId = null
+                            syncPreview = null
                             page = null
                             remoteSaves = null
                             selectedSaveGame = null
