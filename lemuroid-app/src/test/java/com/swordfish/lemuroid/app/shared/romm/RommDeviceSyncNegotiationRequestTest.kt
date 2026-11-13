@@ -77,28 +77,41 @@ class RommDeviceSyncNegotiationRequestTest {
 
     @Test
     fun cannotUseUnsafeNamesOrUnverifiedContent() {
-        assertThrows(IllegalArgumentException::class.java) { build(saves = listOf(local.copy(fileName = "../zelda.srm"))) }
-        assertThrows(IllegalArgumentException::class.java) { build(saves = listOf(local.copy(fileName = "unrelated.exe"))) }
-        assertThrows(IllegalArgumentException::class.java) { build(saves = listOf(local.copy(slot = "../../home"))) }
-        assertThrows(IllegalArgumentException::class.java) { build(saves = listOf(local.copy(updatedAt = "yesterday"))) }
-        assertThrows(IllegalArgumentException::class.java) {
-            build(saves = listOf(local.copy(fingerprint = fingerprint.copy(md5 = "broken"))))
-        }
-        assertThrows(IllegalArgumentException::class.java) {
-            build(saves = listOf(local.copy(fingerprint = fingerprint.copy(bytes = 0))))
+        val invalid =
+            listOf(
+                local.copy(fileName = "../zelda.srm"),
+                local.copy(fileName = "unrelated.exe"),
+                local.copy(slot = "../../home"),
+                local.copy(updatedAt = "yesterday"),
+                local.copy(fingerprint = fingerprint.copy(md5 = "broken")),
+                local.copy(fingerprint = fingerprint.copy(bytes = 0)),
+            )
+        invalid.forEach { bad ->
+            assertThrows(IllegalArgumentException::class.java) {
+                build(saves = listOf(bad))
+            }
         }
     }
 
     @Test
     fun rejectsImpossibleUtcDatesAndAcceptsLeapDay() {
-        for (bad in listOf("2026-02-29T21:00:00Z", "2026-13-12T21:00:00Z", "2026-11-31T21:00:00Z",
-                "2026-11-12T24:00:00Z", "2026-11-12T21:60:00Z")) {
+        val invalidDates =
+            listOf(
+                "2026-02-29T21:00:00Z",
+                "2026-13-12T21:00:00Z",
+                "2026-11-31T21:00:00Z",
+                "2026-11-12T24:00:00Z",
+                "2026-11-12T21:60:00Z",
+            )
+        invalidDates.forEach { bad ->
             assertThrows(IllegalArgumentException::class.java) {
                 build(saves = listOf(local.copy(updatedAt = bad)))
             }
         }
-        val valid = JSONObject(build(saves = listOf(local.copy(updatedAt = "2024-02-29T09:00:00Z"))))
-        assertEquals("2024-02-29T09:00:00Z", valid.getJSONArray("saves").getJSONObject(0).getString("updated_at"))
+        val leapDay = local.copy(updatedAt = "2024-02-29T09:00:00Z")
+        val valid = JSONObject(build(saves = listOf(leapDay)))
+        val date = valid.getJSONArray("saves").getJSONObject(0).getString("updated_at")
+        assertEquals(leapDay.updatedAt, date)
     }
 
     @Test
