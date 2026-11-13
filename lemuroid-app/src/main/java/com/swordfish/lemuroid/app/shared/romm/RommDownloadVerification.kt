@@ -43,7 +43,9 @@ object RommDownloadVerification {
                 }
             }
             "fds" -> {
-                if (file.length() < 128) throw IOException("Downloaded FDS file is too small")
+                if (file.length() < 128L || file.length() > MAX_ROM_UNCOMPRESSED) {
+                    throw IOException("Downloaded FDS file has an invalid size")
+                }
             }
             "zip" -> checkNesZip(file)
             else -> throw IOException("RomM download is not a supported NES file")
