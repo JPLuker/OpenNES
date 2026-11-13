@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,7 +53,7 @@ internal fun NesRewindHoldButton(
     Box(
         modifier =
             modifier
-                .sizeIn(minWidth = 88.dp, minHeight = 44.dp)
+                .size(44.dp)
                 .background(
                     if (pressed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
                     RoundedCornerShape(12.dp),
@@ -80,11 +80,11 @@ internal fun NesRewindHoldButton(
                         },
                     )
                 }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(4.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.opennes_rewind_hold_label),
+            text = "⏪",
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelMedium,
