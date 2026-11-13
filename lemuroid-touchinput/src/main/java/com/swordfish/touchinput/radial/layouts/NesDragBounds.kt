@@ -31,8 +31,17 @@ object NesDragBounds {
         val inset = edgeInsetPx.coerceAtLeast(0f)
         val minimum = viewportStartPx + inset + safeStartPx.coerceAtLeast(0f) - groupStartPx
         val maximum = viewportEndPx - inset - safeEndPx.coerceAtLeast(0f) - groupEndPx
-        // A huge custom control group cannot fit: keep its prior range rather
-        // than using invalid reversed clamp bounds or an abrupt jump.
-        return if (minimum <= maximum) deltaPx.coerceIn(minimum, maximum) else deltaPx
+        // An oversized control cannot fit between both safe edges. Clamp
+        // movement toward the nearer valid edge instead of allowing unlimited
+        // movement offscreen; preserve its current position if both edges
+        // would require a jump in opposite directions.
+        if (minimum > maximum) {
+            return when {
+                deltaPx < maximum -> maximum
+                deltaPx > minimum -> minimum
+                else -> 0f
+            }
+        }
+        return deltaPx.coerceIn(minimum, maximum)
     }
 }
