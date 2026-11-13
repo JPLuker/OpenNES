@@ -52,8 +52,9 @@ object GameProcessLock {
     ): T {
         try {
             return RandomAccessFile(file, "rw").channel.use { probe ->
-                val owned = probe.tryLock()
-                    ?: throw IOException("Close the running NES game before transferring saves")
+                val owned =
+                    probe.tryLock()
+                        ?: throw IOException("Close the running NES game before transferring saves")
                 owned.use { block() }
             }
         } catch (_: OverlappingFileLockException) {
