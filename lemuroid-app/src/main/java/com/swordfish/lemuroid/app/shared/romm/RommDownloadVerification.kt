@@ -160,6 +160,7 @@ object RommDownloadVerification {
                 }
                 hashes += entry.name + ":" + hex(hash.digest())
             }
+            if (hashes.isEmpty()) throw IOException("RomM save ZIP contains no save files")
             return hex(
                 MessageDigest.getInstance("MD5")
                     .digest(hashes.joinToString("\n").toByteArray(Charsets.UTF_8)),
