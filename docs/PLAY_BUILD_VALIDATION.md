@@ -32,6 +32,22 @@ The existing `scripts/verify-apk-identity.py` separately verifies that the
 rolling *debug* APK targets API 36, has the expected package/build version and
 declares both required foreground-service permissions.
 
+## Protected signed AAB validation (manual, not a release)
+
+The separate [signed-bundle validation workflow](https://github.com/JPLuker/OpenNES/actions/workflows/play-signed-validation.yml) is manual-only, restricted to `master` and the `production-signing` GitHub Actions environment. It neither publishes a GitHub release nor uploads to Google Play. Its short-lived signed AAB artifact is a **validation artifact**, not approval to publish.
+
+Once the app owner has created and securely backed up a **new** Play upload keystore outside Git, configure these five protected GitHub Actions environment secrets:
+
+- `OPENNES_RELEASE_KEYSTORE_BASE64`: Base64 encoding of the binary upload keystore (one line)
+- `OPENNES_RELEASE_STORE_PASSWORD`: keystore password
+- `OPENNES_RELEASE_KEY_ALIAS`: upload key alias
+- `OPENNES_RELEASE_KEY_PASSWORD`: upload key password
+- `OPENNES_RELEASE_CERT_SHA256`: SHA-256 fingerprint of that *same upload certificate*, 64 hexadecimal characters without colons
+
+The workflow refuses absent secrets and an unexpected certificate fingerprint, verifies Kotlin/Gradle tests, builds `freeBundleRelease` with release signing, checks the signed AAB and its 16 KiB-native layout, and writes a SHA-256 sidecar. The keystore only exists temporarily on the isolated runner and is deleted after the job. **Do not** use the tracked development `debug.keystore` or place the upload keystore in the repository. Protect the `production-signing` environment with manual reviewers before enabling the job.
+
+The Play `versionCode` derives from the ordered `VERSION` major/minor/patch tuple (`major * 1,000,000 + minor * 1,000 + patch`). Rolling debug builds keep their separate rising Actions-run sequence and `.debug` package ID. No production submission is made until owner approval, signed Play split installation, migration testing and all remaining release gates.
+
 ## What remains unverified
 
 - Google Play App Signing and a private upload key; no debug keystore or secret
