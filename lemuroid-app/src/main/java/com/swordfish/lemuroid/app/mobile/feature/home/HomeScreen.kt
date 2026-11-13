@@ -2068,6 +2068,9 @@ fun GameCover(
         if (primaryArtwork.isNullOrBlank() || usingRomArtwork) romArtwork ?: primaryArtwork else primaryArtwork
 
     val hasKnownArtwork = !artworkUrl.isNullOrBlank()
+    // Do not allow a late failure from an old request to change the source
+    // after this game has already switched to its filename fallback.
+    val requestArtworkUrl = artworkUrl
     AsyncImage(
         model =
             ImageRequest.Builder(LocalContext.current)
@@ -2086,10 +2089,10 @@ fun GameCover(
                 }
                 .listener(
                     onSuccess = { _, _ ->
-                        NesCoverResolutionCache.recordSuccess(primaryArtwork, romArtwork, artworkUrl)
+                        NesCoverResolutionCache.recordSuccess(primaryArtwork, romArtwork, requestArtworkUrl)
                     },
                     onError = { _, _ ->
-                        if (!usingRomArtwork && romArtwork != null && artworkUrl != romArtwork) {
+                        if (!usingRomArtwork && romArtwork != null && requestArtworkUrl != romArtwork) {
                             usingRomArtwork = true
                         }
                     },
