@@ -90,6 +90,18 @@ class RommDeviceSyncNegotiationRequestTest {
     }
 
     @Test
+    fun rejectsImpossibleUtcDatesAndAcceptsLeapDay() {
+        for (bad in listOf("2026-02-29T21:00:00Z", "2026-13-12T21:00:00Z", "2026-11-31T21:00:00Z",
+                "2026-11-12T24:00:00Z", "2026-11-12T21:60:00Z")) {
+            assertThrows(IllegalArgumentException::class.java) {
+                build(saves = listOf(local.copy(updatedAt = bad)))
+            }
+        }
+        val valid = JSONObject(build(saves = listOf(local.copy(updatedAt = "2024-02-29T09:00:00Z"))))
+        assertEquals("2024-02-29T09:00:00Z", valid.getJSONArray("saves").getJSONObject(0).getString("updated_at"))
+    }
+
+    @Test
     fun emptyLocalSavesMayOnlyRequestKnownRomScope() {
         val json = JSONObject(build(saves = emptyList(), roms = setOf(5, 12)))
         assertEquals(0, json.getJSONArray("saves").length())
