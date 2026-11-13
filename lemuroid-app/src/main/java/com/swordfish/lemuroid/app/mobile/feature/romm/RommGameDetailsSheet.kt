@@ -154,10 +154,10 @@ internal fun RommGameDetailsSheet(
                     ) {
                         Text(stringResource(R.string.opennes_play))
                     }
-                } else if (!indexing) {
+                } else {
                     Button(
                         onClick = onDownload,
-                        enabled = hasRomFolder && !downloading && !queued,
+                        enabled = hasRomFolder && !busy && !indexing,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         colors =
                             ButtonDefaults.buttonColors(
@@ -165,7 +165,14 @@ internal fun RommGameDetailsSheet(
                                 contentColor = appColors.onAccent,
                             ),
                     ) {
-                        Text(stringResource(R.string.opennes_romm_download))
+                        Text(
+                            when {
+                                queued -> stringResource(R.string.opennes_romm_phase_queued)
+                                downloading -> stringResource(R.string.opennes_romm_phase_downloading)
+                                indexing -> stringResource(R.string.opennes_romm_phase_indexing)
+                                else -> stringResource(R.string.opennes_romm_download)
+                            },
+                        )
                     }
                 }
 
