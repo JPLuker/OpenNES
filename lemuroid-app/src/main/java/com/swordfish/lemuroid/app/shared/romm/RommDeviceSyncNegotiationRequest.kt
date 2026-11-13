@@ -7,8 +7,9 @@ import java.util.Locale
 /**
  * A bounded, pure negotiation payload builder for RomM 5.4.
  *
- * This does NOT register a device, contact a server, approve a transfer, or
- * grant access to files. Callers must first authenticate the current account
+ * This builder does NOT register a device, contact a server, approve a
+ * transfer, or grant access to files. The caller may explicitly submit the
+ * generated JSON to start a comparison-only negotiation session. Callers must first authenticate the current account
  * and use the actual server-issued device UUID for that account.
  *
  * The protocol's content_hash is MD5, while OpenNES local archive integrity
