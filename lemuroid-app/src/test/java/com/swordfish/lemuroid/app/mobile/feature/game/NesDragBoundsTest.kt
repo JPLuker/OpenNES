@@ -31,6 +31,19 @@ class NesDragBoundsTest {
     }
 
     @Test
+    fun safeAreaInsetsApplyIndependentlyToBothAxes() {
+        val horizontal = NesDragBounds.clamp(500f, 100f, 160f, 0f, 400f, 8f, 0f, 40f)
+        val vertical = NesDragBounds.clamp(-500f, 100f, 160f, 0f, 400f, 8f, 32f, 0f)
+        assertEquals(192f, horizontal, 0.001f)
+        assertEquals(-60f, vertical, 0.001f)
+    }
+
+    @Test
+    fun zeroMovementDoesNotShiftAControlAlreadyWithinSafeBounds() {
+        assertEquals(0f, NesDragBounds.clamp(0f, 100f, 160f, 0f, 400f, 8f, 20f, 20f), 0.001f)
+    }
+
+    @Test
     fun invalidMeasurementsNeverPropagateNaN() {
         val actual =
             NesDragBounds.clamp(
