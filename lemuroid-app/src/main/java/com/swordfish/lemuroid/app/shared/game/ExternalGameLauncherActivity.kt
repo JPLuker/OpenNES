@@ -53,7 +53,7 @@ class ExternalGameLauncherActivity : ImmersiveActivity() {
 
         setContentView(R.layout.activity_loading)
         if (savedInstanceState == null) {
-            val gameId = intent.data?.lastPathSegment?.toIntOrNull()?.takeIf { it > 0 }
+            val gameId = GameShortcutId.parse(intent.data?.lastPathSegment)
             if (gameId == null) {
                 // Stale launcher shortcuts and malformed external intents are
                 // not allowed to crash the app before recovery UI opens.
