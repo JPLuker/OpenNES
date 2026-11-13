@@ -24,6 +24,14 @@ CI performs the same relevant checks on every `master` push and verifies the act
 
 **M8 package and build variants:** the app has only the `freeBundle` supported variant; the APK and AAB validators reject recognized bare game ROM extensions, hidden Libretro cores, unsafe ZIP member paths, and unwanted ABI combinations. The new Python tests cover negative fixtures. This is **not** a complete copyright audit: ROM data inside less obvious archives, third-party artwork, license notices, production signing and user data migration still require separate checks. The unsigned Play AAB workflow is a validation artifact only.
 
+## November 12 — RomM device registration and Play signing candidate
+
+**RomM device identity:** With a RomM 5.4 server and a token carrying `me.read` and `devices.write`, explicitly tap **Register device** in Settings. Verify the account shown matches the token, exactly one device appears under RomM Devices, and checking again reuses the same server device ID. Rotate the token, switch users and switch servers: no previous account's registered device ID may appear under a new login. No hardware hostname, MAC or IP address should be sent; the locally generated alias is anonymous. A 401/403/404, canceled request or logout while registration is in flight must not pin a device. No save upload/download/delete should occur. Both the UI and server must be inspected before marking this working.
+
+**RomM negotiation input:** Pure tests validate a bounded MD5-based request and SHA-256 local integrity. A live sync negotiation HTTP call and any operation executor remain **disabled**; do not interpret registration as a live save-sync acceptance.
+
+**Signed Play workflow:** Once the app owner supplies a protected private key and pinned fingerprint, run only the manual signed-AAB validation workflow after environment approval. Verify the output has production package ID, separately monotonic Play `versionCode`, real signing, only FCEUmm, no bundled game content, and passes 16 KiB native checks. Actual Google Play installation and backup/import from `.debug` remain untested.
+
 ## Latest device-test checklist (current functionality, not a claim of completion)
 
 Only the next applicable items should be requested in a test round; never send the whole list as a playtest request.
