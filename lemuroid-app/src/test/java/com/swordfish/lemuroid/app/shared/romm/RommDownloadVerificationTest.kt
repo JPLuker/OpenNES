@@ -27,6 +27,36 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun rejectsBareNesWithTruncatedHeader() {
+        val rom = temporary.newFile("truncated.nes")
+        rom.writeBytes(byteArrayOf(0x4E, 0x45, 0x53, 0x1A))
+        assertThrows(IOException::class.java) {
+            RommDownloadVerification.checkImportedRom(rom, "truncated.nes")
+        }
+    }
+
+    @Test
+    fun rejectsBareNesAboveSafeSizeLimit() {
+        val rom = temporary.newFile("oversized.nes")
+        java.io.RandomAccessFile(rom, "rw").use { file ->
+            file.setLength(64L * 1024L * 1024L + 1L)
+        }
+        assertThrows(IOException::class.java) {
+            RommDownloadVerification.checkImportedRom(rom, "oversized.nes")
+        }
+    }
+
+    @Test
+    fun rejectsZipNesWithSignatureButIncompleteHeader() {
+        assertThrows(IOException::class.java) {
+            RommDownloadVerification.checkImportedRom(
+                zipOf("truncated.nes" to byteArrayOf(0x4E, 0x45, 0x53, 0x1A)),
+                "truncated.zip",
+            )
+        }
+    }
+
+    @Test
     fun rejectsRenamedOrTruncatedNesInsideZip() {
         assertThrows(IOException::class.java) {
             RommDownloadVerification.checkImportedRom(
