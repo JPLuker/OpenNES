@@ -38,6 +38,12 @@ In OpenNES Debug Settings → Transfer NES saves, export the archive to a user-s
 
 Test cancellation, malicious or corrupt ZIP, missing file, unavailable storage, app backgrounding, reboot and error recovery; refuse export/import while the emulator process lock is held. Verify newly imported SRAM and states load correctly for the same matching legally obtained ROMs after the Play app has indexed them. Source tests cannot substitute for actual migration across different Android package IDs. Do not uninstall the original debug app until all saves are verified in the production app.
 
+## November 13 — RomM 5.4 compare-only acceptance
+
+Connect to a known RomM 5.4 server with a dedicated account and token holding `me.read`, `roms.read`, `assets.read`, `devices.read` and `devices.write`. Register the device explicitly in Settings. Browse one NES title, open its saved games and choose **Compare local save (no transfers)**. Select a real `.srm` from that exact title. Verify the server creates and completes one sync session, displays the proposed action list, and never uploads, downloads, deletes or overwrites any save bytes. Test each action category including a server-side deletion suggestion and real conflict.
+
+Confirm that selecting a non-SRAM file, a stale/missing file, a SAF provider without a valid modification timestamp, an unregistered device, a revoked token, a different RomM account, a server change, cancellation or malformed response fails without modifying content. The server's session log may record comparison actions as failed/unexecuted, which is expected. **Do not call this two-way save synchronization.** It is a comparison workflow only.
+
 ## Latest device-test checklist (current functionality, not a claim of completion)
 
 Only the next applicable items should be requested in a test round; never send the whole list as a playtest request.
