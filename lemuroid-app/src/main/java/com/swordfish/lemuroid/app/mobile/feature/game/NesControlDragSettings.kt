@@ -68,6 +68,10 @@ internal object NesControlDragSettings {
                     selectButton = movedButton(settings.selectButton, deltaXdp, deltaYdp),
                 )
             NesEditableControl.MENU -> settings.copy(menuButton = movedButton(settings.menuButton, deltaXdp, deltaYdp))
+            NesEditableControl.REWIND ->
+                settings.copy(rewindButton = movedButton(settings.rewindButton, deltaXdp, deltaYdp))
+            NesEditableControl.FAST_FORWARD ->
+                settings.copy(fastForwardButton = movedButton(settings.fastForwardButton, deltaXdp, deltaYdp))
         }
     }
 

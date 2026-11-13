@@ -15,6 +15,8 @@ enum class NesEditableControl {
     START,
     SELECT,
     MENU,
+    REWIND,
+    FAST_FORWARD,
 }
 
 /** Real rendered control bounds shared with the non-interactive drag editor. */

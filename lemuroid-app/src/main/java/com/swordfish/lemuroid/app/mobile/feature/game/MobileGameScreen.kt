@@ -4,6 +4,7 @@ import android.graphics.RectF
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -64,6 +67,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -422,6 +426,23 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 }
             }
 
+            if (showTouchPads && touchControllerSettings != null && !isLoading && !onboardingVisible.value) {
+                NesTransportControls(
+                    menuBounds = controlBounds[NesEditableControl.MENU],
+                    fullBounds = fullScreenPosition.value,
+                    settings = touchControllerSettings,
+                    editing = dragEditMode,
+                    rewindAvailable = rewindHoldAvailable,
+                    onRewindPress = viewModel::startHoldRewind,
+                    onRewindRelease = viewModel::stopHoldRewind,
+                    onRewindStep = viewModel::rewindAccessibleStep,
+                    onFastForward = viewModel::toggleFastForward,
+                    reportBounds = { id, bounds ->
+                        if (controlBounds[id] != bounds) controlBounds[id] = bounds
+                    },
+                )
+            }
+
             if (dragEditMode && showTouchPads && touchControllerSettings != null) {
                 NesControllerDragOverlay(
                     leftBounds = leftPadBounds.value,
@@ -439,25 +460,6 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     onRestoreDefaults = viewModel::resetTouchControls,
                 )
             }
-        }
-
-        // This independent surface consumes its own touches, never PadKit
-        // D-pad/A/B events. It is hidden during the editor and first-run flow.
-        if (rewindHoldAvailable && !dragEditMode && !isLoading && !onboardingVisible.value) {
-            NesRewindHoldButton(
-                modifier =
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .windowInsetsPadding(
-                            WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-                            ),
-                        )
-                        .padding(12.dp),
-                onPress = viewModel::startHoldRewind,
-                onRelease = viewModel::stopHoldRewind,
-                onAccessibleStep = viewModel::rewindAccessibleStep,
-            )
         }
 
         if (onboardingVisible.value && showTouchPads && !isLoading) {
@@ -1229,6 +1231,88 @@ private fun MenuEditTouchControlRow(
         )
         Box(modifier = Modifier.weight(1f)) {
             slider()
+        }
+    }
+}
+
+/**
+ * Transport controls are independent Compose surfaces anchored beside the real
+ * Menu pill. Their saved per-orientation drag coordinates move the visible
+ * glyph and touch target together; the existing drag editor uses their bounds.
+ */
+@Composable
+private fun NesTransportControls(
+    menuBounds: Rect?,
+    fullBounds: Rect?,
+    settings: TouchControllerSettingsManager.Settings,
+    editing: Boolean,
+    rewindAvailable: Boolean,
+    onRewindPress: () -> Unit,
+    onRewindRelease: () -> Unit,
+    onRewindStep: () -> Unit,
+    onFastForward: () -> Unit,
+    reportBounds: (NesEditableControl, Rect) -> Unit,
+) {
+    if (menuBounds == null || fullBounds == null) return
+    val density = LocalDensity.current
+    val buttonPx = with(density) { 44.dp.toPx() }
+    val gapPx = with(density) { 8.dp.toPx() }
+    val safe = WindowInsets.safeDrawing
+    val safeLeft = safe.getLeft(density, androidx.compose.ui.unit.LayoutDirection.Ltr).toFloat()
+    val safeRight = safe.getRight(density, androidx.compose.ui.unit.LayoutDirection.Ltr).toFloat()
+    val safeTop = safe.getTop(density).toFloat()
+    val safeBottom = safe.getBottom(density).toFloat()
+
+    @Composable
+    fun TransportPosition(
+        geometry: TouchControllerSettingsManager.ButtonGeometry,
+        control: NesEditableControl,
+        defaultX: Float,
+        content: @Composable (Modifier) -> Unit,
+    ) {
+        val x = (defaultX + geometry.dragX * density.density)
+            .coerceIn(safeLeft, (fullBounds.width - safeRight - buttonPx).coerceAtLeast(safeLeft))
+        val y = (menuBounds.center.y - fullBounds.top - buttonPx / 2f + geometry.dragY * density.density)
+            .coerceIn(safeTop, (fullBounds.height - safeBottom - buttonPx).coerceAtLeast(safeTop))
+        content(
+            Modifier
+                .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                .size(44.dp)
+                .onGloballyPositioned { reportBounds(control, it.boundsInRoot()) },
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        TransportPosition(
+            geometry = settings.rewindButton,
+            control = NesEditableControl.REWIND,
+            defaultX = menuBounds.left - fullBounds.left - buttonPx - gapPx,
+        ) { modifier ->
+            if (rewindAvailable || editing) {
+                NesRewindHoldButton(
+                    modifier = modifier,
+                    onPress = if (editing) ({}) else onRewindPress,
+                    onRelease = if (editing) ({}) else onRewindRelease,
+                    onAccessibleStep = if (editing) ({}) else onRewindStep,
+                )
+            }
+        }
+        TransportPosition(
+            geometry = settings.fastForwardButton,
+            control = NesEditableControl.FAST_FORWARD,
+            defaultX = menuBounds.right - fullBounds.left + gapPx,
+        ) { modifier ->
+            Box(
+                modifier = modifier
+                    .background(
+                        androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                        androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    )
+                    .clickable(enabled = !editing, onClick = onFastForward),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("⏩", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }
