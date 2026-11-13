@@ -197,6 +197,83 @@ class RommApiClient {
         return result
     }
 
+    /**
+     * Explicit comparison only. RomM creates a short-lived sync session while
+     * negotiating; this method immediately completes it as a dry run with no
+     * save transfers. Every upload/download/delete/conflict stays a display
+     * item; no file bytes, local saves or remote saves are mutated.
+     */
+    internal suspend fun previewDeviceSaveSync(
+        context: Context,
+        connection: RommConnection,
+        romId: Int,
+        selectedSave: RommDeviceSyncNegotiationRequest.LocalSave,
+    ): RommDeviceSyncProtocol.Negotiation {
+        require(romId > 0 && selectedSave.romId == romId) { "Unexpected RomM save game" }
+        val store = RommConnectionStore(context)
+        val initialConnection = withContext(Dispatchers.IO) { store.load() }
+            ?: throw IOException("Reconnect before comparing saves")
+        val revision = store.credentialRevision() ?: throw IOException("RomM credentials not verified")
+        if (!sameConnection(initialConnection, connection)) throw IOException("RomM login changed")
+        val user = checkAccountProfile(connection)
+        val accountId = user.userId ?: throw IOException("RomM account ID unavailable")
+        if (store.lastVerifiedUserId() != accountId) {
+            throw IOException("RomM account needs to be verified again")
+        }
+        val fingerprint =
+            RommServerIdentity.fingerprint(connection.serverUrl)
+                ?: throw IOException("Invalid RomM server identity")
+        val deviceId =
+            RommDeviceIdentityStore(context).pinnedDevice(fingerprint, revision, accountId)
+                ?: throw IOException("Register this RomM device before comparing saves")
+        val request =
+            RommDeviceSyncNegotiationRequest.build(
+                deviceId = deviceId,
+                requestedRomIds = setOf(romId),
+                localSaves = listOf(selectedSave),
+                currentServerFingerprint = fingerprint,
+                currentCredentialRevision = revision,
+                currentAccountId = accountId,
+                pinnedServerFingerprint = fingerprint,
+                pinnedCredentialRevision = revision,
+                pinnedAccountId = accountId,
+            )
+        // Server requires assets.read + devices.read for negotiation.
+        // The current account owns the device, and saves are included only
+        // as fingerprints of the one explicitly user-selected local file.
+        val json =
+            postCancellableJson(
+                connection,
+                listOf("api", "sync", "negotiate"),
+                request,
+                128 * 1024,
+            )
+        val result = RommDeviceSyncProtocol.parseNegotiation(json, setOf(romId))
+        val accepted =
+            result as? RommDeviceSyncProtocol.ParseResult.Accepted
+                ?: throw IOException("Unsupported RomM device sync response")
+        val negotiation = accepted.negotiation
+        // Mark the preview session as finished without claiming that any
+        // transfer occurred. Future full sync must use a separate session.
+        val notTransferred =
+            negotiation.operations.count {
+                it.action != RommDeviceSyncProtocol.Action.NO_OP
+            }
+        val unchanged = negotiation.operations.size - notTransferred
+        val completion =
+            JSONObject()
+                .put("operations_completed", unchanged)
+                .put("operations_failed", notTransferred)
+                .toString()
+        postCancellableJson(
+            connection,
+            listOf("api", "sync", "sessions", negotiation.sessionId.toString(), "complete"),
+            completion,
+            16 * 1024,
+        )
+        return negotiation
+    }
+
     private fun sameConnection(
         first: RommConnection,
         second: RommConnection,
