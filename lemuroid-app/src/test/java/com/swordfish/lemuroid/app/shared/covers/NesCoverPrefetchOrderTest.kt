@@ -49,6 +49,9 @@ class NesCoverPrefetchOrderTest {
 
     @Test
     fun zeroLimitNeverReturnsArtwork() {
-        assertEquals(emptyList<String>(), NesCoverPrefetchOrder.select(listOf(listOf(host + "a.png")), 0))
+        assertEquals(
+            emptyList<String>(),
+            NesCoverPrefetchOrder.select(listOf(listOf(host + "a.png")), 0),
+        )
     }
 }
