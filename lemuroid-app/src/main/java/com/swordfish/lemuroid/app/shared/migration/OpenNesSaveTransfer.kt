@@ -249,7 +249,8 @@ internal object OpenNesSaveTransfer {
         val expected = File(root, path.substringBeforeLast('/'))
         return file.isFile && !file.isDirectory &&
             parent.canonicalFile == expected.canonicalFile &&
-            file.canonicalFile.parentFile == parent.canonicalFile
+            file.canonicalFile.parentFile == parent.canonicalFile &&
+            file.canonicalFile.path.startsWith(root.canonicalFile.path + File.separator)
     }
 
     private fun verifiedDestination(root: File, path: String): File {
@@ -278,8 +279,9 @@ internal object OpenNesSaveTransfer {
     }
 
     private fun safePath(path: String): Boolean {
-        if (path.startsWith("/") || path.contains('\\') || path.contains("..") ||
-            path.any { it.isISOControl() } || path.length !in 1..255
+        if (path.startsWith("/") || path.contains('\\') ||
+            path.any { it.isISOControl() } || path.length !in 1..255 ||
+            path.split('/').any { it.isEmpty() || it == "." || it == ".." }
         ) {
             return false
         }
@@ -298,8 +300,8 @@ internal object OpenNesSaveTransfer {
 
     private fun isStateFile(name: String): Boolean {
         val value = name.removeSuffix(".metadata")
-        return value.endsWith(".state") ||
-            (1..4).any { value.endsWith(".slot" + it) }
+        return (value.endsWith(".state") && value.length > ".state".length) ||
+            (1..4).any { value.endsWith(".slot" + it) && value.length > ".slot1".length }
     }
 
     private fun hashMatches(file: File, item: Item): Boolean {
