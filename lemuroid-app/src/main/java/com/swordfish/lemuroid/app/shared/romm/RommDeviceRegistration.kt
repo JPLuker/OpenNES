@@ -46,11 +46,12 @@ internal object RommDeviceRegistration {
 
     fun parse(response: String): Registered {
         if (response.length !in 2..16_384) throw IOException("Unexpected RomM registration response")
-        val result = try {
-            JSONObject(response)
-        } catch (_: Exception) {
-            throw IOException("Malformed RomM device registration")
-        }
+        val result =
+            try {
+                JSONObject(response)
+            } catch (_: Exception) {
+                throw IOException("Malformed RomM device registration")
+            }
         val deviceId = result.optString("device_id")
         val name = result.optString("name")
         if (!uuid.matches(deviceId) || name.length !in 1..128 || name.any { it.isISOControl() }) {
