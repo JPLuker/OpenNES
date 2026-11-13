@@ -180,7 +180,6 @@ dependencies {
 
     kapt(deps.libs.androidx.lifecycle.processor)
 
-
     implementation(deps.libs.androidx.appcompat.recyclerView)
     implementation(deps.libs.androidx.paging.common)
     implementation(deps.libs.androidx.paging.runtime)
