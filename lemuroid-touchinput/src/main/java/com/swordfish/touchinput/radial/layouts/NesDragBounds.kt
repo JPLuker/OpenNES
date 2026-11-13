@@ -31,10 +31,10 @@ object NesDragBounds {
         val inset = edgeInsetPx.coerceAtLeast(0f)
         val minimum = viewportStartPx + inset + safeStartPx.coerceAtLeast(0f) - groupStartPx
         val maximum = viewportEndPx - inset - safeEndPx.coerceAtLeast(0f) - groupEndPx
-        // An oversized control cannot fit between both safe edges. Clamp
-        // movement toward the nearer valid edge instead of allowing unlimited
-        // movement offscreen; preserve its current position if both edges
-        // would require a jump in opposite directions.
+        // An oversized control cannot fit between both safe edges. Bound
+        // movement at the two edge-alignment positions rather than allowing
+        // unbounded movement offscreen. Keep a stationary control stationary
+        // when it already straddles both limits.
         if (minimum > maximum) {
             return when {
                 deltaPx < maximum -> maximum
