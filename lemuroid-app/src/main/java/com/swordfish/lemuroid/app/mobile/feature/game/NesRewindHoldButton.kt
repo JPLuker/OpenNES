@@ -53,10 +53,10 @@ internal fun NesRewindHoldButton(
     Box(
         modifier =
             modifier
-                .size(44.dp)
+                .size(36.dp)
                 .background(
-                    if (pressed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                    RoundedCornerShape(12.dp),
+                    if (pressed) androidx.compose.ui.graphics.Color(0xFF66666E) else androidx.compose.ui.graphics.Color(0xFF45454B),
+                    RoundedCornerShape(18.dp),
                 )
                 .semantics {
                     contentDescription = accessibilityLabel
@@ -85,7 +85,7 @@ internal fun NesRewindHoldButton(
     ) {
         Text(
             text = "⏪",
-            color = MaterialTheme.colorScheme.onSurface,
+            color = androidx.compose.ui.graphics.Color.White,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelMedium,
         )
