@@ -53,6 +53,7 @@ object RommDownloadVerification {
     private fun checkNesZip(file: File) {
         ZipInputStream(file.inputStream().buffered()).use { archive ->
             var files = 0
+            val entryNames = HashSet<String>()
             var roms = 0
             var total = 0L
             val buffer = ByteArray(16 * 1024)
@@ -61,6 +62,9 @@ object RommDownloadVerification {
                 files++
                 if (files > MAX_ENTRIES) throw IOException("NES ZIP has too many entries")
                 requireSafeEntryName(entry.name)
+                if (!entryNames.add(entry.name.replace('\\', '/'))) {
+                    throw IOException("NES ZIP contains duplicate entries")
+                }
                 if (!entry.isDirectory) {
                     val ext = entry.name.substringAfterLast('.', "").lowercase(Locale.ROOT)
                     if (ext == "nes" || ext == "fds") roms++
@@ -176,8 +180,10 @@ object RommDownloadVerification {
     private fun requireSafeEntryName(name: String) {
         val normalized = name.replace('\\', '/')
         val unsafe =
-            normalized.startsWith("/") ||
-                normalized.split('/').any { it == ".." } ||
+            normalized.isBlank() ||
+                normalized.startsWith("/") ||
+                Regex("^[A-Za-z]:").containsMatchIn(normalized) ||
+                normalized.trimEnd('/').split('/').any { it == ".." || it.isEmpty() } ||
                 name.any { it.isISOControl() } ||
                 name.length > 512
         if (unsafe) {
