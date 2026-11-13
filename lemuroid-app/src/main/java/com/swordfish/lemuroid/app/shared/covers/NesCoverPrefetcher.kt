@@ -1,6 +1,7 @@
 package com.swordfish.lemuroid.app.shared.covers
 
 import android.content.Context
+import android.os.SystemClock
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
@@ -34,7 +35,7 @@ class NesCoverPrefetcher(context: Context) {
         mutex.withLock {
             for (url in urls) {
                 if (url in loaded) continue
-                val now = System.currentTimeMillis()
+                val now = SystemClock.elapsedRealtime()
                 val failures = failedAttempts[url] ?: 0
                 if (!NesCoverRetryPolicy.shouldAttempt(failures, lastFailureAt[url], now)) continue
                 if (failures >= MAX_ATTEMPTS) {
@@ -62,7 +63,7 @@ class NesCoverPrefetcher(context: Context) {
                     // A transient offline launch must not permanently blacklist
                     // a cover for this session.
                     failedAttempts[url] = (failedAttempts[url] ?: 0) + 1
-                    lastFailureAt[url] = System.currentTimeMillis()
+                    lastFailureAt[url] = SystemClock.elapsedRealtime()
                 }
             }
         }
