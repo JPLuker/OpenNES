@@ -60,6 +60,7 @@ fun SettingsScreen(
             isSaveSyncSupported = state.isSaveSyncSupported,
             navController = navController,
         )
+        OpenNesSaveMigrationSettings()
     }
 }
 
