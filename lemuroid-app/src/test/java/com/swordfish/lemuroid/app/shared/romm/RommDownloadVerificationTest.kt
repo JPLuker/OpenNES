@@ -101,6 +101,26 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun rejectsDuplicateArchiveEntryNames() {
+        val archive = zipOf("game.nes" to nesBytes(), "a.txt" to byteArrayOf(1), "b.txt" to byteArrayOf(2))
+        val bytes = archive.readBytes()
+        val original = "b.txt".toByteArray()
+        val duplicate = "a.txt".toByteArray()
+        var changed = 0
+        for (index in 0..(bytes.size - original.size)) {
+            if (original.indices.all { offset -> bytes[index + offset] == original[offset] }) {
+                duplicate.copyInto(bytes, index)
+                changed++
+            }
+        }
+        org.junit.Assert.assertEquals(2, changed)
+        archive.writeBytes(bytes)
+        assertThrows(IOException::class.java) {
+            RommDownloadVerification.checkImportedRom(archive, "duplicate.zip")
+        }
+    }
+
+    @Test
     fun acceptsNormalDirectoryEntriesInRomZip() {
         RommDownloadVerification.checkImportedRom(
             zipOf("games/" to byteArrayOf(), "games/game.nes" to nesBytes()),
