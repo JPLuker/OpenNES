@@ -138,6 +138,9 @@ internal fun nesFaceAnchor(
     baseX: Float,
     geometry: TouchControllerSettingsManager.ButtonGeometry,
 ): Anchor<Id.Key> {
+    // Keep anchor geometry in PadKit's normalized dial range. Controller
+    // editor movement must be reflected in this same anchor so the rendered
+    // face and pointer hit target cannot drift apart.
     val x = (baseX + geometry.offsetX.coerceIn(-1f, 1f) * 0.30f + geometry.dragX / 96f).coerceIn(-1f, 1f)
     val y = (geometry.offsetY.coerceIn(-1f, 1f) * 0.40f + geometry.dragY / 96f).coerceIn(-1f, 1f)
     val size = (0.46f * geometry.size.coerceIn(0.75f, 1.25f)).coerceIn(0.34f, 0.58f)
