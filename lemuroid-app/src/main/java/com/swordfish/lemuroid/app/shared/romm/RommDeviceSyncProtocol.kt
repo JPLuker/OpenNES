@@ -7,8 +7,9 @@ import java.security.MessageDigest
 
 /**
  * Strict, read-only handling for the documented RomM 5.4 device-sync
- * negotiation shape. It deliberately does not register a device, negotiate
- * over HTTP, confirm server downloads, or perform ANY sync operation.
+ * negotiation shape. The separate RomM API adapter now supports explicit
+ * read-only comparison sessions, but this parser never initiates requests,
+ * confirms downloads, transfers bytes or performs ANY sync operation.
  *
  * The local archive journal uses SHA-256 for integrity. RomM's newer device
  * protocol separately requires an MD5 content_hash for negotiation. Never
