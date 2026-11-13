@@ -36,6 +36,19 @@ class NesFixMatchCoverTest {
     }
 
     @Test
+    fun meaningfulParenthesizedSubtitlesAreNotDiscarded() {
+        assertNull(NesFixMatchCover.choose("Batman (Return of the Joker)", listOf(entry("Batman (USA)"))))
+        assertNull(NesFixMatchCover.choose("Batman", listOf(entry("Batman (Return of the Joker) (USA)"))))
+        assertEquals(
+            "https://thumbnails.libretro.com/nes/Batman (Return of the Joker) (USA).png",
+            NesFixMatchCover.choose(
+                "Batman (Return of the Joker)",
+                listOf(entry("Batman (USA)"), entry("Batman (Return of the Joker) (USA)")),
+            ),
+        )
+    }
+
+    @Test
     fun plainUsaReleaseIsPreferredOverOtherRegionsAndRevisions() {
         val cover =
             NesFixMatchCover.choose(
