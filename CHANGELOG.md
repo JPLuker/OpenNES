@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **RomM ZIP path validation:** reject `.` directory segments in downloaded ROM and save archives, preventing alternate paths from bypassing duplicate-entry checks.
+
 - **RomM save archive validation:** reject empty or directory-only remote save ZIPs even when their content hash matches, so unusable backups cannot pass verification.
 
 - **RomM save archive integrity:** reject duplicate normalized ZIP paths (including backslash aliases and directory entries) before accepting a remote save hash. Added regression tests for ambiguous archive entries.
