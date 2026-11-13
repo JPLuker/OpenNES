@@ -24,7 +24,7 @@
 - [ ] **Play App Signing:** configure a private upload key and permanent production ID `com.jpluker.opennes`; never use or publish the repository debug key.
 - [ ] Google Play internal/closed testing, Data safety, privacy policy, content rating, permissions, Store listing, versionCode progression, crash/ANR and source-license compliance.
 - [ ] Audit third-party ROM/game imagery and screenshots used in the app/Store listing. Ship no commercial ROMs and do not use unlicensed Nintendo imagery as official app branding.
-- [ ] Provide verified explicit backup/export and import to migrate testers from `com.jpluker.opennes.debug`; Google Play's separately signed production package cannot update the debug app in place.
+- [ ] **Device-accept NES save migration:** explicit user-selected ZIP export/import for Casual `.srm` and FCEUmm save states is source implemented, with verified SHA-256 manifest, non-overwrite import, game-process locking and unit tests. Full debug-to-Play device round trip, restored game/ROM associations, power-failure recovery and non-data-loss acceptance are unverified; the separate production package cannot update `.debug` in place.
 - [ ] **No in-app updater, self-download or unknown-sources APK installation** in public builds; Play Store manages updates. The rolling GitHub APK remains developer-only.
 
 ## Static package validation
