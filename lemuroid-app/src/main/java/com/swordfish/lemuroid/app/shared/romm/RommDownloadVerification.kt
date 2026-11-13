@@ -13,6 +13,7 @@ import java.util.zip.ZipInputStream
  */
 object RommDownloadVerification {
     private const val MAX_ROM_UNCOMPRESSED = 64L * 1024L * 1024L
+    private const val MIN_INES_HEADER_BYTES = 16L
     private const val MAX_SAVE_UNCOMPRESSED = 16L * 1024L * 1024L
     private const val MAX_ENTRIES = 256
     private val MD5_PATTERN = Regex("[a-f0-9]{32}")
@@ -25,6 +26,9 @@ object RommDownloadVerification {
     ) {
         when (name.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
             "nes" -> {
+                if (file.length() < MIN_INES_HEADER_BYTES || file.length() > MAX_ROM_UNCOMPRESSED) {
+                    throw IOException("Downloaded NES file has an invalid size")
+                }
                 file.inputStream().use { stream ->
                     val signature = ByteArray(4)
                     val amount = stream.read(signature)
@@ -83,7 +87,8 @@ object RommDownloadVerification {
                         }
                     }
                     if (ext == "nes" && (
-                            headerLength != 4 ||
+                            entryLength < MIN_INES_HEADER_BYTES ||
+                                headerLength != 4 ||
                                 header[0] != 0x4E.toByte() ||
                                 header[1] != 0x45.toByte() ||
                                 header[2] != 0x53.toByte() ||
