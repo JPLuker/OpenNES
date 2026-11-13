@@ -51,6 +51,28 @@ class RommCatalogueCodecTest {
     }
 
     @Test
+    fun invalidDigestCannotProduceAnUnreadableOfflineCatalogue() {
+        assertNull(
+            RommCatalogueCodec.encode(
+                listOf(rom().copy(md5 = "invalid")),
+                source,
+                revision,
+                1_000_000L,
+            ),
+        )
+        assertNull(
+            RommCatalogueCodec.encode(
+                listOf(rom().copy(md5 = "A".repeat(32))),
+                source,
+                revision,
+                1_000_000L,
+            ),
+        )
+        val withoutDigest = RommCatalogueCodec.encode(listOf(rom().copy(md5 = null)), source, revision, 1_000_000L)!!
+        assertNull(RommCatalogueCodec.decode(withoutDigest, source, revision, 2_000_000L)!!.games.single().md5)
+    }
+
+    @Test
     fun wrongAccountOrServerCannotReadAnotherAccountCatalogue() {
         val bytes = RommCatalogueCodec.encode(listOf(rom()), source, revision, 1_000_000L)!!
         assertNull(RommCatalogueCodec.decode(bytes, source, "another-account", 2_000_000L))
