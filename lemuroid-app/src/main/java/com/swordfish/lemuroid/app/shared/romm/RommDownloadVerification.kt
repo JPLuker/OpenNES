@@ -176,8 +176,10 @@ object RommDownloadVerification {
     private fun requireSafeEntryName(name: String) {
         val normalized = name.replace('\\', '/')
         val unsafe =
-            normalized.startsWith("/") ||
-                normalized.split('/').any { it == ".." } ||
+            normalized.isBlank() ||
+                normalized.startsWith("/") ||
+                Regex("^[A-Za-z]:").containsMatchIn(normalized) ||
+                normalized.split('/').any { it == ".." || it.isEmpty() } ||
                 name.any { it.isISOControl() } ||
                 name.length > 512
         if (unsafe) {
