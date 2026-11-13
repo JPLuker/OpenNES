@@ -278,8 +278,8 @@ fun HomeScreen(
                 onResolveFixMatch = { candidateId, onResult ->
                     viewModel.resolveFixMatch(candidateId, onResult)
                 },
-                onApplyFixMatch = { match, onApplied ->
-                    viewModel.applyFixMatch(game.id, match, onApplied)
+                onApplyFixMatch = { match, title, onApplied ->
+                    viewModel.applyFixMatch(game.id, match, title, onApplied)
                 },
             )
         }
@@ -852,7 +852,7 @@ private fun GameDetailsSheet(
     onApplyOnline: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
     onSearchFixMatch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Job,
     onResolveFixMatch: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Job,
-    onApplyFixMatch: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
+    onApplyFixMatch: (WikidataNesMetadataSource.Result.Match, String, (Game?) -> Unit) -> Unit,
 ) {
     var fixMatchExpanded by remember(game.id) { mutableStateOf(false) }
     var searchExpanded by remember(game.id) { mutableStateOf(false) }
@@ -1272,7 +1272,7 @@ private fun FixMatchSection(
     game: Game,
     onSearch: (String, (WikidataNesMetadataSource.CandidateResults) -> Unit) -> Job,
     onResolve: (String, (WikidataNesMetadataSource.Result) -> Unit) -> Job,
-    onApply: (WikidataNesMetadataSource.Result.Match, (Game?) -> Unit) -> Unit,
+    onApply: (WikidataNesMetadataSource.Result.Match, String, (Game?) -> Unit) -> Unit,
     onGameUpdated: (Game) -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -1585,7 +1585,7 @@ private fun FixMatchSection(
                     onClick = {
                         applying = true
                         status = null
-                        onApply(resolved) { updated ->
+                        onApply(resolved, chosen.title) { updated ->
                             applying = false
                             if (updated == null) {
                                 status = R.string.opennes_online_apply_failed

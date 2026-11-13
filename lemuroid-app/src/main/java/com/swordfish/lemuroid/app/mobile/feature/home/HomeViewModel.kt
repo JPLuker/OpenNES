@@ -312,19 +312,23 @@ class HomeViewModel(
     fun applyFixMatch(
         gameId: Int,
         candidate: WikidataNesMetadataSource.Result.Match,
+        selectedTitle: String,
         onResult: (Game?) -> Unit,
     ) {
         viewModelScope.launch {
             val updated =
                 withContext(Dispatchers.IO) {
                     runCatching {
-                        if (!candidate.entityId.matches(Regex("Q[1-9][0-9]*"))) {
+                        if (!candidate.entityId.matches(Regex("Q[1-9][0-9]*")) ||
+                            selectedTitle.trim().length !in 1..120
+                        ) {
                             return@runCatching null
                         }
                         val dao = retrogradeDb.gameDao()
                         if (
                             dao.applySelectedOnlineMatch(
                                 gameId = gameId,
+                                selectedTitle = selectedTitle.trim(),
                                 genre = candidate.genre,
                                 releaseYear = candidate.releaseYear,
                                 description = candidate.description?.takeIf { it.isNotBlank() },

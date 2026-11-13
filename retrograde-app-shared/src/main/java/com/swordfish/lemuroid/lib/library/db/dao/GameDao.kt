@@ -200,13 +200,14 @@ interface GameDao {
 
     /**
      * Explicit Fix Match confirmation may replace only the game's editorial
-     * metadata and provenance. The ROM identity, cover art, title, favorite,
-     * save data, and playtime stay untouched.
+     * metadata, provenance and the selected library display name. The ROM
+     * identity, indexed title, cover art, favorites, saves and playtime remain unchanged.
      */
     @Query(
         """
         UPDATE games
-        SET genre = COALESCE(:genre, genre),
+        SET customName = :selectedTitle,
+            genre = COALESCE(:genre, genre),
             releaseYear = COALESCE(:releaseYear, releaseYear),
             description = COALESCE(:description, description),
             wikidataEntityId = :sourceId,
@@ -219,6 +220,7 @@ interface GameDao {
     )
     suspend fun applySelectedOnlineMatch(
         gameId: Int,
+        selectedTitle: String,
         genre: String?,
         releaseYear: Int?,
         description: String?,
