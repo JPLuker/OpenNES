@@ -4,6 +4,7 @@ import android.content.Context
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -30,6 +31,7 @@ internal object RommLibraryCatalog {
         val queuedIds: Set<Int> = emptySet(),
         val awaitingIndexIds: Set<Int> = emptySet(),
         val error: String? = null,
+        val serverReachable: Boolean? = null,
         val downloadError: String? = null,
         val transferProgress: Map<Int, RommApiClient.ImportProgress> = emptyMap(),
         val downloadFailures: Map<Int, String> = emptyMap(),
@@ -102,6 +104,41 @@ internal object RommLibraryCatalog {
         return current.games.firstOrNull {
             it.id == -game.id && it.fileName == game.fileName
         }
+    }
+
+    /**
+     * Lightweight foreground-only reachability probe. Uses the authenticated
+     * RomM account endpoint, not an ICMP ping or a full library rescan.
+     * No ROMs, saves or catalogues are transferred by this check.
+     */
+    suspend fun checkConnectivity(context: Context) {
+        val store = RommConnectionStore(context.applicationContext)
+        val source = RommServerIdentity.fingerprint(store.configuredServer()) ?: return
+        val revision = store.credentialRevision() ?: return
+        if (!store.hasSavedToken()) return
+        val connection = withContext(Dispatchers.IO) { store.load() } ?: return
+        if (RommServerIdentity.fingerprint(connection.serverUrl) != source) return
+        val reachable =
+            withTimeoutOrNull(10_000L) {
+                try {
+                    RommApiClient().checkAccountProfile(connection)
+                    true
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    false
+                }
+            } ?: false
+        if (RommServerIdentity.fingerprint(store.configuredServer()) != source ||
+            store.credentialRevision() != revision
+        ) {
+            return
+        }
+        val needsRefresh = reachable && snapshot.value.source == source && snapshot.value.error != null
+        snapshot.update { current ->
+            if (current.source == source) current.copy(serverReachable = reachable) else current
+        }
+        if (needsRefresh) refresh(context, force = true)
     }
 
     suspend fun refresh(
@@ -189,6 +226,7 @@ internal object RommLibraryCatalog {
                         games = games,
                         refreshing = false,
                         error = null,
+                        serverReachable = true,
                         showingOfflineCache = false,
                         lastSuccessfulRefreshAt = finishedAt,
                     )
@@ -206,6 +244,7 @@ internal object RommLibraryCatalog {
                     snapshot.value.copy(
                         refreshing = false,
                         error = "RomM is unavailable. Cached games remain visible; downloads need a connection.",
+                        serverReachable = false,
                         showingOfflineCache = snapshot.value.games.isNotEmpty(),
                     )
             }

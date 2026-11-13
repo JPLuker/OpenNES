@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **0.1.7 device-test correction batch:** controller drag editing now offers movable real D-pad/A-B groups instead of independent invisible D-pad targets; source keeps input/visual groups on the same PadKit translation path. Broken/slow cover requests show a readable fallback instead of an empty black box, without crossfade flicker.
+- **RomM offline UX:** optional library-only 60-second authenticated health checks update remote-only tile status without blocking local games; remote downloads use a primary Download action and a retryable failure dialog. RomM server/live transfers are not part of device acceptance.
+- **Fix Match:** applying a verified manual NES candidate now updates the visible library display name while leaving the underlying indexed title/ROM file, saves, artwork, favorites and playtime intact. Real-device acceptance remains pending.
+
+
 - **M5 shortcut resilience:** external game-launch links are parsed as bounded positive ASCII decimal IDs, rejecting malformed, missing, overflowing, signed or stale IDs without a process crash. Result processing is lifecycle-bound instead of detached GlobalScope, and coroutine cancellation is no longer swallowed. A physical shortcut/URI acceptance case is documented.
 
 - **M5 game launch lifecycle:** Core preference resolution and emulator Activity dispatch now run in the originating lifecycle-owned main-thread coroutine rather than a detached GlobalScope. The app declines launches from destroyed Activities, propagates cancellation, shows a typed failure for unexpected core configuration errors without logging ROM paths and restores background maintenance work if dispatch did not complete. This eliminates a potential rotation/backgrounding race at launch; device acceptance remains required.

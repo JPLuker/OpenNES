@@ -2,6 +2,15 @@
 
 The current rolling APK is a **development preview**, not a release candidate. A passed workflow proves Kotlin source formatting, JVM regressions, Android compilation, native bridge exports, NES-only packaging, version identity and SHA-256 publication. It does **not** prove gameplay stability, safe upgrades, actual RetroAchievements awards or compatibility with the user's live RomM server.
 
+## November 13 — 0.1.6 on-device results and 0.1.7 source fixes
+
+Device: Pixel 9 Pro; baseline debug 0.1.6-dev.1066, source `6ef95bc4af68`.
+**Passed:** app launch and upgrade without losing settings/saves, Zelda and another NES ROM with audio/video, pause/quit/relaunch, game switching, orientation, multitouch A/B+D-pad, tilt option, favorites, recent games, playtime, and concurrent library scanning.
+**Failed:** drag editor moved a label but not the visible graphic and had limited travel; some RomM artwork appeared black or flickered; remote download timeout had poor retry/error presentation; Fix Match choice (Zelda → Zelda II) did not visibly rename the selected game.
+**Not accepted:** physical controller repositioning with real hitboxes, cover flicker regression, metadata selection, RomM reachability, actual save/rewind/RetroAchievements/Zapper acceptance, device stability. RomM server testing deferred while away from home.
+
+The 0.1.7 patch is a **source candidate**, not proof of a working phone build. Install over the existing debug APK without uninstalling or clearing saves. Check that the D-pad and A/B group graphics **and touch input** move together, that known covers persist/fallback and stop flickering, that offline remote games are dimmed without affecting local ROMs, that a failed download offers an explicit retry, and that Fix Match visibly changes the library title without changing the ROM launched.
+
 ## Automated checks
 
 Run locally with the Android SDK, JDK 17 and recursive submodules:

@@ -87,6 +87,10 @@ class HomeViewModel(
         viewModelScope.launch { RommLibraryCatalog.refresh(context, force) }
     }
 
+    fun checkRomMConnectivity() {
+        viewModelScope.launch { RommLibraryCatalog.checkConnectivity(context) }
+    }
+
     fun downloadFromRomM(rom: RommApiClient.Rom) {
         viewModelScope.launch { RommLibraryCatalog.download(context, rom) }
     }

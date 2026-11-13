@@ -76,6 +76,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
@@ -149,6 +150,7 @@ fun HomeScreen(
         if (event == Lifecycle.Event.ON_RESUME) {
             viewModel.updatePermissions(context.applicationContext)
             viewModel.refreshRomMLibrary()
+            viewModel.checkRomMConnectivity()
         }
     }
 
@@ -180,7 +182,14 @@ fun HomeScreen(
                 .sortedBy { it.displayName().lowercase(java.util.Locale.ROOT) }
         }
 
-    LaunchedEffect(Unit) { viewModel.refreshRomMLibrary() }
+    LaunchedEffect(Unit) {
+        viewModel.refreshRomMLibrary()
+        // Only while the library is visible; no background connection service.
+        while (true) {
+            delay(60_000L)
+            viewModel.checkRomMConnectivity()
+        }
+    }
     LaunchedEffect(localFileNames, romm.awaitingIndexIds) {
         RommLibraryCatalog.reconcileIndexed(localFileNames)
         if (romm.awaitingIndexIds.isNotEmpty()) {
@@ -494,6 +503,7 @@ private fun OpenNesLibrary(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
+                                        .alpha(if (game.id < 0 && romm.serverReachable == false) 0.55f else 1f)
                                         .clickable { onGameDetailsClick(game) },
                             )
                             Text(
@@ -505,7 +515,11 @@ private fun OpenNesLibrary(
                             )
                             if (game.id < 0) {
                                 Text(
-                                    stringResource(R.string.opennes_romm_download),
+                                    if (romm.serverReachable == false) {
+                                        "RomM offline"
+                                    } else {
+                                        stringResource(R.string.opennes_romm_download)
+                                    },
                                     color = LibraryColors.muted,
                                     fontSize = 11.sp,
                                 )
