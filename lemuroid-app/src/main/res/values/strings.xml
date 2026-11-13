@@ -54,7 +54,6 @@
 
     <string name="settings_title_open_cores_selection">Change Cores</string>
     <string name="settings_description_open_cores_selection">Select which core is associated to a system</string>
-    <string name="settings_core_selection_ds_info">DeSmuME is deprecated and will be removed in one of the next updates. Save your progress inside the game, then switch to melonDS. In-game saves will load automatically in melonDS, but save states can only be used with the core that created them.</string>
 
     <string name="settings_title_display_bios_info">BIOS</string>
     <string name="settings_description_display_bios_info">Display detected and supported BIOS files</string>
