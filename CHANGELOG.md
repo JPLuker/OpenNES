@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Artwork cancellation safety:** background cover prefetch now propagates coroutine cancellation immediately instead of treating it as a failed download and consuming a retry. This is source hardening pending CI and device acceptance.
+
 - **Artwork retry recovery:** failed cover prefetches now retry after a two-minute cooldown rather than being permanently skipped after three failures in one app session. Regression tests cover cooldown boundaries and clock rollback.
 
 - **RomM offline cache integrity:** reject malformed MD5 hashes before writing the account-bound catalogue; previously such a write could succeed but the same snapshot could not be decoded after restart. Regression tests cover malformed, uppercase and absent hashes.
