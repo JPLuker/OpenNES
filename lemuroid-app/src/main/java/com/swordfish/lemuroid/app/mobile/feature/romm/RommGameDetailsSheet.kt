@@ -140,6 +140,35 @@ internal fun RommGameDetailsSheet(
                     }
                 }
 
+                // Keep the primary action directly below the title, never after
+                // a long metadata description.
+                if (installedGame != null) {
+                    Button(
+                        onClick = { onPlay(installedGame) },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = red,
+                                contentColor = appColors.onAccent,
+                            ),
+                    ) {
+                        Text(stringResource(R.string.opennes_play))
+                    }
+                } else if (!indexing) {
+                    Button(
+                        onClick = onDownload,
+                        enabled = hasRomFolder && !downloading && !queued,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = red,
+                                contentColor = appColors.onAccent,
+                            ),
+                    ) {
+                        Text(stringResource(R.string.opennes_romm_download))
+                    }
+                }
+
                 Text(
                     rom.description
                         ?.takeIf { it.isNotBlank() }
@@ -186,32 +215,7 @@ internal fun RommGameDetailsSheet(
                     }
                 }
 
-                if (installedGame != null) {
-                    Button(
-                        onClick = { onPlay(installedGame) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = red,
-                                contentColor = appColors.onAccent,
-                            ),
-                    ) {
-                        Text(stringResource(R.string.opennes_play))
-                    }
-                } else if (!indexing) {
-                    Button(
-                        onClick = onDownload,
-                        enabled = hasRomFolder && !downloading && !queued,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = red,
-                                contentColor = appColors.onAccent,
-                            ),
-                    ) {
-                        Text(stringResource(R.string.opennes_romm_download))
-                    }
-                }
+
             }
 
             if (busy) {

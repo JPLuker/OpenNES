@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -39,6 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -140,7 +142,41 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
         setContent {
             val navController = rememberNavController()
-            MainScreen(navController)
+            var showingStartup by remember { mutableStateOf(savedInstanceState == null) }
+            LaunchedEffect(showingStartup) {
+                if (showingStartup) {
+                    // Bounded visual handoff, never a network-dependent gate.
+                    delay(550L)
+                    showingStartup = false
+                }
+            }
+            Box(modifier = Modifier.fillMaxSize()) {
+                MainScreen(navController)
+                if (showingStartup) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = ComposeColor(0xFF0F1013),
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                "OpenNES",
+                                color = ComposeColor.White,
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            CircularProgressIndicator(
+                                modifier = Modifier.padding(top = 24.dp).size(26.dp),
+                                color = ComposeColor(0xFFD77B80),
+                                strokeWidth = 2.dp,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 

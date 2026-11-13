@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **Next development batch (device acceptance pending):** add a bounded OpenNES cold-start loading surface while Compose builds the first screen, without waiting on RomM or all cover downloads. Move RomM Download/Play immediately after the cover/title header, before lengthy descriptions, using the same primary action position for installed and remote games.
+
+
 - **0.1.7 device-test correction batch:** controller drag editing now offers movable real D-pad/A-B groups instead of independent invisible D-pad targets; source keeps input/visual groups on the same PadKit translation path. Broken/slow cover requests show a readable fallback instead of an empty black box, without crossfade flicker.
 - **RomM offline UX:** optional library-only 60-second authenticated health checks update remote-only tile status without blocking local games; remote downloads use a primary Download action and a retryable failure dialog. RomM server/live transfers are not part of device acceptance.
 - **Fix Match:** applying a verified manual NES candidate now updates the visible library display name while leaving the underlying indexed title/ROM file, saves, artwork, favorites and playtime intact. Real-device acceptance remains pending.
