@@ -101,6 +101,8 @@ class NesControlDragSettingsTest {
             NesEditableControl.START -> settings.startButton.dragX
             NesEditableControl.SELECT -> settings.selectButton.dragX
             NesEditableControl.MENU -> settings.menuButton.dragX
+            NesEditableControl.REWIND -> settings.rewindButton.dragX
+            NesEditableControl.FAST_FORWARD -> settings.fastForwardButton.dragX
         }
 
     private fun offsetY(
@@ -119,5 +121,7 @@ class NesControlDragSettingsTest {
             NesEditableControl.START -> settings.startButton.dragY
             NesEditableControl.SELECT -> settings.selectButton.dragY
             NesEditableControl.MENU -> settings.menuButton.dragY
+            NesEditableControl.REWIND -> settings.rewindButton.dragY
+            NesEditableControl.FAST_FORWARD -> settings.fastForwardButton.dragY
         }
 }
