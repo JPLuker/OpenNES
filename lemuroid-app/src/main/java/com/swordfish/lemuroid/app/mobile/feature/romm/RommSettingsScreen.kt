@@ -927,6 +927,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                             }
                             configured = true
                             signedInAs = user.username
+                            registeredDeviceId = null
                             page = null
                             remoteSaves = null
                             selectedSaveGame = null
