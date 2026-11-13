@@ -32,6 +32,12 @@ CI performs the same relevant checks on every `master` push and verifies the act
 
 **Signed Play workflow:** Once the app owner supplies a protected private key and pinned fingerprint, run only the manual signed-AAB validation workflow after environment approval. Verify the output has production package ID, separately monotonic Play `versionCode`, real signing, only FCEUmm, no bundled game content, and passes 16 KiB native checks. Actual Google Play installation and backup/import from `.debug` remain untested.
 
+## November 12 — Manual debug-to-Play NES save migration (source candidate)
+
+In OpenNES Debug Settings → Transfer NES saves, export the archive to a user-selected ZIP document **after closing the running game**. Validate the export contains the expected SRAM and FCEUmm state entries and a hash manifest, but no ROMs, Hardcore saves, account credentials or identifiers. Keep the original debug app intact. In the separately signed Play build, import through the same Settings section, review the count, and confirm. Existing production filenames must remain byte-for-byte unchanged; new files must match the source SHA-256 manifest. Reimport the same archive to verify every existing destination file is skipped.
+
+Test cancellation, malicious or corrupt ZIP, missing file, unavailable storage, app backgrounding, reboot and error recovery; refuse export/import while the emulator process lock is held. Verify newly imported SRAM and states load correctly for the same matching legally obtained ROMs after the Play app has indexed them. Source tests cannot substitute for actual migration across different Android package IDs. Do not uninstall the original debug app until all saves are verified in the production app.
+
 ## Latest device-test checklist (current functionality, not a claim of completion)
 
 Only the next applicable items should be requested in a test round; never send the whole list as a playtest request.
