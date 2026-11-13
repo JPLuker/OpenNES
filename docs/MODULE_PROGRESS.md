@@ -4,6 +4,11 @@ Updated: 2026-11-12
 
 This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The last verified feature baseline passed [CI run 43323713762](https://github.com/JPLuker/OpenNES/actions/runs/43323713762), including source formatting, JVM tests, native/Android compilation, NES-only inspection and rolling APK publication. The latest M5 save synchronization and M8 package/build guards must pass their exact-commit CI before being called verified. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.
 
+## November 12 — Explicit debug-to-Play save migration source candidate
+
+- **M8 source:** one user-initiated, ZIP-based Casual NES SRAM/FCEUmm state export/import is now reachable from Settings, without ROMs, user credentials, Hardcore files or app preferences. The archive has a versioned SHA-256 manifest, bounded entry/file/total sizes, safe paths, double-read fingerprinting, immutable staging and only-new-file commit. A confirmation is required. Existing destination save files are never overwritten, and the shared game-process lock prevents copying while the NES core is active.
+- **Validation:** JVM tests cover round trip, metadata, content tampering, malicious archive entries, existing-file preservation and cancellation; source/CI and a real export from the debug package followed by import into the Play package remain acceptance gates. This cannot migrate complete app settings or achievements, and cannot be advertised as Play upgrade until device acceptance.
+
 ## November 12 — Device registration and release-signing source batch
 
 - **M7 new source:** RomM 5.4 device registration is explicit, token-revision/account/server-bound, uses a private pseudonymous hostname and no-backup registered device ID, and requires `devices.write`. A token rotation clears the registered binding. The HTTP call is bounded and cancellable with no redirect; no save bytes move.
