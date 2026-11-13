@@ -138,6 +138,38 @@ class RommDownloadVerificationTest {
         }
     }
 
+    @Test
+    fun verifiesStandaloneSaveHashAndRejectsMismatch() {
+        val save = temporary.newFile("game.sav")
+        save.writeBytes(byteArrayOf(1, 2, 3, 4))
+        val md5 =
+            java.security.MessageDigest.getInstance("MD5")
+                .digest(save.readBytes())
+                .joinToString("") { (it.toInt() and 0xFF).toString(16).padStart(2, '0') }
+        RommDownloadVerification.checkRemoteSaveHash(save, md5)
+        assertThrows(IOException::class.java) {
+            RommDownloadVerification.checkRemoteSaveHash(save, "0".repeat(32))
+        }
+    }
+
+    @Test
+    fun verifiesZipSaveHashFromUncompressedEntryContents() {
+        val content = byteArrayOf(10, 20, 30)
+        val archive = zipOf("save.sav" to content)
+        val entryMd5 =
+            java.security.MessageDigest.getInstance("MD5")
+                .digest(content)
+                .joinToString("") { (it.toInt() and 0xFF).toString(16).padStart(2, '0') }
+        val expected =
+            java.security.MessageDigest.getInstance("MD5")
+                .digest("save.sav:$entryMd5".toByteArray(Charsets.UTF_8))
+                .joinToString("") { (it.toInt() and 0xFF).toString(16).padStart(2, '0') }
+        RommDownloadVerification.checkRemoteSaveHash(archive, expected)
+        assertThrows(IOException::class.java) {
+            RommDownloadVerification.checkRemoteSaveHash(archive, "0".repeat(32))
+        }
+    }
+
     private fun zipOf(vararg entries: Pair<String, ByteArray>): File {
         val zip = temporary.newFile("input-${nextZip++}.zip")
         ZipOutputStream(zip.outputStream()).use { output ->
