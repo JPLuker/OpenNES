@@ -1314,7 +1314,11 @@ private fun NesTransportControls(
                         .clickable(enabled = !editing, onClick = onFastForward),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("⏩", color = androidx.compose.ui.graphics.Color.White, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
+                Text(
+                    "⏩",
+                    color = androidx.compose.ui.graphics.Color.White,
+                    style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
+                )
             }
         }
     }
