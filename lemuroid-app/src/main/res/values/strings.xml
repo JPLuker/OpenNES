@@ -461,6 +461,12 @@
     <string name="opennes_support_description">Copies app version, Android version and CPU architecture only. No game titles, file paths, accounts or credentials.</string>
     <string name="opennes_support_copied">Diagnostic report copied to clipboard.</string>
     <string name="opennes_romm_title">RomM library</string>
+    <string name="opennes_romm_device_title">Device sync setup</string>
+    <string name="opennes_romm_device_description">Register this installation with your RomM account. The token needs devices.write permission. Registration never transfers or replaces saves.</string>
+    <string name="opennes_romm_device_unregistered">Not registered. Save sync is not enabled.</string>
+    <string name="opennes_romm_device_registered">Device registered. Save sync remains disabled until transfer verification is complete.</string>
+    <string name="opennes_romm_device_register">Register device</string>
+    <string name="opennes_romm_device_recheck">Verify device registration</string>
     <string name="opennes_romm_settings_description">Connect to a RomM server and import NES games</string>
     <string name="opennes_romm_explanation">Connect to your own RomM server to browse and manually import NES or Famicom games. Your ROM folder must be selected first.</string>
     <string name="opennes_romm_server">RomM server URL</string>
