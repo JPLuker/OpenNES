@@ -2,28 +2,28 @@ package com.swordfish.lemuroid.app.mobile.feature.game
 
 import android.graphics.RectF
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -37,22 +37,21 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -61,6 +60,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -80,29 +80,29 @@ import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelTouchContro
 import com.swordfish.lemuroid.app.shared.settings.HapticFeedbackMode
 import com.swordfish.lemuroid.lib.controller.ControllerConfig
 import com.swordfish.touchinput.controller.R
+import com.swordfish.touchinput.radial.layouts.LocalNesControlBoundsReporter
+import com.swordfish.touchinput.radial.layouts.LocalNesDpadEditMode
+import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
+import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
+import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
+import com.swordfish.touchinput.radial.layouts.NesEditableControl
+import com.swordfish.touchinput.radial.layouts.NESLandscapeLeft
+import com.swordfish.touchinput.radial.layouts.NESLandscapeRight
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalNesControllerPalette
 import com.swordfish.touchinput.radial.NesColorPart
 import com.swordfish.touchinput.radial.NesControllerAppearanceStore
 import com.swordfish.touchinput.radial.NesControllerPresets
-import com.swordfish.touchinput.radial.layouts.LocalNesControlBoundsReporter
-import com.swordfish.touchinput.radial.layouts.LocalNesDpadEditMode
-import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
-import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
-import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
-import com.swordfish.touchinput.radial.layouts.NESLandscapeLeft
-import com.swordfish.touchinput.radial.layouts.NESLandscapeRight
-import com.swordfish.touchinput.radial.layouts.NesEditableControl
 import com.swordfish.touchinput.radial.rememberNesControllerAppearance
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import com.swordfish.touchinput.radial.ui.LemuroidButtonPressFeedback
-import gg.padkit.PadKit
 import gg.padkit.config.HapticFeedbackType
 import gg.padkit.inputstate.InputState
-import kotlinx.coroutines.delay
+import gg.padkit.PadKit
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 @Composable
 fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
@@ -1270,10 +1270,12 @@ private fun NesTransportControls(
         defaultX: Float,
         content: @Composable (Modifier) -> Unit,
     ) {
-        val x = (defaultX + geometry.dragX * density.density)
-            .coerceIn(safeLeft, (fullBounds.width - safeRight - buttonPx).coerceAtLeast(safeLeft))
-        val y = (menuBounds.center.y - fullBounds.top - buttonPx / 2f + geometry.dragY * density.density)
-            .coerceIn(safeTop, (fullBounds.height - safeBottom - buttonPx).coerceAtLeast(safeTop))
+        val x =
+            (defaultX + geometry.dragX * density.density)
+                .coerceIn(safeLeft, (fullBounds.width - safeRight - buttonPx).coerceAtLeast(safeLeft))
+        val y =
+            (menuBounds.center.y - fullBounds.top - buttonPx / 2f + geometry.dragY * density.density)
+                .coerceIn(safeTop, (fullBounds.height - safeBottom - buttonPx).coerceAtLeast(safeTop))
         content(
             Modifier
                 .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
@@ -1303,8 +1305,9 @@ private fun NesTransportControls(
             defaultX = menuBounds.right - fullBounds.left + gapPx,
         ) { modifier ->
             Box(
-                modifier = modifier
-                    .background(
+                modifier =
+                    modifier
+                        .background(
                         androidx.compose.material3.MaterialTheme.colorScheme.surface,
                         androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     )
