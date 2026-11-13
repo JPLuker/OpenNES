@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -24,7 +25,9 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,11 +63,10 @@ internal fun RommGameDetailsSheet(
     installedGame: Game? = null,
     onDismiss: () -> Unit,
     onDownload: () -> Unit,
-    onRetryConnection: () -> Unit = {},
     onPlay: (Game) -> Unit = {},
 ) {
     val context = LocalContext.current
-    var offlinePrompt by remember(rom.id) { mutableStateOf(false) }
+    var dismissedFailure by remember(rom.id) { mutableStateOf<String?>(null) }
     val progress = catalog.transferProgress[rom.id]
     val queued = rom.id in catalog.queuedIds
     val downloading = rom.id in catalog.downloadingIds
@@ -72,6 +74,9 @@ internal fun RommGameDetailsSheet(
     val delayed = rom.id in catalog.indexingDelayedIds
     val busy = installedGame == null && (queued || downloading || (indexing && !delayed))
     val error = catalog.downloadFailures[rom.id]
+    LaunchedEffect(queued, downloading) {
+        if (queued || downloading) dismissedFailure = null
+    }
     val appColors = com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors.current
     val foreground = appColors.foreground
     val muted = appColors.muted
@@ -167,19 +172,6 @@ internal fun RommGameDetailsSheet(
                 if (installedGame == null && error != null) {
                     Text(error, color = red, fontSize = 13.sp)
                 }
-                if (offlinePrompt && installedGame == null) {
-                    Text(
-                        stringResource(R.string.opennes_romm_download_offline),
-                        color = foreground,
-                        fontSize = 13.sp,
-                    )
-                    OutlinedButton(onClick = {
-                        offlinePrompt = false
-                        onRetryConnection()
-                    }) {
-                        Text(stringResource(R.string.opennes_romm_retry_connection))
-                    }
-                }
                 if (installedGame == null && delayed) {
                     Text(
                         stringResource(R.string.opennes_romm_indexing_delayed),
@@ -208,9 +200,7 @@ internal fun RommGameDetailsSheet(
                     }
                 } else if (!indexing) {
                     Button(
-                        onClick = {
-                            if (catalog.error != null) offlinePrompt = true else onDownload()
-                        },
+                        onClick = onDownload,
                         enabled = hasRomFolder && !downloading && !queued,
                         modifier = Modifier.fillMaxWidth(),
                         colors =
@@ -301,5 +291,27 @@ internal fun RommGameDetailsSheet(
                 }
             }
         }
+    }
+    if (error != null && dismissedFailure != error) {
+        AlertDialog(
+            onDismissRequest = { dismissedFailure = error },
+            title = { Text("Download failed") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        dismissedFailure = error
+                        onDownload()
+                    },
+                ) {
+                    Text("Retry download")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { dismissedFailure = error }) {
+                    Text("Close")
+                }
+            },
+        )
     }
 }

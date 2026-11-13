@@ -233,7 +233,6 @@ fun HomeScreen(
                     },
                 onDismiss = { selectedGame = null },
                 onDownload = { viewModel.downloadFromRomM(remote) },
-                onRetryConnection = { viewModel.refreshRomMLibrary(force = true) },
                 onPlay = {
                     selectedGame = null
                     onGameClick(it)
@@ -2067,6 +2066,7 @@ fun GameCover(
                         memoryCacheKey(key)
                         placeholderMemoryCacheKey(key)
                     }
+                    crossfade(false)
                 }
                 .listener(
                     onSuccess = { _, _ ->
@@ -2086,9 +2086,9 @@ fun GameCover(
         // Only titles genuinely missing cover data should show a title
         // placeholder. Known URLs display the previous cached artwork or
         // the neutral box surface while loading, without a title-card flash.
-        placeholder = if (hasKnownArtwork) null else fallbackPainter,
+        placeholder = fallbackPainter,
         fallback = fallbackPainter,
-        error = if (romArtwork != null && artworkUrl != romArtwork) null else fallbackPainter,
+        error = fallbackPainter,
     )
 }
 

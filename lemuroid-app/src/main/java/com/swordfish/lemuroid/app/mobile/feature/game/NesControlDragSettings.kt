@@ -24,6 +24,11 @@ internal object NesControlDragSettings {
                     leftDragX = adjust(settings.leftDragX, deltaXdp),
                     leftDragY = adjust(settings.leftDragY, deltaYdp),
                 )
+            NesEditableControl.FACE_BUTTONS ->
+                settings.copy(
+                    rightDragX = adjust(settings.rightDragX, deltaXdp),
+                    rightDragY = adjust(settings.rightDragY, deltaYdp),
+                )
             NesEditableControl.DPAD_UP ->
                 settings.copy(
                     individualDpadHitboxes = true,

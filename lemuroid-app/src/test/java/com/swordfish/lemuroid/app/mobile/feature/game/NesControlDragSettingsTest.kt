@@ -54,6 +54,7 @@ class NesControlDragSettingsTest {
     ): Float =
         when (control) {
             NesEditableControl.DPAD -> settings.leftDragX
+            NesEditableControl.FACE_BUTTONS -> settings.rightDragX
             NesEditableControl.DPAD_UP -> settings.dpadUp.dragX
             NesEditableControl.DPAD_DOWN -> settings.dpadDown.dragX
             NesEditableControl.DPAD_LEFT -> settings.dpadLeft.dragX
@@ -71,6 +72,7 @@ class NesControlDragSettingsTest {
     ): Float =
         when (control) {
             NesEditableControl.DPAD -> settings.leftDragY
+            NesEditableControl.FACE_BUTTONS -> settings.rightDragY
             NesEditableControl.DPAD_UP -> settings.dpadUp.dragY
             NesEditableControl.DPAD_DOWN -> settings.dpadDown.dragY
             NesEditableControl.DPAD_LEFT -> settings.dpadLeft.dragY

@@ -90,10 +90,23 @@ internal fun NesControllerDragOverlay(
 
         // Use individual real-control measurements, not the old two radial
         // group rectangles. D-pad fallback exists for older PadKit layouts.
-        NesEditableControl.entries.forEach { control ->
+        // Directional hitboxes calibrate invisible input regions, not the
+        // painted D-pad cross. Only expose whole visual controls in drag mode.
+        val movableControls =
+            NesEditableControl.entries.filterNot {
+                it == NesEditableControl.DPAD_UP ||
+                    it == NesEditableControl.DPAD_DOWN ||
+                    it == NesEditableControl.DPAD_LEFT ||
+                    it == NesEditableControl.DPAD_RIGHT
+            }
+        movableControls.forEach { control ->
             val bounds =
                 controlBounds[control]
-                    ?: if (control == NesEditableControl.DPAD) leftBounds else null
+                    ?: when (control) {
+                        NesEditableControl.DPAD -> leftBounds
+                        NesEditableControl.FACE_BUTTONS -> rightBounds
+                        else -> null
+                    }
             if (bounds != null && bounds.width > 0f && bounds.height > 0f) {
                 NesDragTarget(
                     control = control,
@@ -228,6 +241,7 @@ private fun NesDragTarget(
     val label =
         when (control) {
             NesEditableControl.DPAD -> "D-PAD"
+            NesEditableControl.FACE_BUTTONS -> "A / B GROUP"
             NesEditableControl.DPAD_UP -> "UP"
             NesEditableControl.DPAD_DOWN -> "DOWN"
             NesEditableControl.DPAD_LEFT -> "LEFT"

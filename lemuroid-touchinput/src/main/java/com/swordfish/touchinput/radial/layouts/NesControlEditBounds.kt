@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 
 enum class NesEditableControl {
     DPAD,
+    FACE_BUTTONS,
     DPAD_UP,
     DPAD_DOWN,
     DPAD_LEFT,
