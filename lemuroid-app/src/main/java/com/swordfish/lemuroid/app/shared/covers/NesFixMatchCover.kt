@@ -17,7 +17,9 @@ object NesFixMatchCover {
     private const val NES = "nes"
     private val subtitleSeparator = Regex("""\s*(?::|\s-\s|\s–\s)\s*""")
     private val leadingArticle = Regex("""^(The|An|A)\s+(.+)$""", RegexOption.IGNORE_CASE)
-    private val tag = Regex("""\s*[(\[][^)\]]*[)\]]""")
+    // Strip catalogue release metadata, not meaningful parenthesized title text.
+    // For example, "Batman (Return of the Joker)" must not match "Batman".
+    private val tag = Regex("""\s*(?:\((?:USA|World|Europe|Japan|Rev(?:ision)?\s*\d+|Beta(?:\s*\d+)?|Proto(?:type)?|Demo|Sample|Unl|Unlicensed)\)|\[(?:[a-zA-Z!+]+|[a-zA-Z]\d+)\])""", RegexOption.IGNORE_CASE)
     private val preferredRegions = listOf("(usa", "(world", "(europe", "(japan")
 
     /**
