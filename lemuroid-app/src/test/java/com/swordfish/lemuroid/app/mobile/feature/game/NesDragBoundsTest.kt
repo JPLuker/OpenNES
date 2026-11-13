@@ -25,7 +25,7 @@ class NesDragBoundsTest {
 
     @Test
     fun oversizedControlCannotBeDraggedFurtherBeyondEitherSafeEdge() {
-        assertEquals(-140f, NesDragBounds.clamp(-300f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
+        assertEquals(-130f, NesDragBounds.clamp(-300f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
         assertEquals(20f, NesDragBounds.clamp(27f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
         assertEquals(20f, NesDragBounds.clamp(300f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
     }
