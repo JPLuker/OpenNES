@@ -2092,7 +2092,13 @@ fun GameCover(
                         NesCoverResolutionCache.recordSuccess(primaryArtwork, romArtwork, requestArtworkUrl)
                     },
                     onError = { _, _ ->
-                        if (!usingRomArtwork && romArtwork != null && requestArtworkUrl != romArtwork) {
+                        // A failed user-selected cover must not silently
+                        // replace that choice with unrelated catalogue art.
+                        if (game.customCoverUri.isNullOrBlank() &&
+                            !usingRomArtwork &&
+                            romArtwork != null &&
+                            requestArtworkUrl != romArtwork
+                        ) {
                             usingRomArtwork = true
                         }
                     },
