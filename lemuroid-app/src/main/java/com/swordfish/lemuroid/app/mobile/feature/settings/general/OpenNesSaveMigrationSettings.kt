@@ -22,6 +22,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsLink
 import com.swordfish.lemuroid.app.shared.migration.OpenNesSaveTransfer
+import com.swordfish.lemuroid.app.shared.game.GameProcessLock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,28 +59,30 @@ internal fun OpenNesSaveMigrationSettings() {
                                 val root =
                                     context.getExternalFilesDir(null)
                                         ?: throw IOException("NES save directory unavailable")
-                                val temporary = File.createTempFile("opennes-export-", ".zip", context.cacheDir)
-                                try {
-                                    val count =
-                                        temporary.outputStream().use {
-                                            OpenNesSaveTransfer.export(root, it)
+                                GameProcessLock.withNoGameRunning(context) {
+                                    val temporary = File.createTempFile("opennes-export-", ".zip", context.cacheDir)
+                                    try {
+                                        val count =
+                                            temporary.outputStream().use {
+                                                OpenNesSaveTransfer.export(root, it)
+                                            }
+                                        val expected = hashFile(temporary)
+                                        val output =
+                                            context.contentResolver.openOutputStream(uri, "w")
+                                                ?: throw IOException("Cannot write selected document")
+                                        temporary.inputStream().use { input ->
+                                            output.use { input.copyTo(it) }
                                         }
-                                    val expected = hashFile(temporary)
-                                    val output =
-                                        context.contentResolver.openOutputStream(uri, "w")
-                                            ?: throw IOException("Cannot write selected document")
-                                    temporary.inputStream().use { input ->
-                                        output.use { input.copyTo(it) }
+                                        val actual =
+                                            context.contentResolver.openInputStream(uri)?.use(::hashStream)
+                                                ?: throw IOException("Cannot verify selected document")
+                                        if (!MessageDigest.isEqual(expected, actual)) {
+                                            throw IOException("Exported save checksum mismatch")
+                                        }
+                                        count
+                                    } finally {
+                                        temporary.delete()
                                     }
-                                    val actual =
-                                        context.contentResolver.openInputStream(uri)?.use(::hashStream)
-                                            ?: throw IOException("Cannot verify selected document")
-                                    if (!MessageDigest.isEqual(expected, actual)) {
-                                        throw IOException("Exported save checksum mismatch")
-                                    }
-                                    count
-                                } finally {
-                                    temporary.delete()
                                 }
                             }
                         status = R.string.opennes_save_transfer_exported
@@ -176,7 +179,9 @@ internal fun OpenNesSaveMigrationSettings() {
                                         val root =
                                             context.getExternalFilesDir(null)
                                                 ?: throw IOException("NES save directory unavailable")
-                                        pending.apply(root)
+                                        GameProcessLock.withNoGameRunning(context) {
+                                            pending.apply(root)
+                                        }
                                     }
                                 lastCount = outcome.imported
                                 lastSkipped = outcome.existingPreserved
