@@ -480,6 +480,16 @@
     <string name="opennes_romm_device_registered">Device registered. Save sync remains disabled until transfer verification is complete.</string>
     <string name="opennes_romm_device_register">Register device</string>
     <string name="opennes_romm_device_recheck">Verify device registration</string>
+    <string name="opennes_romm_preview_description">Compare one manually selected local NES SRAM save with RomM. This creates a short-lived server comparison session. It never uploads, downloads, deletes or replaces save files. Requires a registered device and RomM token scopes assets.read, devices.read and devices.write.</string>
+    <string name="opennes_romm_preview_button">Compare local save (no transfers)</string>
+    <string name="opennes_romm_preview_ready">Comparison completed. No save bytes were transferred.</string>
+    <string name="opennes_romm_preview_count">RomM suggested %1$d operations. Nothing has been applied.</string>
+    <string name="opennes_romm_preview_upload">Would upload: %1$s</string>
+    <string name="opennes_romm_preview_download">Would download: %1$s</string>
+    <string name="opennes_romm_preview_conflict">Conflict — keep both versions: %1$s</string>
+    <string name="opennes_romm_preview_delete">Would delete local save (not performed): %1$s</string>
+    <string name="opennes_romm_preview_noop">Identical — no changes: %1$s</string>
+    <string name="opennes_romm_preview_more">Additional proposed operations are hidden. No operations were executed.</string>
     <string name="opennes_romm_settings_description">Connect to a RomM server and import NES games</string>
     <string name="opennes_romm_explanation">Connect to your own RomM server to browse and manually import NES or Famicom games. Your ROM folder must be selected first.</string>
     <string name="opennes_romm_server">RomM server URL</string>
