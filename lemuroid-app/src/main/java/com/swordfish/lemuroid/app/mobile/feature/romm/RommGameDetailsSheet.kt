@@ -221,8 +221,6 @@ internal fun RommGameDetailsSheet(
                         Text(stringResource(R.string.opennes_romm_retry_indexing))
                     }
                 }
-
-
             }
 
             if (busy) {
