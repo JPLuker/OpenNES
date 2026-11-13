@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **RomM stream progress:** ROM ZIP verification and remote-save hash checks now fail after repeated zero-byte stream reads instead of potentially looping indefinitely; regression tests cover standalone and zipped save digests.
+
 - **RomM archive path safety:** reject drive-qualified and malformed ZIP paths while allowing legitimate nested directories. Regression tests cover Windows absolute paths, repeated separators, duplicate ZIP entries, and directory entries.
 
 - **RomM import validation:** reject standalone NES files with incomplete 16-byte iNES headers or over the 64 MiB import cap, and reject zipped NES entries with truncated headers. JVM tests cover these boundaries; device acceptance remains pending.
