@@ -142,8 +142,10 @@ object RommDownloadVerification {
             val buffer = ByteArray(16 * 1024)
             for (entry in entries.sortedBy { it.name }) {
                 requireSafeEntryName(entry.name)
+                if (!names.add(entry.name.replace('\\', '/'))) {
+                    throw IOException("RomM save ZIP has duplicate entries")
+                }
                 if (entry.isDirectory) continue
-                if (!names.add(entry.name)) throw IOException("RomM save ZIP has duplicate entries")
                 val hash = MessageDigest.getInstance("MD5")
                 archive.getInputStream(entry).use { stream ->
                     while (true) {
