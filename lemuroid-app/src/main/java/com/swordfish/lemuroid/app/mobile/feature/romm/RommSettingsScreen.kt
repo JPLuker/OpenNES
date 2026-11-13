@@ -56,6 +56,7 @@ import com.swordfish.lemuroid.app.shared.romm.RommCataloguePaging
 import com.swordfish.lemuroid.app.shared.romm.RommConnection
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionPreferences
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionStore
+import com.swordfish.lemuroid.app.shared.romm.RommDeviceIdentityStore
 import com.swordfish.lemuroid.app.shared.romm.RommPairing
 import com.swordfish.lemuroid.app.shared.romm.RommPendingReviewSummary
 import com.swordfish.lemuroid.app.shared.romm.RommPendingSyncJournal
@@ -78,6 +79,7 @@ import java.io.File
 fun RommSettingsScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current.applicationContext
     val store = remember(context) { RommConnectionStore(context) }
+    val deviceIdentity = remember(context) { RommDeviceIdentityStore(context) }
     val client = remember { RommApiClient() }
     LaunchedEffect(context) { RommConnectionPreferences.load(context) }
     val showDisconnectWarnings = RommConnectionPreferences.warnings.collectAsState().value
@@ -107,6 +109,15 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
         mutableStateOf(store.configuredServer() != null && store.hasSavedToken())
     }
     var signedInAs by remember { mutableStateOf<String?>(null) }
+    var registeredDeviceId by remember(context) {
+        mutableStateOf(
+            deviceIdentity.pinnedDevice(
+                RommServerIdentity.fingerprint(store.configuredServer()),
+                store.credentialRevision(),
+                store.lastVerifiedUserId(),
+            ),
+        )
+    }
     var page by remember { mutableStateOf<RommApiClient.Page?>(null) }
     var remoteSaves by remember { mutableStateOf<List<RommApiClient.RemoteSave>?>(null) }
     var selectedSaveGame by remember { mutableStateOf<RommApiClient.Rom?>(null) }
@@ -317,6 +328,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             }
             configured = true
             signedInAs = user.username
+            registeredDeviceId = null
             page = null
             remoteSaves = null
             selectedSaveGame = null
@@ -459,6 +471,7 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                                     configured = false
                                     tokenInput = ""
                                     signedInAs = null
+                                    registeredDeviceId = null
                                     page = null
                                     remoteSaves = null
                                     selectedSaveGame = null
@@ -476,6 +489,54 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
                     Text(stringResource(R.string.opennes_romm_action_busy, operation))
                 }
                 if (status.isNotBlank()) Text(status)
+            }
+        }
+
+        if (configured) {
+            OpenNesSettingsGroup(
+                title = { Text(stringResource(R.string.opennes_romm_device_title)) },
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(stringResource(R.string.opennes_romm_device_description))
+                    Text(
+                        stringResource(
+                            if (registeredDeviceId != null) {
+                                R.string.opennes_romm_device_registered
+                            } else {
+                                R.string.opennes_romm_device_unregistered
+                            },
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp,
+                    )
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            perform("Registering RomM device") {
+                                val connection =
+                                    withContext(Dispatchers.IO) {
+                                        store.load() ?: error("Reconnect to RomM")
+                                    }
+                                val device = client.registerDevice(context, connection)
+                                registeredDeviceId = device.deviceId
+                                status = context.getString(R.string.opennes_romm_device_registered)
+                            }
+                        },
+                    ) {
+                        Text(
+                            stringResource(
+                                if (registeredDeviceId == null) {
+                                    R.string.opennes_romm_device_register
+                                } else {
+                                    R.string.opennes_romm_device_recheck
+                                },
+                            ),
+                        )
+                    }
+                }
             }
         }
 
