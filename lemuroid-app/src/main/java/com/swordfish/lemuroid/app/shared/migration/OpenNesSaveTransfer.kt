@@ -50,19 +50,38 @@ internal object OpenNesSaveTransfer {
                         skipped++
                         return@forEach
                     }
-                    if (!destination.createNewFile()) {
-                        skipped++
-                        return@forEach
-                    }
-                    created += destination
-                    File(staging, item.path).inputStream().buffered().use { input ->
-                        FileOutputStream(destination).use { output ->
-                            copyBounded(input, output, MAX_FILE_BYTES)
-                            output.fd.sync()
+                    // Stream into a unique temporary file in the SAME
+                    // destination directory and verify before commit. A
+                    // process kill must not leave a truncated *.srm or *.state
+                    // that the next emulator launch mistakes for a valid save.
+                    val temporary =
+                        File.createTempFile("opennes-import-", ".partial", destination.parentFile)
+                    try {
+                        File(staging, item.path).inputStream().buffered().use { input ->
+                            FileOutputStream(temporary).use { output ->
+                                copyBounded(input, output, MAX_FILE_BYTES)
+                                output.fd.sync()
+                            }
                         }
-                    }
-                    if (!hashMatches(destination, item)) {
-                        throw IOException("Imported save failed SHA-256 verification")
+                        if (!hashMatches(temporary, item)) {
+                            throw IOException("Imported save failed pre-commit verification")
+                        }
+                        // The caller holds GameProcessLock across this entire
+                        // transaction. Never use REPLACE_EXISTING, and always
+                        // refuse a destination that appeared meanwhile.
+                        if (destination.exists()) {
+                            skipped++
+                            return@forEach
+                        }
+                        if (!temporary.renameTo(destination)) {
+                            throw IOException("Cannot commit verified migration save")
+                        }
+                        created += destination
+                        if (!hashMatches(destination, item)) {
+                            throw IOException("Imported save failed post-commit verification")
+                        }
+                    } finally {
+                        temporary.delete()
                     }
                 }
                 return ImportResult(created.size, skipped)
