@@ -19,6 +19,22 @@ class OpenNesVariantsTests(unittest.TestCase):
         self.assertIn('"bundleImplementation"(project(":bundled-cores"))', app)
         self.assertIn('"freeImplementation"(project(":lemuroid-app-ext-free"))', app)
 
+    def test_production_play_version_codes_are_monotonic(self):
+        app = (ROOT / "lemuroid-app" / "build.gradle.kts").read_text(encoding="utf-8")
+        self.assertIn("val playVersionCode =", app)
+        self.assertIn('openNesVersion.split(".").map(String::toInt)', app)
+        self.assertIn("versionCode = developmentRun?.plus(100_000) ?: playVersionCode", app)
+        self.assertNotIn("versionCode = developmentRun?.plus(100_000) ?: 1", app)
+        # The Play sequence is ordered by semver, not by whichever Actions
+        # run happened to produce the last debug APK.
+        def play_code(version):
+            major, minor, patch = map(int, version.split("."))
+            return major * 1_000_000 + minor * 1_000 + patch
+
+        codes = [play_code(v) for v in ("0.1.0", "0.1.1", "0.1.2", "0.2.0", "1.0.0")]
+        self.assertEqual(sorted(codes), codes)
+        self.assertEqual(len(set(codes)), len(codes))
+
     def test_package_identity_is_kept_across_debug_and_play(self):
         app = (ROOT / "lemuroid-app" / "build.gradle.kts").read_text(encoding="utf-8")
         self.assertIn('applicationId = "com.jpluker.opennes"', app)
