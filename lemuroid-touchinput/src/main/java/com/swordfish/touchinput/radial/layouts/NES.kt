@@ -3,9 +3,7 @@ package com.swordfish.touchinput.radial.layouts
 import android.view.KeyEvent
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.boundsInRoot
@@ -13,20 +11,16 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.swordfish.touchinput.radial.controls.LemuroidControlCross
-import com.swordfish.touchinput.radial.controls.LemuroidControlFaceButtons
 import com.swordfish.touchinput.radial.layouts.shared.ComposeTouchLayouts
 import com.swordfish.touchinput.radial.layouts.shared.SecondaryButtonMenuPlaceholder
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import com.swordfish.touchinput.radial.ui.NesCrossForeground
-import com.swordfish.touchinput.radial.ui.NesFaceButtonForeground
 import com.swordfish.touchinput.radial.ui.NesPillButtonForeground
 import gg.padkit.PadKitScope
 import gg.padkit.anchors.Anchor
 import gg.padkit.controls.ControlButton
 import gg.padkit.ids.Id
 import gg.padkit.layouts.radial.secondarydials.LayoutRadialSecondaryDialsScope
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 
 /**
@@ -78,47 +72,16 @@ fun PadKitScope.NESRight(
     settings: TouchControllerSettingsManager.Settings,
 ) {
     val report = LocalNesControlBoundsReporter.current
-    val aId = Id.Key(KeyEvent.KEYCODE_BUTTON_A)
-    val bId = Id.Key(KeyEvent.KEYCODE_BUTTON_B)
-    // PadKit anchors control BOTH the rendered buttons and their hit targets.
-    // Avoid graphical offsets here: those would visually move buttons while
-    // leaving the original invisible input regions behind.
-    val primaryAnchors =
-        remember(settings.aButton, settings.bButton) {
-            persistentListOf(
-                nesFaceAnchor(aId, 0.92f, settings.aButton),
-                nesFaceAnchor(bId, -0.92f, settings.bButton),
-            )
-        }
-    val compositeAnchors =
-        remember(aId, bId) {
-            val both = persistentSetOf(aId, bId)
-            persistentListOf(
-                Anchor(Offset(0f, -0.85f), both, 0.1f),
-                Anchor(Offset(0f, 0.85f), both, 0.1f),
-            )
-        }
-
     BaseLayoutRight(
         settings = settings,
         modifier = modifier,
         primaryDial = {
-            LemuroidControlFaceButtons(
+            NesFaceButtons(
                 modifier =
                     Modifier.onGloballyPositioned {
                         report(NesEditableControl.FACE_BUTTONS, it.boundsInRoot())
                     },
-                primaryAnchors = primaryAnchors,
-                compositeAnchors = compositeAnchors,
-                trackPointers = true,
-                applyPadding = false,
-                background = {},
-                showCompositeForeground = false,
-                idsForegrounds =
-                    persistentMapOf<Id.Key, @Composable (State<Boolean>) -> Unit>(
-                        aId to { NesFaceButtonForeground(pressed = it, label = "A") },
-                        bId to { NesFaceButtonForeground(pressed = it, label = "B") },
-                    ),
+                settings = settings,
             )
         },
         secondaryDials = {
@@ -129,27 +92,24 @@ fun PadKitScope.NESRight(
 }
 
 /**
- * Position and size are in PadKit's normalized (-1..1) dial coordinates.
- * Defaults approximate the existing paired layout, while independently
- * adjusting the anchor changes the painted disc and real touch hitbox alike.
+ * Anchor for the untouched, paired A/B dial in PadKit's normalized (-1..1)
+ * coordinates. Editor drags are not applied here: an anchor cannot leave its
+ * dial, so dragged buttons are laid out by [NesFaceButtonLayout] instead.
  */
 internal fun nesFaceAnchor(
     id: Id.Key,
     baseX: Float,
     geometry: TouchControllerSettingsManager.ButtonGeometry,
-): Anchor<Id.Key> {
-    // Keep anchor geometry in PadKit's normalized dial range. Controller
-    // editor movement must be reflected in this same anchor so the rendered
-    // face and pointer hit target cannot drift apart.
-    val x = (baseX + geometry.offsetX.coerceIn(-1f, 1f) * 0.30f + geometry.dragX / 96f).coerceIn(-1f, 1f)
-    val y = (geometry.offsetY.coerceIn(-1f, 1f) * 0.40f + geometry.dragY / 96f).coerceIn(-1f, 1f)
-    val size = (0.46f * geometry.size.coerceIn(0.75f, 1.25f)).coerceIn(0.34f, 0.58f)
-    return Anchor(
-        position = Offset(x, y),
+): Anchor<Id.Key> =
+    Anchor(
+        position =
+            Offset(
+                NesFaceButtonLayout.anchorX(baseX, geometry),
+                NesFaceButtonLayout.anchorY(geometry),
+            ),
         buttons = persistentSetOf(id),
-        size = size,
+        size = NesFaceButtonLayout.sizeFraction(geometry),
     )
-}
 
 /**
  * Cancel the parent PadKit dial translation for secondary controls, leaving

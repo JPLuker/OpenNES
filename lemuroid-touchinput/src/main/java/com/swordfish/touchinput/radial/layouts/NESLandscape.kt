@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -17,19 +15,13 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.swordfish.touchinput.radial.controls.LemuroidControlCross
-import com.swordfish.touchinput.radial.controls.LemuroidControlFaceButtons
 import com.swordfish.touchinput.radial.layouts.shared.ComposeTouchLayouts
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import com.swordfish.touchinput.radial.ui.NesCrossForeground
-import com.swordfish.touchinput.radial.ui.NesFaceButtonForeground
 import com.swordfish.touchinput.radial.ui.NesPillButtonForeground
 import gg.padkit.PadKitScope
-import gg.padkit.anchors.Anchor
 import gg.padkit.controls.ControlButton
 import gg.padkit.ids.Id
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.persistentSetOf
 
 /**
  * Real, independent landscape controls. The inherited radial layout shrank
@@ -120,26 +112,8 @@ fun PadKitScope.NESLandscapeRight(
         val y =
             NesLandscapeDragLimits.verticalTravelDp(sideHeight.value, dialSize.value).dp *
                 settings.rightOffsetY.coerceIn(-1f, 1f) + settings.rightDragY.dp
-        val aId = remember { Id.Key(KeyEvent.KEYCODE_BUTTON_A) }
-        val bId = remember { Id.Key(KeyEvent.KEYCODE_BUTTON_B) }
-        val primaryAnchors =
-            remember(settings.aButton, settings.bButton) {
-                persistentListOf(
-                    nesFaceAnchor(aId, 0.92f, settings.aButton),
-                    nesFaceAnchor(bId, -0.92f, settings.bButton),
-                )
-            }
-        val compositeAnchors =
-            remember {
-                val both = persistentSetOf(aId, bId)
-                persistentListOf(
-                    Anchor(androidx.compose.ui.geometry.Offset(0f, -0.85f), both, 0.1f),
-                    Anchor(androidx.compose.ui.geometry.Offset(0f, 0.85f), both, 0.1f),
-                )
-            }
-
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            LemuroidControlFaceButtons(
+            NesFaceButtons(
                 modifier =
                     Modifier
                         .size(dialSize)
@@ -148,17 +122,7 @@ fun PadKitScope.NESLandscapeRight(
                             val rect = it.boundsInRoot()
                             onPrimaryBounds?.invoke(rect)
                         },
-                primaryAnchors = primaryAnchors,
-                compositeAnchors = compositeAnchors,
-                trackPointers = true,
-                applyPadding = false,
-                background = {},
-                showCompositeForeground = false,
-                idsForegrounds =
-                    persistentMapOf<Id.Key, @Composable (State<Boolean>) -> Unit>(
-                        aId to { pressed -> NesFaceButtonForeground(pressed = pressed, label = "A") },
-                        bId to { pressed -> NesFaceButtonForeground(pressed = pressed, label = "B") },
-                    ),
+                settings = settings,
             )
             NESLandscapeSecondaryButton(
                 modifier = Modifier.align(Alignment.Center),

@@ -79,7 +79,28 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val dpadDown: ButtonGeometry = ButtonGeometry(),
         val dpadLeft: ButtonGeometry = ButtonGeometry(),
         val dpadRight: ButtonGeometry = ButtonGeometry(),
-    )
+        // 0 marks layouts saved while A/B drags were dial-normalized and
+        // clipped. See withCurrentFaceLayout.
+        val faceLayoutVersion: Int = 0,
+    ) {
+        /**
+         * A/B drag values saved before version 2 were clipped to the dial and
+         * could accumulate far beyond what was ever shown. Read as real dp
+         * they would throw the buttons across the screen, so they are
+         * dropped once. Sizes, fine-tune offsets and every other control keep
+         * their saved values.
+         */
+        fun withCurrentFaceLayout(): Settings =
+            if (faceLayoutVersion >= FACE_LAYOUT_VERSION) {
+                this
+            } else {
+                copy(
+                    aButton = aButton.copy(dragX = 0f, dragY = 0f),
+                    bButton = bButton.copy(dragX = 0f, dragY = 0f),
+                    faceLayoutVersion = FACE_LAYOUT_VERSION,
+                )
+            }
+    }
 
     private fun computeInsetsPaddings(
         density: Density,
@@ -167,6 +188,7 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
                 rotation = DEFAULT_ROTATION,
                 marginX = (horizontalPadding.value + portraitSideGutterDp) / MAX_MARGINS,
                 marginY = verticalPadding.value / MAX_MARGINS,
+                faceLayoutVersion = FACE_LAYOUT_VERSION,
             )
         val settingsKey = getPreferenceString(touchControllerID, orientation)
         val cachedStateFlow =
@@ -178,6 +200,7 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
                                 Timber.w(error, "Ignoring invalid saved NES touch layout")
                             }
                             .getOrNull()
+                            ?.withCurrentFaceLayout()
                     }
 
                 MutableStateFlow(currentSettings)
@@ -271,6 +294,9 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         const val MAX_BUTTON_OFFSET_Y = 32f
         const val MIN_BUTTON_SIZE = 0.75f
         const val MAX_BUTTON_SIZE = 1.25f
+
+        // 2: A/B drag offsets are real dp applied to both paint and touch.
+        const val FACE_LAYOUT_VERSION = 2
     }
 
     private fun getPreferenceString(

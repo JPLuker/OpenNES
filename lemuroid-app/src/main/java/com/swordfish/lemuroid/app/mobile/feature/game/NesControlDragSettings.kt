@@ -49,8 +49,16 @@ internal object NesControlDragSettings {
                     individualDpadHitboxes = true,
                     dpadRight = movedDpadTarget(settings.dpadRight, deltaXdp, deltaYdp),
                 )
-            NesEditableControl.A -> settings.copy(aButton = movedButton(settings.aButton, deltaXdp, deltaYdp))
-            NesEditableControl.B -> settings.copy(bButton = movedButton(settings.bButton, deltaXdp, deltaYdp))
+            // Stamp the layout version so these real-dp offsets are never
+            // mistaken for the old dial-normalized values on the next load.
+            NesEditableControl.A ->
+                settings.withCurrentFaceLayout().let {
+                    it.copy(aButton = movedButton(it.aButton, deltaXdp, deltaYdp))
+                }
+            NesEditableControl.B ->
+                settings.withCurrentFaceLayout().let {
+                    it.copy(bButton = movedButton(it.bButton, deltaXdp, deltaYdp))
+                }
             NesEditableControl.START ->
                 settings.copy(
                     startButton = movedButton(settings.startButton, deltaXdp, deltaYdp),

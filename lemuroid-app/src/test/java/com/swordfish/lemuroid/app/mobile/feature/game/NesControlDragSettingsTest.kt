@@ -48,6 +48,43 @@ class NesControlDragSettingsTest {
         assertEquals(0f, adjusted.leftDragX, 0.001f)
     }
 
+    @Test
+    fun faceButtonDragsSavedByTheClippedDialLayoutAreDroppedOnce() {
+        // Old builds divided A/B drags by 96 and clipped them to the dial, so
+        // stored values could grow far beyond anything shown on screen.
+        val legacy =
+            TouchControllerSettingsManager.Settings(
+                rightDragX = 12f,
+                aButton = TouchControllerSettingsManager.ButtonGeometry(size = 1.1f, offsetX = 0.3f, dragX = 900f),
+                bButton = TouchControllerSettingsManager.ButtonGeometry(dragY = -700f),
+                startButton = TouchControllerSettingsManager.ButtonGeometry(dragX = 40f),
+            )
+        val current = legacy.withCurrentFaceLayout()
+        assertEquals(TouchControllerSettingsManager.FACE_LAYOUT_VERSION, current.faceLayoutVersion)
+        assertEquals(0f, current.aButton.dragX, 0f)
+        assertEquals(0f, current.bButton.dragY, 0f)
+        // Everything that was displayed correctly is kept.
+        assertEquals(1.1f, current.aButton.size, 0f)
+        assertEquals(0.3f, current.aButton.offsetX, 0f)
+        assertEquals(40f, current.startButton.dragX, 0f)
+        assertEquals(12f, current.rightDragX, 0f)
+        assertEquals(current, current.withCurrentFaceLayout())
+    }
+
+    @Test
+    fun aNewFaceButtonDragSurvivesTheNextLoad() {
+        val dragged =
+            NesControlDragSettings.move(
+                TouchControllerSettingsManager.Settings(),
+                NesEditableControl.B,
+                -120f,
+                64f,
+            )
+        val reloaded = dragged.withCurrentFaceLayout()
+        assertEquals(-120f, reloaded.bButton.dragX, 0f)
+        assertEquals(64f, reloaded.bButton.dragY, 0f)
+    }
+
     private fun offsetX(
         settings: TouchControllerSettingsManager.Settings,
         control: NesEditableControl,

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Controller editor, A and B (#13, device acceptance pending):** dragging A or B now moves the painted button and its touch target together, by the distance dragged, anywhere on screen. Previously the drag was divided by 96 and clipped at the edge of the A/B dial, so the buttons lagged the finger and stopped at the dial rim. Buttons left close together still share one control with one-thumb A+B zones; buttons moved far apart become separate targets. A/B drag positions saved by older builds are reset once (sizes, fine-tune sliders and all other controls are kept), and no saved position can place a button outside the window.
+
 - **Next development batch (device acceptance pending):** add a bounded OpenNES cold-start loading surface while Compose builds the first screen, without waiting on RomM or all cover downloads. Move RomM Download/Play immediately after the cover/title header, before lengthy descriptions, using the same primary action position for installed and remote games.
 
 
