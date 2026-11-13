@@ -89,6 +89,26 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun rejectsWindowsDriveAndEmptyArchiveSegments() {
+        for (entry in listOf("C:/game.nes", "folder//game.nes", "/game.nes")) {
+            assertThrows(IOException::class.java) {
+                RommDownloadVerification.checkImportedRom(
+                    zipOf(entry to nesBytes()),
+                    "unsafe.zip",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun acceptsNormalDirectoryEntriesInRomZip() {
+        RommDownloadVerification.checkImportedRom(
+            zipOf("games/" to byteArrayOf(), "games/game.nes" to nesBytes()),
+            "nested.zip",
+        )
+    }
+
+    @Test
     fun rejectsTruncatedFdsInsideZip() {
         assertThrows(IOException::class.java) {
             RommDownloadVerification.checkImportedRom(
