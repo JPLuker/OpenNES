@@ -245,6 +245,8 @@ private fun NesDragTarget(
             NesEditableControl.START -> "START"
             NesEditableControl.SELECT -> "SELECT"
             NesEditableControl.MENU -> "MENU"
+            NesEditableControl.REWIND -> "⏪"
+            NesEditableControl.FAST_FORWARD -> "⏩"
         }
 
     Box(
