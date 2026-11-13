@@ -37,6 +37,8 @@ individual fixes: everything that can only be judged on a phone is here.
 18. **Notch and gesture edges:** controls placed near the camera cutout and the bottom gesture bar are fully visible and respond.
 19. **Large font setting:** with Android font size at maximum, the editor bar and game details are still usable.
 
+19b. **Haptics (#44).** Settings → Touch feedback = *Press*: every on-screen control gives one click when pressed (D-pad, A, B, A+B together, Start, Select, Menu, rewind, fast-forward). Set *Press & release*: a lighter tick also on lifting. Set *None*: nothing vibrates. Change the setting while a game is in the background, return to it: the new setting applies without restarting the game. Rotating the phone or opening the editor never vibrates by itself.
+
 ## D. RetroAchievements (5 min, needs your account)
 
 20. Sign in. Start a supported game: the achievement list and your past unlocks show.

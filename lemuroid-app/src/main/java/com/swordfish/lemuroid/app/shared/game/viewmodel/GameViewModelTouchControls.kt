@@ -64,7 +64,9 @@ class GameViewModelTouchControls(
                 touchControlId.value = it.touchControllerID
             }
         }
-        owner.launchOnState(Lifecycle.State.CREATED) {
+        // Read again on every resume: the setting can change in the library
+        // while this game waits in the background.
+        owner.launchOnState(Lifecycle.State.RESUMED) {
             withContext(Dispatchers.IO) {
                 hapticFeedbackMode.value = HapticFeedbackMode.parse(settingsManager.hapticFeedbackMode())
             }

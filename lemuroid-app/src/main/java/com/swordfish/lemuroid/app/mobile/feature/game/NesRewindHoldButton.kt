@@ -39,6 +39,7 @@ internal fun NesRewindHoldButton(
     onPress: () -> Unit,
     onRelease: () -> Unit,
     onAccessibleStep: () -> Unit,
+    haptics: NesTouchHaptics? = null,
 ) {
     var pressed by remember { mutableStateOf(false) }
     val latestPress by rememberUpdatedState(onPress)
@@ -74,9 +75,12 @@ internal fun NesRewindHoldButton(
                     detectTapGestures(
                         onPress = {
                             pressed = true
+                            // Vibrate only for a real finger, never on disposal.
+                            haptics?.press()
                             latestPress()
                             try {
                                 tryAwaitRelease()
+                                haptics?.release()
                             } finally {
                                 pressed = false
                                 latestRelease()

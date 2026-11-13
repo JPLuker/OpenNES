@@ -437,6 +437,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     onRewindRelease = viewModel::stopHoldRewind,
                     onRewindStep = viewModel::rewindAccessibleStep,
                     onFastForward = viewModel::toggleFastForward,
+                    haptics = rememberNesTouchHaptics(hapticFeedbackMode.value),
                     reportBounds = { id, bounds ->
                         if (controlBounds[id] != bounds) controlBounds[id] = bounds
                     },
@@ -1251,6 +1252,7 @@ private fun NesTransportControls(
     onRewindRelease: () -> Unit,
     onRewindStep: () -> Unit,
     onFastForward: () -> Unit,
+    haptics: NesTouchHaptics,
     reportBounds: (NesEditableControl, Rect) -> Unit,
 ) {
     if (menuBounds == null || fullBounds == null) return
@@ -1295,6 +1297,7 @@ private fun NesTransportControls(
                     modifier = modifier,
                     onPress = if (editing) ({}) else onRewindPress,
                     onRelease = if (editing) ({}) else onRewindRelease,
+                    haptics = if (editing) null else haptics,
                     onAccessibleStep = if (editing) ({}) else onRewindStep,
                 )
             }
@@ -1311,7 +1314,10 @@ private fun NesTransportControls(
                             androidx.compose.ui.graphics.Color(0xFF45454B),
                             androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                         )
-                        .clickable(enabled = !editing, onClick = onFastForward),
+                        .clickable(enabled = !editing) {
+                            haptics.press()
+                            onFastForward()
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

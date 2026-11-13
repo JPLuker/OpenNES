@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Haptic feedback (#44):** the on-screen rewind and fast-forward buttons now vibrate like the rest of the pad (click on press, tick on release with *Press & release*, nothing with *None*); they were silent before. The Touch feedback setting is now re-read whenever a game returns to the foreground, so a change made in Settings applies without relaunching the game.
+
 - **Artwork prefetch fairness:** use limited background requests for the primary cover of each visible NES game before fetching alternate artwork for earlier games, reducing empty covers further down the shelf.
 
 - **RomM save detection:** require a complete ZIP magic signature before interpreting downloaded save bytes as an archive, preventing raw save files with ZIP-like prefixes from being rejected incorrectly.
