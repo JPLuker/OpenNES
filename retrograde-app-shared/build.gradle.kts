@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.libs.arch.work.runtime)
     implementation(deps.libs.arch.work.runtimeKtx)
     implementation(deps.libs.androidx.appcompat.appcompat)
+    implementation(deps.libs.androidx.preferences.preferencesKtx)
     implementation(deps.libs.androidx.ktx.collection)
     implementation(deps.libs.androidx.ktx.core)
     implementation(deps.libs.androidx.ktx.coreKtx)
