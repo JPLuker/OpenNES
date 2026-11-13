@@ -1255,8 +1255,8 @@ private fun NesTransportControls(
 ) {
     if (menuBounds == null || fullBounds == null) return
     val density = LocalDensity.current
-    val buttonPx = with(density) { 44.dp.toPx() }
-    val gapPx = with(density) { 8.dp.toPx() }
+    val buttonPx = with(density) { 36.dp.toPx() }
+    val gapPx = with(density) { 12.dp.toPx() }
     val safe = WindowInsets.safeDrawing
     val safeLeft = safe.getLeft(density, androidx.compose.ui.unit.LayoutDirection.Ltr).toFloat()
     val safeRight = safe.getRight(density, androidx.compose.ui.unit.LayoutDirection.Ltr).toFloat()
@@ -1279,7 +1279,7 @@ private fun NesTransportControls(
         content(
             Modifier
                 .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
-                .size(44.dp)
+                .size(36.dp)
                 .onGloballyPositioned { reportBounds(control, it.boundsInRoot()) },
         )
     }
@@ -1308,13 +1308,13 @@ private fun NesTransportControls(
                 modifier =
                     modifier
                         .background(
-                            androidx.compose.material3.MaterialTheme.colorScheme.surface,
-                            androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                            androidx.compose.ui.graphics.Color(0xFF45454B),
+                            androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                         )
                         .clickable(enabled = !editing, onClick = onFastForward),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("⏩", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text("⏩", color = androidx.compose.ui.graphics.Color.White, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
             }
         }
     }
