@@ -1,49 +1,29 @@
-Lemuroid is an open-source emulator based on Libretro. It's designed to work on a wide range of devices, from phones to TVs, and to provide the best user experience on Android. It's completely free and without ads.
+OpenNES is a free, open-source emulator made for one system: the NES and Famicom. It has no ads, no account and no tracking.
 
+OpenNES does not include any games. You play game files that you own and add yourself.
 
-Supported Systems:
+Built for phones
+- A touch controller styled after the original pad, with separate layouts for portrait and landscape
+- Move and resize every button, tune the D-pad, and pick your own colors
+- Works with Bluetooth and USB gamepads
 
-- Atari 2600 (A26)
-- Atari 7800 (A78)
-- Atari Lynx (Lynx)
-- Nintendo (NES)
-- Super Nintendo (SNES)
-- Game Boy (GB)
-- Game Boy Color (GBC)
-- Game Boy Advance (GBA)
-- Sega Genesis (aka Megadrive)
-- Sega CD (aka Mega CD)
-- Sega Master System (SMS)
-- Sega Game Gear (GG)
-- Nintendo 64 (N64)
-- PlayStation (PSX)
-- PlayStation Portable (PSP)
-- FinalBurn Neo (Arcade)
-- Nintendo DS (NDS)
-- NEC PC Engine (PCE)
-- Neo Geo Pocket (NGP)
-- Neo Geo Pocket Color (NGC)
-- WonderSwan (WS)
-- WonderSwan Color (WSC)
-- Nintendo 3DS (3DS)
+Your library
+- Point OpenNES at a folder and it finds your games
+- Box art, descriptions, favorites, search and play time
+- Fix a wrong match yourself, or set your own cover
 
+Play your way
+- Battery saves, save states and optional autosave
+- Rewind the last few seconds
+- Fast-forward, display filters and Game Genie codes
+- Touchscreen Zapper for light-gun games
 
-Features:
+Optional online features
+- RetroAchievements: sign in to see and earn achievements while you play
+- RomM: browse and download games from your own RomM server
 
-- Automatically save and restore game states
-- ROMs scanning and indexing
-- Optimized touch controls
-- Quick save/load with slots
-- Support for zipped ROMs
-- Display simulation (LCD/CRT)
-- Fast-forward support
-- Gamepad support
-- Tilt to stick support
-- Touch control customization (size and position)
-- Cloud save sync
-- No ads
-- Local multiplayer (connect multiple gamepads to the same device)
+Everything works offline. Online features are off until you turn them on, and the privacy policy lists exactly what each one connects to.
 
-Keep in mind not every device can emulate every console. A very powerful one is required for more recent systems such as PSP and DS and 3DS.
+OpenNES is free software under the GNU GPL version 3, based on Lemuroid and the FCEUmm core. Source code: https://github.com/JPLuker/OpenNES
 
-This application does not contain any games. You need to provide your own legally owned ROM files.
+OpenNES is not affiliated with or endorsed by Nintendo. "NES" and "Famicom" are used only to describe compatibility.

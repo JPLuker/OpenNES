@@ -26,7 +26,7 @@ Two words are used precisely here. **Built** means the code is on `master` and C
 1. **One phone test** of the current build, using [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md). Owner.
 2. **A live RomM server session** (part of the same checklist). Owner.
 3. **Decide the RomM scope for 1.0:** ship with download and manual backups only, or wait for two-way save sync. Owner decision.
-4. **Play release setup:** create the upload key, add the four `OPENNES_RELEASE_*` secrets, open the Play Console listing. Owner. Steps are in [docs/PLAY_BUILD_VALIDATION.md](docs/PLAY_BUILD_VALIDATION.md) and [docs/RELEASE_GATE.md](docs/RELEASE_GATE.md).
+4. **Play release setup:** create the upload key, add the `OPENNES_RELEASE_*` secrets, open the Play Console listing and take original screenshots. Owner. Listing text and form answers are drafted in [docs/PLAY_LISTING.md](docs/PLAY_LISTING.md). Steps are in [docs/PLAY_BUILD_VALIDATION.md](docs/PLAY_BUILD_VALIDATION.md) and [docs/RELEASE_GATE.md](docs/RELEASE_GATE.md).
 5. **RetroAchievements Hardcore** needs emulator approval from RetroAchievements. It is not required for 1.0; 1.0 ships Casual only.
 
 Open issues: [#10 gameplay](https://github.com/JPLuker/OpenNES/issues/10), [#13 controller](https://github.com/JPLuker/OpenNES/issues/13), [#11 rewind](https://github.com/JPLuker/OpenNES/issues/11), [#12 Zapper](https://github.com/JPLuker/OpenNES/issues/12), [#8 RomM](https://github.com/JPLuker/OpenNES/issues/8), [#14 Play release](https://github.com/JPLuker/OpenNES/issues/14), [#4 menus](https://github.com/JPLuker/OpenNES/issues/4), [#5 metadata](https://github.com/JPLuker/OpenNES/issues/5), [#16 privacy mode](https://github.com/JPLuker/OpenNES/issues/16).

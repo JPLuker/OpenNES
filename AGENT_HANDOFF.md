@@ -29,7 +29,7 @@ Audited, no change needed: Casual rewind (#11) and touchscreen Zapper (#12) are 
 1. Run [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md) on the phone and report pass or fail by number.
 2. Run its RomM section against the home server.
 3. Decide whether 1.0 ships RomM as download plus manual backups, or waits for two-way save sync.
-4. Create the Play upload key, add the `OPENNES_RELEASE_*` secrets to the protected `production-signing` environment, and open the Play Console listing.
+4. Create the Play upload key, add the `OPENNES_RELEASE_*` secrets to the protected `production-signing` environment, and open the Play Console listing. Store text and form answers are drafted in [docs/PLAY_LISTING.md](docs/PLAY_LISTING.md); original screenshots and icon artwork are still needed.
 
 ## Next agent
 

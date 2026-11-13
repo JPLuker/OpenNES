@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Play listing:** replaced the inherited Lemuroid store description ("All in one emulator", 23 systems) with OpenNES text, and removed the Lemuroid screenshot and TV banner. `docs/PLAY_LISTING.md` has ready answers for the Data safety form, permissions, content rating and emulator policy notes. Original screenshots and icon artwork are still needed.
+
 - **0.1.8.** Base version raised so the build that contains the fixes below is easy to recognize in Settings → About.
 - **Release paperwork:** added a standalone privacy policy (`PRIVACY.md`), third-party notices (`THIRD_PARTY_NOTICES.md`) and a Settings → About section with version, source/license, notices and privacy links. The inherited `READ_EXTERNAL_STORAGE` permission, which the app never requests, is no longer declared on Android 13 and later.
 - **Docs:** the roadmap now opens with one current status table and the list of what blocks 1.0; the single phone checklist is `docs/DEVICE_TEST.md`.

@@ -1,1 +1,1 @@
-All in one emulator on Android
+Open-source NES emulator with a touch controller you can make your own.
