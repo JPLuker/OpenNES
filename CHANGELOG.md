@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **0.1.8.** Base version raised so the build that contains the fixes below is easy to recognize in Settings → About.
+- **Release paperwork:** added a standalone privacy policy (`PRIVACY.md`), third-party notices (`THIRD_PARTY_NOTICES.md`) and a Settings → About section with version, source/license, notices and privacy links. The inherited `READ_EXTERNAL_STORAGE` permission, which the app never requests, is no longer declared on Android 13 and later.
+- **Docs:** the roadmap now opens with one current status table and the list of what blocks 1.0; the single phone checklist is `docs/DEVICE_TEST.md`.
+
 - **Library fixes from the last phone test (device acceptance pending):**
   - **Fix Match updates the cover.** Confirming a match (for example Zelda → Zelda II) now also switches to that game's box art when the built-in catalogue has an entry with exactly that title. A cover you picked yourself is kept; a near-miss title never replaces the art.
   - **Covers no longer reload when navigating.** Every cover surface and the prefetcher now decode at one shared size, so a cover decoded once is reused on shelves, details and search. A cover that has already been shown stays on screen while it is re-requested instead of flashing the generated title card.

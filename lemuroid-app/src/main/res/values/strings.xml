@@ -539,6 +539,14 @@
     <string name="opennes_romm_retry_indexing">Retry library scan</string>
     <string name="opennes_romm_failed_tap">Download failed — tap for details</string>
     <string name="opennes_romm_view_status">Details</string>
+    <string name="opennes_about_title">About</string>
+    <string name="opennes_about_version">Version</string>
+    <string name="opennes_about_source">Source code and license</string>
+    <string name="opennes_about_source_description">OpenNES is free software under the GNU GPL version 3.</string>
+    <string name="opennes_about_notices">Open-source notices</string>
+    <string name="opennes_about_notices_description">The emulator core, libraries and data OpenNES is built from.</string>
+    <string name="opennes_about_privacy">Privacy policy</string>
+    <string name="opennes_about_privacy_description">No account, ads or analytics. See what each optional feature connects to.</string>
     <string name="opennes_romm_download">Download</string>
     <string name="opennes_romm_retry_download">Retry download</string>
     <string name="opennes_romm_tile_remote">On RomM · Tap to download</string>

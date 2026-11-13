@@ -1,60 +1,44 @@
-# OpenNES — Development Roadmap
+# OpenNES — Roadmap
 
-> **Handoff update — 2026-11-13:** See [AGENT_HANDOFF.md](AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.
+**Platform:** native Android · **Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES) · **Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0) · **Core:** FCEUmm via LibretroDroid
 
+A dedicated open-source NES/Famicom emulator with its own interface, an NES-controller-inspired touch layout and native RetroAchievements.
 
-**Status (2026-11-12):** M0 foundation, M1 NES-only conversion, M2 UI, M3 portrait and M4 landscape have **CI-built source implementations**. M1 is functionally complete; M0/M2/M3/M4 still need device acceptance. Remaining inherited source/dependency cleanup and production signing belong to M8. Individual D-pad editing, rewind and Zapper are source-implemented but not hardware-accepted. M5 saves, audio and input are manual-test gates. **M6 now has a game-owned, authenticated native `rc_client` for NES ROMs**, with emulated-frame evaluation, RAM validation before activation, native achievement events, cancellable HTTPS callbacks, disconnect/reconnect gating and pause-time idle processing under the core lock. FDS native awards remain disabled pending memory mapping validation. **A real achievement award and server-side persistence have not yet been verified on a phone.** M7 RomM read-only import, manual offline save archives and explicit export are available in source; two-way sync and real-server testing remain. **M7 acceptance precedes M8 public release.** See [module progress](docs/MODULE_PROGRESS.md) and [the no-device plan](docs/NO_DEVICE_BUILD_PLAN_2026-11-10.md).
+## Where things stand (2026-11-13)
 
-**M2/M6 no-device refinement (2026-11-10):** Source candidate includes Fix Match IME/focus handling, invalidation of stale year/title previews, bounded qualifier fallback searches, durable SAF permission for custom covers, edit/replace actions, official NES-only catalogue result filtering and deduplication, persistent successful artwork fallback selection, encoded Libretro NES gallery support, and smaller progressive achievement/leaderboard lists with collapsible emulator warnings. This source batch passed CI 42923112381; phone acceptance remains open before the milestone closes.
+Two words are used precisely here. **Built** means the code is on `master` and CI passed for it. **Accepted** means it was checked on a real phone. Nothing is accepted because it compiled.
 
-**Real-device M6 evidence (2026-11-10):** The user has confirmed native RetroAchievements sessions listing actual game achievements and historical unlock progress for Zelda and RoboCop. A newly triggered, server-persisted award is **not** yet confirmed. The most recent M6 source batch repairs late sign-in/reconnect/retry and separates client-generated emulator warnings from genuine achievement totals; it requires final CI plus device acceptance.
+| Milestone | Built | Accepted on a phone |
+| --- | --- | --- |
+| M0 Branding and build | Yes | Install and upgrade keep settings and saves (0.1.6, Pixel 9 Pro) |
+| M1 NES-only app | Yes, CI inspects every APK | Not applicable |
+| M2 OpenNES interface | Yes | Library, search, favorites and play time passed. Covers, Fix Match, loading screen and RomM tiles were fixed after that test and need a retest |
+| M3 / M4 Touch controller | Yes | Taps, diagonals, A/B with D-pad and rotation passed. The drag editor failed; the fix needs a retest |
+| M5 Gameplay and saves | Yes | Two games with sound, saves, pause, relaunch and switching passed. Rewind, Zapper and cheats have never been tried on a phone |
+| M6 RetroAchievements (Casual) | Yes | Sign-in and achievement lists work. A newly earned unlock saved on the server is not confirmed. Hardcore is off until RetroAchievements approves the emulator |
+| M7 RomM | Browse, download and manual save backups | Not tested against a live server. Two-way save sync is not built and its 1.0 scope is undecided |
+| M8 Google Play release | API 36, unsigned bundle checks, privacy policy, notices, About screen | Needs the owner's signing key and Play Console account |
 
-**November 12 implementation status:** [Debug CI 43323713762](https://github.com/JPLuker/OpenNES/actions/runs/43323713762) passed with bounded Casual rewind, pause-menu and in-game held rewind, per-ROM Zapper, and individually adjustable D-pad direction hitboxes. All remain **hardware-unverified**; Zapper mapping, controller ergonomics, rewind save/audio integrity, Hardcore recognition and live RomM synchronization remain open. Subsequent save-lock and package-inspection changes require their own exact-commit CI. An unsigned Play AAB validation run passed before the stricter 16 KiB ELF alignment gate; the revised strict 16 KiB ELF gate passed [unsigned AAB CI 43257644960](https://github.com/JPLuker/OpenNES/actions/runs/43257644960), with device verification still pending. Target/compile API 36 is source implemented and debug inspected, but Play release signing and device checks are blocked.
+**Release order:** M7 acceptance comes before the M8 public release.
 
-**Last verified feature baseline at this documentation update:** [run 43323713762](https://github.com/JPLuker/OpenNES/actions/runs/43323713762) passed Kotlin lint, JVM regression tests, native/Android compilation, NES-only APK inspection and rolling development APK publication. This includes M7 per-server journal isolation, conflict guards, read-only local request review, archive integrity auditing, stable snapshot recovery and a strict RomM 5.4 device-sync parser. CI does not verify live RomM server compatibility or phone behavior.
+### What blocks 1.0, and who can clear it
 
-**Next feature tracks:** M5-C NES cheat manager is **source implemented and CI verified** (run 42886631595), with a per-ROM editor, raw and Game Genie validation, session-only opt-in toggles and native FCEUmm cheat calls. Device behavior and code persistence still need acceptance; bounded local JSON import/export is source implemented with Android document pickers and non-activating imports. Atomic native cheat replacement is now CI-verified with a core-generation lease and per-ROM reset; real-game acceptance remains. M6-H has a **CI-verified, fail-closed restrictions foundation**, but Hardcore mode is **not available** and the native RA client still operates in Casual. Emulator recognition, compliant offline unlock handling, real-device verification and a clean-reset native activation path are still required.
-**Platform:** Native Android  
-**Repository:** [JPLuker/OpenNES](https://github.com/JPLuker/OpenNES)  
-**Foundation:** [Lemuroid](https://github.com/Swordfish90/Lemuroid) (GPL-3.0)  
-**Primary emulator:** FCEUmm via LibretroDroid  
-**Product:** A dedicated open-source NES/Famicom emulator with a wholly redesigned UI, premium NES-controller-inspired mobile gameplay, and native RetroAchievements.
+1. **One phone test** of the current build, using [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md). Owner.
+2. **A live RomM server session** (part of the same checklist). Owner.
+3. **Decide the RomM scope for 1.0:** ship with download and manual backups only, or wait for two-way save sync. Owner decision.
+4. **Play release setup:** create the upload key, add the four `OPENNES_RELEASE_*` secrets, open the Play Console listing. Owner. Steps are in [docs/PLAY_BUILD_VALIDATION.md](docs/PLAY_BUILD_VALIDATION.md) and [docs/RELEASE_GATE.md](docs/RELEASE_GATE.md).
+5. **RetroAchievements Hardcore** needs emulator approval from RetroAchievements. It is not required for 1.0; 1.0 ships Casual only.
 
-## November 10–11 — RomM full-library and offline reliability candidate
+Open issues: [#10 gameplay](https://github.com/JPLuker/OpenNES/issues/10), [#13 controller](https://github.com/JPLuker/OpenNES/issues/13), [#11 rewind](https://github.com/JPLuker/OpenNES/issues/11), [#12 Zapper](https://github.com/JPLuker/OpenNES/issues/12), [#8 RomM](https://github.com/JPLuker/OpenNES/issues/8), [#14 Play release](https://github.com/JPLuker/OpenNES/issues/14), [#4 menus](https://github.com/JPLuker/OpenNES/issues/4), [#5 metadata](https://github.com/JPLuker/OpenNES/issues/5), [#16 privacy mode](https://github.com/JPLuker/OpenNES/issues/16).
 
-- **Unified NES library:** all indexed local NES games and RomM-only previews share the physical shelf, with a full-screen adaptive cover grid, search, A–Z jumps, Installed/RomM filters and the regular details layout. A remote preview never enters Room as a fake playable file. Download becomes Play only once a real local ROM has been indexed.
-- **Native RomM metadata:** description/summary is used where available, with a clear missing-description label. Only trusted public IGDB HTTPS cover URLs are accepted from the RomM record; Libretro NES box-art fallback remains. The selected server token is never sent to a cover host.
-- **Offline metadata:** a strictly bounded metadata-only cache is kept in private no-backup storage, keyed by exact server identity plus login revision, and cleared on disconnect/reconnect. Reopening the app without RomM access can show previously fetched titles and descriptions; ROM bytes are not cached or downloaded. A visible Retry action bypasses the refresh interval.
-- **Transfer workflow:** explicitly requested downloads show queued, connecting, downloading (bounded percent when known), verifying, importing and indexing states. The game details blur during work, a persistent home banner preserves status after dismiss, and the Settings browser has a cancellable loading dialog. Failures are per-ROM and actionable; a stalled WorkManager scan offers Retry library scan rather than another ROM download.
-- **Correct complete pagination:** the client advances by raw server-row count, not filtered NES entries; small, filtered and total-less pages are covered by tests. Platform discovery is reused within one connection's paginated request.
-- **Storage safety:** prevent case-insensitive duplicate imports, reject renamed SAF-created files, never overwrite a local ROM or save, and retain successful file imports in the indexing-recovery state if scan scheduling fails. A ROM stream retains connection/read stall limits plus a strict size bound without the JSON API's 60-second overall timeout.
-- **Verification:** all work is a source candidate pending the latest CI build and an actual phone/RomM server session. Tests now cover offline cache corruption/account isolation, album-art host restrictions, paging, deduplication and index completion. Do not mark M7 complete or publish M8 stable until real-device acceptance is performed.
+Dated progress notes that used to sit here are in [CHANGELOG.md](CHANGELOG.md) and the git history. Detailed per-module notes are in [docs/MODULE_PROGRESS.md](docs/MODULE_PROGRESS.md).
 
-## Functional NES emulator comparison (November 12, 2026)
+### First-release scope decided on 2026-11-12
 
-[Issue #9 comparison and implementation shortlist](docs/NES_EMULATOR_FEATURE_COMPARISON.md) evaluates NES.emu, Nostalgia.NES and FCEUmm. **Decision (2026-11-12): Casual-only rewind, per-ROM Zapper touchscreen support and independent controller/D-pad improvements are committed first-release requirements.** Their source implementations are in the debug branch; none is device-accepted. Do not copy another emulator's design or add Wi-Fi multiplayer by implication.
-
-## Confirmed new first-release scope — November 12, 2026
-
-These first-release requirements have source implementations, **not hardware-accepted capabilities**:
-
-1. **M5-R — Casual-only rewind.** Implement a bounded, RAM-only rolling history of FCEUmm serialize/unserialize snapshots using the native core/session lock. Add hold-to-rewind gameplay input and a pause-menu action; never overwrite durable saves or reuse save-state slots. Cap memory/time, handle corrupt frames and low memory, and clear the history on game switch, reset, load-state, core teardown and process death. **Hardcore must prohibit recording, access and native restore**, not just hide a button. Verify Zelda and a fast-moving game on a phone, including audio and save integrity.
-2. **M5-Z — NES Zapper.** Add an opt-in per-ROM light-gun/touchscreen peripheral (usually port 2). Use FCEUmm's supported `fceumm_zapper_mode=touchscreen` plus a verified native input bridge. Convert taps to NES game-frame coordinates after letterboxing, screen rotation and cutouts; ignore touches outside the video frame. Do not introduce a nonworking toggle. Verify Duck Hunt and another light-gun game on a phone; ordinary ROMs retain normal controls.
-3. **M3/M4-C — Controller improvements.** Independently adjust D-pad Up/Down/Left/Right geometry and hit regions without breaking diagonals or coherent visual housing. Preserve independent portrait/landscape position, scaling, opacity and theme, all-axis drag into the safe area, per-orientation restore-defaults and legible previews. Test A+B/D-pad multitouch, real notch/gesture boundaries, gamepad takeover and persistence.
-4. **M8 — Google Play.** Public distribution is a Google Play **Android App Bundle (AAB)** with Play App Signing, Play Console tracks and Play-managed updates. **No in-app updater, GitHub release polling, unknown-source installer or self-sideload prompts** in production. Retain the one GitHub `dev-latest` APK for developer testing only, with its separate `.debug` package and signer. Plan explicit save/export migration from debug to the production identity.
-5. **Google Play compliance:** For a new phone app in November 2026, submission requires target SDK **API 36+**. Compile/target SDK now specifies **36**; unsigned AAB static checks enforce 16 KiB ARM64 ELF alignment. Android 16 gameplay, physical 16 KiB-page compatibility, Play splits and production signing remain unverified. The production app must pass privacy/Data safety, GPL/license and third-party artwork/ROM rights review. Commercial ROMs are not bundled.
-
-**Priority:** Restore/verify gameplay and saves → D-pad and Zapper native input → Casual rewind and Hardcore-policy tests → M6/M7 acceptance → production AAB/Google Play approval.
-
-**Tracking:** [#11 Casual rewind](https://github.com/JPLuker/OpenNES/issues/11), [#12 Zapper touchscreen](https://github.com/JPLuker/OpenNES/issues/12), [#13 D-pad/controller improvements](https://github.com/JPLuker/OpenNES/issues/13), [#14 Google Play release](https://github.com/JPLuker/OpenNES/issues/14). None of these issues is resolved by this roadmap decision. See [new-feature implementation plan](docs/NES_EMULATOR_FEATURE_COMPARISON.md) and [release gate](docs/RELEASE_GATE.md).
-
-## Near-term execution while phone testing is unavailable (November 2026)
-
-1. **M2/M4: stabilize the most recent test feedback.** Finalize the keyboard-aware Fix Match dialog and its alternate-title search, keep active search fields visible above the IME, preserve game metadata and saves on application, and test off-screen drag constraints with normalized touch coordinates. Once CI passes, freeze speculative controller design changes until physical-device feedback returns.
-2. **M6: verify native achievements on hardware.** The separate game-owned `rc_client` now authenticates a saved emulator token, loads an officially recognized NES ROM, validates the core RAM map, evaluates every emulated frame and emits native unlock/network events. It pumps idle callbacks while paused with emulator memory protected by the same core lock. FDS awards fail closed. **Next critical step:** verify a real NES unlock on the device and confirm server-side persistence. Test offline, pause, reset, rotation, fast-forward, sign-out and restart before acceptance.
-3. **M7: harden RomM integration.** The Settings page now supports user-requested remote save downloads into an app-private, versioned SHA-256 archive, with integrity-checked offline listings and explicit SAF export. Existing local backup, recovery, snapshot and fail-closed conflict-planning infrastructure remains non-destructive; **nothing uploads to RomM or modifies live saves automatically**. Two-way sync still requires verified RomM account/server identities, remote snapshots, conflict decisions, opt-in and live-server acceptance. A persistent **non-executing** sync-intent journal now records bounded offline requests and fails closed on corruption or changed hashes. A user can prepare a new server-bound intent from a verified archived backup plus a local document: this stores fingerprints only, not the selected document or any approval. No uploads or live-save overwrites are enabled.
-4. **M8: final source cleanup and release engineering.** M1's NES-only functional conversion is complete. Audit inherited optional flavors, non-NES source/resources, upstream licenses and native artifacts, build reproducibility and production signing without breaking working NES functionality or user data.
-5. **When physical testing resumes:** execute the [M0–M5 acceptance matrix](docs/M5_FINAL_TESTING.md), including the newly reported keyboard/notch issues; then perform genuine RetroAchievements and RomM server acceptance. Do not mark a device gate completed because lint or compilation passed.
+- **Casual-only rewind:** bounded, in memory, never touches saves, refused in Hardcore. Built.
+- **Touchscreen Zapper** per game (Duck Hunt). Built.
+- **Controller editing:** every control movable with its touch target, per orientation. Built.
+- **Google Play** distribution as an App Bundle with Play App Signing. No in-app updater. The GitHub `dev-latest` APK stays for testing only.
 
 ## Non-negotiable product direction
 
@@ -79,7 +63,7 @@ These first-release requirements have source implementations, **not hardware-acc
 - Existing Android package ID and GitHub release workflows still use Lemuroid names and release assumptions.
 - Initial repository inspection showed no open GitHub issues. No APK build or real-device validation has been performed yet.
 
-> **Progress tracking:** The checklists below preserve original acceptance gates. Unchecked items do not imply missing source implementation. See the [current implementation tracker](docs/MODULE_PROGRESS.md). The latest CI passed; final device gameplay acceptance is still open.
+> **Reading the checklists below:** they are the original acceptance gates. A box is ticked only for work that is finished, so an unticked box often means built but not yet accepted on a phone. The table at the top of this file is the current summary.
 
 ## M0 — Baseline, build and branding
 
@@ -262,7 +246,7 @@ See [Hardcore compliance audit](docs/HARDCORE_COMPLIANCE_AUDIT.md) for implement
 
 ## M8 — Release, maintenance and open source
 
-- [ ] Complete GPL/source attributions, third-party license audit, acknowledgements, and privacy documentation.
+- [ ] Complete GPL/source attributions, third-party license audit, acknowledgements, and privacy documentation. *[PRIVACY.md](PRIVACY.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and Settings → About are in place; a line-by-line audit of transitive dependencies is still open.*
 - [x] Consolidate `master` Kotlin lint, NES-only APK build, APK inspection, SHA-256 creation, and rolling `dev-latest` publication into one GitHub Actions job.
 - [ ] Add production-grade test/release checks and signed tagged releases after M7 RomM acceptance.
 - [ ] Configure **OpenNES-specific** release signing securely. Never commit signing keys or secrets.
@@ -290,16 +274,3 @@ See [Hardcore compliance audit](docs/HARDCORE_COMPLIANCE_AUDIT.md) for implement
 - Direct copying of Pizza Boy source, UI assets or controller art.
 - Hardcore-compliant claim or competitive Hardcore awards without RetroAchievements approval (Hardcore is **planned**, not removed from the roadmap).
 - Android TV-specific experience unless needed for a future, separately approved scope.
-
-## Latest verified CI evidence (2026-11-09)
-
-- [CI run 42703489576](https://github.com/JPLuker/OpenNES/actions/runs/42703489576) passed lint, compilation, NES-only APK inspection and publishing for [commit `5dd2fac`](https://github.com/JPLuker/OpenNES/commit/5dd2fac586863858b6b1d1f71fa44a387bf10007).
-- One rolling [test APK](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk) and [SHA-256 file](https://github.com/JPLuker/OpenNES/releases/download/dev-latest/OpenNES-debug.apk.sha256) serve normal testing. The current build contains the D-pad visual fix, onboarding preview, color wheel and palette icon.
-- Real-device feedback has been received, but the full M5 acceptance matrix is **not complete**; there is no verified production release.
-
-## Historical baseline evidence (2026-11-06)
-
-- The first GitHub Actions run successfully compiled `:lemuroid-app:assembleFreeBundleDebug` and uploaded `OpenNES-debug-apk`; its overall status was **failure due to Kotlin lint**, not failure to assemble the APK.
-- Initial lint failures were resolved in later development; the consolidated lint/build/publish workflow passed on 2026-11-09.
-- No mobile gameplay or NES-only APK acceptance test has yet been completed.
-- APK inspection and debloat work remain subject to the M0 baseline verification gate.

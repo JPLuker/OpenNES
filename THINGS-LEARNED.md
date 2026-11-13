@@ -57,3 +57,19 @@ This log records fixes and lessons supported by OpenNES source, CI or reported d
 **Change:** Read no more than the accepted encrypted blob capacity before decrypting in the RomM and both RetroAchievements account stores, and reject stalled streams.
 
 **Check:** Exact-limit, oversized, stalled and transient-zero-read tests. Existing account formats and save data stay unchanged.
+
+## 8. Move the thing the library hit-tests, not a number inside it
+
+**Problem:** Dragging A or B changed an anchor inside a fixed touch-control dial. The library only accepts touches inside the dial, so the buttons lagged the finger (the drag was divided by a guessed constant) and stopped at the dial's edge, while the saved value kept growing.
+
+**Change:** Read the dependency's source to find the real hit-test rule, then compute button positions in real pixels in one plain object and place the control itself there, so paint and touch share one rectangle. Give saved data a layout version so values written under the old meaning are dropped once instead of being reinterpreted.
+
+**Check:** Unit tests that a drag of N pixels moves the button N pixels with no dial limit, that the other button stays put, and that old saved values cannot place a button off screen. Feel and reach still need a phone.
+
+## 9. An explicit placeholder can hide the cache you meant to show
+
+**Problem:** Covers flashed a generated title card on every navigation. The image request asked for the cached bitmap as its placeholder, but an explicit placeholder painter passed to the composable replaced it, and each screen requested a different size, so the cache entry was rejected as too small.
+
+**Change:** Decode every cover at one shared size, and pass the title-card placeholder only when the cover has never been decoded.
+
+**Check:** Scroll, open details, go back and search on a phone; a cover seen once must not flash.

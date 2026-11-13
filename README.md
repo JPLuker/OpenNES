@@ -94,7 +94,7 @@ Open a [GitHub issue](https://github.com/JPLuker/OpenNES/issues) with your Andro
 
 OpenNES will launch publicly through **Google Play**. Updates will be managed by the Play Store; there is **no in-app updater**. GitHub's `dev-latest` debug APK remains for development testing only, with a different app ID and signing identity. Preserve saves by exporting them before moving between debug and Play releases.
 
-Casual-only rewind, touchscreen Zapper input and individual D-pad hitbox customization are **planned first-release features, not yet implemented**.
+Casual-only rewind, touchscreen Zapper input and individual D-pad hitbox customization are implemented in development builds and **not yet verified on a phone**.
 
 ## Privacy
 
@@ -112,7 +112,7 @@ OpenNES can play locally imported NES games without an OpenNES account or intern
 
 These external services may receive normal HTTPS connection metadata such as an IP address. Their own privacy policies apply. A separate OpenNES-hosted account, analytics account or required cloud backend is not part of the intended local-play flow. Full inherited dependency and network audits are release gates, not completed certifications.
 
-For security concerns, see [SECURITY.md](SECURITY.md). The current implementation and unresolved hardware checks are listed in [TESTING.md](TESTING.md).
+The standalone policy is [PRIVACY.md](PRIVACY.md); bundled work is credited in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). For security concerns, see [SECURITY.md](SECURITY.md). The current implementation and unresolved hardware checks are listed in [TESTING.md](TESTING.md).
 
 ## Licensing and acknowledgments
 

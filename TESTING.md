@@ -5,6 +5,12 @@
 
 The current rolling APK is a **development preview**, not a release candidate. A passed workflow proves Kotlin source formatting, JVM regressions, Android compilation, native bridge exports, NES-only packaging, version identity and SHA-256 publication. It does **not** prove gameplay stability, safe upgrades, actual RetroAchievements awards or compatibility with the user's live RomM server.
 
+## November 13 — 0.1.8 source fixes, awaiting one phone test
+
+Every failure from the 0.1.6 phone test below now has a source fix that passed CI: A/B drag travel and touch targets, Fix Match cover, cover reload flicker, opening loading screen, RomM tile marking and download retry. None is accepted. The single checklist for the next phone session is [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md); record results here by item number.
+
+Rewind and Zapper were audited in source and are implemented; neither has been tried on a phone.
+
 ## November 13 — 0.1.6 on-device results and 0.1.7 source fixes
 
 Device: Pixel 9 Pro; baseline debug 0.1.6-dev.1066, source `6ef95bc4af68`.

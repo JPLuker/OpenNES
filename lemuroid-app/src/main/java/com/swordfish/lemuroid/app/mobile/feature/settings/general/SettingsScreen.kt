@@ -7,9 +7,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.NavController
+import com.swordfish.lemuroid.BuildConfig
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
 import com.swordfish.lemuroid.app.mobile.feature.main.navigateToRoute
@@ -61,8 +63,43 @@ fun SettingsScreen(
             navController = navController,
         )
         OpenNesSaveMigrationSettings()
+        AboutSettings()
     }
 }
+
+/** Version, license, source and privacy: required reading for a GPL app on Google Play. */
+@Composable
+private fun AboutSettings() {
+    val uriHandler = LocalUriHandler.current
+    val open: (String) -> Unit = { url -> runCatching { uriHandler.openUri(url) } }
+    OpenNesSettingsGroup(
+        title = { Text(text = stringResource(R.string.opennes_about_title)) },
+    ) {
+        OpenNesSettingsLink(
+            title = { Text(text = stringResource(R.string.opennes_about_version)) },
+            subtitle = { Text(text = BuildConfig.VERSION_NAME) },
+            action = {},
+            onClick = {},
+        )
+        OpenNesSettingsLink(
+            title = { Text(text = stringResource(R.string.opennes_about_source)) },
+            subtitle = { Text(text = stringResource(R.string.opennes_about_source_description)) },
+            onClick = { open(OPENNES_SOURCE_URL) },
+        )
+        OpenNesSettingsLink(
+            title = { Text(text = stringResource(R.string.opennes_about_notices)) },
+            subtitle = { Text(text = stringResource(R.string.opennes_about_notices_description)) },
+            onClick = { open("$OPENNES_SOURCE_URL/blob/master/THIRD_PARTY_NOTICES.md") },
+        )
+        OpenNesSettingsLink(
+            title = { Text(text = stringResource(R.string.opennes_about_privacy)) },
+            subtitle = { Text(text = stringResource(R.string.opennes_about_privacy_description)) },
+            onClick = { open("$OPENNES_SOURCE_URL/blob/master/PRIVACY.md") },
+        )
+    }
+}
+
+private const val OPENNES_SOURCE_URL = "https://github.com/JPLuker/OpenNES"
 
 @Composable
 private fun MiscSettings(
