@@ -32,7 +32,6 @@ interface StorageProvider {
 
     val uriSchemes: List<String>
 
-
     val enabledByDefault: Boolean
 
     fun listBaseStorageFiles(): Flow<List<BaseStorageFile>>
