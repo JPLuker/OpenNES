@@ -197,7 +197,7 @@ private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings)
             Modifier
                 .radialPosition(if (handheld) 120f else 60f)
                 .radialScale(scale * buttonScale)
-                .offset(x = buttonX, y = buttonY + if (LocalNesPortraitLayout.current) 4.dp else 0.dp)
+                .offset(x = buttonX, y = buttonY + if (LocalNesPortraitLayout.current) 10.dp else 0.dp)
                 .onGloballyPositioned { report(NesEditableControl.START, it.boundsInRoot()) },
         id = Id.Key(KeyEvent.KEYCODE_BUTTON_START),
         foreground = { NesPillButtonForeground(pressed = it, label = "START", expanded = true) },
