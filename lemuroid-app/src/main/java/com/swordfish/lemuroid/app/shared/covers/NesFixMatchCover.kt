@@ -22,8 +22,8 @@ object NesFixMatchCover {
     // For example, "Batman (Return of the Joker)" must not match "Batman".
     private val tag =
         Regex(
-            """\\s*(?:\\((?:USA|World|Europe|Japan|Rev(?:ision)?\\s*\\d+|Beta(?:\\s*\\d+)?|""" +
-                """Proto(?:type)?|Demo|Sample|Unl|Unlicensed)\\)|\\[(?:[a-zA-Z!+]+|[a-zA-Z]\\d+)\\])""",
+            """\s*(?:\((?:USA|World|Europe|Japan|Rev(?:ision)?\s*\d+|Beta(?:\s*\d+)?|""" +
+                """Proto(?:type)?|Demo|Sample|Unl|Unlicensed)\)|\[(?:[a-zA-Z!+]+|[a-zA-Z]\d+)\])""",
             RegexOption.IGNORE_CASE,
         )
     private val preferredRegions = listOf("(usa", "(world", "(europe", "(japan")
