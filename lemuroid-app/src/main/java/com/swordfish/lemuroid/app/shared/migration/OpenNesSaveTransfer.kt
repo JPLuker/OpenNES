@@ -226,8 +226,9 @@ internal object OpenNesSaveTransfer {
                     zip.closeEntry()
                 }
             }
-            val parsed = manifest?.let(::parseManifest)
-                ?: throw IOException("Missing save migration manifest")
+            val parsed =
+                manifest?.let(::parseManifest)
+                    ?: throw IOException("Missing save migration manifest")
             if (parsed.size != staged.size || parsed.toSet() != staged.values.toSet()) {
                 throw IOException("Save migration manifest does not match the archive")
             }
@@ -263,7 +264,11 @@ internal object OpenNesSaveTransfer {
         return items
     }
 
-    private fun verifiedExistingFile(root: File, path: String, file: File): Boolean {
+    private fun verifiedExistingFile(
+        root: File,
+        path: String,
+        file: File,
+    ): Boolean {
         val parent = file.parentFile ?: return false
         val expected = File(root, path.substringBeforeLast('/'))
         return file.isFile && !file.isDirectory &&
@@ -272,7 +277,10 @@ internal object OpenNesSaveTransfer {
             file.canonicalFile.path.startsWith(root.canonicalFile.path + File.separator)
     }
 
-    private fun verifiedDestination(root: File, path: String): File {
+    private fun verifiedDestination(
+        root: File,
+        path: String,
+    ): File {
         if (!safePath(path)) throw IOException("Invalid save destination")
         val destination = File(root, path)
         val parent = destination.parentFile ?: throw IOException("Invalid save destination")
@@ -323,7 +331,10 @@ internal object OpenNesSaveTransfer {
             (1..4).any { value.endsWith(".slot" + it) && value.length > ".slot1".length }
     }
 
-    private fun hashMatches(file: File, item: Item): Boolean {
+    private fun hashMatches(
+        file: File,
+        item: Item,
+    ): Boolean {
         if (!file.isFile || file.length() != item.bytes) return false
         return sha256(file.readBytes()) == item.sha256 && file.length() == item.bytes
     }
@@ -331,10 +342,13 @@ internal object OpenNesSaveTransfer {
     private fun sha256(bytes: ByteArray): String =
         hex(MessageDigest.getInstance("SHA-256").digest(bytes))
 
-    private fun hex(bytes: ByteArray): String =
-        bytes.joinToString("") { (it.toInt() and 255).toString(16).padStart(2, '0') }
+    private fun hex(bytes: ByteArray): String = bytes.joinToString("") { (it.toInt() and 255).toString(16).padStart(2, '0') }
 
-    private fun copyBounded(source: InputStream, dest: OutputStream, limit: Long): Long {
+    private fun copyBounded(
+        source: InputStream,
+        dest: OutputStream,
+        limit: Long,
+    ): Long {
         val buffer = ByteArray(16 * 1024)
         var total = 0L
         while (true) {
@@ -348,7 +362,10 @@ internal object OpenNesSaveTransfer {
         return total
     }
 
-    private fun readBounded(stream: InputStream, limit: Int): ByteArray {
+    private fun readBounded(
+        stream: InputStream,
+        limit: Int,
+    ): ByteArray {
         val result = java.io.ByteArrayOutputStream()
         copyBounded(stream, result, limit.toLong())
         return result.toByteArray()
