@@ -474,7 +474,7 @@
     <string name="opennes_romm_scan_prompt">Scan the pairing QR code shown in RomM</string>
     <string name="opennes_romm_pair_code">8-character pairing code</string>
     <string name="opennes_romm_pair_code_action">Pair using code</string>
-    <string name="opennes_romm_pair_instructions">In RomM, open Client API Tokens, create an OpenNES token with me.read, platforms.read and roms.read, then choose Pair device. You can scan its QR code or enter the short code below.</string>
+    <string name="opennes_romm_pair_instructions">In RomM, open Client API Tokens, create an OpenNES token with me.read, platforms.read and roms.read (add devices.write if registering this device for future save sync), then choose Pair device. You can scan its QR code or enter the short code below.</string>
     <string name="opennes_romm_pair_confirm">Pair with RomM?</string>
     <string name="opennes_romm_pair_explanation">Connect to %1$s? The code expires after 60 seconds. Your token will be stored encrypted on this device.</string>
     <string name="opennes_romm_pair_invalid">Not a valid RomM pairing QR code, or server address is not permitted.</string>
