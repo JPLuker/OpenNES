@@ -2062,6 +2062,8 @@ fun GameCover(
     var usingRomArtwork by remember(game.id, primaryArtwork, romArtwork) {
         mutableStateOf(preferredArtwork == romArtwork && romArtwork != primaryArtwork)
     }
+    // When the catalogue URL is absent, the ROM filename fallback is the
+    // actual primary source; do not re-request a known failed catalogue URL.
     val artworkUrl =
         if (primaryArtwork.isNullOrBlank() || usingRomArtwork) romArtwork ?: primaryArtwork else primaryArtwork
 
