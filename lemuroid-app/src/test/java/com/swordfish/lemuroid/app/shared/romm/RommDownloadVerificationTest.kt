@@ -129,6 +129,24 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun rejectsOversizedStandaloneFds() {
+        val disk = temporary.newFile("oversized.fds")
+        java.io.RandomAccessFile(disk, "rw").use { file ->
+            file.setLength(64L * 1024L * 1024L + 1L)
+        }
+        assertThrows(IOException::class.java) {
+            RommDownloadVerification.checkImportedRom(disk, "oversized.fds")
+        }
+    }
+
+    @Test
+    fun acceptsStandaloneFdsAtMinimumSize() {
+        val disk = temporary.newFile("minimum.fds")
+        disk.writeBytes(ByteArray(128))
+        RommDownloadVerification.checkImportedRom(disk, "minimum.fds")
+    }
+
+    @Test
     fun rejectsTruncatedFdsInsideZip() {
         assertThrows(IOException::class.java) {
             RommDownloadVerification.checkImportedRom(
