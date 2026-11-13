@@ -157,6 +157,35 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun rejectsNormalizedDuplicatePathsInRemoteSaveZip() {
+        val archive =
+            zipOf(
+                "saves\\game.sav" to byteArrayOf(1),
+                "saves/game.sav" to byteArrayOf(2),
+            )
+        val failure =
+            assertThrows(IOException::class.java) {
+                RommDownloadVerification.checkRemoteSaveHash(archive, "0".repeat(32))
+            }
+        org.junit.Assert.assertEquals("RomM save ZIP has duplicate entries", failure.message)
+    }
+
+    @Test
+    fun rejectsDuplicateDirectoryEntriesInRemoteSaveZip() {
+        val archive =
+            zipOf(
+                "saves/" to byteArrayOf(),
+                "saves\\" to byteArrayOf(),
+                "saves/game.sav" to byteArrayOf(3),
+            )
+        val failure =
+            assertThrows(IOException::class.java) {
+                RommDownloadVerification.checkRemoteSaveHash(archive, "0".repeat(32))
+            }
+        org.junit.Assert.assertEquals("RomM save ZIP has duplicate entries", failure.message)
+    }
+
+    @Test
     fun verifiesStandaloneSaveHashAndRejectsMismatch() {
         val save = temporary.newFile("game.sav")
         save.writeBytes(byteArrayOf(1, 2, 3, 4))
