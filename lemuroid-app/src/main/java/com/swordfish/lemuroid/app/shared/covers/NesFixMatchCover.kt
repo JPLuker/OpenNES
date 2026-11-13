@@ -20,10 +20,14 @@ object NesFixMatchCover {
 
     // Strip catalogue release metadata, not meaningful parenthesized title text.
     // For example, "Batman (Return of the Joker)" must not match "Batman".
+    private val regionName =
+        """(?:USA|World|Europe|Japan|Germany|France|Spain|Italy|Australia|Canada|Brazil|Korea|China|Taiwan)"""
+    private val regionTag = """(?:$regionName)(?:,\\s*$regionName)*"""
+    private val releaseTag =
+        """(?:Rev(?:ision)?\\s*\\d+|Beta(?:\\s*\\d+)?|Proto(?:type)?|Demo|Sample|Unl|Unlicensed)"""
     private val tag =
         Regex(
-            """\s*(?:\((?:USA|World|Europe|Japan|Rev(?:ision)?\s*\d+|Beta(?:\s*\d+)?|""" +
-                """Proto(?:type)?|Demo|Sample|Unl|Unlicensed)\)|\[(?:[a-zA-Z!+]+|[a-zA-Z]\d+)\])""",
+            """\\s*(?:\\((?:$regionTag|$releaseTag)\\)|\\[(?:[a-zA-Z!+]+|[a-zA-Z]\\d+)\\])""",
             RegexOption.IGNORE_CASE,
         )
     private val preferredRegions = listOf("(usa", "(world", "(europe", "(japan")
