@@ -48,6 +48,12 @@ The workflow refuses absent secrets and an unexpected certificate fingerprint, v
 
 The Play `versionCode` derives from the ordered `VERSION` major/minor/patch tuple (`major * 1,000,000 + minor * 1,000 + patch`). Rolling debug builds keep their separate rising Actions-run sequence and `.debug` package ID. No production submission is made until owner approval, signed Play split installation, migration testing and all remaining release gates.
 
+## Migrating progress from the development APK
+
+The development package `com.jpluker.opennes.debug` and production package `com.jpluker.opennes` are distinct apps. Android cannot upgrade one package ID into the other or silently copy their app-private data. OpenNES now has a source-implemented manual Settings → Transfer NES saves workflow on both variants. It exports a user-selected ZIP containing only verified Casual SRAM and FCEUmm state files, then explicitly stages and imports those files to the other variant without replacing any filename that already exists. ROMs, account credentials, app preferences and Hardcore files are not included; users must separately select/import their own ROM folder and sign in.
+
+**Do not call the migration production-safe** before testing a complete real-device round trip, with running games closed, matching ROMs reindexed, actual save restoration verified, repeated import, cancellation and low-storage failure. Retain the original debug installation and a second external backup until restoration is confirmed.
+
 ## What remains unverified
 
 - Google Play App Signing and a private upload key; no debug keystore or secret
