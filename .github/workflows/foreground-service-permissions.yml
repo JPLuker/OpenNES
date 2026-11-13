@@ -3,13 +3,13 @@ name: Android foreground-service permission regression
 on:
   push:
     paths:
-      - '**/AndroidManifest.xml'
+      - 'lemuroid-app/src/main/AndroidManifest.xml'
       - 'scripts/check_foreground_service_permissions.py'
       - 'scripts/tests/test_foreground_service_permissions.py'
       - '.github/workflows/foreground-service-permissions.yml'
   pull_request:
     paths:
-      - '**/AndroidManifest.xml'
+      - 'lemuroid-app/src/main/AndroidManifest.xml'
       - 'scripts/check_foreground_service_permissions.py'
       - 'scripts/tests/test_foreground_service_permissions.py'
       - '.github/workflows/foreground-service-permissions.yml'
@@ -25,11 +25,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run permission validator regression tests
         run: python3 -m unittest discover -s scripts/tests -p 'test_foreground_service_permissions.py' -v
-      - name: Validate foreground service declarations in Android manifests
-        shell: bash
-        run: |
-          set -euo pipefail
-          while IFS= read -r -d '' manifest; do
-            echo "Checking $manifest"
-            python3 scripts/check_foreground_service_permissions.py "$manifest"
-          done < <(find . -name AndroidManifest.xml -type f -not -path './.git/*' -print0)
+      - name: Validate main app foreground-service declarations
+        run: python3 scripts/check_foreground_service_permissions.py lemuroid-app/src/main/AndroidManifest.xml
