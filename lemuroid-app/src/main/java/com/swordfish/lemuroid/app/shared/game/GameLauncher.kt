@@ -39,15 +39,22 @@ class GameLauncher(
             return false
         }
         host.lifecycleScope.launch {
+            var backgroundWorkPaused = false
             try {
                 val system = GameSystem.findById(game.systemId)
                 val coreConfig = coresSelection.getCoreConfigForSystem(system)
                 if (activity.isFinishing || activity.isDestroyed) return@launch
                 gameLaunchTaskHandler.handleGameStart(activity.applicationContext)
+                backgroundWorkPaused = true
                 BaseGameActivity.launchGame(activity, coreConfig, game, loadSave, leanback)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (backgroundWorkPaused) {
+                    runCatching {
+                        gameLaunchTaskHandler.handleGameLaunchFailure(activity.applicationContext)
+                    }
+                }
                 // Do not log untrusted exception messages (ROM paths, URIs).
                 Timber.w("NES launch preparation failed: %s", e.javaClass.simpleName)
                 if (!activity.isFinishing && !activity.isDestroyed) {
