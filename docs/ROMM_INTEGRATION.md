@@ -1,6 +1,6 @@
 # OpenNES — RomM integration
 
-**Status (2026-11-10): M7 integration in progress.** A scoped read-only API client (HTTPS or explicitly approved private IPv4 HTTP), Android Keystore-backed token store, immutable offline archives and server-bound non-executing request staging exist. Offline integrity auditing, local request review, strict conflict ancestry checks and a read-only RomM 5.4 negotiation parser passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071). No real RomM server, Android UI acceptance, per-user device registration or remote write behavior has been verified.
+**Status (2026-11-10): M7 integration in progress.** A scoped read-only API client (HTTPS or explicitly approved private IPv4 HTTP), Android Keystore-backed token store, immutable offline archives and server-bound non-executing request staging exist. Offline integrity auditing, local request review, strict conflict ancestry checks and a read-only RomM 5.4 negotiation parser passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071). No real RomM server or Android UI acceptance has been verified. Per-account device registration now has a **source implementation** but has not passed a live registration; remote save writes remain disabled.
 
 ## Connection & security
 
@@ -51,6 +51,14 @@
 - **Correct complete pagination:** the client advances by raw server-row count, not filtered NES entries; small, filtered and total-less pages are covered by tests. Platform discovery is reused within one connection's paginated request.
 - **Storage safety:** prevent case-insensitive duplicate imports, reject renamed SAF-created files, never overwrite a local ROM or save, and retain successful file imports in the indexing-recovery state if scan scheduling fails. A ROM stream retains connection/read stall limits plus a strict size bound without the JSON API's 60-second overall timeout.
 - **Verification:** all work is a source candidate pending the latest CI build and an actual phone/RomM server session. Tests now cover offline cache corruption/account isolation, album-art host restrictions, paging, deduplication and index completion. Do not mark M7 complete or publish M8 stable until real-device acceptance is performed.
+
+## November 12 — Device registration and negotiation source candidate
+
+- **Explicit registration UI:** Settings → RomM → Device sync setup offers **Register device**. OpenNES first revalidates `/api/users/me` against its pinned, encrypted-token login; it then submits a bounded `POST /api/devices` using the documented RomM 5.4 `devices.write` scope. The request identifies `platform=android`, `client=opennes`, and `sync_mode=api`. It explicitly disables remote-install capability, duplicate creation and synchronization reset.
+- **Private device identity:** the registration hostname is an anonymous, stable alias derived from a random seed in Android no-backup storage and the exact server/account identity. No MAC, actual Android hostname, IP address, or token appears in the registration payload. The server-issued UUID is retained only while the server fingerprint, credential revision and verified RomM account match. Token change or disconnect clears the binding; the alias seed stays local so a reconnect can claim the same existing server device.
+- **Bounded cancellation:** registration HTTP uses a cancellable OkHttp callback with a no-redirect client, response-size limits and post-response account revalidation. An in-flight response after logout or token rotation cannot pin the device to the new account.
+- **Offline negotiation input:** `RommDeviceSyncNegotiationRequest` builds a bounded, **non-executing** RomM 5.4 negotiation JSON body for individually verified ROM IDs, safe `.srm` filenames, MD5 content hashes and UTC timestamps. It separately requires the current server/account/credential pin, rejects duplicate slots or unsafe content, and always sends `restore_unlisted=false`. The immutable SHA-256 fingerprint remains local for archive integrity rather than being misused as RomM's MD5.
+- **Still disabled:** The app has no real `/api/sync/negotiate` transport, no upload/overwrite/download executor, and no automatic queue replay. Device registration is **not** save synchronization. Registration and negotiation payloads need live RomM 5.4 verification before M7 can advance to safe copy execution.
 
 ## Outstanding gates
 
