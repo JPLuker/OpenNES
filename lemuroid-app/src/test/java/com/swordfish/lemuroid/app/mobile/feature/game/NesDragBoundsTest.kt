@@ -44,6 +44,12 @@ class NesDragBoundsTest {
     }
 
     @Test
+    fun zeroSizeViewportOrControlCannotMove() {
+        assertEquals(0f, NesDragBounds.clamp(50f, 10f, 10f, 0f, 300f, 8f, 0f, 0f), 0.001f)
+        assertEquals(0f, NesDragBounds.clamp(50f, 10f, 40f, 0f, 0f, 8f, 0f, 0f), 0.001f)
+    }
+
+    @Test
     fun invalidMeasurementsNeverPropagateNaN() {
         val actual =
             NesDragBounds.clamp(
