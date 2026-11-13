@@ -101,6 +101,30 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun rejectsDotSegmentsInRomZipPaths() {
+        for (name in listOf("./game.nes", "games/./game.nes", "games\\.\\game.nes")) {
+            val archive = zipOf(name to nesBytes())
+            val failure =
+                assertThrows(IOException::class.java) {
+                    RommDownloadVerification.checkImportedRom(archive, "game.zip")
+                }
+            org.junit.Assert.assertEquals("Unsafe archive entry name", failure.message)
+        }
+    }
+
+    @Test
+    fun rejectsDotSegmentsInRemoteSaveZipPaths() {
+        for (name in listOf("./save.sav", "saves/./save.sav", "saves\\.\\save.sav")) {
+            val archive = zipOf(name to byteArrayOf(1, 2, 3))
+            val failure =
+                assertThrows(IOException::class.java) {
+                    RommDownloadVerification.checkRemoteSaveHash(archive, "0".repeat(32))
+                }
+            org.junit.Assert.assertEquals("Unsafe archive entry name", failure.message)
+        }
+    }
+
+    @Test
     fun rejectsDuplicateArchiveEntryNames() {
         val archive = zipOf("game.nes" to nesBytes(), "a.txt" to byteArrayOf(1), "b.txt" to byteArrayOf(2))
         val bytes = archive.readBytes()
