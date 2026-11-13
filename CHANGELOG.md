@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **M7 read-only device sync preview:** a registered RomM user can select a local NES SRAM file, double-check its MD5/SHA-256 fingerprint, and receive one ROM-scoped RomM 5.4 negotiation preview in Settings. Proposed upload/download/conflict/delete/no-op operations are displayed; all non-no-op actions are reported as unexecuted when the short-lived session is closed. No local or remote save content is modified, and a server/account change clears the preview. Live RomM acceptance is still required.
+
+
 - **M8 debug-to-Play save transfer:** Settings now supports an explicitly user-selected ZIP export/import for NES Casual SRAM and FCEUmm save states. Export double-checks source hashes; import bounds size/count, requires a SHA-256 manifest, stages and verifies everything, and offers an explicit confirmation before committing only new filenames. Existing saves are never overwritten. The emulator process lock prevents a simultaneous running game from mutating files. ROMs, RetroAchievements credentials, RomM tokens, private preferences and Hardcore saves are excluded. This is source implementation; successful phone export/import and reboot/upgrade acceptance are pending.
 
 - **M7 device registration:** explicit RomM 5.4 device registration now uses a cancellable, bounded request, rechecks the current verified account before and after it, and stores a server-issued device ID only for that account/token revision. An anonymous, per-server/account alias is derived from a private no-backup seed; no MAC or real device hostname is sent. Registration never transfers saves, and requires live server verification.
