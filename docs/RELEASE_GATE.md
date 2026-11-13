@@ -5,6 +5,10 @@
 ## Secret custody and build provenance
 
 - [ ] Create a unique OpenNES release keystore off-repository, secure a backup and record certificate fingerprints privately.
+- [x] Prepare a **manual** signed Play AAB validation workflow bound to the protected `production-signing` environment, with no release/Play publishing and no debug-key fallback.
+- [ ] Supply a unique private upload key, keystore credentials and a separately pinned SHA-256 upload-certificate fingerprint as protected environment secrets; configure required environment reviewers, then run the signed validation workflow. This has **not** been executed.
+- [x] Derive production versionCode monotonically from the `VERSION` semantic tuple, independent of the increasing Actions-run debug code.
+
 - [x] Remove Lemuroid's inherited hardcoded release credentials. Without all four `OPENNES_RELEASE_*` environment variables, release signing is not configured.
 - [ ] Verify all release environment variables come from protected CI secrets or a private interactive shell; avoid logging them.
 - [x] Pin the four GitHub Actions families in the development APK workflow to their verified tag commits.
@@ -23,9 +27,9 @@
 - [ ] Provide verified explicit backup/export and import to migrate testers from `com.jpluker.opennes.debug`; Google Play's separately signed production package cannot update the debug app in place.
 - [ ] **No in-app updater, self-download or unknown-sources APK installation** in public builds; Play Store manages updates. The rolling GitHub APK remains developer-only.
 
-## Package & source compliance
+## Static package validation
 
-### Implemented static packaging checks (source; exact-commit CI required)
+### Implemented release inspection safeguards
 
 - [x] The supported build variant is `freeBundle` only. The old Play/dynamic variant definitions and unused app-extension module are no longer in the configured app project.
 - [x] APK and AAB inspectors reject hidden Libretro core libraries, recognizable bare NES/FDS/NSF ROM images and ZIP paths with traversal or platform-incompatible separators. Synthetic fixtures test these failure paths.
