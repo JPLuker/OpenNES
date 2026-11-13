@@ -35,6 +35,12 @@
         <item name="elevationOverlayColor">?attr/colorOnSurface</item>
     </style>
 
+    <style name="LemuroidMaterialTheme.Startup" parent="LemuroidMaterialTheme">
+        <item name="android:windowBackground">#0F1013</item>
+        <item name="android:statusBarColor">#0F1013</item>
+        <item name="android:navigationBarColor">#0F1013</item>
+    </style>
+
     <style name="LemuroidMaterialTheme.Invisible" parent="LemuroidMaterialTheme">
         <item name="android:background">#00000000</item>
         <item name="android:windowNoTitle">true</item>
