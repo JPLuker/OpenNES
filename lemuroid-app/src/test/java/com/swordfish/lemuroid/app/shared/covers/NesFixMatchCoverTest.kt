@@ -49,6 +49,32 @@ class NesFixMatchCoverTest {
     }
 
     @Test
+    fun combinedRegionTagsMatchExactTitleWithoutErasingSubtitles() {
+        val cover = entry("Batman (Return of the Joker) (USA, Europe)")
+        assertEquals(
+            cover.thumbnail,
+            NesFixMatchCover.choose("Batman (Return of the Joker)", listOf(cover)),
+        )
+        assertNull(
+            NesFixMatchCover.choose(
+                "Batman",
+                listOf(entry("Batman (Return of the Joker) (USA, Europe)")),
+            ),
+        )
+    }
+
+    @Test
+    fun additionalKnownRegionTagsMatchButUnknownParenthesesRemainTitles() {
+        assertEquals(
+            entry("Tetris (Germany)").thumbnail,
+            NesFixMatchCover.choose("Tetris", listOf(entry("Tetris (Germany)"))),
+        )
+        assertNull(
+            NesFixMatchCover.choose("Tetris", listOf(entry("Tetris (Special Edition) (Germany)"))),
+        )
+    }
+
+    @Test
     fun plainUsaReleaseIsPreferredOverOtherRegionsAndRevisions() {
         val cover =
             NesFixMatchCover.choose(
