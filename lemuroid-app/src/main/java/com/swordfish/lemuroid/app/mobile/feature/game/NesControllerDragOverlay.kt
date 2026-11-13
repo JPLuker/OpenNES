@@ -92,25 +92,8 @@ internal fun NesControllerDragOverlay(
         // group rectangles. D-pad fallback exists for older PadKit layouts.
         // Directional hitboxes calibrate invisible input regions, not the
         // painted D-pad cross. Only expose whole visual controls in drag mode.
-        val movableControls =
-            NesEditableControl.entries.filterNot {
-                it == NesEditableControl.DPAD_UP ||
-                    it == NesEditableControl.DPAD_DOWN ||
-                    it == NesEditableControl.DPAD_LEFT ||
-                    it == NesEditableControl.DPAD_RIGHT
-            }
+        val movableControls = NesDragHandleSelection.visibleControls(controlBounds.keys)
         movableControls.forEach { control ->
-            // The face-button group encloses A and B. Rendering its drag
-            // target above those individual targets intercepts their gestures,
-            // making the painted buttons appear impossible to move separately.
-            // Keep the group handle only as a fallback for layouts that do
-            // not report individual A/B bounds.
-            if (control == NesEditableControl.FACE_BUTTONS &&
-                controlBounds[NesEditableControl.A] != null &&
-                controlBounds[NesEditableControl.B] != null
-            ) {
-                return@forEach
-            }
             val bounds =
                 controlBounds[control]
                     ?: when (control) {
