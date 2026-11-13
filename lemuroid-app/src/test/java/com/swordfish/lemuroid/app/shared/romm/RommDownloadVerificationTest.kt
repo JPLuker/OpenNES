@@ -157,6 +157,20 @@ class RommDownloadVerificationTest {
     }
 
     @Test
+    fun rejectsDirectoryOnlyRemoteSaveZipEvenWithMatchingEmptyDigest() {
+        val archive = zipOf("saves/" to byteArrayOf())
+        val emptyDigest =
+            java.security.MessageDigest.getInstance("MD5")
+                .digest(byteArrayOf())
+                .joinToString("") { (it.toInt() and 0xFF).toString(16).padStart(2, '0') }
+        val failure =
+            assertThrows(IOException::class.java) {
+                RommDownloadVerification.checkRemoteSaveHash(archive, emptyDigest)
+            }
+        org.junit.Assert.assertEquals("RomM save ZIP contains no save files", failure.message)
+    }
+
+    @Test
     fun rejectsNormalizedDuplicatePathsInRemoteSaveZip() {
         val archive =
             zipOf(
