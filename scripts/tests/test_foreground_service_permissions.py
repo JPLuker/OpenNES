@@ -1,6 +1,9 @@
 """Regression coverage for the Android foreground-service permission validator."""
 import unittest
+from pathlib import Path
+import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from check_foreground_service_permissions import validate_manifest
 
 HEADER = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
