@@ -1,6 +1,8 @@
 # OpenNES — Development progress
 
-> **Handoff update — 2026-11-13:** See [../AGENT_HANDOFF.md](../AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.\n\n
+> **Handoff update — 2026-11-13:** See [../AGENT_HANDOFF.md](../AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.
+
+
 Updated: 2026-11-12
 
 This tracker distinguishes **source implementation**, **verified CI**, and **real-device acceptance**. The last verified feature baseline passed [CI run 43323713762](https://github.com/JPLuker/OpenNES/actions/runs/43323713762), including source formatting, JVM tests, native/Android compilation, NES-only inspection and rolling APK publication. The latest M5 save synchronization and M8 package/build guards must pass their exact-commit CI before being called verified. A genuine NES award reflected on RetroAchievements has not yet been confirmed, and [M0–M5 phone acceptance](M5_FINAL_TESTING.md) remains open. M7 real-server save sync is also outstanding.

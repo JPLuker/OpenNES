@@ -1,6 +1,8 @@
 # OpenNES testing and acceptance
 
-> **Handoff update — 2026-11-13:** See [AGENT_HANDOFF.md](AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.\n\n
+> **Handoff update — 2026-11-13:** See [AGENT_HANDOFF.md](AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.
+
+
 The current rolling APK is a **development preview**, not a release candidate. A passed workflow proves Kotlin source formatting, JVM regressions, Android compilation, native bridge exports, NES-only packaging, version identity and SHA-256 publication. It does **not** prove gameplay stability, safe upgrades, actual RetroAchievements awards or compatibility with the user's live RomM server.
 
 ## November 13 — 0.1.6 on-device results and 0.1.7 source fixes

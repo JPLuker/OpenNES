@@ -1,6 +1,8 @@
 # OpenNES — Production release gate
 
-> **Handoff update — 2026-11-13:** See [../AGENT_HANDOFF.md](../AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.\n\n
+> **Handoff update — 2026-11-13:** See [../AGENT_HANDOFF.md](../AGENT_HANDOFF.md) for the latest source head, CI caveats, user-reported failures, priorities and acceptance requirements. Older milestone claims below are historical and may conflict with newer code or device reports. Do not treat source implementation as accepted.
+
+
 **Status:** Not release-approved. This is an implementation checklist, not evidence of a completed test.
 
 ## Secret custody and build provenance
