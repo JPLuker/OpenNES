@@ -190,21 +190,6 @@ fun GameMenuHomeScreen(
             onCheckedChange = onAudioChanged,
         )
 
-        if (gameMenuRequest.fastForwardSupported) {
-            GameMenuSwitchAction(
-                title = stringResource(R.string.game_menu_fast_forward),
-                checked = fastForwardEnabled,
-                onCheckedChange = onFastForwardChanged,
-            )
-        }
-        if (rewindAvailable && !hardcoreActive) {
-            GameMenuAction(
-                title = stringResource(R.string.opennes_rewind_action),
-                icon = R.drawable.ic_menu_load,
-                onClick = { onResult { putExtra(GameMenuContract.RESULT_REWIND, true) } },
-            )
-        }
-
         // NES games normally do not expose multiple disks or tilt input.
         // Preserve the existing handlers only if the running core supports them.
         if (gameMenuRequest.numDisks > 1) {
@@ -219,14 +204,6 @@ fun GameMenuHomeScreen(
                 onItemSelected = { index, _ ->
                     onResult { putExtra(GameMenuContract.RESULT_CHANGE_DISK, index) }
                 },
-            )
-        }
-
-        if (DpadTiltControl.isAvailable(gameMenuRequest.allTiltConfigurations)) {
-            GameMenuSwitchAction(
-                title = stringResource(R.string.opennes_dpad_tilt_control),
-                checked = tiltEnabled,
-                onCheckedChange = onTiltChanged,
             )
         }
 
