@@ -83,10 +83,11 @@ class OpenNesSaveTransferTest {
     @Test
     fun existingSavesArePreservedWithoutReplacement() {
         sourceFile("saves/Zelda.srm", byteArrayOf(1, 2, 3))
-        val existing = File(target, "saves/Zelda.srm").apply {
-            parentFile?.mkdirs()
-            writeBytes(byteArrayOf(99, 98))
-        }
+        val existing =
+            File(target, "saves/Zelda.srm").apply {
+                parentFile?.mkdirs()
+                writeBytes(byteArrayOf(99, 98))
+            }
         val imported =
             OpenNesSaveTransfer.prepare(ByteArrayInputStream(exportBytes()), staging).apply(target)
         assertEquals(0, imported.imported)
