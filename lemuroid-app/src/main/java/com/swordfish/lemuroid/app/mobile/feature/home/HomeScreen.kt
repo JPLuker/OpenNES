@@ -553,7 +553,6 @@ private fun OpenNesLibrary(
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
-
                         }
                     }
                     repeat(columns - rows[index].size) {
