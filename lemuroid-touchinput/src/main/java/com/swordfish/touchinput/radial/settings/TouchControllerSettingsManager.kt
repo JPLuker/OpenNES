@@ -70,6 +70,8 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val startButton: ButtonGeometry = ButtonGeometry(),
         val selectButton: ButtonGeometry = ButtonGeometry(),
         val menuButton: ButtonGeometry = ButtonGeometry(),
+        val rewindButton: ButtonGeometry = ButtonGeometry(),
+        val fastForwardButton: ButtonGeometry = ButtonGeometry(),
         val aButton: ButtonGeometry = ButtonGeometry(),
         val bButton: ButtonGeometry = ButtonGeometry(),
         // Opt-in independent D-pad direction targets. Unmodified users retain
