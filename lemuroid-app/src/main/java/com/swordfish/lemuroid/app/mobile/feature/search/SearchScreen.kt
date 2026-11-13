@@ -184,7 +184,6 @@ fun SearchScreen(
                 },
             onDismiss = { selectedRemote = null },
             onDownload = { viewModel.downloadFromRomM(remote) },
-            onRetryConnection = { viewModel.refreshRomMLibrary(force = true) },
             onPlay = {
                 selectedRemote = null
                 onGameClick(it)
