@@ -13,12 +13,12 @@ import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.HttpUrl
-import okhttp3.Response
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -156,8 +156,9 @@ class RommApiClient {
         connection: RommConnection,
     ): RommDeviceRegistration.Registered {
         val store = RommConnectionStore(context)
-        val saved = withContext(Dispatchers.IO) { store.load() }
-            ?: throw IOException("Reconnect to RomM to register this device")
+        val saved =
+            withContext(Dispatchers.IO) { store.load() }
+                ?: throw IOException("Reconnect to RomM to register this device")
         val initialRevision = store.credentialRevision() ?: throw IOException("RomM token not verified")
         if (!sameConnection(saved, connection)) throw IOException("RomM login changed")
         val profile = checkAccountProfile(connection)
@@ -211,8 +212,9 @@ class RommApiClient {
     ): RommDeviceSyncProtocol.Negotiation {
         require(romId > 0 && selectedSave.romId == romId) { "Unexpected RomM save game" }
         val store = RommConnectionStore(context)
-        val initialConnection = withContext(Dispatchers.IO) { store.load() }
-            ?: throw IOException("Reconnect before comparing saves")
+        val initialConnection =
+            withContext(Dispatchers.IO) { store.load() }
+                ?: throw IOException("Reconnect before comparing saves")
         val revision = store.credentialRevision() ?: throw IOException("RomM credentials not verified")
         if (!sameConnection(initialConnection, connection)) throw IOException("RomM login changed")
         val user = checkAccountProfile(connection)
@@ -327,7 +329,9 @@ class RommApiClient {
                                         throw IOException("RomM device response too large")
                                     }
                                     val bytes =
-                                        body.byteStream().use { input -> RommSafeStreamRead.readBounded(input, maxBytes) }
+                                        body.byteStream().use { input ->
+                                            RommSafeStreamRead.readBounded(input, maxBytes)
+                                        }
                                     String(bytes, Charsets.UTF_8)
                                 }
                             if (continuation.isActive) continuation.resume(text)
