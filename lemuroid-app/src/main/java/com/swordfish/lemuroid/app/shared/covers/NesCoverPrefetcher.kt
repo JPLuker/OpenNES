@@ -20,6 +20,7 @@ class NesCoverPrefetcher(context: Context) {
     private val mutex = Mutex()
     private val loaded = mutableSetOf<String>()
     private val failedAttempts = mutableMapOf<String, Int>()
+    private val lastFailureAt = mutableMapOf<String, Long>()
 
     suspend fun prefetch(games: List<Game>) {
         val urls =
@@ -32,7 +33,14 @@ class NesCoverPrefetcher(context: Context) {
 
         mutex.withLock {
             for (url in urls) {
-                if (url in loaded || (failedAttempts[url] ?: 0) >= MAX_ATTEMPTS) continue
+                if (url in loaded) continue
+                val now = System.currentTimeMillis()
+                val failures = failedAttempts[url] ?: 0
+                if (!NesCoverRetryPolicy.shouldAttempt(failures, lastFailureAt[url], now)) continue
+                if (failures >= MAX_ATTEMPTS) {
+                    failedAttempts.remove(url)
+                    lastFailureAt.remove(url)
+                }
                 val result =
                     runCatching {
                         imageLoader.execute(
@@ -48,11 +56,13 @@ class NesCoverPrefetcher(context: Context) {
                 if (result is SuccessResult) {
                     loaded.add(url)
                     failedAttempts.remove(url)
+                    lastFailureAt.remove(url)
                 } else {
                     // Coil commonly returns ErrorResult rather than throwing.
                     // A transient offline launch must not permanently blacklist
                     // a cover for this session.
                     failedAttempts[url] = (failedAttempts[url] ?: 0) + 1
+                    lastFailureAt[url] = System.currentTimeMillis()
                 }
             }
         }
