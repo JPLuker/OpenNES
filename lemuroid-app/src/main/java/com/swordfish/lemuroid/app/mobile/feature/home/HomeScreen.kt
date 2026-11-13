@@ -200,9 +200,12 @@ fun HomeScreen(
         }
 
     LaunchedEffect(Unit) {
-        viewModel.refreshRomMLibrary()
-        viewModel.checkRomMConnectivity()
-        OpenNesStartupGate.markRemoteReady()
+        try {
+            RommLibraryCatalog.refresh(context.applicationContext)
+            RommLibraryCatalog.checkConnectivity(context.applicationContext)
+        } finally {
+            OpenNesStartupGate.markRemoteReady()
+        }
         // Only while the library is visible; no background connection service.
         while (true) {
             delay(60_000L)
