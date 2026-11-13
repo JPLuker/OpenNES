@@ -12,6 +12,10 @@ END = '</manifest>'
 
 
 class ManifestPermissionTests(unittest.TestCase):
+    def test_actual_app_manifest(self):
+        manifest = Path(__file__).resolve().parents[2] / 'lemuroid-app/src/main/AndroidManifest.xml'
+        self.assertEqual(validate_manifest(manifest.read_text(encoding='utf-8')), [])
+
     def test_missing_both_permissions(self):
         errors = validate_manifest(HEADER + SERVICE + END)
         self.assertEqual(len(errors), 2)
