@@ -151,7 +151,7 @@ class RommApiClient {
      * so a logout/login during a pending registration cannot bind the wrong
      * account to this device.
      */
-    suspend fun registerDevice(
+    internal suspend fun registerDevice(
         context: Context,
         connection: RommConnection,
     ): RommDeviceRegistration.Registered {
