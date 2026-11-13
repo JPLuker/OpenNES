@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **M7 device registration:** explicit RomM 5.4 device registration now uses a cancellable, bounded request, rechecks the current verified account before and after it, and stores a server-issued device ID only for that account/token revision. An anonymous, per-server/account alias is derived from a private no-backup seed; no MAC or real device hostname is sent. Registration never transfers saves, and requires live server verification.
+- **M7 sync preparation:** added a bounded, account-pinned negotiation JSON builder for eligible NES `.srm` saves with distinct MD5 wire fingerprints and local SHA-256 integrity, strict ROM IDs/UTC dates, no automatic restore, and failure tests. Negotiation network execution and remote writes remain disabled.
+- **M8 production readiness:** a manual, non-publishing signed Play AAB validation workflow now requires an external private keystore, certificate fingerprint pin and protected GitHub environment. Production versionCodes derive monotonically from semantic `VERSION`; debug builds retain their existing development sequence. The new workflow is code-ready but cannot run without owner-managed signing secrets.
+
+
 - **M0–M4 source-finalization audit:** the branded foundation, NES-only build, library UI, portrait controller and three landscape presentation modes have source implementations. M1 is functionally complete; physical-device acceptance remains separate for M0/M2/M3/M4.
 - **M5 save coordination:** manual slot/quick save/load, startup autosave restoration and game reset now share a consistent session mutex and rewind timeline-reset lock, preventing old or concurrent snapshot history from crossing a state restore. Added repeated held-rewind, stale candidate and invalid snapshot regression tests. Source build and device verification are separate requirements.
 - **M8 packaging:** removed unused play/dynamic variants while retaining `freeBundle`, the existing development application ID and signing identity. Added strict APK/AAB archive path, bundled bare-ROM and hidden emulation-core rejection with regression fixtures. The standalone unsigned Play bundle workflow also runs on changes to core packaging and its inspectors. Final license/security/ROM audit, Play signing and device verification remain open.
