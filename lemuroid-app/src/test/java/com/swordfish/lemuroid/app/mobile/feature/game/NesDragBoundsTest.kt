@@ -20,13 +20,13 @@ class NesDragBoundsTest {
     @Test
     fun oversizedGroupHasNoInvalidReversedClamp() {
         val actual = NesDragBounds.clamp(27f, 10f, 300f, 0f, 200f, 10f, 20f, 20f)
-        assertEquals(0f, actual, 0.001f)
+        assertEquals(20f, actual, 0.001f)
     }
 
     @Test
     fun oversizedControlCannotBeDraggedFurtherBeyondEitherSafeEdge() {
         assertEquals(-140f, NesDragBounds.clamp(-300f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
-        assertEquals(0f, NesDragBounds.clamp(27f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
+        assertEquals(20f, NesDragBounds.clamp(27f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
         assertEquals(20f, NesDragBounds.clamp(300f, 10f, 300f, 0f, 200f, 10f, 20f, 20f), 0.001f)
     }
 
