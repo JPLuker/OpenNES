@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **RomM save detection:** require a complete ZIP magic signature before interpreting downloaded save bytes as an archive, preventing raw save files with ZIP-like prefixes from being rejected incorrectly.
+
 - **Fix Match cover selection:** recognize combined and additional region tags (such as `(USA, Europe)` and `(Germany)`) without discarding meaningful parenthesized game subtitles.
 
 - **RomM ZIP path validation:** reject `.` directory segments in downloaded ROM and save archives, preventing alternate paths from bypassing duplicate-entry checks.
