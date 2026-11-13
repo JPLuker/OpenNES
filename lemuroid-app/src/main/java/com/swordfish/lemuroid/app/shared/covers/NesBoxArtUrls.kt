@@ -22,12 +22,16 @@ object NesBoxArtUrls {
             Uri.encode(fileTitle) + ".png"
     }
 
-    fun remoteCandidates(game: Game): List<String> =
-        listOfNotNull(
+    fun remoteCandidates(game: Game): List<String> {
+        // A custom cover is authoritative. Do not fetch unrelated catalogue
+        // artwork in the background when the player has supplied their own.
+        if (game.systemId != "nes" || !game.customCoverUri.isNullOrBlank()) return emptyList()
+        return listOfNotNull(
             game.coverFrontUrl?.replace(
                 "http://thumbnails.libretro.com/",
                 "https://thumbnails.libretro.com/",
             ),
             romFilenameFallback(game),
         ).distinct()
+    }
 }

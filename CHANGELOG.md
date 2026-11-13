@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Cover prefetch safety:** custom artwork now suppresses unnecessary remote catalogue requests, and non-NES entries cannot request NES covers. JVM regression tests cover custom covers, unrelated systems and ordinary NES artwork. Device acceptance remains pending.
+
 - **Play listing:** replaced the inherited Lemuroid store description ("All in one emulator", 23 systems) with OpenNES text, and removed the Lemuroid screenshot and TV banner. `docs/PLAY_LISTING.md` has ready answers for the Data safety form, permissions, content rating and emulator policy notes. Original screenshots and icon artwork are still needed.
 
 - **0.1.8.** Base version raised so the build that contains the fixes below is easy to recognize in Settings → About.
