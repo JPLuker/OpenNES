@@ -8,7 +8,7 @@ internal object GameShortcutId {
     fun parse(lastPathSegment: String?): Int? {
         if (lastPathSegment.isNullOrBlank() ||
             lastPathSegment.length > 10 ||
-            !lastPathSegment.all(Char::isDigit)
+            !lastPathSegment.all { it in '0'..'9' }
         ) {
             return null
         }
