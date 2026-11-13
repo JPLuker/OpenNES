@@ -1288,7 +1288,7 @@ private fun NesTransportControls(
         TransportPosition(
             geometry = settings.rewindButton,
             control = NesEditableControl.REWIND,
-            defaultX = menuBounds.left - fullBounds.left - buttonPx - gapPx,
+            defaultX = menuBounds.left - fullBounds.left - 2f * (buttonPx + gapPx),
         ) { modifier ->
             if (rewindAvailable || editing) {
                 NesRewindHoldButton(
@@ -1302,7 +1302,7 @@ private fun NesTransportControls(
         TransportPosition(
             geometry = settings.fastForwardButton,
             control = NesEditableControl.FAST_FORWARD,
-            defaultX = menuBounds.right - fullBounds.left + gapPx,
+            defaultX = menuBounds.left - fullBounds.left - buttonPx - gapPx,
         ) { modifier ->
             Box(
                 modifier =
