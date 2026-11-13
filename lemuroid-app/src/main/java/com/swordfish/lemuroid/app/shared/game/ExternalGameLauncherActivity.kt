@@ -13,12 +13,11 @@ import com.swordfish.lemuroid.app.shared.main.GameLaunchTaskHandler
 import com.swordfish.lemuroid.app.utils.android.displayErrorDialog
 import com.swordfish.lemuroid.common.animationDuration
 import com.swordfish.lemuroid.common.coroutines.launchOnState
-import com.swordfish.lemuroid.common.coroutines.safeLaunch
 import com.swordfish.lemuroid.common.longAnimationDuration
 import com.swordfish.lemuroid.lib.core.CoresSelection
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,13 +53,22 @@ class ExternalGameLauncherActivity : ImmersiveActivity() {
 
         setContentView(R.layout.activity_loading)
         if (savedInstanceState == null) {
-            val gameId = intent.data?.pathSegments?.let { it[it.size - 1].toInt() }!!
+            val gameId = intent.data?.lastPathSegment?.toIntOrNull()?.takeIf { it > 0 }
+            if (gameId == null) {
+                // Stale launcher shortcuts and malformed external intents are
+                // not allowed to crash the app before recovery UI opens.
+                displayErrorMessage()
+                return
+            }
 
             lifecycleScope.launch {
                 loadingState.value = true
                 try {
                     loadGame(gameId)
-                } catch (e: Throwable) {
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Never forward ROM document paths in external errors.
                     displayErrorMessage()
                 }
                 loadingState.value = false
@@ -125,9 +133,12 @@ class ExternalGameLauncherActivity : ImmersiveActivity() {
 
         when (requestCode) {
             BaseGameActivity.REQUEST_PLAY_GAME -> {
-                GlobalScope.safeLaunch {
-                    gameLaunchTaskHandler.handleGameFinish(this@ExternalGameLauncherActivity, resultCode, data)
-                    finish()
+                lifecycleScope.launch {
+                    try {
+                        gameLaunchTaskHandler.handleGameFinish(this@ExternalGameLauncherActivity, resultCode, data)
+                    } finally {
+                        finish()
+                    }
                 }
             }
         }
