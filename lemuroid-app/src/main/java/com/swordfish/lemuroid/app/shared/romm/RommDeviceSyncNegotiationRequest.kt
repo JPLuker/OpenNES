@@ -1,0 +1,119 @@
+package com.swordfish.lemuroid.app.shared.romm
+
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.Locale
+
+/**
+ * A bounded, pure negotiation payload builder for RomM 5.4.
+ *
+ * This does NOT register a device, contact a server, approve a transfer, or
+ * grant access to files. Callers must first authenticate the current account
+ * and use the actual server-issued device UUID for that account.
+ *
+ * The protocol's content_hash is MD5, while OpenNES local archive integrity
+ * uses SHA-256. Never exchange or compare these two digest types.
+ */
+internal object RommDeviceSyncNegotiationRequest {
+    data class LocalSave(
+        val romId: Int,
+        val fileName: String,
+        val slot: String?,
+        val fingerprint: RommDeviceSyncProtocol.StableFileFingerprint,
+        val updatedAt: String,
+    )
+
+    private val deviceIdPattern =
+        Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+    private val md5Pattern = Regex("[0-9a-f]{32}")
+    private val sha256Pattern = Regex("[0-9a-f]{64}")
+    private val timestampPattern =
+        Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z")
+
+    /**
+     * Produces only a local JSON preview. The REST negotiation endpoint
+     * creates a session, so this builder never sends it on its own.
+     *
+     * Only a subset of the user's verified NES ROMs may be queried. Unknown
+     * ROM IDs, duplicate slots, unsafe paths, unverified account pins or
+     * changed-file digests are rejected, not silently removed.
+     */
+    fun build(
+        deviceId: String,
+        requestedRomIds: Set<Int>,
+        localSaves: List<LocalSave>,
+        currentServerFingerprint: String?,
+        currentCredentialRevision: String?,
+        currentAccountId: Long?,
+        pinnedServerFingerprint: String?,
+        pinnedCredentialRevision: String?,
+        pinnedAccountId: Long?,
+    ): String {
+        require(deviceId.matches(deviceIdPattern)) { "Registered RomM device required" }
+        require(
+            RommAccountIdentity.matchesPin(
+                currentServerFingerprint,
+                currentCredentialRevision,
+                currentAccountId,
+                pinnedServerFingerprint,
+                pinnedCredentialRevision,
+                pinnedAccountId,
+            ),
+        ) { "Current RomM account is not verified" }
+        require(requestedRomIds.isNotEmpty() && requestedRomIds.size <= MAX_ROMS) {
+            "Select a bounded set of verified NES games"
+        }
+        require(requestedRomIds.all { it > 0 }) { "Unverified RomM game ID" }
+        require(localSaves.size <= MAX_SAVES) { "Too many local saves" }
+
+        val slotKeys = HashSet<Pair<Int, String?>>()
+        val saves = JSONArray()
+        localSaves.forEach { save ->
+            require(save.romId in requestedRomIds) { "Save does not belong to a selected ROM" }
+            require(safeFileName(save.fileName)) { "Unsafe save filename" }
+            require(save.slot == null || safeSlot(save.slot)) { "Unsafe RomM save slot" }
+            require(slotKeys.add(save.romId to save.slot)) { "Duplicate save slot for ROM" }
+            require(
+                save.fingerprint.md5.matches(md5Pattern) &&
+                    save.fingerprint.sha256.matches(sha256Pattern) &&
+                    save.fingerprint.bytes in 1..MAX_SAVE_BYTES,
+            ) { "A stable double-read save fingerprint is required" }
+            require(timestampPattern.matches(save.updatedAt)) { "Invalid UTC save timestamp" }
+            saves.put(
+                JSONObject()
+                    .put("rom_id", save.romId)
+                    .put("file_name", save.fileName)
+                    .put("slot", save.slot ?: JSONObject.NULL)
+                    .put("emulator", JSONObject.NULL)
+                    .put("content_hash", save.fingerprint.md5)
+                    .put("updated_at", save.updatedAt)
+                    .put("file_size_bytes", save.fingerprint.bytes),
+            )
+        }
+        val ids = JSONArray()
+        requestedRomIds.sorted().forEach(ids::put)
+        return JSONObject()
+            .put("device_id", deviceId)
+            .put("saves", saves)
+            .put("rom_ids", ids)
+            // Never treat an omitted local save as permission to delete or
+            // to silently restore a remote account's unlisted saves.
+            .put("restore_unlisted", false)
+            .put("emulators", JSONObject.NULL)
+            .toString()
+    }
+
+    private fun safeFileName(name: String): Boolean =
+        name.length in 1..255 &&
+            name != "." && name != ".." &&
+            name.none { it == '/' || it == '\\' || it.isISOControl() } &&
+            name.lowercase(Locale.ROOT).endsWith(".srm")
+
+    private fun safeSlot(slot: String): Boolean =
+        slot.length in 1..128 &&
+            slot.none { it == '/' || it == '\\' || it.isISOControl() }
+
+    private const val MAX_ROMS = 128
+    private const val MAX_SAVES = 128
+    private const val MAX_SAVE_BYTES = 16L * 1024 * 1024
+}
