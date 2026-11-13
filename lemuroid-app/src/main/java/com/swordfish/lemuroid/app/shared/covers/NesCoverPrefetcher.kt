@@ -26,12 +26,10 @@ class NesCoverPrefetcher(context: Context) {
 
     suspend fun prefetch(games: List<Game>) {
         val urls =
-            games.asSequence()
-                .flatMap { NesBoxArtUrls.remoteCandidates(it).asSequence() }
-                .filter { it.startsWith("https://thumbnails.libretro.com/") }
-                .distinct()
-                .take(MAX_COVERS)
-                .toList()
+            NesCoverPrefetchOrder.select(
+                games.map(NesBoxArtUrls::remoteCandidates),
+                MAX_COVERS,
+            )
 
         mutex.withLock {
             for (url in urls) {
