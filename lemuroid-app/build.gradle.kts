@@ -14,6 +14,15 @@ val openNesVersion = rootProject.file("VERSION").readText().trim()
 require(openNesVersion.matches(Regex("""[0-9]+\.[0-9]+\.[0-9]+"""))) {
     "VERSION must be a semantic major.minor.patch version"
 }
+// Production Play versionCodes come from the ordered VERSION tuple, not
+// GitHub Actions run numbers. Debug remains on its separate package/sequence.
+val (majorVersion, minorVersion, patchVersion) = openNesVersion.split(".").map(String::toInt)
+require(majorVersion in 0..2_100 && minorVersion in 0..999 && patchVersion in 0..999) {
+    "VERSION exceeds the safe Play versionCode representation"
+}
+val playVersionCode = majorVersion * 1_000_000 + minorVersion * 1_000 + patchVersion
+require(playVersionCode in 1..2_100_000_000) { "Invalid Play versionCode" }
+
 val developmentRunRaw = System.getenv("OPENNES_DEV_RUN_NUMBER")
 val developmentRun = developmentRunRaw?.toIntOrNull()
 require(developmentRunRaw == null || (developmentRun != null && developmentRun in 1..1_000_000)) {
@@ -22,7 +31,7 @@ require(developmentRunRaw == null || (developmentRun != null && developmentRun i
 
 android {
     defaultConfig {
-        versionCode = developmentRun?.plus(100_000) ?: 1
+        versionCode = developmentRun?.plus(100_000) ?: playVersionCode
         versionName = openNesVersion
         applicationId = "com.jpluker.opennes"
         // Private-free source revision in user-copied diagnostics, not a signing identity.
