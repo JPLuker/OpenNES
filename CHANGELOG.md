@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **FDS download safety:** standalone Famicom Disk System files now respect the same 64 MiB maximum as NES ROMs, preventing oversized direct downloads from bypassing the ZIP and NES limits.
+
 - **RomM stream progress:** ROM ZIP verification and remote-save hash checks now fail after repeated zero-byte stream reads instead of potentially looping indefinitely; regression tests cover standalone and zipped save digests.
 
 - **RomM archive path safety:** reject drive-qualified and malformed ZIP paths while allowing legitimate nested directories. Regression tests cover Windows absolute paths, repeated separators, duplicate ZIP entries, and directory entries.
