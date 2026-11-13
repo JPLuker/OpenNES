@@ -36,6 +36,31 @@ object GameProcessLock {
         }
     }
 
+    /**
+     * Safely export/import save files only while no emulator owns the process
+     * lock. Holding this same lock during the entire I/O transaction also
+     * prevents launching a new game halfway through migration.
+     */
+    fun <T> withNoGameRunning(
+        appContext: Context,
+        block: () -> T,
+    ): T = withExclusiveLockFile(File(appContext.filesDir, LOCK_FILE_NAME), block)
+
+    internal fun <T> withExclusiveLockFile(
+        file: File,
+        block: () -> T,
+    ): T {
+        try {
+            return RandomAccessFile(file, "rw").channel.use { probe ->
+                val owned = probe.tryLock()
+                    ?: throw IOException("Close the running NES game before transferring saves")
+                owned.use { block() }
+            }
+        } catch (_: OverlappingFileLockException) {
+            throw IOException("Close the running NES game before transferring saves")
+        }
+    }
+
     fun isHeldByAnotherProcess(appContext: Context): Boolean = isFileLocked(File(appContext.filesDir, LOCK_FILE_NAME))
 
     /** Fail closed if the lock cannot be probed; never launch two cores. */
