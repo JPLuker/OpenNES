@@ -13,7 +13,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * loads the library (first-run setup) cannot hold the screen.
  */
 object OpenNesStartupGate {
-    const val MINIMUM_MS = 450L
+    const val MINIMUM_MS = 1_000L
     const val MAXIMUM_MS = 4_000L
 
     private val libraryReady = MutableStateFlow(false)
