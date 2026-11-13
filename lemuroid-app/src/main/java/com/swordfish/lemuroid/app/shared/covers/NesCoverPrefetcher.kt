@@ -6,6 +6,7 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -43,7 +44,7 @@ class NesCoverPrefetcher(context: Context) {
                     lastFailureAt.remove(url)
                 }
                 val result =
-                    runCatching {
+                    try {
                         imageLoader.execute(
                             ImageRequest.Builder(appContext)
                                 .data(url)
@@ -51,9 +52,14 @@ class NesCoverPrefetcher(context: Context) {
                                 .memoryCacheKey(CoverUtils.coverMemoryKey(url))
                                 .build(),
                         )
-                    }.onFailure {
-                        Timber.d(it, "NES artwork cache fetch failed")
-                    }.getOrNull()
+                    } catch (cancelled: CancellationException) {
+                        // Cancellation is not a failed download. Stop the batch
+                        // immediately and do not consume its retry budget.
+                        throw cancelled
+                    } catch (error: Exception) {
+                        Timber.d(error, "NES artwork cache fetch failed")
+                        null
+                    }
                 if (result is SuccessResult) {
                     loaded.add(url)
                     failedAttempts.remove(url)
