@@ -3,12 +3,17 @@ package com.swordfish.lemuroid.app.shared.romm
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import com.swordfish.lemuroid.BuildConfig
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexScheduler
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.HttpUrl
+import okhttp3.Response
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -24,6 +29,8 @@ import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.coroutineContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * RomM adapter. Uses scoped bearer tokens; HTTPS is required outside private IPv4 LANs.
@@ -133,6 +140,126 @@ class RommApiClient {
     internal suspend fun checkAccountProfile(connection: RommConnection): RommAccountIdentity.Profile =
         withContext(Dispatchers.IO) {
             RommAccountIdentity.parseProfile(getJson(connection, listOf("api", "users", "me")))
+        }
+
+    /**
+     * Explicit, account-bound device registration for future RomM 5.4 sync.
+     * Registration adds only an anonymous device entry to this user's RomM;
+     * no saves are downloaded, uploaded, deleted or replaced here.
+     *
+     * The token and pinned account are checked again after the HTTP response
+     * so a logout/login during a pending registration cannot bind the wrong
+     * account to this device.
+     */
+    suspend fun registerDevice(
+        context: Context,
+        connection: RommConnection,
+    ): RommDeviceRegistration.Registered {
+        val store = RommConnectionStore(context)
+        val saved = withContext(Dispatchers.IO) { store.load() }
+            ?: throw IOException("Reconnect to RomM to register this device")
+        val initialRevision = store.credentialRevision() ?: throw IOException("RomM token not verified")
+        if (!sameConnection(saved, connection)) throw IOException("RomM login changed")
+        val profile = checkAccountProfile(connection)
+        val userId = profile.userId ?: throw IOException("RomM account ID not available")
+        if (store.lastVerifiedUserId() != userId) {
+            throw IOException("RomM account is different from the verified login")
+        }
+        val fingerprint =
+            RommServerIdentity.fingerprint(connection.serverUrl)
+                ?: throw IOException("Invalid RomM server")
+        val identity = RommDeviceIdentityStore(context)
+        val alias = withContext(Dispatchers.IO) { identity.alias(fingerprint, userId) }
+        val requestBody =
+            RommDeviceRegistration.request(
+                hostAlias = alias,
+                version = BuildConfig.VERSION_NAME.substringBefore('-'),
+            ).toString()
+        val result =
+            RommDeviceRegistration.parse(
+                postCancellableJson(
+                    connection = connection,
+                    path = listOf("api", "devices"),
+                    json = requestBody,
+                    maxBytes = 16 * 1024,
+                ),
+            )
+        withContext(Dispatchers.IO) {
+            val latest = store.load() ?: throw IOException("RomM login changed")
+            if (!sameConnection(latest, connection) ||
+                store.credentialRevision() != initialRevision ||
+                store.lastVerifiedUserId() != userId
+            ) {
+                throw IOException("RomM account changed during device registration")
+            }
+            identity.pin(fingerprint, initialRevision, userId, result.deviceId)
+        }
+        return result
+    }
+
+    private fun sameConnection(
+        first: RommConnection,
+        second: RommConnection,
+    ): Boolean =
+        first.serverUrl == second.serverUrl &&
+            MessageDigest.isEqual(
+                first.token.toByteArray(Charsets.UTF_8),
+                second.token.toByteArray(Charsets.UTF_8),
+            )
+
+    /**
+     * Cancels the underlying OkHttp call on coroutine cancellation. Never
+     * follows redirects; bearer tokens must stay on the configured origin.
+     */
+    private suspend fun postCancellableJson(
+        connection: RommConnection,
+        path: List<String>,
+        json: String,
+        maxBytes: Int,
+    ): String =
+        suspendCancellableCoroutine { continuation ->
+            val request =
+                Request.Builder()
+                    .url(buildUrl(connection, path))
+                    .post(json.toRequestBody("application/json; charset=utf-8".toMediaType()))
+                    .header("Authorization", "Bearer " + connection.token)
+                    .header("Accept", "application/json")
+                    .header("User-Agent", "OpenNES RomM device registration")
+                    .build()
+            val call = http.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(
+                object : Callback {
+                    override fun onFailure(
+                        call: Call,
+                        e: IOException,
+                    ) {
+                        if (continuation.isActive) continuation.resumeWithException(e)
+                    }
+
+                    override fun onResponse(
+                        call: Call,
+                        response: Response,
+                    ) {
+                        try {
+                            val text =
+                                response.use {
+                                    if (!it.isSuccessful) throw httpError(it.code)
+                                    val body = it.body ?: throw IOException("Empty RomM device response")
+                                    if (body.contentLength() > maxBytes) {
+                                        throw IOException("RomM device response too large")
+                                    }
+                                    val bytes =
+                                        body.byteStream().use { input -> RommSafeStreamRead.readBounded(input, maxBytes) }
+                                    String(bytes, Charsets.UTF_8)
+                                }
+                            if (continuation.isActive) continuation.resume(text)
+                        } catch (e: Exception) {
+                            if (continuation.isActive) continuation.resumeWithException(e)
+                        }
+                    }
+                },
+            )
         }
 
     suspend fun checkAccount(connection: RommConnection): String = checkAccountProfile(connection).username
