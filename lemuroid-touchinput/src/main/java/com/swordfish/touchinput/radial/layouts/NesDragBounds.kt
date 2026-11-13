@@ -28,6 +28,7 @@ object NesDragBounds {
             )
         if (values.any { !it.isFinite() }) return 0f
         if (viewportEndPx < viewportStartPx || groupEndPx < groupStartPx) return 0f
+        if (viewportEndPx == viewportStartPx || groupEndPx == groupStartPx) return 0f
         val inset = edgeInsetPx.coerceAtLeast(0f)
         val minimum = viewportStartPx + inset + safeStartPx.coerceAtLeast(0f) - groupStartPx
         val maximum = viewportEndPx - inset - safeEndPx.coerceAtLeast(0f) - groupEndPx
