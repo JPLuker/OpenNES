@@ -72,6 +72,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -2071,6 +2072,7 @@ fun GameCover(
     // Do not allow a late failure from an old request to change the source
     // after this game has already switched to its filename fallback.
     val requestArtworkUrl = artworkUrl
+    val currentArtworkUrl = rememberUpdatedState(artworkUrl)
     AsyncImage(
         model =
             ImageRequest.Builder(LocalContext.current)
@@ -2094,7 +2096,8 @@ fun GameCover(
                     onError = { _, _ ->
                         // A failed user-selected cover must not silently
                         // replace that choice with unrelated catalogue art.
-                        if (game.customCoverUri.isNullOrBlank() &&
+                        if (requestArtworkUrl == currentArtworkUrl.value &&
+                            game.customCoverUri.isNullOrBlank() &&
                             !usingRomArtwork &&
                             romArtwork != null &&
                             requestArtworkUrl != romArtwork
