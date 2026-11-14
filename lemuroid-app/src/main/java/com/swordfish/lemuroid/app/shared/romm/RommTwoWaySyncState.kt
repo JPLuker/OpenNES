@@ -42,6 +42,8 @@ internal data class RommTwoWaySyncState(
         val failed: Int,
         /** A short, user-safe message; never a server response or path. */
         val problem: String? = null,
+        /** Games on this phone that were paired with a game on RomM. */
+        val matched: Int = 0,
     )
 
     fun forOwner(currentOwner: String): RommTwoWaySyncState =
@@ -77,6 +79,7 @@ internal data class RommTwoWaySyncState(
                     .put("downloaded", run.downloaded)
                     .put("conflicts", run.conflicts)
                     .put("failed", run.failed)
+                    .put("matched", run.matched)
                     .put("problem", run.problem ?: JSONObject.NULL),
             )
         }
@@ -140,6 +143,7 @@ internal data class RommTwoWaySyncState(
                         downloaded = run.optInt("downloaded").coerceAtLeast(0),
                         conflicts = run.optInt("conflicts").coerceAtLeast(0),
                         failed = run.optInt("failed").coerceAtLeast(0),
+                        matched = run.optInt("matched").coerceAtLeast(0),
                         problem =
                             if (run.isNull("problem")) null else run.optString("problem").take(MAX_PROBLEM),
                     )

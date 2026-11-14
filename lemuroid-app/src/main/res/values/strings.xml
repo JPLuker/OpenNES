@@ -571,7 +571,8 @@
     <string name="opennes_romm_sync_description">In-game saves continue between this phone, RomM\'s web player and RetroArch. Syncs before a game starts and after it closes. Save states stay on this phone.</string>
     <string name="opennes_romm_sync_running">Syncing saves…</string>
     <string name="opennes_romm_sync_now">Sync now</string>
-    <string name="opennes_romm_sync_last_run">Last synced %1$s · %2$d uploaded, %3$d downloaded</string>
+    <string name="opennes_romm_sync_last_run">Last synced %1$s · %2$d games matched with RomM · %3$d uploaded, %4$d downloaded</string>
+    <string name="opennes_romm_sync_none_matched">Last synced %1$s · None of the games on this phone matched a game on RomM, so there was nothing to sync.</string>
     <string name="opennes_romm_sync_token_help">The RomM token needs these permissions: assets.read, assets.write, devices.read and devices.write.</string>
     <string name="opennes_romm_sync_conflicts_title">Choose which save to keep</string>
     <string name="opennes_romm_sync_reason_both">This phone and RomM both have newer progress for this game.</string>

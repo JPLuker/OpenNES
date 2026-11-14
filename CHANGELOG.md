@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Save sync pairs games by content too:** a game on the phone now matches the same game on RomM even when the file names differ, using the same ROM fingerprint RomM records (MD5 of the file, or of the largest file in a zip). The status line now says how many games matched, and says plainly when none did.
+
 - **Play signing set up:** the owner's upload key is in the protected `production-signing` environment, and the first signed production bundle (`com.jpluker.opennes`) built and matched its pinned certificate ([run 43604032372](https://github.com/JPLuker/OpenNES/actions/runs/43604032372)).
 
 - **RomM two-way save sync (#8, device and server acceptance pending).** Settings → RomM → **Save sync** turns it on (it registers the phone with RomM automatically). In-game battery saves then sync with your RomM server before a game starts (at most 6 s, so an offline server never blocks play), after it closes, when the library opens and on **Sync now**. Uses RomM 5.4's device sync with the `autosave` slot and `fceumm` emulator, the names RomM's web player and RetroArch sync use, so a save continues on any of them.

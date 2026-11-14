@@ -144,7 +144,7 @@ internal object RommTwoWaySync {
             guard(context) {
                 val session = openSession(context, registerIfNeeded = false)
                 RommLibraryCatalog.refresh(context.applicationContext)
-                run(context, session, pair(games, RommLibraryCatalog.state.value.games))
+                run(context, session, pair(context, games, RommLibraryCatalog.state.value.games))
             } ?: Outcome.Failed("Sync stopped")
         }
 
@@ -166,7 +166,7 @@ internal object RommTwoWaySync {
                         RommLibraryCatalog.refresh(context.applicationContext)
                         remote = RommLibraryCatalog.state.value.games
                     }
-                    run(context, session, pair(listOf(game), remote))
+                    run(context, session, pair(context, listOf(game), remote))
                 }
             }
         }
@@ -312,20 +312,48 @@ internal object RommTwoWaySync {
         return Session(connection, deviceId, fingerprint, accountId)
     }
 
-    /** Local games paired with server ROMs by exact file name, ignoring case. */
-    private fun pair(
+    // ROM fingerprints by file URI and size, so each ROM is hashed once per process.
+    private val romMd5Cache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /**
+     * Local games paired with server ROMs: by exact file name ignoring case,
+     * else by the ROM's content fingerprint, which RomM also records. Two
+     * server ROMs matching one game are ambiguous and skipped.
+     */
+    private suspend fun pair(
+        context: Context,
         games: List<Game>,
         remote: List<RommApiClient.Rom>,
     ): List<Pair<Game, RommApiClient.Rom>> {
         val byName = remote.groupBy { it.fileName.lowercase(Locale.ROOT) }
+        val byMd5 = remote.filter { it.md5 != null }.groupBy { it.md5 }
         return games
             .filter { it.id > 0 && it.systemId == "nes" }
             .mapNotNull { game ->
-                // Two server ROMs with one file name are ambiguous: skip.
-                byName[game.fileName.lowercase(Locale.ROOT)]?.singleOrNull()?.let { game to it }
+                byName[game.fileName.lowercase(Locale.ROOT)]?.singleOrNull()?.let { return@mapNotNull game to it }
+                if (byMd5.isEmpty()) return@mapNotNull null
+                val md5 = localRomMd5(context, game) ?: return@mapNotNull null
+                byMd5[md5]?.singleOrNull()?.let { game to it }
             }
             .distinctBy { it.second.id }
     }
+
+    private suspend fun localRomMd5(
+        context: Context,
+        game: Game,
+    ): String? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val uri = android.net.Uri.parse(game.fileUri)
+                val resolver = context.applicationContext.contentResolver
+                val size =
+                    resolver.openAssetFileDescriptor(uri, "r")?.use { it.length } ?: -1L
+                val key = game.fileUri + "|" + size
+                romMd5Cache[key] ?: resolver.openInputStream(uri)?.use { input ->
+                    RommRomFingerprint.md5(input, game.fileName.lowercase(Locale.ROOT).endsWith(".zip"))
+                }?.also { romMd5Cache[key] = it }
+            }.getOrNull()
+        }
 
     private fun refuseIfRunning(
         context: Context,
@@ -504,6 +532,7 @@ internal object RommTwoWaySync {
                 conflicts = conflicts.size,
                 failed = failed,
                 problem = if (failed > 0) "Some saves couldn't sync and will be tried again." else null,
+                matched = pairs.size,
             )
         state =
             withContext(Dispatchers.IO) { file.read() }.forOwner(session.owner).copy(

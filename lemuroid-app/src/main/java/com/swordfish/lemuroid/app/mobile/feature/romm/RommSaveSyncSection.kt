@@ -194,7 +194,8 @@ private fun lastRunText(run: RommTwoWaySyncState.LastRun): String {
             System.currentTimeMillis(),
             DateUtils.MINUTE_IN_MILLIS,
         ).toString()
-    return stringResource(R.string.opennes_romm_sync_last_run, ago, run.uploaded, run.downloaded)
+    if (run.problem == null && run.matched == 0) return stringResource(R.string.opennes_romm_sync_none_matched, ago)
+    return stringResource(R.string.opennes_romm_sync_last_run, ago, run.matched, run.uploaded, run.downloaded)
 }
 
 private fun reasonText(reason: RommTwoWaySyncPlan.ConflictReason): Int =
