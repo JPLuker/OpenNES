@@ -73,11 +73,6 @@ private fun InputSettings() {
             title = { Text(text = stringResource(id = R.string.settings_title_enable_device_rumble)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_enable_device_rumble)) },
         )
-        OpenNesSettingsSwitch(
-            state = booleanPreferenceState(R.string.pref_key_rewind_enabled, true),
-            title = { Text(text = stringResource(R.string.settings_title_rewind_enabled)) },
-            subtitle = { Text(text = stringResource(R.string.settings_description_rewind_enabled)) },
-        )
         OpenNesSettingsSlider(
             state =
                 intPreferenceState(

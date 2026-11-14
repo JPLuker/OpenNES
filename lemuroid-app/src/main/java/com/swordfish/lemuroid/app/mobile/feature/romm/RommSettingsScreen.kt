@@ -13,9 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -30,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +55,7 @@ import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsLink
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
 import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
@@ -121,6 +127,7 @@ fun RommSettingsScreen(
         mutableStateOf(store.configuredServer() != null && store.hasSavedToken())
     }
     var signedInAs by remember { mutableStateOf<String?>(null) }
+    var showAdvanced by rememberSaveable { mutableStateOf(false) }
     var registeredDeviceId by remember(context) {
         mutableStateOf(
             deviceIdentity.pinnedDevice(
@@ -373,6 +380,7 @@ fun RommSettingsScreen(
     }
 
     val browse: (Int) -> Unit = { offset ->
+        showAdvanced = true
         perform("Browsing NES games") {
             val connection =
                 withContext(Dispatchers.IO) {
@@ -408,26 +416,6 @@ fun RommSettingsScreen(
     }
 
     OpenNesSettingsPage(modifier = modifier.then(if (busy) Modifier.blur(10.dp) else Modifier)) {
-        OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_romm_notice_settings)) }) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.opennes_romm_notice_toggle))
-                    Text(
-                        stringResource(R.string.opennes_romm_notice_description),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                    )
-                }
-                Switch(
-                    checked = showDisconnectWarnings,
-                    onCheckedChange = { RommConnectionPreferences.setWarnings(context, it) },
-                )
-            }
-        }
         OpenNesSettingsGroup(
             title = { Text(stringResource(R.string.opennes_romm_title)) },
         ) {
@@ -567,331 +555,368 @@ fun RommSettingsScreen(
             RommSaveSyncSection(loadGames = loadGames)
         }
 
-        if (configured) {
-            page?.let { loaded ->
+        // Everything below is for troubleshooting and manual recovery;
+        // everyday use is the connection and Save sync above.
+        OpenNesSettingsGroup {
+            OpenNesSettingsLink(
+                title = { Text(stringResource(R.string.opennes_romm_advanced_title)) },
+                subtitle = { Text(stringResource(R.string.opennes_romm_advanced_description)) },
+                action = {
+                    Icon(
+                        imageVector = if (showAdvanced) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                        contentDescription = null,
+                    )
+                },
+                onClick = { showAdvanced = !showAdvanced },
+            )
+        }
+        if (showAdvanced) {
+            OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_romm_notice_settings)) }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.opennes_romm_notice_toggle))
+                        Text(
+                            stringResource(R.string.opennes_romm_notice_description),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                        )
+                    }
+                    Switch(
+                        checked = showDisconnectWarnings,
+                        onCheckedChange = { RommConnectionPreferences.setWarnings(context, it) },
+                    )
+                }
+            }
+            if (configured) {
+                page?.let { loaded ->
+                    OpenNesSettingsGroup(
+                        title = {
+                            Text(stringResource(R.string.opennes_romm_results, loaded.total))
+                        },
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Text(stringResource(R.string.opennes_romm_import_note))
+                            if (!hasRomFolder) {
+                                Text(stringResource(R.string.opennes_romm_no_folder))
+                            }
+                            if (loaded.items.isEmpty()) {
+                                Text(stringResource(R.string.opennes_romm_no_roms))
+                            }
+                            loaded.items.forEach { rom ->
+                                RommGameRow(
+                                    game = rom,
+                                    busy = busy,
+                                    importAvailable = hasRomFolder,
+                                    onSaves = {
+                                        perform("Viewing save backups") {
+                                            val connection =
+                                                withContext(Dispatchers.IO) {
+                                                    store.load() ?: error("Reconnect to RomM")
+                                                }
+                                            remoteSaves = client.listRemoteSaves(connection, rom.id)
+                                            selectedSaveGame = rom
+                                            syncPreview = null
+                                        }
+                                    },
+                                    onImport = {
+                                        perform("Importing " + rom.name) {
+                                            val connection =
+                                                withContext(Dispatchers.IO) {
+                                                    store.load() ?: error("Reconnect to RomM")
+                                                }
+                                            client.importIntoSelectedNesFolder(context, connection, rom)
+                                            status = context.getString(R.string.opennes_romm_imported, rom.name)
+                                        }
+                                    },
+                                )
+                            }
+                            val nextOffset =
+                                runCatching { RommCataloguePaging.nextOffset(loaded.offset, loaded) }.getOrNull()
+                            if (nextOffset != null) {
+                                Button(enabled = !busy, onClick = { browse(nextOffset) }) {
+                                    Text(stringResource(R.string.opennes_romm_more))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            val saves = remoteSaves
+            val game = selectedSaveGame
+            if (configured && saves != null && game != null) {
                 OpenNesSettingsGroup(
-                    title = {
-                        Text(stringResource(R.string.opennes_romm_results, loaded.total))
-                    },
+                    title = { Text(stringResource(R.string.opennes_romm_save_backups_for, game.name)) },
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Text(stringResource(R.string.opennes_romm_import_note))
-                        if (!hasRomFolder) {
-                            Text(stringResource(R.string.opennes_romm_no_folder))
+                        Text(stringResource(R.string.opennes_romm_save_backups_note))
+                        if (saves.isEmpty()) Text(stringResource(R.string.opennes_romm_no_saves))
+                        Text(stringResource(R.string.opennes_romm_preview_description))
+                        OutlinedButton(
+                            enabled = !busy && registeredDeviceId != null,
+                            onClick = {
+                                pendingSyncPreviewRom = game
+                                syncPreview = null
+                                syncPreviewPicker.launch(arrayOf("*/*"))
+                            },
+                        ) {
+                            Text(stringResource(R.string.opennes_romm_preview_button))
                         }
-                        if (loaded.items.isEmpty()) {
-                            Text(stringResource(R.string.opennes_romm_no_roms))
-                        }
-                        loaded.items.forEach { rom ->
-                            RommGameRow(
-                                game = rom,
-                                busy = busy,
-                                importAvailable = hasRomFolder,
-                                onSaves = {
-                                    perform("Viewing save backups") {
-                                        val connection =
-                                            withContext(Dispatchers.IO) {
-                                                store.load() ?: error("Reconnect to RomM")
-                                            }
-                                        remoteSaves = client.listRemoteSaves(connection, rom.id)
-                                        selectedSaveGame = rom
-                                        syncPreview = null
+                        syncPreview?.let { preview ->
+                            Text(stringResource(R.string.opennes_romm_preview_count, preview.operations.size))
+                            preview.operations.take(12).forEach { proposed ->
+                                val textId =
+                                    when (proposed.action) {
+                                        RommDeviceSyncProtocol.Action.UPLOAD ->
+                                            R.string.opennes_romm_preview_upload
+                                        RommDeviceSyncProtocol.Action.DOWNLOAD ->
+                                            R.string.opennes_romm_preview_download
+                                        RommDeviceSyncProtocol.Action.CONFLICT ->
+                                            R.string.opennes_romm_preview_conflict
+                                        RommDeviceSyncProtocol.Action.DELETE ->
+                                            R.string.opennes_romm_preview_delete
+                                        RommDeviceSyncProtocol.Action.NO_OP ->
+                                            R.string.opennes_romm_preview_noop
                                     }
-                                },
-                                onImport = {
-                                    perform("Importing " + rom.name) {
-                                        val connection =
-                                            withContext(Dispatchers.IO) {
-                                                store.load() ?: error("Reconnect to RomM")
-                                            }
-                                        client.importIntoSelectedNesFolder(context, connection, rom)
-                                        status = context.getString(R.string.opennes_romm_imported, rom.name)
-                                    }
-                                },
-                            )
+                                Text(stringResource(textId, proposed.fileName))
+                            }
+                            if (preview.operations.size > 12) {
+                                Text(stringResource(R.string.opennes_romm_preview_more))
+                            }
                         }
-                        val nextOffset =
-                            runCatching { RommCataloguePaging.nextOffset(loaded.offset, loaded) }.getOrNull()
-                        if (nextOffset != null) {
-                            Button(enabled = !busy, onClick = { browse(nextOffset) }) {
-                                Text(stringResource(R.string.opennes_romm_more))
+                        saves.forEach { save ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(save.fileName)
+                                    save.slot?.let { Text(it) }
+                                }
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = {
+                                        pendingSave = save
+                                        backupPicker.launch(save.fileName)
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.opennes_romm_export_save))
+                                }
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = {
+                                        perform("Saving private offline backup") {
+                                            client.keepRemoteSaveBackup(
+                                                context,
+                                                withContext(Dispatchers.IO) {
+                                                    store.load() ?: error("Reconnect to RomM")
+                                                },
+                                                save,
+                                            )
+                                            archivedSaves = client.listOfflineSaveBackups(context)
+                                            status = context.getString(R.string.opennes_romm_archive_saved)
+                                        }
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.opennes_romm_archive_keep))
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        val saves = remoteSaves
-        val game = selectedSaveGame
-        if (configured && saves != null && game != null) {
             OpenNesSettingsGroup(
-                title = { Text(stringResource(R.string.opennes_romm_save_backups_for, game.name)) },
+                title = { Text(stringResource(R.string.opennes_romm_archive_title)) },
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(stringResource(R.string.opennes_romm_save_backups_note))
-                    if (saves.isEmpty()) Text(stringResource(R.string.opennes_romm_no_saves))
-                    Text(stringResource(R.string.opennes_romm_preview_description))
+                    Text(stringResource(R.string.opennes_romm_archive_description))
                     OutlinedButton(
-                        enabled = !busy && registeredDeviceId != null,
+                        enabled = !busy,
                         onClick = {
-                            pendingSyncPreviewRom = game
-                            syncPreview = null
-                            syncPreviewPicker.launch(arrayOf("*/*"))
+                            perform("Checking offline save backups") {
+                                archivedSaves = client.listOfflineSaveBackups(context)
+                                archiveAudit = null
+                                status = context.getString(R.string.opennes_romm_archive_checked)
+                            }
                         },
                     ) {
-                        Text(stringResource(R.string.opennes_romm_preview_button))
+                        Text(stringResource(R.string.opennes_romm_archive_refresh))
                     }
-                    syncPreview?.let { preview ->
-                        Text(stringResource(R.string.opennes_romm_preview_count, preview.operations.size))
-                        preview.operations.take(12).forEach { proposed ->
-                            val textId =
-                                when (proposed.action) {
-                                    RommDeviceSyncProtocol.Action.UPLOAD ->
-                                        R.string.opennes_romm_preview_upload
-                                    RommDeviceSyncProtocol.Action.DOWNLOAD ->
-                                        R.string.opennes_romm_preview_download
-                                    RommDeviceSyncProtocol.Action.CONFLICT ->
-                                        R.string.opennes_romm_preview_conflict
-                                    RommDeviceSyncProtocol.Action.DELETE ->
-                                        R.string.opennes_romm_preview_delete
-                                    RommDeviceSyncProtocol.Action.NO_OP ->
-                                        R.string.opennes_romm_preview_noop
-                                }
-                            Text(stringResource(textId, proposed.fileName))
-                        }
-                        if (preview.operations.size > 12) {
-                            Text(stringResource(R.string.opennes_romm_preview_more))
-                        }
-                    }
-                    saves.forEach { save ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(save.fileName)
-                                save.slot?.let { Text(it) }
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            perform("Auditing offline backup integrity") {
+                                archiveAudit = client.auditOfflineSaveBackups(context)
+                                archivedSaves = client.listOfflineSaveBackups(context)
+                                status = context.getString(R.string.opennes_romm_archive_audited)
                             }
-                            TextButton(
-                                enabled = !busy,
-                                onClick = {
-                                    pendingSave = save
-                                    backupPicker.launch(save.fileName)
-                                },
-                            ) {
-                                Text(stringResource(R.string.opennes_romm_export_save))
-                            }
-                            TextButton(
-                                enabled = !busy,
-                                onClick = {
-                                    perform("Saving private offline backup") {
-                                        client.keepRemoteSaveBackup(
-                                            context,
-                                            withContext(Dispatchers.IO) {
-                                                store.load() ?: error("Reconnect to RomM")
-                                            },
-                                            save,
-                                        )
-                                        archivedSaves = client.listOfflineSaveBackups(context)
-                                        status = context.getString(R.string.opennes_romm_archive_saved)
-                                    }
-                                },
-                            ) {
-                                Text(stringResource(R.string.opennes_romm_archive_keep))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        OpenNesSettingsGroup(
-            title = { Text(stringResource(R.string.opennes_romm_archive_title)) },
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(stringResource(R.string.opennes_romm_archive_description))
-                OutlinedButton(
-                    enabled = !busy,
-                    onClick = {
-                        perform("Checking offline save backups") {
-                            archivedSaves = client.listOfflineSaveBackups(context)
-                            archiveAudit = null
-                            status = context.getString(R.string.opennes_romm_archive_checked)
-                        }
-                    },
-                ) {
-                    Text(stringResource(R.string.opennes_romm_archive_refresh))
-                }
-                OutlinedButton(
-                    enabled = !busy,
-                    onClick = {
-                        perform("Auditing offline backup integrity") {
-                            archiveAudit = client.auditOfflineSaveBackups(context)
-                            archivedSaves = client.listOfflineSaveBackups(context)
-                            status = context.getString(R.string.opennes_romm_archive_audited)
-                        }
-                    },
-                ) {
-                    Text(stringResource(R.string.opennes_romm_archive_audit))
-                }
-                archiveAudit?.let { audit ->
-                    Text(
-                        stringResource(
-                            R.string.opennes_romm_archive_audit_results,
-                            audit.verified,
-                            audit.unverifiedArchives,
-                            audit.orphanedManifests,
-                            audit.incompleteWrites,
-                        ),
-                    )
-                    if (audit.unverifiedArchives > 0 || audit.orphanedManifests > 0 ||
-                        audit.incompleteWrites > 0
+                        },
                     ) {
-                        Text(stringResource(R.string.opennes_romm_archive_audit_warning))
+                        Text(stringResource(R.string.opennes_romm_archive_audit))
                     }
-                }
-                if (archivedSaves.isEmpty()) {
-                    Text(stringResource(R.string.opennes_romm_archive_empty))
-                }
-                archivedSaves.forEach { backup ->
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(stringResource(R.string.opennes_romm_archive_entry, backup.romId))
-                        Text(stringResource(R.string.opennes_romm_archive_size, backup.bytes))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                    archiveAudit?.let { audit ->
+                        Text(
+                            stringResource(
+                                R.string.opennes_romm_archive_audit_results,
+                                audit.verified,
+                                audit.unverifiedArchives,
+                                audit.orphanedManifests,
+                                audit.incompleteWrites,
+                            ),
+                        )
+                        if (audit.unverifiedArchives > 0 || audit.orphanedManifests > 0 ||
+                            audit.incompleteWrites > 0
                         ) {
-                            TextButton(
-                                enabled = !busy,
-                                onClick = {
-                                    pendingArchive = backup
-                                    archivePicker.launch("romm-${backup.romId}.savebak")
-                                },
-                            ) { Text(stringResource(R.string.opennes_romm_export_save)) }
-                            TextButton(
-                                enabled = !busy,
-                                onClick = {
-                                    pendingArchiveComparison = backup
-                                    comparePicker.launch(arrayOf("*/*"))
-                                },
-                            ) { Text(stringResource(R.string.opennes_romm_compare_action)) }
-                            TextButton(
-                                enabled = !busy,
-                                onClick = { pendingArchiveDeletion = backup },
-                            ) { Text(stringResource(R.string.opennes_romm_archive_delete)) }
-                        }
-                        val source = RommServerIdentity.fingerprint(store.configuredServer())
-                        if (backup.sourceServerFingerprint == null) {
-                            Text(stringResource(R.string.opennes_romm_pending_legacy_archive))
-                        } else if (backup.sourceServerFingerprint != source) {
-                            Text(stringResource(R.string.opennes_romm_pending_other_server))
-                        } else {
-                            TextButton(
-                                enabled = !busy,
-                                onClick = { prepareArchive = backup },
-                            ) { Text(stringResource(R.string.opennes_romm_pending_prepare)) }
+                            Text(stringResource(R.string.opennes_romm_archive_audit_warning))
                         }
                     }
-                }
-            }
-        }
-
-        OpenNesSettingsGroup(
-            title = { Text(stringResource(R.string.opennes_romm_pending_title)) },
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(stringResource(R.string.opennes_romm_pending_description))
-                OutlinedButton(
-                    enabled = !busy,
-                    onClick = {
-                        perform("Reviewing pending transfers") {
-                            syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
-                            localReviews = emptyMap()
-                            status = context.getString(R.string.opennes_romm_pending_refreshed)
-                        }
-                    },
-                ) { Text(stringResource(R.string.opennes_romm_pending_refresh)) }
-                when (val result = syncQueue) {
-                    RommPendingSyncJournal.ReadResult.Corrupt ->
-                        Text(stringResource(R.string.opennes_romm_pending_corrupt))
-                    is RommPendingSyncJournal.ReadResult.Entries -> {
-                        if (result.pending.isEmpty()) {
-                            Text(stringResource(R.string.opennes_romm_pending_empty))
-                        }
-                        val currentServer = RommServerIdentity.fingerprint(store.configuredServer())
-                        result.pending.forEach { pending ->
-                            Column(
+                    if (archivedSaves.isEmpty()) {
+                        Text(stringResource(R.string.opennes_romm_archive_empty))
+                    }
+                    archivedSaves.forEach { backup ->
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(stringResource(R.string.opennes_romm_archive_entry, backup.romId))
+                            Text(stringResource(R.string.opennes_romm_archive_size, backup.bytes))
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(3.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                val direction =
-                                    if (pending.direction == RommSaveSyncPlanner.Direction.UPLOAD) {
-                                        stringResource(R.string.opennes_romm_pending_upload)
-                                    } else {
-                                        stringResource(R.string.opennes_romm_pending_download)
-                                    }
-                                Text(
-                                    stringResource(
-                                        R.string.opennes_romm_pending_entry,
-                                        pending.romId,
-                                        direction,
-                                    ),
-                                )
-                                Text(stringResource(R.string.opennes_romm_pending_unapproved))
-                                if (currentServer == null || pending.serverFingerprint != currentServer) {
-                                    Text(stringResource(R.string.opennes_romm_pending_other_server))
-                                }
-                                localReviews[pending.id]?.let { review ->
-                                    val label =
-                                        when (review) {
-                                            RommPendingSyncJournal.LocalReview.MATCHES_OBSERVED ->
-                                                R.string.opennes_romm_pending_local_same
-                                            RommPendingSyncJournal.LocalReview.CHANGED_SINCE_REQUEST ->
-                                                R.string.opennes_romm_pending_local_changed
-                                            RommPendingSyncJournal.LocalReview.DIFFERENT_SERVER ->
-                                                R.string.opennes_romm_pending_other_server
-                                            RommPendingSyncJournal.LocalReview.REQUEST_CHANGED ->
-                                                R.string.opennes_romm_pending_request_stale
-                                            RommPendingSyncJournal.LocalReview.JOURNAL_CORRUPT ->
-                                                R.string.opennes_romm_pending_corrupt
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = {
+                                        pendingArchive = backup
+                                        archivePicker.launch("romm-${backup.romId}.savebak")
+                                    },
+                                ) { Text(stringResource(R.string.opennes_romm_export_save)) }
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = {
+                                        pendingArchiveComparison = backup
+                                        comparePicker.launch(arrayOf("*/*"))
+                                    },
+                                ) { Text(stringResource(R.string.opennes_romm_compare_action)) }
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = { pendingArchiveDeletion = backup },
+                                ) { Text(stringResource(R.string.opennes_romm_archive_delete)) }
+                            }
+                            val source = RommServerIdentity.fingerprint(store.configuredServer())
+                            if (backup.sourceServerFingerprint == null) {
+                                Text(stringResource(R.string.opennes_romm_pending_legacy_archive))
+                            } else if (backup.sourceServerFingerprint != source) {
+                                Text(stringResource(R.string.opennes_romm_pending_other_server))
+                            } else {
+                                TextButton(
+                                    enabled = !busy,
+                                    onClick = { prepareArchive = backup },
+                                ) { Text(stringResource(R.string.opennes_romm_pending_prepare)) }
+                            }
+                        }
+                    }
+                }
+            }
+
+            OpenNesSettingsGroup(
+                title = { Text(stringResource(R.string.opennes_romm_pending_title)) },
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(stringResource(R.string.opennes_romm_pending_description))
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            perform("Reviewing pending transfers") {
+                                syncQueue = withContext(Dispatchers.IO) { syncJournal.list() }
+                                localReviews = emptyMap()
+                                status = context.getString(R.string.opennes_romm_pending_refreshed)
+                            }
+                        },
+                    ) { Text(stringResource(R.string.opennes_romm_pending_refresh)) }
+                    when (val result = syncQueue) {
+                        RommPendingSyncJournal.ReadResult.Corrupt ->
+                            Text(stringResource(R.string.opennes_romm_pending_corrupt))
+                        is RommPendingSyncJournal.ReadResult.Entries -> {
+                            if (result.pending.isEmpty()) {
+                                Text(stringResource(R.string.opennes_romm_pending_empty))
+                            }
+                            val currentServer = RommServerIdentity.fingerprint(store.configuredServer())
+                            result.pending.forEach { pending ->
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                                ) {
+                                    val direction =
+                                        if (pending.direction == RommSaveSyncPlanner.Direction.UPLOAD) {
+                                            stringResource(R.string.opennes_romm_pending_upload)
+                                        } else {
+                                            stringResource(R.string.opennes_romm_pending_download)
                                         }
-                                    Text(stringResource(label))
-                                }
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    TextButton(
-                                        onClick = { pendingIntentDetails = pending },
-                                    ) { Text(stringResource(R.string.opennes_romm_pending_details)) }
-                                    if (currentServer != null && pending.serverFingerprint == currentServer) {
+                                    Text(
+                                        stringResource(
+                                            R.string.opennes_romm_pending_entry,
+                                            pending.romId,
+                                            direction,
+                                        ),
+                                    )
+                                    Text(stringResource(R.string.opennes_romm_pending_unapproved))
+                                    if (currentServer == null || pending.serverFingerprint != currentServer) {
+                                        Text(stringResource(R.string.opennes_romm_pending_other_server))
+                                    }
+                                    localReviews[pending.id]?.let { review ->
+                                        val label =
+                                            when (review) {
+                                                RommPendingSyncJournal.LocalReview.MATCHES_OBSERVED ->
+                                                    R.string.opennes_romm_pending_local_same
+                                                RommPendingSyncJournal.LocalReview.CHANGED_SINCE_REQUEST ->
+                                                    R.string.opennes_romm_pending_local_changed
+                                                RommPendingSyncJournal.LocalReview.DIFFERENT_SERVER ->
+                                                    R.string.opennes_romm_pending_other_server
+                                                RommPendingSyncJournal.LocalReview.REQUEST_CHANGED ->
+                                                    R.string.opennes_romm_pending_request_stale
+                                                RommPendingSyncJournal.LocalReview.JOURNAL_CORRUPT ->
+                                                    R.string.opennes_romm_pending_corrupt
+                                            }
+                                        Text(stringResource(label))
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        TextButton(
+                                            onClick = { pendingIntentDetails = pending },
+                                        ) { Text(stringResource(R.string.opennes_romm_pending_details)) }
+                                        if (currentServer != null && pending.serverFingerprint == currentServer) {
+                                            TextButton(
+                                                enabled = !busy,
+                                                onClick = {
+                                                    pendingIntentReview = pending
+                                                    reviewPicker.launch(arrayOf("*/*"))
+                                                },
+                                            ) { Text(stringResource(R.string.opennes_romm_pending_recheck_local)) }
+                                        }
                                         TextButton(
                                             enabled = !busy,
-                                            onClick = {
-                                                pendingIntentReview = pending
-                                                reviewPicker.launch(arrayOf("*/*"))
-                                            },
-                                        ) { Text(stringResource(R.string.opennes_romm_pending_recheck_local)) }
+                                            onClick = { pendingIntentDeletion = pending },
+                                        ) { Text(stringResource(R.string.opennes_romm_pending_discard)) }
                                     }
-                                    TextButton(
-                                        enabled = !busy,
-                                        onClick = { pendingIntentDeletion = pending },
-                                    ) { Text(stringResource(R.string.opennes_romm_pending_discard)) }
                                 }
                             }
                         }
