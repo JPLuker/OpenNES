@@ -10,7 +10,7 @@ submit; change this file when the app's behavior changes.
 - **Category:** Games → Arcade (emulators have no category of their own)
 - **Privacy policy URL:** <https://github.com/JPLuker/OpenNES/blob/master/PRIVACY.md>
 - **Screenshots:** none yet. The inherited Lemuroid screenshot and TV banner were removed because they showed another app. Take at least two phone screenshots of OpenNES (library, and a game with the touch controller) using a homebrew or public-domain game, not a commercial title.
-- **App icon / feature graphic:** must be original OpenNES artwork with no Nintendo logos or controller photos.
+- **App icon / feature graphic:** must be original OpenNES artwork with no Nintendo logos or controller photos. The 512 px icon is `fastlane/metadata/android/en-US/images/icon.png` (Joseph's cartridge drawing, source in `docs/brand/`).
 
 ## Data safety form
 

@@ -1,75 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OpenNES launcher icon: cartridge pixel art by Joseph Luker. Generated from a 32x47 pixel grid. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="127.064445"
-    android:viewportHeight="127.064445">
-  <group android:translateX="6.3532224"
-      android:translateY="6.3532224">
-    <path
-        android:pathData="M37.671,57.065m-12.926,0a12.926,12.926 0,1 1,25.852 0a12.926,12.926 0,1 1,-25.852 0"
-        android:strokeWidth="1.11160922"
-        android:fillColor="#000000"
-        android:fillType="evenOdd"
-        android:fillAlpha="1"/>
-    <path
-        android:pathData="M76.47,57.065m-12.926,0a12.926,12.926 0,1 1,25.852 0a12.926,12.926 0,1 1,-25.852 0"
-        android:fillColor="#000000"
-        android:fillAlpha="1"
-        android:fillType="evenOdd"/>
-    <path
-        android:pathData="m74.169,52.749c0,-1.267 1.024,-2.298 2.295,-2.298 1.27,0 2.293,1.031 2.293,2.298 0,1.269 -1.022,2.299 -2.293,2.299C75.193,55.047 74.169,54.018 74.169,52.749Z"
-        android:strokeWidth="0.66750008"
-        android:fillColor="#ffffff"
-        android:strokeColor="#00000000"
-        android:fillAlpha="1"
-        android:fillType="evenOdd"/>
-    <path
-        android:pathData="m74.169,60.613c0,-1.267 1.024,-2.298 2.295,-2.298 1.27,0 2.293,1.031 2.293,2.298 0,1.269 -1.022,2.299 -2.293,2.299 -1.271,-0.001 -2.295,-1.03 -2.295,-2.299z"
-        android:strokeWidth="0.66750008"
-        android:fillColor="#ffffff"
-        android:strokeColor="#00000000"
-        android:fillAlpha="1"
-        android:fillType="evenOdd"/>
-    <path
-        android:pathData="m78.185,56.748c0,-1.267 1.024,-2.298 2.295,-2.298 1.27,0 2.293,1.031 2.293,2.298 0,1.269 -1.022,2.299 -2.293,2.299 -1.271,-0.001 -2.295,-1.03 -2.295,-2.299z"
-        android:strokeWidth="0.66750008"
-        android:fillColor="#ffffff"
-        android:strokeColor="#00000000"
-        android:fillAlpha="1"
-        android:fillType="evenOdd"/>
-    <path
-        android:pathData="m70.154,56.748c0,-1.267 1.024,-2.298 2.295,-2.298 1.27,0 2.293,1.031 2.293,2.298 0,1.269 -1.022,2.299 -2.293,2.299C71.178,59.046 70.154,58.017 70.154,56.748Z"
-        android:strokeWidth="0.66750008"
-        android:fillColor="#ffffff"
-        android:strokeColor="#00000000"
-        android:fillAlpha="1"
-        android:fillType="evenOdd"/>
-    <path
-        android:pathData="m66.69,77.868c0,4.554 -3.692,8.246 -8.246,8.246h-2.506c-4.553,0 -8.246,-3.692 -8.246,-8.246v0c0,-4.554 3.693,-8.246 8.246,-8.246h2.506c4.554,0 8.246,3.692 8.246,8.246z"
-        android:strokeAlpha="0.5"
-        android:strokeWidth="1.11160922"
-        android:fillColor="#ffffff"
-        android:fillType="evenOdd"
-        android:fillAlpha="0.5"/>
-    <path
-        android:pathData="m52.039,76.689c-0.794,-0.93 -0.441,-1.691 0.78,-1.691l8.512,0c1.223,0 1.574,0.761 0.78,1.692l-3.594,4.213c-0.794,0.93 -2.092,0.93 -2.886,0z"
-        android:strokeAlpha="0.5"
-        android:fillColor="#000000"
-        android:fillAlpha="0.5"
-        android:fillType="evenOdd"/>
-    <path
-        android:pathData="M35.54,51.05l3.999,0l0,11.998l-3.999,0z"
-        android:strokeAlpha="1"
-        android:strokeWidth="0"
-        android:fillColor="#ffffff"
-        android:fillAlpha="1"
-        android:strokeColor="#00000000"/>
-    <path
-        android:pathData="M43.539,55.05l-0,3.999l-11.998,0l-0,-3.999z"
-        android:strokeAlpha="1"
-        android:strokeWidth="0"
-        android:fillColor="#ffffff"
-        android:fillAlpha="1"
-        android:strokeColor="#00000000"/>
-  </group>
+    android:viewportWidth="102.857"
+    android:viewportHeight="102.857">
+    <group android:translateX="35.428" android:translateY="27.928">
+        <path android:fillColor="#5D6263" android:pathData="M0,0h32v1h-32zM0,1h1v38h-1zM31,1h1v38h-1zM1,38h2v1h-2zM29,38h2v1h-2zM2,39h1v8h-1zM29,39h1v8h-1zM3,46h26v1h-26z" />
+        <path android:fillColor="#939C9D" android:pathData="M1,1h6v37h-6zM14,1h1v45h-1zM27,1h4v37h-4zM8,6h5v2h-5zM8,9h5v2h-5zM8,12h5v2h-5zM8,15h5v2h-5zM8,18h5v2h-5zM8,21h5v2h-5zM8,24h5v2h-5zM15,26h12v3h-12zM8,27h5v2h-5zM15,29h1v17h-1zM21,29h6v17h-6zM8,30h5v2h-5zM16,30h1v16h-1zM20,30h1v16h-1zM17,31h1v15h-1zM19,31h1v15h-1zM18,32h1v14h-1zM8,33h5v2h-5zM8,36h5v2h-5zM3,38h4v8h-4zM27,38h2v8h-2zM8,39h5v2h-5zM8,42h5v4h-5z" />
+        <path android:fillColor="#747B7B" android:pathData="M7,1h1v45h-1zM13,1h1v45h-1zM8,4h5v1h-5z" />
+        <path android:fillColor="#7D8484" android:pathData="M8,1h5v1h-5zM8,3h5v1h-5zM8,5h5v1h-5zM8,8h5v1h-5zM8,11h5v1h-5zM8,14h5v1h-5zM8,17h5v1h-5zM8,20h5v1h-5zM8,23h5v1h-5zM8,26h5v1h-5zM8,29h5v1h-5zM8,32h5v1h-5zM8,35h5v1h-5zM8,38h5v1h-5zM8,41h5v1h-5z" />
+        <path android:fillColor="#747B7C" android:pathData="M15,1h12v25h-12z" />
+        <path android:fillColor="#616767" android:pathData="M8,2h5v1h-5z" />
+        <path android:fillColor="#848C8D" android:pathData="M16,29h5v1h-5zM17,30h3v1h-3zM18,31h1v1h-1z" />
+    </group>
 </vector>

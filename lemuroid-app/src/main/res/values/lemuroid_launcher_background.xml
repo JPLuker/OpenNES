@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="lemuroid_launcher_background">@color/main_color</color>
+    <!-- OpenNES launcher background: the Classic Hardware accent red. -->
+    <color name="lemuroid_launcher_background">#B52E43</color>
 </resources>

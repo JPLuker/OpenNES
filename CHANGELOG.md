@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **New app icon (2026-11-14):** Joseph's original cartridge pixel art on the Classic Hardware red. The launcher icon is a vector built from the 32×47 drawing, so it stays sharp at every size; it includes a line-art version for Android 13 themed icons and a 512 px Play Store icon. The source drawing is in `docs/brand/`.
+
 - **Settings and first launch redone (2026-11-14):** Settings is now grouped into Library, Controls, Gameplay, Display, Online, More and About, each row with an icon and plain wording; options that only matter when another is on (HD quality) hide until then, and the rewind switch moved from Advanced to Gameplay. RomM settings show the connection and Save sync first, with backups, archives and browse results under **Advanced tools**. First launch is a four-step guide (welcome, choose your games folder right there, pick controller colors with a live preview, optional RetroAchievements and RomM); every step can be skipped.
 
 - **Phone-test fixes (2026-11-14):** the portrait controller housing now runs edge to edge with square corners instead of a rounded, inset card. The rewind and fast-forward buttons use white vector icons instead of emoji, which Android drew as blue tiles. A RomM download no longer covers the game details with a popup; the Download button itself shows **Downloading… 42%**, then **Adding to your library…**.
