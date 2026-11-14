@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Removed dead Lemuroid module:** `lemuroid-app-ext-play` (Google Drive save sync, Play in-app review, Play on-demand core delivery) had already been dropped from the build but was still in the repository, along with its Google Play services and Google API client dependency definitions. Removing it means the source matches what ships and no Google services code can be re-enabled by accident.
+
 - **Translatable text and TalkBack:** moved the remaining hard-coded English in the controller restore dialog, cheat finder, game details (Play, Resume, Casual/Hardcore), game-switch dialog, rename dialog and RomM download-failure dialog into `strings.xml`, with a proper plural for the cheat count. The fast-forward button now has a screen-reader label and button role.
 
 - **Haptic feedback (#44):** the on-screen rewind and fast-forward buttons now vibrate like the rest of the pad (click on press, tick on release with *Press & release*, nothing with *None*); they were silent before. The Touch feedback setting is now re-read whenever a game returns to the foreground, so a change made in Settings applies without relaunching the game.
