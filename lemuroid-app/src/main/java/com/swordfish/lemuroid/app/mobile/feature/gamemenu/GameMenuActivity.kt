@@ -13,7 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -24,7 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,7 +43,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -349,23 +348,20 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         fullscreen: Boolean = false,
         content: @Composable ColumnScope.() -> Unit,
     ) {
-        BoxWithConstraints(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.55f)),
+        // A plain Box lays the panel out in the very first frame (the old
+        // BoxWithConstraints drew an empty dimmed frame first), and the
+        // window theme's own dim is the only darkening layer.
+        Box(
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.CenterEnd,
         ) {
-            val panelWidth =
-                remember(maxWidth, fullscreen) {
-                    if (fullscreen) maxWidth else minOf(maxWidth * 0.92f, 460.dp)
-                }
-
             Surface(
                 modifier =
-                    Modifier
-                        .fillMaxHeight()
-                        .width(panelWidth),
+                    if (fullscreen) {
+                        Modifier.fillMaxSize()
+                    } else {
+                        Modifier.fillMaxHeight().fillMaxWidth(0.92f).widthIn(max = 460.dp)
+                    },
                 color = GameMenuStyle.background,
                 shape =
                     if (fullscreen) {

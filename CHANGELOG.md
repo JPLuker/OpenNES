@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **Phone-test round 5 (2026-11-14):**
+  - **Continue card redone:** the last game played sits on one tappable panel with a larger title and a full-width Resume button, and is no longer repeated in Recently played.
+  - **"Running game" no longer sticks after Quit:** the library keeps checking until the closed game has finished shutting down.
+  - **Pause menu:** the panel is laid out in the first frame and the window's own dim is the only darkening layer (it used to draw an empty dimmed frame, then the panel, under two stacked dims).
+
 - **Phone-test round 4 (2026-11-14):**
   - **RomM names and details:** a game downloaded from RomM now shows RomM's name, and takes RomM's genre and description when it has none. A name you chose yourself is never replaced.
   - **More covers:** a game with no cover and no region in its file name now tries the Libretro catalogue's US box art for its title.

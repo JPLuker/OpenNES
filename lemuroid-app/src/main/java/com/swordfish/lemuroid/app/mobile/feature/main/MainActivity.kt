@@ -268,6 +268,14 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                     activeSession.value = ActiveGameSession.current(applicationContext)
                 }
             }
+            // A game that was just quit takes a moment to shut down; keep
+            // checking so "Running game" clears itself instead of sticking.
+            LaunchedEffect(activeSession.value) {
+                while (activeSession.value != null) {
+                    delay(700)
+                    activeSession.value = ActiveGameSession.current(applicationContext)
+                }
+            }
 
             val resumeGame = {
                 if (ActiveGameSession.current(applicationContext) != null) {

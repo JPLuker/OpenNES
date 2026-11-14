@@ -469,11 +469,13 @@ private fun OpenNesLibrary(
                 item { FeaturedGame(game, onGameClick) }
             }
         }
-        if (state.recentGames.isNotEmpty()) {
+        // The game on the Continue card is not repeated on the shelf below it.
+        val recentShelf = if (activeSession == null) state.recentGames.drop(1) else state.recentGames
+        if (recentShelf.isNotEmpty()) {
             item {
                 GameShelf(
                     title = stringResource(R.string.opennes_recent_shelf),
-                    games = state.recentGames,
+                    games = recentShelf,
                     onGameClick = onGameDetailsClick,
                     onGameLongClick = onGameLongClick,
                 )
@@ -730,8 +732,8 @@ private fun LibraryHeader(
 }
 
 /**
- * Featured selection sits on the same visual shelf as the collection.
- * No giant rounded recommendation card or duplicate artwork title footer.
+ * The Continue card: the last game played, on one tappable panel with a
+ * full-width button, so picking up where you left off is the obvious action.
  */
 @Composable
 private fun FeaturedGame(
@@ -741,48 +743,48 @@ private fun FeaturedGame(
     val compactLayout =
         LocalConfiguration.current.screenWidthDp < 360 || LocalDensity.current.fontScale > 1.2f
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Surface(
+        onClick = { onGameClick(game) },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = LibraryColors.panel,
+        border = BorderStroke(1.dp, LibraryColors.red.copy(alpha = 0.35f)),
+    ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            modifier = Modifier.padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.Bottom,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            NesBoxArtwork(game = game, modifier = Modifier.width(if (compactLayout) 96.dp else 124.dp))
+            NesBoxArtwork(game = game, modifier = Modifier.width(if (compactLayout) 84.dp else 104.dp))
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(7.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
                     text = stringResource(R.string.opennes_continue),
                     color = LibraryColors.red,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
+                    letterSpacing = 1.5.sp,
                 )
                 Text(
                     text = game.displayName(),
                     color = LibraryColors.foreground,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
+                    fontSize = 20.sp,
+                    lineHeight = 24.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = playTimeLabel(game),
                     color = LibraryColors.muted,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                 )
-                game.description?.takeIf { it.isNotBlank() }?.let { description ->
-                    Text(
-                        text = description,
-                        color = LibraryColors.muted,
-                        fontSize = 12.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
                 Button(
                     onClick = { onGameClick(game) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).heightIn(min = 46.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = LibraryColors.red,
@@ -790,11 +792,11 @@ private fun FeaturedGame(
                         ),
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Text(stringResource(R.string.opennes_play))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.opennes_resume), fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                 }
             }
         }
-        NesShelfRail()
     }
 }
 
