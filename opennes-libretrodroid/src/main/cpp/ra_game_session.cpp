@@ -152,6 +152,48 @@ void RC_CCONV onEvent(const rc_client_event_t* event, rc_client_t* client) {
         enqueueEvent("disconnected");
     } else if (event->type == RC_CLIENT_EVENT_RECONNECTED) {
         enqueueEvent("reconnected");
+    } else if ((event->type == RC_CLIENT_EVENT_LEADERBOARD_STARTED ||
+                event->type == RC_CLIENT_EVENT_LEADERBOARD_FAILED ||
+                event->type == RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED) && event->leaderboard) {
+        const char* kind =
+            event->type == RC_CLIENT_EVENT_LEADERBOARD_STARTED ? "lb_start" :
+            event->type == RC_CLIENT_EVENT_LEADERBOARD_FAILED ? "lb_fail" : "lb_submit";
+        std::string text = safeLabel(event->leaderboard->title, 160);
+        if (event->type == RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED) {
+            text += ": " + safeLabel(event->leaderboard->tracker_value, 24);
+        }
+        enqueueEvent(std::string("notice\t") + kind + "\t" + text);
+    } else if ((event->type == RC_CLIENT_EVENT_LEADERBOARD_TRACKER_SHOW ||
+                event->type == RC_CLIENT_EVENT_LEADERBOARD_TRACKER_UPDATE) &&
+               event->leaderboard_tracker) {
+        enqueueEvent(
+            "tracker\t" + std::to_string(event->leaderboard_tracker->id) + "\t" +
+            safeLabel(event->leaderboard_tracker->display, 24)
+        );
+    } else if (event->type == RC_CLIENT_EVENT_LEADERBOARD_TRACKER_HIDE &&
+               event->leaderboard_tracker) {
+        enqueueEvent("tracker\t" + std::to_string(event->leaderboard_tracker->id) + "\t");
+    } else if (event->type == RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW &&
+               event->achievement) {
+        enqueueEvent(
+            "challenge\t" + std::to_string(event->achievement->id) + "\t1\t" +
+            safeLabel(event->achievement->title, 120)
+        );
+    } else if (event->type == RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE &&
+               event->achievement) {
+        enqueueEvent("challenge\t" + std::to_string(event->achievement->id) + "\t0\t-");
+    } else if ((event->type == RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW ||
+                event->type == RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE) &&
+               event->achievement) {
+        enqueueEvent(
+            "notice\tprogress\t" + safeLabel(event->achievement->title, 120) + ": " +
+            safeLabel(event->achievement->measured_progress, 24)
+        );
+    } else if (event->type == RC_CLIENT_EVENT_GAME_COMPLETED) {
+        enqueueEvent("notice\tcomplete\t-");
+    } else if (event->type == RC_CLIENT_EVENT_SERVER_ERROR) {
+        // The server's message is not shown; only that something was refused.
+        enqueueEvent("notice\terror\t-");
     }
 }
 
@@ -291,7 +333,7 @@ extern "C" bool OpenNESIsAchievementSessionActive() {
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startGameSession(
-    JNIEnv* env, jobject, jstring rawName, jstring rawToken, jstring rawHash
+    JNIEnv* env, jobject, jstring rawName, jstring rawToken, jstring rawHash, jboolean hardcore
 ) {
     auto name = copyUtf(env, rawName);
     auto token = copyUtf(env, rawToken);
@@ -321,7 +363,9 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_star
         expectedHash = hash;
         sessionState = 0;
         rc_client_set_allow_background_memory_reads(gameClient, 0);
-        rc_client_set_hardcore_enabled(gameClient, 0);
+        // Hardcore is decided once, before login, for a freshly booted game.
+        // Kotlin only passes true when its own policy gates allow it.
+        rc_client_set_hardcore_enabled(gameClient, hardcore == JNI_TRUE ? 1 : 0);
         rc_client_set_event_handler(gameClient, onEvent);
         rc_client_begin_login_with_token(gameClient, name.c_str(), token.c_str(), onLogin, nullptr);
     }
@@ -409,6 +453,43 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_idle
         rc_client_idle(gameClient);
         frameReadingSessionId = 0;
     });
+}
+
+// Hardcore to Casual is allowed at any time and needs no reset. Acts on
+// whichever session is current; a no-op when there is none.
+extern "C" JNIEXPORT void JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_downgradeGameSessionToCasual(
+    JNIEnv*, jobject
+) {
+    auto& emulator = libretrodroid::LibretroDroid::getInstance();
+    emulator.withCoreLock([&](bool) {
+        std::lock_guard<std::recursive_mutex> lock(clientMutex);
+        if (!gameClient || disposing) return;
+        rc_client_set_hardcore_enabled(gameClient, 0);
+    });
+}
+
+// The emulated console was reset: achievement progress in flight restarts too.
+extern "C" JNIEXPORT void JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_resetGameSession(
+    JNIEnv*, jobject
+) {
+    auto& emulator = libretrodroid::LibretroDroid::getInstance();
+    emulator.withCoreLock([&](bool) {
+        std::lock_guard<std::recursive_mutex> lock(clientMutex);
+        if (!gameClient || disposing || sessionState != 2) return;
+        rc_client_reset(gameClient);
+    });
+}
+
+// 1 when the current session is in Hardcore, 0 when Casual, -1 when there is none.
+extern "C" JNIEXPORT jint JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameSessionHardcore(
+    JNIEnv*, jobject, jlong session
+) {
+    std::lock_guard<std::recursive_mutex> lock(clientMutex);
+    if (session <= 0 || activeId.load() != static_cast<uint64_t>(session) || !gameClient) return -1;
+    return rc_client_get_hardcore_enabled(gameClient) ? 1 : 0;
 }
 
 extern "C" JNIEXPORT jint JNICALL

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Hardcore mode built, locked until RetroAchievements approves OpenNES (2026-11-14, no device test yet).** Release builds are still Casual-only. Hardcore is chosen per game before launch and boots the game fresh; the achievements client is told the mode once, before sign-in. Switching to Casual mid-game is allowed (pause menu); leaving the app also drops to Casual, opening the pause menu does not. Leaderboard attempts, challenge indicators, measured progress and the session's mode are shown in play, and Restart resets achievement logic. Debug builds have a labeled test switch under Settings → Advanced → Hardcore. See `docs/HARDCORE_COMPLIANCE_AUDIT.md` and the draft request in `docs/RETROACHIEVEMENTS_APPROVAL_REQUEST.md`. The privacy policy now states retention, server locations and GDPR.
+
 - **Pause menu cover, second attempt (2026-11-14):** before launch the library now saves the exact bitmap it has on screen (falling back to loading each candidate cover), and the pause menu always uses that saved file first.
 
 - **Phone-test round 6 (2026-11-14):**

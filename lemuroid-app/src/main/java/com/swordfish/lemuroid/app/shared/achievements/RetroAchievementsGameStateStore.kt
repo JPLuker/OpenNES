@@ -21,6 +21,8 @@ internal object RetroAchievementsGameStateStore {
         val romMd5: String? = null,
         val state: RetroAchievementsDisplayState = RetroAchievementsDisplayState.NotConnected,
         val notice: UnlockNotice? = null,
+        // Live challenge and leaderboard indicators, keyed so they can be removed.
+        val indicators: Map<String, String> = emptyMap(),
     )
 
     private val mutable = MutableStateFlow(Snapshot())
@@ -73,6 +75,45 @@ internal object RetroAchievementsGameStateStore {
         mutable.value = mutable.value.copy(notice = notice)
         return true
     }
+
+    /** A short message from the current native session (mode, leaderboard, progress). */
+    @Synchronized
+    fun notifyMessage(
+        ticket: Long,
+        romMd5: String,
+        message: String,
+    ): Boolean {
+        if (ticket != currentTicket || mutable.value.romMd5 != romMd5 ||
+            message.isBlank() || message.any(Char::isISOControl)
+        ) {
+            return false
+        }
+        mutable.value = mutable.value.copy(notice = UnlockNotice(0, message.take(220), ++unlockSequence))
+        return true
+    }
+
+    /** Show ([text] set) or remove ([text] null) one live indicator. */
+    @Synchronized
+    fun setIndicator(
+        ticket: Long,
+        romMd5: String,
+        key: String,
+        text: String?,
+    ) {
+        if (ticket != currentTicket || mutable.value.romMd5 != romMd5) return
+        val current = mutable.value.indicators
+        val next =
+            if (text.isNullOrBlank()) {
+                current - key
+            } else if (current.size >= MAX_INDICATORS && key !in current) {
+                current
+            } else {
+                current + (key to text.take(80))
+            }
+        if (next != current) mutable.value = mutable.value.copy(indicators = next)
+    }
+
+    private const val MAX_INDICATORS = 6
 
     /** A delayed dismissal must not dismiss a newer unlock or newer ROM. */
     @Synchronized

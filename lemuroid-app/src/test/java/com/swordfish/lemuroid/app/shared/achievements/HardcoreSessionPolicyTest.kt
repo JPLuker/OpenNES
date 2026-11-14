@@ -88,4 +88,52 @@ class HardcoreSessionPolicyTest {
         assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
         HardcoreRuntime.end("rom-b")
     }
+
+    @Test
+    fun runtimeRefusesHardcoreWithoutApprovalOrFreshBoot() {
+        assertFalse(HardcoreGate.EMULATOR_APPROVED)
+        HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = true)
+        assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
+        HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = false, testUnapproved = true)
+        assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
+        HardcoreRuntime.end("rom")
+    }
+
+    @Test
+    fun leavingHardcoreSwitchesNativeFirstAndNeverReturns() {
+        val order = mutableListOf<String>()
+        HardcoreRuntime.nativeDowngrade = {
+            // Restrictions must still be in force while native switches.
+            order += if (HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE)) "open" else "native"
+        }
+        HardcoreRuntime.onLeftHardcore = { order += "told" }
+        try {
+            HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = true, testUnapproved = true)
+            assertEquals(HardcoreSessionPolicy.Mode.HARDCORE, HardcoreRuntime.mode())
+            HardcoreRuntime.onSuspended("other-rom")
+            assertEquals(HardcoreSessionPolicy.Mode.HARDCORE, HardcoreRuntime.mode())
+            HardcoreRuntime.onSuspended("rom")
+            assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
+            HardcoreRuntime.switchToCasual()
+            assertEquals(listOf("native", "told"), order)
+        } finally {
+            HardcoreRuntime.nativeDowngrade = null
+            HardcoreRuntime.onLeftHardcore = null
+            HardcoreRuntime.end("rom")
+        }
+    }
+
+    @Test
+    fun failedNativeDowngradeKeepsRestrictions() {
+        HardcoreRuntime.nativeDowngrade = { error("native unavailable") }
+        try {
+            HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = true, testUnapproved = true)
+            HardcoreRuntime.switchToCasual()
+            assertEquals(HardcoreSessionPolicy.Mode.HARDCORE, HardcoreRuntime.mode())
+            assertFalse(HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE))
+        } finally {
+            HardcoreRuntime.nativeDowngrade = null
+            HardcoreRuntime.end("rom")
+        }
+    }
 }

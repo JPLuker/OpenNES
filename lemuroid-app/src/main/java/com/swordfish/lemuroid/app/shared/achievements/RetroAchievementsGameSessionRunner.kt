@@ -1,6 +1,7 @@
 package com.swordfish.lemuroid.app.shared.achievements
 
 import android.content.Context
+import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +37,7 @@ internal class RetroAchievementsGameSessionRunner(
         val accountStore = RetroAchievementsNativeAccountStore(context)
         var previousCredentials: NativeCredentials? = null
         var previousRetryVersion = 0L
+        var firstSession = true
 
         // Bound to the game ViewModel: signing in, signing out, switching
         // accounts and manually retrying can all happen without restarting
@@ -46,6 +48,11 @@ internal class RetroAchievementsGameSessionRunner(
             val ticket = RetroAchievementsGameStateStore.begin(md5)
             var session = 0L
             var outcome = SessionEnd.Failed
+            // Only the first session of a freshly booted game may be Hardcore.
+            // A later sign-in or retry would join a game already in progress.
+            if (!firstSession) HardcoreRuntime.switchToCasual()
+            val hardcore = firstSession && HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
+            firstSession = false
             try {
                 withContext(Dispatchers.IO) {
                     session =
@@ -53,6 +60,7 @@ internal class RetroAchievementsGameSessionRunner(
                             credentials.username,
                             credentials.token,
                             md5,
+                            hardcore,
                         )
                     if (session > 0L) {
                         outcome = pollGame(session, ticket, md5, credentials, accountStore)
@@ -79,6 +87,17 @@ internal class RetroAchievementsGameSessionRunner(
             previousRetryVersion = RetroAchievementsGameStateStore.retryVersion(md5)
         }
     }
+
+    private fun noticeText(event: NativeGameEvent.Notice): String? =
+        when (event.kind) {
+            "lb_start" -> context.getString(R.string.opennes_ra_notice_leaderboard_started, event.text)
+            "lb_fail" -> context.getString(R.string.opennes_ra_notice_leaderboard_failed, event.text)
+            "lb_submit" -> context.getString(R.string.opennes_ra_notice_leaderboard_submitted, event.text)
+            "progress" -> event.text
+            "complete" -> context.getString(R.string.opennes_ra_notice_game_completed)
+            "error" -> context.getString(R.string.opennes_ra_notice_server_error)
+            else -> null
+        }
 
     internal enum class SessionEnd {
         Failed,
@@ -161,6 +180,21 @@ internal class RetroAchievementsGameSessionRunner(
                 -1 -> return SessionEnd.Failed // Native login, game load or memory failure.
                 2 -> {
                     if (RetroAchievementsNative.loadedGameId(session) <= 0) return SessionEnd.Failed
+                    if (!active) {
+                        // Say which mode this session counts as, once, at the start.
+                        val nativeHardcore = RetroAchievementsNative.gameSessionHardcore(session) == 1
+                        RetroAchievementsGameStateStore.notifyMessage(
+                            ticket,
+                            md5,
+                            context.getString(
+                                if (nativeHardcore) {
+                                    R.string.opennes_ra_mode_hardcore
+                                } else {
+                                    R.string.opennes_ra_mode_casual
+                                },
+                            ),
+                        )
+                    }
                     active = true
                 }
             }
@@ -222,6 +256,15 @@ internal class RetroAchievementsGameSessionRunner(
                             // persistence from a UI event.
                             lastRefresh = 0L
                         }
+                        is NativeGameEvent.Notice -> {
+                            if (connection.observe(event)) {
+                                noticeText(event)?.let {
+                                    RetroAchievementsGameStateStore.notifyMessage(ticket, md5, it)
+                                }
+                            }
+                        }
+                        is NativeGameEvent.Indicator ->
+                            RetroAchievementsGameStateStore.setIndicator(ticket, md5, event.key, event.text)
                         null -> Unit
                     }
                 }
@@ -269,6 +312,12 @@ internal class RetroAchievementsGameSessionRunner(
 
         data object Disconnected : NativeGameEvent
 
+        /** A one-off message: leaderboard attempt, progress, completion, server refusal. */
+        data class Notice(val kind: String, val text: String) : NativeGameEvent
+
+        /** A live indicator to show ([text] set) or remove ([text] null). */
+        data class Indicator(val key: String, val text: String?) : NativeGameEvent
+
         data object Reconnected : NativeGameEvent
     }
 
@@ -281,7 +330,10 @@ internal class RetroAchievementsGameSessionRunner(
             when (event) {
                 NativeGameEvent.Disconnected -> isConnected = false
                 NativeGameEvent.Reconnected -> isConnected = true
-                is NativeGameEvent.Unlock -> Unit
+                is NativeGameEvent.Unlock,
+                is NativeGameEvent.Notice,
+                is NativeGameEvent.Indicator,
+                -> Unit
             }
             return isConnected
         }
@@ -298,9 +350,40 @@ internal class RetroAchievementsGameSessionRunner(
         internal fun supportsNativeGame(identity: NesRetroAchievementsHash.Identity): Boolean =
             identity.console == NesRetroAchievementsHash.Console.NES
 
+        private val noticeKinds = setOf("lb_start", "lb_fail", "lb_submit", "progress", "complete", "error")
+
+        /** Leaderboard, challenge and progress events; text is bounded and free of control characters. */
+        internal fun decodeLiveEvent(raw: String): NativeGameEvent? {
+            val fields = raw.split('\t')
+
+            fun clean(value: String) = value.trim().takeIf { it.isNotEmpty() && it.none(Char::isISOControl) }?.take(200)
+            return when (fields[0]) {
+                "notice" -> {
+                    if (fields.size != 3 || fields[1] !in noticeKinds) return null
+                    NativeGameEvent.Notice(fields[1], clean(fields[2]) ?: return null)
+                }
+                "tracker" -> {
+                    if (fields.size != 3) return null
+                    val id = fields[1].toIntOrNull()?.takeIf { it > 0 } ?: return null
+                    NativeGameEvent.Indicator("tracker:$id", clean(fields[2]))
+                }
+                "challenge" -> {
+                    if (fields.size != 4) return null
+                    val id = fields[1].toIntOrNull()?.takeIf { it > 0 } ?: return null
+                    when (fields[2]) {
+                        "1" -> NativeGameEvent.Indicator("challenge:$id", clean(fields[3]) ?: return null)
+                        "0" -> NativeGameEvent.Indicator("challenge:$id", null)
+                        else -> null
+                    }
+                }
+                else -> null
+            }
+        }
+
         internal fun decodeNativeEvent(raw: String): NativeGameEvent? {
             if (raw == "disconnected") return NativeGameEvent.Disconnected
             if (raw == "reconnected") return NativeGameEvent.Reconnected
+            decodeLiveEvent(raw)?.let { return it }
             val fields = raw.split('\t', limit = 4)
             if (fields.size != 4 || fields[0] != "unlock") return null
             val id = fields[1].toIntOrNull()?.takeIf { it > 0 } ?: return null

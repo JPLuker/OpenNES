@@ -39,6 +39,22 @@ Each of these services sees your IP address and ordinary connection details,
 as any website does, and handles them under its own privacy policy. A RomM
 server is run by you or by someone you chose.
 
+## Retention, server locations and GDPR
+
+- **The developer keeps nothing.** OpenNES has no developer-run server,
+  telemetry, analytics or crash reporting, so there is no retained data, no
+  retention period and no server location on the developer's side.
+- **On your device,** data stays until you delete it (see "Deleting your
+  data"). Achievement unlocks that could not be sent are held in memory only
+  while the game is running and are never written to storage.
+- **Third-party services** listed above store what you send them on their own
+  servers, in the countries and for the periods their own privacy policies
+  state. For RetroAchievements, see <https://retroachievements.org/privacy-policy>.
+  A RomM server is wherever you or its operator host it.
+- **GDPR:** because the developer collects and processes no personal data,
+  there is no developer-held data to access, correct or erase. Requests about
+  data held by RetroAchievements or another service go to that service.
+
 ## Permissions
 
 - **Internet / network state:** the connections listed above.

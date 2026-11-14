@@ -53,6 +53,7 @@ import javax.inject.Inject
 @OptIn(DelicateCoroutinesApi::class)
 abstract class BaseGameActivity : ImmersiveActivity() {
     protected lateinit var game: Game
+    private var pauseMenuShowing = false
     private lateinit var system: GameSystem
     protected lateinit var systemCoreConfig: SystemCoreConfig
 
@@ -159,6 +160,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                 systemCoreConfig,
                 gameLoader,
                 intent.getBooleanExtra(EXTRA_LOAD_SAVE, false),
+                requestHardcore = intent.getBooleanExtra(EXTRA_HARDCORE, false),
             )
         }
 
@@ -244,6 +246,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                 // TODO PADS... Make sure to avoid passing this if a physical pad is connected.
                 this.putExtra(GameMenuContract.EXTRA_TILT_ALL_CONFIGS, tiltConfigurations.toTypedArray())
             }
+        pauseMenuShowing = true
         startActivityForResult(intent, DIALOG_REQUEST)
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
@@ -401,7 +404,9 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         // Even a quick-resumed or backgrounded emulator must downgrade to
         // Casual. Pausing for the menu may also trigger this conservative
         // transition; remaining Hardcore in that case is not essential.
-        if (::game.isInitialized) HardcoreRuntime.onSuspended(game.fileUri)
+        // Opening the app's own pause menu is not leaving the game; the
+        // menu itself reports when the app is really backgrounded.
+        if (::game.isInitialized && !pauseMenuShowing) HardcoreRuntime.onSuspended(game.fileUri)
         if (!finishTriggered && !isFinishing && !isChangingConfigurations) {
             baseGameScreenViewModel.requestBackgroundSave()
         }
@@ -422,6 +427,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     ) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == DIALOG_REQUEST) {
+            pauseMenuShowing = false
             Timber.d("Game menu dialog response received")
             if (data?.getBooleanExtra(GameMenuContract.RESULT_RESET, false) == true) {
                 lifecycleScope.launch {
@@ -490,6 +496,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
         private const val EXTRA_GAME = "GAME"
         private const val EXTRA_LOAD_SAVE = "LOAD_SAVE"
+        private const val EXTRA_HARDCORE = "HARDCORE"
         private const val EXTRA_LEANBACK = "LEANBACK"
         private const val EXTRA_SYSTEM_CORE_CONFIG = "EXTRA_SYSTEM_CORE_CONFIG"
 
@@ -509,6 +516,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             game: Game,
             loadSave: Boolean,
             useLeanback: Boolean,
+            hardcore: Boolean = false,
         ) {
             // OpenNES is mobile-only; retain the legacy boolean in the intent
             // for stored session/result compatibility, not activity selection.
@@ -516,6 +524,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                 Intent(activity, GameActivity::class.java).apply {
                     putExtra(EXTRA_GAME, game)
                     putExtra(EXTRA_LOAD_SAVE, loadSave)
+                    putExtra(EXTRA_HARDCORE, hardcore)
                     putExtra(EXTRA_LEANBACK, useLeanback)
                     putExtra(EXTRA_SYSTEM_CORE_CONFIG, systemCoreConfig)
                 },

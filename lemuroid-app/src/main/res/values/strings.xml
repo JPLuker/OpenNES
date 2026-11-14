@@ -695,6 +695,15 @@
     <string name="opennes_ra_runtime_ready">Achievements connected</string>
     <string name="opennes_ra_runtime_connecting">Connecting to RetroAchievements</string>
     <string name="opennes_ra_runtime_failed">Could not start live achievements</string>
+    <string name="opennes_hardcore_ended">Hardcore ended. This session is now Casual.</string>
+    <string name="opennes_hardcore_switch_to_casual">Switch to Casual</string>
+    <string name="opennes_hardcore_test_title">Test build only</string>
+    <string name="opennes_hardcore_test_body">Try Hardcore before approval. RetroAchievements has not approved OpenNES, so unlocks may count as Casual or be refused. Turn this on only for compliance testing.</string>
+    <string name="opennes_ra_notice_leaderboard_started">Leaderboard attempt started: %1$s</string>
+    <string name="opennes_ra_notice_leaderboard_failed">Leaderboard attempt failed: %1$s</string>
+    <string name="opennes_ra_notice_leaderboard_submitted">Leaderboard submitted: %1$s</string>
+    <string name="opennes_ra_notice_game_completed">All achievements earned for this game</string>
+    <string name="opennes_ra_notice_server_error">RetroAchievements refused a request. Some progress may not have been recorded.</string>
     <string name="opennes_ra_mode_casual">Achievement mode: Casual</string>
     <string name="opennes_ra_mode_hardcore">Achievement mode: Hardcore</string>
     <string name="opennes_ra_hardcore_not_approved">Hardcore is unavailable until OpenNES meets RetroAchievements emulator requirements.</string>
@@ -884,7 +893,7 @@
     <string name="opennes_hardcore_settings_title">Hardcore mode</string>
     <string name="opennes_hardcore_settings_subtitle">Not available yet</string>
     <string name="opennes_hardcore_status_title">Availability</string>
-    <string name="opennes_hardcore_unavailable">Hardcore mode is not available yet. Official RetroAchievements Hardcore support needs native enforcement and verification before it can be enabled.</string>
+    <string name="opennes_hardcore_unavailable">Hardcore mode is not available yet. OpenNES has to be approved by RetroAchievements as a Hardcore-compliant emulator first; until then, all achievements count as Casual.</string>
     <string name="opennes_hardcore_rules_title">Hardcore rules</string>
     <string name="opennes_hardcore_rules_body">Hardcore play must prevent cheats, rewind, loading save states and other disallowed gameplay assistance. These restrictions must work in the emulator core, not only in the menus.</string>
     <string name="opennes_hardcore_saves_title">Separate saves</string>

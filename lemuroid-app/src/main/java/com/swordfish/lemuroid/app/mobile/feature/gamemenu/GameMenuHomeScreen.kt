@@ -83,7 +83,9 @@ fun GameMenuHomeScreen(
     onResult: KFunction1<Intent.() -> Unit, Unit>,
 ) {
     var confirmation by remember { mutableStateOf<Confirmation?>(null) }
-    val hardcoreActive = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
+    var hardcoreActive by remember {
+        mutableStateOf(HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE)
+    }
 
     Column(
         modifier =
@@ -180,6 +182,19 @@ fun GameMenuHomeScreen(
                     )
                 }
             }
+        }
+
+        if (hardcoreActive) {
+            // Hardcore to Casual is allowed mid-game; the reverse needs a fresh start.
+            GameMenuAction(
+                title = stringResource(R.string.opennes_hardcore_switch_to_casual),
+                detail = stringResource(R.string.opennes_mode_hardcore),
+                icon = R.drawable.ic_menu_achievements,
+                onClick = {
+                    HardcoreRuntime.switchToCasual()
+                    hardcoreActive = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
+                },
+            )
         }
 
         GameMenuAction(

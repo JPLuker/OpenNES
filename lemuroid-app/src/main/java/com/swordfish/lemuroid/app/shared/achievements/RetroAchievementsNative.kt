@@ -61,7 +61,17 @@ internal object RetroAchievementsNative {
         username: String,
         token: String,
         romMd5: String,
+        hardcore: Boolean,
     ): Long
+
+    /** Switch the current session, if any, to Casual. Allowed at any time. */
+    external fun downgradeGameSessionToCasual()
+
+    /** Tell the current session, if any, that the console was reset. */
+    external fun resetGameSession()
+
+    /** 1=Hardcore, 0=Casual, -1=no such session. */
+    external fun gameSessionHardcore(session: Long): Int
 
     /** One pending native request: [request ID, official URL, POST data]. */
     external fun takeGameRequest(session: Long): Array<String>?

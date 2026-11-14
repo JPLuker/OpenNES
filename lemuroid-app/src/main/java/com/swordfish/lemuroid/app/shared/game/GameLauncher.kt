@@ -6,6 +6,7 @@ import android.os.Looper
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.home.NesRomLaunchModeStore
 import com.swordfish.lemuroid.app.shared.covers.NesLaunchCover
 import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
@@ -77,7 +78,9 @@ class GameLauncher(
                 RommTwoWaySync.protectLaunchingGame(game.id)
                 gameLaunchTaskHandler.handleGameStart(activity.applicationContext)
                 backgroundWorkPaused = true
-                BaseGameActivity.launchGame(activity, coreConfig, game, loadSave, leanback)
+                // Hardcore always boots the game fresh: no restored state.
+                val hardcore = NesRomLaunchModeStore(activity.applicationContext).wantsHardcore(game.fileUri)
+                BaseGameActivity.launchGame(activity, coreConfig, game, loadSave && !hardcore, leanback, hardcore)
                 launchDispatched = true
             } catch (e: CancellationException) {
                 throw e

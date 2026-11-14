@@ -1,13 +1,33 @@
 # OpenNES — RetroAchievements Hardcore compliance audit
 
-Updated: 2026-11-10. **Hardcore mode is NOT enabled or approved.** This document is a source-level implementation and acceptance checklist, not an assertion of certification.
+Updated: 2026-11-14. **Hardcore mode is NOT approved and is not available in release builds.** This document is a source-level implementation and acceptance checklist, not an assertion of certification.
 
 Authoritative rules:
 - [RetroAchievements Hardcore Compliance Requirements](https://docs.retroachievements.org/general/hardcore-compliance-requirements.html)
 - [RetroAchievements FAQ — Hardcore](https://docs.retroachievements.org/general/faq.html)
-- [RetroAchievements emulator identity and approval guidance](https://retroachievements.org/forums/topic/29231)
 
-## CI-verified foundation
+## Status on 2026-11-14: implemented behind the approval gate (no device test yet)
+
+The single switch is `HardcoreGate.EMULATOR_APPROVED` (false). Release builds cannot enter Hardcore. **Debug builds only** have Settings → Advanced → Hardcore → "Test build only", which lets the developer and RetroAchievements reviewers exercise the mode before approval.
+
+| Requirement | Implementation | Verified |
+| --- | --- | --- |
+| Enter Hardcore only with a game reset | Chosen per game on its details page before launch; `GameLauncher` forces a fresh boot (no autosave state), `HardcoreRuntime.begin` refuses unless `freshBoot`. Nothing re-enters Hardcore mid-session. | JVM tests; device pending |
+| Native mode matches | `startGameSession(..., hardcore)` calls `rc_client_set_hardcore_enabled` once, before login. Only the first session of a launch may be Hardcore; a later sign-in or retry drops to Casual. | CI compile; device pending |
+| No state loading, rewind, cheats, Game Genie | Existing `HardcoreRuntime.allow` checks at every entry point; menu entries hidden | JVM tests; device pending |
+| Hardcore → Casual mid-session | Pause menu "Switch to Casual". Native is downgraded first; if that fails the restrictions stay. | JVM tests; device pending |
+| Resumed session is Casual | Leaving the app (game `onStop`, or pause menu `onStop`) downgrades. Opening the in-app pause menu does not. | Device pending |
+| Status visible in play | Banner "Achievement mode: Hardcore/Casual" when the session becomes active; toast when Hardcore ends | Device pending |
+| Leaderboards, challenge and progress indicators | rc_client events forwarded: leaderboard start/fail/submit, tracker values, challenge indicators, measured progress, game completed, server error | Device pending |
+| Console reset | `rc_client_reset` on Restart | Device pending |
+| Offline unlocks | rc_client's own pending-unlock queue retries while the game runs (Disconnected/Reconnected shown). **Not persisted after the game closes** — confirm with RetroAchievements whether that meets "securely cached". | Open question |
+| Unique user agent | `OpenNES/<version> (Android) rcheevos/<version>`; never used another client's | Done |
+| Privacy policy, licenses, no monetization | `PRIVACY.md` (retention, locations, GDPR), `THIRD_PARTY_NOTICES.md` | Done |
+| Six-month public availability | Relies on the parent emulator (Lemuroid). RetroAchievements to confirm. | Open question |
+
+Questions for RetroAchievements: (1) does Lemuroid's history satisfy the six-month rule for this fork; (2) is rc_client's in-session unlock retry enough, or must pending unlocks survive closing the game; (3) is downgrading on app background required, acceptable, or stricter than needed; (4) FCEUmm memory exposure for NES is the standard libretro map — anything else to validate.
+
+## Earlier foundation (2026-11-10)
 
 The [OpenNES rolling APK build 42902652152](https://github.com/JPLuker/OpenNES/actions/runs/42902652152) passed Kotlin formatting, JVM regressions, Android/native compilation and APK publication.
 

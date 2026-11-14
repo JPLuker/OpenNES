@@ -64,6 +64,7 @@ import com.swordfish.lemuroid.app.mobile.feature.gamemenu.states.GameMenuStatesV
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.tilt.DpadTiltControl
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.AppTheme
 import com.swordfish.lemuroid.app.shared.GameMenuContract
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.coreoptions.LemuroidCoreOption
 import com.swordfish.lemuroid.app.shared.input.InputDeviceManager
 import com.swordfish.lemuroid.common.kotlin.serializable
@@ -169,6 +170,12 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         setContent {
             GameMenuScreen(gameMenuRequest)
         }
+    }
+
+    override fun onStop() {
+        // Leaving the app with the menu open counts as suspending the game.
+        if (!isFinishing && !isChangingConfigurations) HardcoreRuntime.onBackgrounded()
+        super.onStop()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

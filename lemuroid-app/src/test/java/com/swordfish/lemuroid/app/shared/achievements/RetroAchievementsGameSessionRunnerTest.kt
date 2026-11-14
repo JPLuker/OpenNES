@@ -3,6 +3,7 @@ package com.swordfish.lemuroid.app.shared.achievements
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -255,5 +256,21 @@ class RetroAchievementsGameSessionRunnerTest {
         assertEquals(currentActive, RetroAchievementsGameStateStore.snapshots.value.state)
         RetroAchievementsGameStateStore.clear(newTicket)
         assertEquals(null, RetroAchievementsGameStateStore.snapshots.value.romMd5)
+    }
+
+    @Test
+    fun decodesLeaderboardChallengeAndProgressEvents() {
+        val notice = RetroAchievementsGameSessionRunner.NativeGameEvent::Notice
+        val indicator = RetroAchievementsGameSessionRunner.NativeGameEvent::Indicator
+        val decode = RetroAchievementsGameSessionRunner.Companion::decodeNativeEvent
+        assertEquals(notice("lb_submit", "Fastest lap: 1:23.45"), decode("notice\tlb_submit\tFastest lap: 1:23.45"))
+        assertEquals(notice("complete", "-"), decode("notice\tcomplete\t-"))
+        assertEquals(indicator("tracker:7", "001234"), decode("tracker\t7\t001234"))
+        assertEquals(indicator("tracker:7", null), decode("tracker\t7\t"))
+        assertEquals(indicator("challenge:9", "No damage"), decode("challenge\t9\t1\tNo damage"))
+        assertEquals(indicator("challenge:9", null), decode("challenge\t9\t0\t-"))
+        assertNull(decode("notice\tunknown\ttext"))
+        assertNull(decode("tracker\t0\t1"))
+        assertNull(decode("challenge\t9\t2\tx"))
     }
 }

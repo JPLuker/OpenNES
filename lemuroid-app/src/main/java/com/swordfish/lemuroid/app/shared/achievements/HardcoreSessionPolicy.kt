@@ -1,11 +1,11 @@
 package com.swordfish.lemuroid.app.shared.achievements
 
 /**
- * Centralized compliance rules for a future RetroAchievements Hardcore mode.
+ * Centralized compliance rules for RetroAchievements Hardcore mode.
  *
- * Production is intentionally Casual-only: OpenNES is not an approved
- * Hardcore emulator and native rc_client currently runs in Casual mode.
- * No UI or stored preference can override the two explicit build gates.
+ * Production is Casual-only until [HardcoreGate.EMULATOR_APPROVED] is set
+ * after RetroAchievements approval. Only debug builds can test Hardcore
+ * before then, through an explicit, clearly labeled switch.
  */
 internal class HardcoreSessionPolicy(
     private val emulatorApproved: Boolean,
@@ -88,33 +88,83 @@ internal class HardcoreSessionPolicy(
 }
 
 /**
+ * The one switch that makes Hardcore available to players. It stays false
+ * until RetroAchievements approves OpenNES as a Hardcore-compliant emulator;
+ * unapproved clients must not offer Hardcore credit.
+ */
+internal object HardcoreGate {
+    const val EMULATOR_APPROVED = false
+}
+
+/**
  * Game-process policy shared by save, cheat, and core-option entry points.
- * The build intentionally has no path that can activate Hardcore yet.
+ *
+ * Hardcore can only begin with a freshly booted game ([begin]) and can only
+ * end ([leaveHardcore]); nothing re-enters it mid-session. Leaving switches
+ * the native rc_client to Casual *before* this policy lifts its restrictions.
  */
 internal object HardcoreRuntime {
-    private val policy =
-        HardcoreSessionPolicy(
-            emulatorApproved = false,
-            nativeHardcoreAvailable = false,
-        )
+    private var policy = HardcoreSessionPolicy(HardcoreGate.EMULATOR_APPROVED, nativeHardcoreAvailable = true)
     private var currentRomUri: String? = null
 
+    /** Switches the native client to Casual; set by the game screen. Must not throw to succeed. */
+    @Volatile
+    var nativeDowngrade: (() -> Unit)? = null
+
+    /** Told after Hardcore ended mid-session, to inform the player. */
+    @Volatile
+    var onLeftHardcore: (() -> Unit)? = null
+
+    /**
+     * Start a game. Hardcore needs the approval gate (or a debug build's
+     * explicit test switch, [testUnapproved]), a fresh boot with no restored
+     * state, and no cheats.
+     */
     @Synchronized
-    fun begin(romUri: String) {
+    fun begin(
+        romUri: String,
+        requestHardcore: Boolean = false,
+        freshBoot: Boolean = false,
+        testUnapproved: Boolean = false,
+    ): HardcoreSessionPolicy.Activation {
         currentRomUri = romUri
-        policy.onGameEnded()
+        policy =
+            HardcoreSessionPolicy(
+                emulatorApproved = HardcoreGate.EMULATOR_APPROVED || testUnapproved,
+                nativeHardcoreAvailable = true,
+            )
+        if (!requestHardcore) return HardcoreSessionPolicy.Activation.UNAVAILABLE
+        return policy.requestHardcore(freshReset = freshBoot, cheatsActive = false)
     }
 
     @Synchronized
     fun end(romUri: String) {
         if (currentRomUri != romUri) return
         currentRomUri = null
-        policy.onGameEnded()
+        policy = HardcoreSessionPolicy(HardcoreGate.EMULATOR_APPROVED, nativeHardcoreAvailable = true)
     }
 
-    @Synchronized
+    /** The app left the screen while the pause menu was open. */
+    fun onBackgrounded() = leaveHardcore()
+
+    /** The game went to the background: a resumed session is Casual. */
     fun onSuspended(romUri: String) {
-        if (currentRomUri == romUri) policy.onSuspended()
+        val current = synchronized(this) { currentRomUri == romUri }
+        if (current) leaveHardcore()
+    }
+
+    /** The player's own choice from the pause menu; allowed at any time. */
+    fun switchToCasual() = leaveHardcore()
+
+    private fun leaveHardcore() {
+        synchronized(this) {
+            if (policy.mode != HardcoreSessionPolicy.Mode.HARDCORE) return
+            // Native first. If it cannot be switched, stay restricted.
+            val downgraded = runCatching { nativeDowngrade?.invoke() }.isSuccess
+            if (!downgraded) return
+            policy.switchToCasual()
+        }
+        runCatching { onLeftHardcore?.invoke() }
     }
 
     @Synchronized

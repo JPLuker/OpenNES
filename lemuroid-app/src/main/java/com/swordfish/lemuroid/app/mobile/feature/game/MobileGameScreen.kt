@@ -120,7 +120,9 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         val appearanceStore = remember(appContext) { NesControllerAppearanceStore(appContext) }
         val onboardingVisible = remember { mutableStateOf(false) }
         val pendingLayoutEditor = remember { mutableStateOf(false) }
-        val nativeUnlock = RetroAchievementsGameStateStore.snapshots.collectAsState().value.notice
+        val achievementSnapshot = RetroAchievementsGameStateStore.snapshots.collectAsState().value
+        val nativeUnlock = achievementSnapshot.notice
+        val liveIndicators = achievementSnapshot.indicators
 
         LaunchedEffect(nativeUnlock?.sequence) {
             nativeUnlock?.let { notice ->
@@ -500,6 +502,36 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
+            }
+        }
+
+        // Active challenges and leaderboard attempts, as RetroAchievements requires.
+        if (liveIndicators.isNotEmpty() && !isLoading) {
+            Column(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Start),
+                        )
+                        .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                liveIndicators.values.forEach { text ->
+                    Text(
+                        text = text,
+                        color = androidx.compose.ui.graphics.Color.White,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        modifier =
+                            Modifier
+                                .background(
+                                    androidx.compose.ui.graphics.Color(0xB3000000),
+                                    androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+                                )
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
             }
         }
 

@@ -11,11 +11,14 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.swordfish.lemuroid.BuildConfig
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.game.GameService
 import com.swordfish.lemuroid.app.mobile.feature.settings.SettingsManager
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
+import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameSessionRunner
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNative
 import com.swordfish.lemuroid.app.shared.cheats.NesCheatSession
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelInput
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelRetroGameView
@@ -260,12 +263,24 @@ class BaseGameScreenViewModel(
         systemCoreConfig: SystemCoreConfig,
         gameLoader: GameLoader,
         requestLoadSave: Boolean,
+        requestHardcore: Boolean = false,
     ) {
         Timber.i("Calling load game: $game")
-        // Each ROM starts in Casual; approved Hardcore can only be activated
-        // after a clean reset and verified native session in a future build.
-        HardcoreRuntime.begin(game.fileUri)
-        retroGameView.initialize(applicationContext, game, systemCoreConfig, gameLoader, requestLoadSave)
+        // Hardcore is only entered here, for a freshly booted game with no
+        // restored state. It needs RetroAchievements approval, or a debug
+        // build (the library offers the test switch only in debug builds).
+        HardcoreRuntime.nativeDowngrade = { RetroAchievementsNative.downgradeGameSessionToCasual() }
+        HardcoreRuntime.onLeftHardcore = {
+            sideEffects.showToast(appContext.getString(R.string.opennes_hardcore_ended))
+        }
+        HardcoreRuntime.begin(
+            romUri = game.fileUri,
+            requestHardcore = requestHardcore,
+            freshBoot = !requestLoadSave,
+            testUnapproved = BuildConfig.DEBUG,
+        )
+        val hardcore = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
+        retroGameView.initialize(applicationContext, game, systemCoreConfig, gameLoader, requestLoadSave && !hardcore)
     }
 
     fun showEditControls(show: Boolean) {
@@ -435,6 +450,8 @@ class BaseGameScreenViewModel(
                 saves.withExclusiveSessionState {
                     rewind.withTimelineReset {
                         retroGameView.retroGameViewFlow().reset()
+                        // Achievement logic in flight restarts with the console.
+                        runCatching { RetroAchievementsNative.resetGameSession() }
                     }
                     true
                 }
@@ -524,6 +541,8 @@ class BaseGameScreenViewModel(
         rewind.clear()
         NesCheatSession.end(activeGameUri)
         HardcoreRuntime.end(activeGameUri)
+        HardcoreRuntime.nativeDowngrade = null
+        HardcoreRuntime.onLeftHardcore = null
         super.onCleared()
     }
 }
