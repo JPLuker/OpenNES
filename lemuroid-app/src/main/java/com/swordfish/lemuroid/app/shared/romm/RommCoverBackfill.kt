@@ -25,7 +25,7 @@ internal object RommCoverBackfill {
     ): Map<Int, String> {
         val remoteCovers =
             remote
-                .mapNotNull { rom -> RommCoverUrl.trusted(rom.coverUrl)?.let { key(rom.fileName) to it } }
+                .mapNotNull { rom -> RommCoverUrl.usable(rom.coverUrl)?.let { key(rom.fileName) to it } }
                 .toMap()
         if (remoteCovers.isEmpty()) return emptyMap()
         return local

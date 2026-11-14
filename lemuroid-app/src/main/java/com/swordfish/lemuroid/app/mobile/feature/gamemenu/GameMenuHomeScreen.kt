@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -50,6 +51,7 @@ import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.GameMenuContract
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
+import com.swordfish.lemuroid.app.shared.covers.NesLaunchCover
 import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsList
 import kotlin.reflect.KFunction1
 
@@ -88,7 +90,12 @@ fun GameMenuHomeScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            NesBoxArtwork(game = gameMenuRequest.game, modifier = Modifier.width(66.dp))
+            val coverContext = LocalContext.current
+            val coverGame =
+                remember(gameMenuRequest.game) {
+                    NesLaunchCover.withSavedCover(coverContext, gameMenuRequest.game)
+                }
+            NesBoxArtwork(game = coverGame, modifier = Modifier.width(66.dp))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),

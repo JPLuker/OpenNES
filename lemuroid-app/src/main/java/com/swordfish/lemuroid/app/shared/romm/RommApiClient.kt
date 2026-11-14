@@ -643,7 +643,9 @@ class RommApiClient {
                                 .trim()
                                 .takeIf { it.isNotBlank() && it != "null" }
                                 ?.take(8_000),
-                        coverUrl = RommCoverUrl.trusted(row.optString("url_cover")),
+                        coverUrl =
+                            RommCoverUrl.fromServer(connection.serverUrl, row.optString("path_cover_large"))
+                                ?: RommCoverUrl.trusted(row.optString("url_cover")),
                         genres =
                             row.optJSONObject("metadatum")?.optJSONArray("genres")?.let { values ->
                                 (0 until minOf(values.length(), 12))

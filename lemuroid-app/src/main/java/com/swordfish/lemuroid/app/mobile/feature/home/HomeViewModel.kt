@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import com.swordfish.lemuroid.app.mobile.feature.main.OpenNesStartupGate
+import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
 import com.swordfish.lemuroid.app.shared.covers.NesFixMatchCover
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
@@ -90,7 +91,40 @@ class HomeViewModel(
         viewModelScope.launch { RommLibraryCatalog.refresh(context, force) }
     }
 
-    /** Give downloaded RomM games without art the cover RomM shows for them. */
+    /**
+     * Before the loading screen lifts: give downloaded RomM games without art
+     * the cover RomM stores for them, then decode the covers of the first
+     * shelves (recently played, then the library in title order).
+     */
+    suspend fun prepareStartupCovers() {
+        withContext(Dispatchers.IO) {
+            val dao = retrogradeDb.gameDao()
+            val remote = RommLibraryCatalog.state.value.games
+            val stored = dao.selectAllNesGames()
+            val covers =
+                RommCoverBackfill.covers(
+                    stored.map { RommCoverBackfill.LocalGame(it.id, it.fileName, it.coverFrontUrl, it.customCoverUri) },
+                    remote,
+                )
+            covers.forEach { (gameId, url) -> dao.updateCatalogueCover(gameId, url) }
+            val local = stored.map { game -> covers[game.id]?.let { game.copy(coverFrontUrl = it) } ?: game }
+            val shelf =
+                local.filter { it.lastPlayedAt != null }.sortedByDescending { it.lastPlayedAt }.take(4) +
+                    (
+                        local +
+                            RommLibraryCatalog.available(remote, local.map { it.fileName }.toSet())
+                                .map(RommLibraryCatalog::asPreview)
+                    )
+                        .sortedBy { it.displayName().lowercase(java.util.Locale.ROOT) }
+            coverPrefetcher.warm(
+                shelf.mapNotNull { game ->
+                    game.displayCoverUrl()?.takeIf { it.isNotBlank() } ?: NesBoxArtUrls.romFilenameFallback(game)
+                },
+            )
+        }
+    }
+
+    /** Later catalogue or library changes: keep filling in missing covers. */
     fun backfillRommCovers(remote: List<RommApiClient.Rom>) {
         if (remote.isEmpty()) return
         viewModelScope.launch(Dispatchers.IO) {

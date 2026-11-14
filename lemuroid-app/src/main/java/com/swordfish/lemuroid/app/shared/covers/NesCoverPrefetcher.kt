@@ -7,8 +7,12 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import timber.log.Timber
 
 /**
@@ -73,7 +77,34 @@ class NesCoverPrefetcher(context: Context) {
         }
     }
 
+    /**
+     * Decode the covers the library opens on, several at a time, so they are
+     * already in memory when the loading screen lifts. Best effort.
+     */
+    suspend fun warm(urls: List<String>) {
+        val gate = Semaphore(WARM_PARALLEL)
+        coroutineScope {
+            urls.distinct().take(WARM_MAX).forEach { url ->
+                launch {
+                    gate.withPermit {
+                        runCatching {
+                            imageLoader.execute(
+                                ImageRequest.Builder(appContext)
+                                    .data(url)
+                                    .size(CoverUtils.COVER_DECODE_WIDTH_PX, CoverUtils.COVER_DECODE_HEIGHT_PX)
+                                    .memoryCacheKey(CoverUtils.coverMemoryKey(url))
+                                    .build(),
+                            )
+                        }.onFailure { if (it is CancellationException) throw it }
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
+        private const val WARM_MAX = 30
+        private const val WARM_PARALLEL = 6
         private const val MAX_COVERS = 24
         private const val MAX_ATTEMPTS = 3
     }

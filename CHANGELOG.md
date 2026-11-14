@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **Phone-test round 3 (2026-11-14):**
+  - **Covers come from RomM itself.** A RomM game's cover is now the image RomM stores for it (`path_cover_large`, served by your own server without a token), falling back to IGDB. Before, only IGDB-hosted covers were accepted, so games RomM matched elsewhere showed letter tiles.
+  - **The opening screen waits for covers.** It now stays until the library, the RomM catalogue and the covers of the first shelves are loaded (at most 8 s), so the library is complete when it appears.
+  - **Pause menu cover:** the library saves the cover it shows just before launch, and the pause menu (a separate process) displays that file, also offline.
+  - The "Starting game…" screen shows the matched game name. The rewind button is no longer dimmed.
+
 - **Phone-test round 2 (2026-11-14):**
   - **Save sync after a game closes now works.** The upload used to start while the closed game's process was still shutting down, so sync skipped exactly the game just played, and it could also be dropped as a "duplicate" of a library-open sync. It now waits for the game process to end (up to 20 s, then retries) and queues behind any other sync.
   - **Save-state slots sync with RomM (device acceptance pending).** The four slots of each matched game sync as `Game.state1`…`Game.state4` under `fceumm` (RetroArch's naming, raw core state). Each slot remembers what was last synced; the unchanged side takes the other's newer state, and when both changed the more recent one wins. A slot replaced on the phone is first copied to a private folder. The Resume autosave state and Hardcore states are not synced. RomM has no version history for states, so a state replaced on the server is gone.

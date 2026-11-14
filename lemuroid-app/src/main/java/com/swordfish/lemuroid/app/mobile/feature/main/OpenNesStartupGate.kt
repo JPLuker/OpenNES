@@ -9,16 +9,22 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * Decides how long the opening loading screen stays up.
  *
- * It covers the first library snapshot so the app never opens onto an empty
- * shelf, but it is always bounded: a slow database or a route that never
- * loads the library (first-run setup) cannot hold the screen.
+ * It covers the first library snapshot, the RomM catalogue and the covers of
+ * the first shelves, so the library is complete when it appears. It is always
+ * bounded: a slow database, server or image host cannot hold the screen.
  */
 object OpenNesStartupGate {
     const val MINIMUM_MS = 1_000L
-    const val MAXIMUM_MS = 4_000L
+    const val MAXIMUM_MS = 8_000L
 
     private val libraryReady = MutableStateFlow(false)
     private val remoteReady = MutableStateFlow(false)
+    private val coversReady = MutableStateFlow(false)
+
+    /** The covers of the first shelves are decoded and ready to draw. */
+    fun markCoversReady() {
+        coversReady.value = true
+    }
 
     fun markRemoteReady() {
         remoteReady.value = true
@@ -31,13 +37,15 @@ object OpenNesStartupGate {
 
     /**
      * Returns when the loading screen may be removed. The minimum avoids a
-     * one-frame flash; network work (RomM, covers) is never waited for.
+     * one-frame flash; the maximum bounds all network work.
      */
     suspend fun awaitHandoff(waitForLibrary: Boolean) {
         delay(MINIMUM_MS)
         if (waitForLibrary) {
             withTimeoutOrNull(MAXIMUM_MS - MINIMUM_MS) {
-                combine(libraryReady, remoteReady) { library, remote -> library && remote }
+                combine(libraryReady, remoteReady, coversReady) { library, remote, covers ->
+                    library && remote && covers
+                }
                     .first { it }
             }
         }

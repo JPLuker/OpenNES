@@ -6,6 +6,7 @@ import android.os.Looper
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.shared.covers.NesLaunchCover
 import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
 import com.swordfish.lemuroid.app.shared.main.GameLaunchTaskHandler
@@ -58,17 +59,20 @@ class GameLauncher(
                 // Pull a newer save made on another device. Bounded: an
                 // unreachable server never holds up play.
                 // Cover the gap until the game's own loading screen appears.
-                preparingState.value = Preparing(game.title, checkingSave = false)
+                preparingState.value = Preparing(game.displayName(), checkingSave = false)
                 val slowNotice =
                     launch {
                         delay(800)
-                        preparingState.value = Preparing(game.title, checkingSave = true)
+                        preparingState.value = Preparing(game.displayName(), checkingSave = true)
                     }
                 try {
                     RommTwoWaySync.syncBeforeLaunch(activity.applicationContext, game)
                 } finally {
                     slowNotice.cancel()
                 }
+                // The pause menu (another process) shows this same cover.
+                runCatching { NesLaunchCover.save(activity.applicationContext, game) }
+                    .onFailure { if (it is CancellationException) throw it }
                 if (activity.isFinishing || activity.isDestroyed) return@launch
                 RommTwoWaySync.protectLaunchingGame(game.id)
                 gameLaunchTaskHandler.handleGameStart(activity.applicationContext)

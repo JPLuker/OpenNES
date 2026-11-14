@@ -209,6 +209,12 @@ fun HomeScreen(
         } finally {
             OpenNesStartupGate.markRemoteReady()
         }
+        // The loading screen stays until the first shelves' covers are ready.
+        try {
+            viewModel.prepareStartupCovers()
+        } finally {
+            OpenNesStartupGate.markCoversReady()
+        }
         // Only while the library is visible; no background connection service.
         while (true) {
             delay(60_000L)

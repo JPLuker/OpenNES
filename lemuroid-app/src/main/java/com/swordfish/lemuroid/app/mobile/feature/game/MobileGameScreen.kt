@@ -54,7 +54,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -1315,10 +1314,10 @@ private fun NesTransportControls(
             control = NesEditableControl.REWIND,
             defaultX = menuBounds.left - fullBounds.left - 2f * (buttonPx + gapPx),
         ) { modifier ->
-            // Shown whenever rewind is on; dimmed until there is something to rewind to.
-            if (rewindOffered || editing) {
+            // Shown whenever rewind is on; history fills within a moment.
+            if (rewindOffered || rewindAvailable || editing) {
                 NesRewindHoldButton(
-                    modifier = modifier.alpha(if (rewindAvailable || editing) 1f else 0.4f),
+                    modifier = modifier,
                     onPress = if (editing) ({}) else onRewindPress,
                     onRelease = if (editing) ({}) else onRewindRelease,
                     haptics = if (editing) null else haptics,

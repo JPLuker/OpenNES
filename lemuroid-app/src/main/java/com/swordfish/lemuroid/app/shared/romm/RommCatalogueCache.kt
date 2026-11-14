@@ -101,7 +101,7 @@ internal object RommCatalogueCodec {
                         .put("size", rom.sizeBytes)
                         .put("md5", rom.md5.orEmpty())
                         .put("description", rom.description.orEmpty().take(MAX_SUMMARY))
-                        .put("cover", RommCoverUrl.trusted(rom.coverUrl).orEmpty())
+                        .put("cover", RommCoverUrl.usable(rom.coverUrl).orEmpty())
                         .put("genres", JSONArray(rom.genres.take(12))),
                 )
             }
@@ -157,7 +157,7 @@ internal object RommCatalogueCodec {
                             sizeBytes = row.getLong("size"),
                             md5 = md5.ifBlank { null },
                             description = summary.ifBlank { null },
-                            coverUrl = RommCoverUrl.trusted(row.optString("cover")),
+                            coverUrl = RommCoverUrl.usable(row.optString("cover")),
                             genres =
                                 row.optJSONArray("genres")?.let { values ->
                                     (0 until minOf(values.length(), 12))
@@ -182,7 +182,7 @@ internal object RommCatalogueCodec {
             rom.sizeBytes in 0..MAX_ROM_BYTES &&
             (rom.md5 == null || rom.md5.matches(Regex("[a-f0-9]{32}"))) &&
             RommApiClient.safeRomFileName(rom.fileName) &&
-            (rom.coverUrl == null || RommCoverUrl.trusted(rom.coverUrl) != null) &&
+            (rom.coverUrl == null || RommCoverUrl.usable(rom.coverUrl) != null) &&
             rom.genres.size <= 12 &&
             rom.genres.all { it.length in 2..60 }
 }
