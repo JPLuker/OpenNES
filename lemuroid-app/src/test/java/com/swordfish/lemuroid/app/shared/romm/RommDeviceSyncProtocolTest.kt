@@ -232,4 +232,20 @@ class RommDeviceSyncProtocolTest {
             RommDeviceSyncProtocol.fingerprint { null }
         }
     }
+
+    @Test
+    fun acceptsTheUploadRommSendsWhenOnlyThePhoneChangedAPairedSave() {
+        // RomM 5.4 names the paired server save it would supersede. Rejecting
+        // that broke the most common sync case: progress made on the phone.
+        val rows =
+            """{"action":"upload","rom_id":7,"save_id":31,"file_name":"Zelda.srm","slot":"autosave",""" +
+                """"server_content_hash":"0123456789abcdef0123456789abcdef"}"""
+        val counts =
+            """"total_upload":1,"total_download":0,"total_conflict":0,"total_delete":0,"total_no_op":0"""
+        val result = RommDeviceSyncProtocol.parseNegotiation(response(rows, counts), setOf(7))
+        assertTrue(result is RommDeviceSyncProtocol.ParseResult.Accepted)
+        val operation = (result as RommDeviceSyncProtocol.ParseResult.Accepted).negotiation.operations.single()
+        assertEquals(RommDeviceSyncProtocol.Action.UPLOAD, operation.action)
+        assertEquals(31L, operation.saveId)
+    }
 }

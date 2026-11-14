@@ -22,6 +22,8 @@ internal object RommDeviceSyncNegotiationRequest {
         val slot: String?,
         val fingerprint: RommDeviceSyncProtocol.StableFileFingerprint,
         val updatedAt: String,
+        // The libretro core id RomM's web player and RetroArch sync use.
+        val emulator: String? = null,
     )
 
     private val deviceIdPattern =
@@ -85,7 +87,7 @@ internal object RommDeviceSyncNegotiationRequest {
                     .put("rom_id", save.romId)
                     .put("file_name", save.fileName)
                     .put("slot", save.slot ?: JSONObject.NULL)
-                    .put("emulator", JSONObject.NULL)
+                    .put("emulator", save.emulator?.takeIf(::safeSlot) ?: JSONObject.NULL)
                     .put("content_hash", save.fingerprint.md5)
                     .put("updated_at", save.updatedAt)
                     .put("file_size_bytes", save.fingerprint.bytes),

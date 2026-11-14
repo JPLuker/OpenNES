@@ -276,6 +276,193 @@ class RommApiClient {
         return negotiation
     }
 
+    // Two-way save sync (RomM 5.4 device sync). The engine decides what to
+    // do; these calls only move one save or one session record each.
+
+    /** Starts a sync session. Requires assets.read and devices.read. */
+    internal suspend fun negotiateSaveSync(
+        connection: RommConnection,
+        requestJson: String,
+        allowedRomIds: Set<Int>,
+    ): RommDeviceSyncProtocol.Negotiation {
+        val (code, text) =
+            syncCall(
+                connection,
+                buildUrl(connection, listOf("api", "sync", "negotiate")),
+                requestJson.toRequestBody(JSON_MEDIA_TYPE),
+                MAX_NEGOTIATION_BYTES,
+            )
+        if (code !in 200..299) throw RommSyncHttpException(code)
+        val result = RommDeviceSyncProtocol.parseNegotiation(String(text, Charsets.UTF_8), allowedRomIds)
+        return (result as? RommDeviceSyncProtocol.ParseResult.Accepted)?.negotiation
+            ?: throw IOException("Unsupported RomM sync response")
+    }
+
+    /** Closes a session with the real counts. Requires devices.write. */
+    internal suspend fun completeSaveSyncSession(
+        connection: RommConnection,
+        sessionId: Long,
+        completed: Int,
+        failed: Int,
+    ) {
+        require(sessionId > 0) { "Invalid RomM sync session" }
+        val body =
+            JSONObject()
+                .put("operations_completed", completed.coerceAtLeast(0))
+                .put("operations_failed", failed.coerceAtLeast(0))
+                .toString()
+        val (code, _) =
+            syncCall(
+                connection,
+                buildUrl(connection, listOf("api", "sync", "sessions", sessionId.toString(), "complete")),
+                body.toRequestBody(JSON_MEDIA_TYPE),
+                16 * 1024,
+            )
+        if (code !in 200..299) throw RommSyncHttpException(code)
+    }
+
+    /**
+     * Sends one battery save to the RomM "autosave" slot. Returns false when
+     * RomM refuses because its copy changed since this device last synced
+     * (HTTP 409); the caller turns that into a conflict, never a retry with
+     * overwrite. overwrite is only true for the player's explicit choice.
+     * Requires assets.write and devices.write.
+     */
+    internal suspend fun uploadSyncedSave(
+        connection: RommConnection,
+        romId: Int,
+        fileName: String,
+        content: ByteArray,
+        md5: String,
+        deviceId: String,
+        sessionId: Long?,
+        overwrite: Boolean,
+    ): Boolean {
+        require(romId > 0 && content.isNotEmpty() && content.size <= MAX_SYNC_SAVE_BYTES) { "Invalid save" }
+        require(safeAttachmentFileName(fileName) && fileName.endsWith(".srm")) { "Invalid save name" }
+        require(md5.matches(Regex("[0-9a-f]{32}"))) { "Invalid save hash" }
+        val params =
+            mutableListOf(
+                "rom_id" to romId.toString(),
+                "slot" to SYNC_SLOT,
+                "emulator" to SYNC_EMULATOR,
+                "device_id" to deviceId,
+                "content_hash" to md5,
+                "overwrite" to overwrite.toString(),
+            )
+        sessionId?.let { params += "session_id" to it.toString() }
+        val body =
+            okhttp3.MultipartBody.Builder()
+                .setType(okhttp3.MultipartBody.FORM)
+                .addFormDataPart(
+                    "saveFile",
+                    fileName,
+                    content.toRequestBody("application/octet-stream".toMediaType()),
+                )
+                .build()
+        val (code, _) =
+            syncCall(connection, buildUrl(connection, listOf("api", "saves"), params), body, MAX_NEGOTIATION_BYTES)
+        if (code == 409) return false
+        if (code !in 200..299) throw RommSyncHttpException(code)
+        return true
+    }
+
+    /** Downloads one server save's bytes, bounded. Requires assets.read. */
+    internal suspend fun downloadSyncedSave(
+        connection: RommConnection,
+        saveId: Long,
+        deviceId: String,
+        sessionId: Long?,
+    ): ByteArray {
+        require(saveId > 0) { "Invalid RomM save" }
+        val params = mutableListOf("device_id" to deviceId)
+        sessionId?.let { params += "session_id" to it.toString() }
+        val (code, bytes) =
+            syncCall(
+                connection,
+                buildUrl(connection, listOf("api", "saves", saveId.toString(), "content"), params),
+                null,
+                MAX_SYNC_SAVE_BYTES,
+            )
+        if (code !in 200..299) throw RommSyncHttpException(code)
+        if (bytes.isEmpty()) throw IOException("RomM returned an empty save")
+        return bytes
+    }
+
+    /** Tells RomM this device now holds the save. Requires devices.write. */
+    internal suspend fun confirmSyncedSaveDownloaded(
+        connection: RommConnection,
+        saveId: Long,
+        deviceId: String,
+        md5: String,
+    ) {
+        val body = JSONObject().put("device_id", deviceId).put("content_hash", md5).toString()
+        val (code, _) =
+            syncCall(
+                connection,
+                buildUrl(connection, listOf("api", "saves", saveId.toString(), "downloaded")),
+                body.toRequestBody(JSON_MEDIA_TYPE),
+                MAX_NEGOTIATION_BYTES,
+            )
+        if (code !in 200..299) throw RommSyncHttpException(code)
+    }
+
+    /**
+     * One cancellable request that returns the status and a bounded body
+     * instead of throwing on every non-2xx code, so a 409 can be told apart.
+     * A null body sends a GET. Never follows redirects.
+     */
+    private suspend fun syncCall(
+        connection: RommConnection,
+        url: HttpUrl,
+        body: okhttp3.RequestBody?,
+        maxBytes: Int,
+    ): Pair<Int, ByteArray> =
+        suspendCancellableCoroutine { continuation ->
+            val request =
+                Request.Builder()
+                    .url(url)
+                    .apply { if (body == null) get() else post(body) }
+                    .header("Authorization", "Bearer " + connection.token)
+                    .header("User-Agent", "OpenNES RomM save sync")
+                    .build()
+            val call = http.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(
+                object : Callback {
+                    override fun onFailure(
+                        call: Call,
+                        e: IOException,
+                    ) {
+                        if (continuation.isActive) continuation.resumeWithException(e)
+                    }
+
+                    override fun onResponse(
+                        call: Call,
+                        response: Response,
+                    ) {
+                        try {
+                            val result =
+                                response.use {
+                                    if (!it.isSuccessful) return@use it.code to ByteArray(0)
+                                    val responseBody = it.body ?: return@use it.code to ByteArray(0)
+                                    if (responseBody.contentLength() > maxBytes) {
+                                        throw IOException("RomM response too large")
+                                    }
+                                    it.code to
+                                        responseBody.byteStream().use { input ->
+                                            RommSafeStreamRead.readBounded(input, maxBytes)
+                                        }
+                                }
+                            if (continuation.isActive) continuation.resume(result)
+                        } catch (e: Exception) {
+                            if (continuation.isActive) continuation.resumeWithException(e)
+                        }
+                    }
+                },
+            )
+        }
+
     private fun sameConnection(
         first: RommConnection,
         second: RommConnection,
@@ -958,6 +1145,14 @@ class RommApiClient {
         private const val MAX_ROM_BYTES = 96 * 1024 * 1024L
         private const val MAX_SAVE_BYTES = 16 * 1024 * 1024L
         private val NES_SLUGS = setOf("nes", "famicom", "fds", "famicom-disk-system")
+        private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
+        private const val MAX_NEGOTIATION_BYTES = 128 * 1024
+        const val MAX_SYNC_SAVE_BYTES = 4 * 1024 * 1024
+
+        // RomM's names for an NES battery save, shared with its web player
+        // and RetroArch sync so the same save continues on any of them.
+        const val SYNC_SLOT = "autosave"
+        const val SYNC_EMULATOR = "fceumm"
 
         /**
          * Allow cleartext only to literal RFC1918 IPv4 addresses. Hostnames
@@ -1042,3 +1237,6 @@ class RommApiClient {
         }
     }
 }
+
+/** A RomM save-sync call returned [code]; the engine maps it to a message. */
+internal class RommSyncHttpException(val code: Int) : IOException("RomM returned HTTP " + code)

@@ -137,9 +137,10 @@ internal object RommDeviceSyncProtocol {
             if (action in listOf(Action.DOWNLOAD, Action.CONFLICT) && saveId == null) {
                 return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
             }
-            if (action in listOf(Action.UPLOAD, Action.DELETE) && saveId != null) {
-                return ParseResult.Rejected(Rejection.MALFORMED_RESPONSE)
-            }
+            // An upload or delete may name the paired server save it
+            // supersedes (RomM 5.4 does so when only this device changed),
+            // so its presence is not an error. A download or conflict must
+            // name the exact server save to fetch or compare.
             val serverMd5 =
                 if (!row.has("server_content_hash") || row.isNull("server_content_hash")) {
                     null
