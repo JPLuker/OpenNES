@@ -1,6 +1,6 @@
 # OpenNES privacy policy
 
-_Last updated: 13 November 2026. Applies to the OpenNES Android app._
+_Last updated: 14 November 2026. Applies to the OpenNES Android app._
 
 OpenNES is an open-source NES emulator. It has no OpenNES account, no
 advertising, no analytics and no crash-reporting service. The developer runs
@@ -27,12 +27,13 @@ connects to these services, and only for the purpose shown.
 | Libretro thumbnails (`thumbnails.libretro.com`) | Showing box art, title screens and screenshots for games in your library | The catalogue name of the game, as part of the image address |
 | Wikidata and Wikipedia (`www.wikidata.org`, `en.wikipedia.org`) | Looking up genre, release year and description. This runs automatically after a library scan unless you turn it off in **Settings → Library maintenance**, and when you use Fix Match | The cleaned game title, and the ID of a matching Wikidata record |
 | RetroAchievements (`retroachievements.org`) | Only after you sign in to RetroAchievements | Your RetroAchievements username and sign-in token, an identifying hash of the game you start, achievement progress and activity status |
-| Your RomM server (address you enter) | Only after you connect a RomM server | Your RomM sign-in for that server, and requests to list and download your NES games and the save backups you ask for |
+| Your RomM server (address you enter) | Only after you connect a RomM server | Your RomM sign-in for that server, and requests to list and download your NES games and the save backups you ask for. If you turn on **Save sync**, also your in-game save files (battery saves) and a random device name for this phone |
 | GitHub (`api.github.com`, `raw.githubusercontent.com`) | Only when you search the Libretro cheat catalogue from the Cheats screen | The game name used to find a cheat file |
 
-Game files and save files are never uploaded by the app. RomM save backups are
-only downloaded or exported when you ask; the app does not upload or overwrite
-saves on a server automatically.
+Game files are never uploaded. Save files are uploaded only to your own RomM
+server, and only after you turn on **Settings → RomM → Save sync**. Save states
+are never uploaded. Before a save on the phone is replaced by one from RomM, the
+phone's copy is backed up on the phone.
 
 Each of these services sees your IP address and ordinary connection details,
 as any website does, and handles them under its own privacy policy. A RomM

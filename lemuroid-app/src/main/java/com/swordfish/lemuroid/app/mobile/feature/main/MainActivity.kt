@@ -539,7 +539,10 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                         )
                     }
                     composable(MainRoute.SETTINGS_ROMM) {
-                        RommSettingsScreen(modifier = Modifier.padding(padding))
+                        RommSettingsScreen(
+                            modifier = Modifier.padding(padding),
+                            loadGames = { retrogradeDb.gameDao().selectAllNesGames() },
+                        )
                     }
                     composable(MainRoute.SETTINGS_RETROACHIEVEMENTS) {
                         RetroAchievementsSettingsScreen(modifier = Modifier.padding(padding))

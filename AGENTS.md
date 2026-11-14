@@ -12,7 +12,7 @@ Read this file, the current [roadmap](ROADMAP.md), [testing status](TESTING.md),
 - The development APK ID is `com.jpluker.opennes.debug`. Its persistent test signer is not production signing. Each CI run derives an increasing version code from `OPENNES_DEV_RUN_NUMBER`, sourced from GitHub Actions; the root `VERSION` file owns the base version.
 - No speculative restyling. Portrait and landscape controls retain independent configurations; the controller palette drives the UI. Changes to appearance require an explicit request.
 - RetroAchievements runs in Casual mode only. Do **not** enable official Hardcore unlocks or advertise compliance without real approval, native enforcement and acceptance.
-- RomM is optional. Existing library browsing, imports, manual backup and offline request planning do not authorize background save uploads or remote overwrites. Preserve per-user, per-server provenance and require live credentials and explicit consent before future writes.
+- RomM is optional. Two-way battery-save sync (decided for 1.0 on 2026-11-14) runs only after the player turns it on, and follows `RommTwoWaySyncPlan`: a transfer happens only when one side is provably unchanged since the last sync, otherwise the player chooses. Never delete a local save, never touch the running game's save, always back up before replacing, and keep per-user, per-server provenance. Save states are not synced.
 - Local emulation must work without signing into either service. Every network request must be scoped, cancellable, bounded and transparent to users.
 
 ## Before changing code

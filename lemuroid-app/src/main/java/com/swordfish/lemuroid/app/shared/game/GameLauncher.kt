@@ -7,13 +7,16 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
 import com.swordfish.lemuroid.app.shared.main.GameLaunchTaskHandler
+import com.swordfish.lemuroid.app.shared.romm.RommTwoWaySync
 import com.swordfish.lemuroid.common.displayToast
 import com.swordfish.lemuroid.lib.core.CoresSelection
 import com.swordfish.lemuroid.lib.library.GameSystem
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 
 class GameLauncher(
     private val coresSelection: CoresSelection,
@@ -38,12 +41,28 @@ class GameLauncher(
         if (host == null || activity.isFinishing || activity.isDestroyed) {
             return false
         }
+        // The pre-launch save check can take a few seconds; a second tap on
+        // Play meanwhile must not start the game twice.
+        if (!launchInProgress.compareAndSet(false, true)) return false
         host.lifecycleScope.launch {
             var backgroundWorkPaused = false
             var launchDispatched = false
             try {
                 val system = GameSystem.findById(game.systemId)
                 val coreConfig = coresSelection.getCoreConfigForSystem(system)
+                if (activity.isFinishing || activity.isDestroyed) return@launch
+                // Pull a newer save made on another device. Bounded: an
+                // unreachable server never holds up play.
+                val slowNotice =
+                    launch {
+                        delay(800)
+                        activity.displayToast(R.string.opennes_romm_sync_checking)
+                    }
+                try {
+                    RommTwoWaySync.syncBeforeLaunch(activity.applicationContext, game)
+                } finally {
+                    slowNotice.cancel()
+                }
                 if (activity.isFinishing || activity.isDestroyed) return@launch
                 gameLaunchTaskHandler.handleGameStart(activity.applicationContext)
                 backgroundWorkPaused = true
@@ -73,7 +92,11 @@ class GameLauncher(
                     }
                 }
             }
-        }
+        }.invokeOnCompletion { launchInProgress.set(false) }
         return true
+    }
+
+    companion object {
+        private val launchInProgress = AtomicBoolean(false)
     }
 }

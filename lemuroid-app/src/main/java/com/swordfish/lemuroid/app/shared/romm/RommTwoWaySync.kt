@@ -74,6 +74,10 @@ internal object RommTwoWaySync {
         status.value = status.value.copy(state = state)
     }
 
+    /** When the last run finished, or null if sync never ran. */
+    suspend fun lastRunAtMillis(context: Context): Long? =
+        withContext(Dispatchers.IO) { stateFile(context).read().lastRun?.atMillis }
+
     suspend fun isEnabled(context: Context): Boolean = withContext(Dispatchers.IO) { stateFile(context).read().enabled }
 
     /**

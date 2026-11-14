@@ -7,6 +7,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.shared.diagnostics.OpenNesFailureCategory
 import com.swordfish.lemuroid.app.shared.game.BaseGameActivity
 import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
+import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncWork
 import com.swordfish.lemuroid.app.shared.savesync.SaveSyncWork
 import com.swordfish.lemuroid.app.shared.storage.cache.CacheCleanerWork
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
@@ -71,6 +72,8 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
     private fun rescheduleBackgroundWork(context: Context) {
         // Let's slightly delay the sync. Maybe the user wants to play another game.
         SaveSyncWork.enqueueAutoWork(context, 5)
+        // Upload the progress just made, if RomM save sync is on.
+        RommSaveSyncWork.enqueue(context)
         CacheCleanerWork.enqueueCleanCacheLRU(context)
     }
 

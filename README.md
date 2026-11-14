@@ -98,7 +98,7 @@ Casual-only rewind, touchscreen Zapper input and individual D-pad hitbox customi
 
 ## Privacy
 
-OpenNES can play locally imported NES games without an OpenNES account or internet connection. The RomM and RetroAchievements integrations are optional. ROM files, save states and local game settings remain on your device unless you choose to import, export or synchronize through a supported service. **Automatic RomM save uploads and overwrites are not enabled.** Do not use development backups as your only copy of a save.
+OpenNES can play locally imported NES games without an OpenNES account or internet connection. The RomM and RetroAchievements integrations are optional. ROM files, save states and local game settings remain on your device unless you choose to import, export or synchronize through a supported service. **RomM save sync is off until you turn it on**; it then syncs in-game saves (not save states) with your own server and backs up the phone's copy before replacing it. Do not use development backups as your only copy of a save.
 
 ### Network connections
 

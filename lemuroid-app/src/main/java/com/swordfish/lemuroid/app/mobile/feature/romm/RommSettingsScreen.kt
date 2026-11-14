@@ -66,6 +66,7 @@ import com.swordfish.lemuroid.app.shared.romm.RommPendingSyncJournal
 import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncPlanner
 import com.swordfish.lemuroid.app.shared.romm.RommServerIdentity
 import com.swordfish.lemuroid.app.shared.romm.RommVersionedSaveBackupStore
+import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +85,10 @@ import java.util.TimeZone
  * Bearer tokens are never displayed again after successful configuration.
  */
 @Composable
-fun RommSettingsScreen(modifier: Modifier = Modifier) {
+fun RommSettingsScreen(
+    modifier: Modifier = Modifier,
+    loadGames: suspend () -> List<Game> = { emptyList() },
+) {
     val context = LocalContext.current.applicationContext
     val store = remember(context) { RommConnectionStore(context) }
     val deviceIdentity = remember(context) { RommDeviceIdentityStore(context) }
@@ -557,52 +561,10 @@ fun RommSettingsScreen(modifier: Modifier = Modifier) {
             }
         }
 
+        // Turning save sync on registers this phone with RomM, so the
+        // separate registration box is no longer needed.
         if (configured) {
-            OpenNesSettingsGroup(
-                title = { Text(stringResource(R.string.opennes_romm_device_title)) },
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Text(stringResource(R.string.opennes_romm_device_description))
-                    Text(
-                        stringResource(
-                            if (registeredDeviceId != null) {
-                                R.string.opennes_romm_device_registered
-                            } else {
-                                R.string.opennes_romm_device_unregistered
-                            },
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                    )
-                    OutlinedButton(
-                        enabled = !busy,
-                        onClick = {
-                            perform("Registering RomM device") {
-                                val connection =
-                                    withContext(Dispatchers.IO) {
-                                        store.load() ?: error("Reconnect to RomM")
-                                    }
-                                val device = client.registerDevice(context, connection)
-                                registeredDeviceId = device.deviceId
-                                status = context.getString(R.string.opennes_romm_device_registered)
-                            }
-                        },
-                    ) {
-                        Text(
-                            stringResource(
-                                if (registeredDeviceId == null) {
-                                    R.string.opennes_romm_device_register
-                                } else {
-                                    R.string.opennes_romm_device_recheck
-                                },
-                            ),
-                        )
-                    }
-                }
-            }
+            RommSaveSyncSection(loadGames = loadGames)
         }
 
         if (configured) {

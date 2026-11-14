@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- **RomM two-way save sync (#8, device and server acceptance pending).** Settings → RomM → **Save sync** turns it on (it registers the phone with RomM automatically). In-game battery saves then sync with your RomM server before a game starts (at most 6 s, so an offline server never blocks play), after it closes, when the library opens and on **Sync now**. Uses RomM 5.4's device sync with the `autosave` slot and `fceumm` emulator, the names RomM's web player and RetroArch sync use, so a save continues on any of them.
+  - A save moves only when one side is provably unchanged since the last sync (a per-game record of the last synced save). Otherwise, including the first sync of a game that has a different save on each side, you choose **Keep phone save** or **Use RomM save**. RomM keeps replaced server saves as older versions.
+  - Before a downloaded save replaces the phone's, the phone's copy is backed up (listed with the other RomM backups) and the game's autosave state is set aside, so it can't be restored over the new progress.
+  - The running game's save is never touched, server-side deletions never delete anything on the phone, and save states are not synced.
+  - Fixed: the RomM 5.4 response for "only the phone changed" was rejected as malformed.
+  - Needs a RomM token with `assets.read`, `assets.write`, `devices.read` and `devices.write`.
+
 - **Removed dead Lemuroid module:** `lemuroid-app-ext-play` (Google Drive save sync, Play in-app review, Play on-demand core delivery) had already been dropped from the build but was still in the repository, along with its Google Play services and Google API client dependency definitions. Removing it means the source matches what ships and no Google services code can be re-enabled by accident.
 
 - **Translatable text and TalkBack:** moved the remaining hard-coded English in the controller restore dialog, cheat finder, game details (Play, Resume, Casual/Hardcore), game-switch dialog, rename dialog and RomM download-failure dialog into `strings.xml`, with a proper plural for the cheat count. The fast-forward button now has a screen-reader label and button role.

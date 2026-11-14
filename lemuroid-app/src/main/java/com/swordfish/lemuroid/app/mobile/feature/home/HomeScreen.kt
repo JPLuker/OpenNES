@@ -121,6 +121,7 @@ import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.shared.romm.RommConnectionPreferences
 import com.swordfish.lemuroid.app.shared.romm.RommLibraryCatalog
+import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncWork
 import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.common.displayDetailsSettingsScreen
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -159,6 +160,8 @@ fun HomeScreen(
             viewModel.updatePermissions(context.applicationContext)
             viewModel.refreshRomMLibrary()
             viewModel.checkRomMConnectivity()
+            // Pull saves made elsewhere, if RomM save sync is on.
+            RommSaveSyncWork.enqueueIfDue(context.applicationContext)
         }
     }
 

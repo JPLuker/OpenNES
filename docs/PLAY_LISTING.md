@@ -21,8 +21,8 @@ submit; change this file when the app's behavior changes.
 | Can users request deletion? | Not applicable | Nothing is held by the developer |
 
 Google treats data sent to a third party **at the user's direction** (signing in
-to RetroAchievements, connecting to the user's own RomM server) as not
-"shared". If a reviewer asks, the complete list of connections is in
+to RetroAchievements, connecting to the user's own RomM server, turning on RomM
+save sync, which uploads in-game saves to that server) as not "shared". If a reviewer asks, the complete list of connections is in
 `PRIVACY.md`.
 
 One point to decide before submitting: game-detail lookups (Wikidata and

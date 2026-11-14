@@ -48,19 +48,27 @@ individual fixes: everything that can only be judged on a phone is here.
 
 ## E. RomM (needs your server on the network)
 
-23. Connect to the server. NES games on the server appear with the download badge on the cover.
+Before starting: in RomM, create a new client token with **assets.read, assets.write, devices.read, devices.write, me.read, platforms.read, roms.read** and connect OpenNES with it (Settings → RomM).
+
+23. NES games on the server appear with the download badge on the cover.
 24. Download one. Progress shows, then the game becomes playable and the badge is gone.
 25. Turn Wi-Fi off and try a download: a clear reason and **Retry download** appear beside the button. Turn Wi-Fi on and retry: it works.
-26. Download a save backup from the server and export it. No save on the phone or the server is changed without you asking.
-27. Close and reopen the app offline: previously seen RomM titles are still listed, marked offline.
+26. **Turn on sync.** Settings → RomM → Save sync → switch on. It finishes with "Last synced just now". In RomM's web UI the phone appears under your devices.
+27. **Phone → server.** Play a game with battery saves (e.g. Zelda), save in-game, quit. Within a minute the save appears in RomM for that game (slot `autosave`).
+28. **Server → phone.** Play the same game in RomM's web player in a browser and save in-game, then close the web player. On the phone, tap Play on that game: the newer save loads (a "Checking RomM" toast may show briefly). The old autosave state is not restored over it.
+29. **Conflict.** Turn Wi-Fi off, play the game on the phone, save in-game and quit. Make different progress in RomM's web player. Turn Wi-Fi back on and tap **Sync now**: the game appears under **Choose which save to keep**. Try **Use RomM save**: the phone's save is replaced and a backup appears in the backups list. Repeat and try **Keep phone save**: RomM shows the phone's save as the newest version.
+30. **First sync with existing saves.** For a game that already had a different save on the phone and on RomM before sync was turned on, the first sync asks instead of picking one.
+31. **Offline launch.** With the server off, tap Play: the game starts within about 6 seconds using the phone's save.
+32. **Never while playing.** Start a game, switch to the library and tap Sync now: the running game's save is not changed.
+33. Close and reopen the app offline: previously seen RomM titles are still listed, marked offline.
 
 ## F. Settings → About
 
-28. Version, source code, open-source notices and privacy policy rows are present and the three links open.
-29. **TalkBack** (optional): with TalkBack on, the rewind and fast-forward buttons are read out by name, and the switch-games, download-failed and restore-defaults dialogs read normally.
+34. Version, source code, open-source notices and privacy policy rows are present and the three links open.
+35. **TalkBack** (optional): with TalkBack on, the rewind and fast-forward buttons are read out by name, and the switch-games, download-failed and restore-defaults dialogs read normally.
 
 ## What a result means
 
 - **All of A–C pass:** the app is ready for the Play internal-testing track once signing is set up.
 - **D21 passes:** RetroAchievements Casual can be advertised.
-- **E passes:** the RomM gate for the public release is met for the download-and-backup scope.
+- **E passes:** the RomM gate for the public release is met, including two-way save sync.

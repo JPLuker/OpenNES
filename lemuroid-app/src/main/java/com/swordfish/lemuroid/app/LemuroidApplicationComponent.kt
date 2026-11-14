@@ -22,6 +22,7 @@ package com.swordfish.lemuroid.app
 import com.swordfish.lemuroid.app.shared.library.CoreUpdateWork
 import com.swordfish.lemuroid.app.shared.library.LibraryIndexWork
 import com.swordfish.lemuroid.app.shared.metadata.NesAutoMetadataWork
+import com.swordfish.lemuroid.app.shared.romm.RommSaveSyncWork
 import com.swordfish.lemuroid.app.shared.savesync.SaveSyncWork
 import com.swordfish.lemuroid.app.shared.storage.cache.CacheCleanerWork
 import com.swordfish.lemuroid.lib.injection.AndroidWorkerInjectionModule
@@ -40,6 +41,7 @@ import dagger.android.support.AndroidSupportInjectionModule
         SaveSyncWork.Module::class,
         CoreUpdateWork.Module::class,
         CacheCleanerWork.Module::class,
+        RommSaveSyncWork.Module::class,
     ],
 )
 @PerApp
