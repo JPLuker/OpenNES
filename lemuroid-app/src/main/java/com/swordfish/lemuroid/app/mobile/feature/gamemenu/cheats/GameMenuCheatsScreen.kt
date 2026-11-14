@@ -234,7 +234,7 @@ internal fun GameMenuCheatsScreen(game: Game) {
             },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Find Cheats")
+            Text(stringResource(R.string.opennes_cheats_find))
         }
         Button(
             onClick = { openEditor(null) },
@@ -308,15 +308,14 @@ internal fun GameMenuCheatsScreen(game: Game) {
     if (finderOpen) {
         AlertDialog(
             onDismissRequest = { dismissFinder() },
-            title = { Text("Find NES cheats") },
+            title = { Text(stringResource(R.string.opennes_cheats_find_title)) },
             text = {
                 Column(
                     modifier = Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Text(
-                        "Libretro NES cheat database · CC BY-SA 4.0. " +
-                            "Only compatible individual codes are shown; imported codes stay disabled.",
+                        stringResource(R.string.opennes_cheats_find_notice),
                         color = GameMenuStyle.muted,
                         fontSize = 12.sp,
                     )
@@ -332,7 +331,7 @@ internal fun GameMenuCheatsScreen(game: Game) {
                                 finderMessage = null
                             }
                         },
-                        label = { Text("Game title") },
+                        label = { Text(stringResource(R.string.opennes_cheats_find_game_title)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                     )
@@ -368,14 +367,19 @@ internal fun GameMenuCheatsScreen(game: Game) {
                                     finderMessage =
                                         when {
                                             result.isFailure ->
-                                                "Could not reach the cheat database. Check the connection."
+                                                context.getString(R.string.opennes_cheats_find_unavailable)
                                             finderResults.isEmpty() ->
-                                                "No compatible NES cheats found. Try a different title."
-                                            else -> "${finderResults.size} compatible cheats found."
+                                                context.getString(R.string.opennes_cheats_find_none)
+                                            else ->
+                                                context.resources.getQuantityString(
+                                                    R.plurals.opennes_cheats_find_count,
+                                                    finderResults.size,
+                                                    finderResults.size,
+                                                )
                                         }
                                 }
                         },
-                    ) { Text("Search database") }
+                    ) { Text(stringResource(R.string.opennes_cheats_find_search)) }
                     if (finderLoading) CircularProgressIndicator()
                     finderMessage?.let { Text(it, color = GameMenuStyle.muted, fontSize = 12.sp) }
                     finderResults.forEach { candidate ->
@@ -420,16 +424,16 @@ internal fun GameMenuCheatsScreen(game: Game) {
                             dismissFinder()
                             finderMessage = null
                         } else {
-                            finderMessage = "Unable to import selected codes."
+                            finderMessage = context.getString(R.string.opennes_cheats_find_import_failed)
                         }
                     },
                 ) {
-                    Text("Import selected (${finderSelected.size})")
+                    Text(stringResource(R.string.opennes_cheats_find_import, finderSelected.size))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { dismissFinder() }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
             containerColor = GameMenuStyle.surface,

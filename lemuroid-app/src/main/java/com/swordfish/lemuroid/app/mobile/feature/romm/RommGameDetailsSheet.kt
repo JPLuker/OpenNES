@@ -307,7 +307,7 @@ internal fun RommGameDetailsSheet(
     if (error != null && dismissedFailure != error) {
         AlertDialog(
             onDismissRequest = { dismissedFailure = error },
-            title = { Text("Download failed") },
+            title = { Text(stringResource(R.string.opennes_romm_download_failed)) },
             text = { Text(error) },
             confirmButton = {
                 TextButton(
@@ -316,12 +316,12 @@ internal fun RommGameDetailsSheet(
                         onDownload()
                     },
                 ) {
-                    Text("Retry download")
+                    Text(stringResource(R.string.opennes_romm_retry_download))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { dismissedFailure = error }) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             },
         )

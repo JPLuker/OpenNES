@@ -283,13 +283,17 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             verticalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
                             Text(
-                                "Switch games?",
+                                stringResource(R.string.opennes_switch_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                "Close ${activeSession.value?.title ?: "the current game"} " +
-                                    "before starting ${next.displayName()}. Your progress will be saved.",
+                                stringResource(
+                                    R.string.opennes_switch_body,
+                                    activeSession.value?.title
+                                        ?: stringResource(R.string.opennes_switch_current_game),
+                                    next.displayName(),
+                                ),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 4,
                                 overflow = TextOverflow.Ellipsis,
@@ -297,7 +301,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             )
                             if (switchError.value) {
                                 Text(
-                                    "The running game did not close. No forced shutdown was performed.",
+                                    stringResource(R.string.opennes_switch_failed),
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodySmall,
                                 )
@@ -349,7 +353,15 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                         strokeWidth = 2.dp,
                                     )
                                 }
-                                Text(if (switching.value) "Saving and closing…" else "Close & launch")
+                                Text(
+                                    stringResource(
+                                        if (switching.value) {
+                                            R.string.opennes_switch_working
+                                        } else {
+                                            R.string.opennes_switch_confirm
+                                        },
+                                    ),
+                                )
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -359,14 +371,14 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                 TextButton(
                                     enabled = !switching.value,
                                     onClick = { pendingSwitch.value = null },
-                                ) { Text("Cancel") }
+                                ) { Text(stringResource(R.string.cancel)) }
                                 OutlinedButton(
                                     enabled = !switching.value,
                                     onClick = {
                                         pendingSwitch.value = null
                                         resumeGame()
                                     },
-                                ) { Text("Resume current") }
+                                ) { Text(stringResource(R.string.opennes_switch_resume_current)) }
                             }
                         }
                     }

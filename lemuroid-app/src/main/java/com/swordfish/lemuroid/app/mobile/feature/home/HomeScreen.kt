@@ -448,7 +448,7 @@ private fun OpenNesLibrary(
                                 fontWeight = FontWeight.Bold,
                             )
                         }
-                        Button(onClick = onResumeActive) { Text("Resume") }
+                        Button(onClick = onResumeActive) { Text(stringResource(R.string.opennes_resume)) }
                     }
                 }
             }
@@ -935,7 +935,7 @@ private fun GameDetailsSheet(
                         ),
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Text("Play")
+                    Text(stringResource(R.string.opennes_play))
                 }
                 Box {
                     OutlinedIconButton(
@@ -1035,7 +1035,7 @@ private fun GameDetailsSheet(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Casual", color = LibraryColors.foreground)
+                Text(stringResource(R.string.opennes_mode_casual), color = LibraryColors.foreground)
                 Switch(
                     checked = wantsHardcore,
                     enabled = launchModeStore.hardcoreAvailable,
@@ -1046,7 +1046,7 @@ private fun GameDetailsSheet(
                     },
                 )
                 Text(
-                    "Hardcore",
+                    stringResource(R.string.opennes_mode_hardcore),
                     color = if (launchModeStore.hardcoreAvailable) LibraryColors.foreground else LibraryColors.muted,
                 )
             }

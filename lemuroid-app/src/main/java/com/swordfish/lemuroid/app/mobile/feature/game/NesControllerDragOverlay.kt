@@ -183,12 +183,9 @@ internal fun NesControllerDragOverlay(
     if (confirmRestore.value) {
         AlertDialog(
             onDismissRequest = { confirmRestore.value = false },
-            title = { Text("Restore controller defaults?") },
+            title = { Text(stringResource(R.string.opennes_controls_restore_title)) },
             text = {
-                Text(
-                    "Reset positions and sizes for this orientation only. " +
-                        "Controller colors and the other orientation will be preserved.",
-                )
+                Text(stringResource(R.string.opennes_controls_restore_body))
             },
             confirmButton = {
                 TextButton(
@@ -197,12 +194,12 @@ internal fun NesControllerDragOverlay(
                         onRestoreDefaults()
                     },
                 ) {
-                    Text("Restore defaults")
+                    Text(stringResource(R.string.opennes_controls_restore_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { confirmRestore.value = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         )

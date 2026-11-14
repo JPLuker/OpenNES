@@ -65,6 +65,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -103,6 +106,7 @@ import gg.padkit.config.HapticFeedbackType
 import gg.padkit.inputstate.InputState
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+import com.swordfish.lemuroid.R as AppR
 
 @Composable
 fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
@@ -1256,6 +1260,7 @@ private fun NesTransportControls(
     reportBounds: (NesEditableControl, Rect) -> Unit,
 ) {
     if (menuBounds == null || fullBounds == null) return
+    val fastForwardLabel = stringResource(AppR.string.opennes_fast_forward_accessibility)
     val density = LocalDensity.current
     val buttonPx = with(density) { 36.dp.toPx() }
     val gapPx = with(density) { 12.dp.toPx() }
@@ -1314,7 +1319,8 @@ private fun NesTransportControls(
                             androidx.compose.ui.graphics.Color(0xFF45454B),
                             androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                         )
-                        .clickable(enabled = !editing) {
+                        .semantics { contentDescription = fastForwardLabel }
+                        .clickable(enabled = !editing, role = Role.Button) {
                             haptics.press()
                             onFastForward()
                         },
