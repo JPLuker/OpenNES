@@ -407,6 +407,66 @@ class RommApiClient {
         if (code !in 200..299) throw RommSyncHttpException(code)
     }
 
+    /** The newest save state per (ROM, slot 1-4) for these ROMs. Requires assets.read. */
+    internal suspend fun listSlotStates(
+        connection: RommConnection,
+        romIds: Collection<Int>,
+    ): Map<Pair<Int, Int>, RommStateSlotPlan.Remote> {
+        if (romIds.isEmpty()) return emptyMap()
+        val params = romIds.map { "rom_ids" to it.toString() }
+        val (code, bytes) =
+            syncCall(connection, buildUrl(connection, listOf("api", "states"), params), null, MAX_JSON_BYTES.toInt())
+        if (code !in 200..299) throw RommSyncHttpException(code)
+        return RommStateSlotPlan.parseRemote(String(bytes, Charsets.UTF_8))
+    }
+
+    /** Downloads one save state's bytes, bounded. Requires assets.read. */
+    internal suspend fun downloadSlotState(
+        connection: RommConnection,
+        stateId: Long,
+    ): ByteArray {
+        require(stateId > 0) { "Invalid RomM state" }
+        val (code, bytes) =
+            syncCall(
+                connection,
+                buildUrl(connection, listOf("api", "states", stateId.toString(), "content")),
+                null,
+                MAX_SYNC_SAVE_BYTES,
+            )
+        if (code !in 200..299) throw RommSyncHttpException(code)
+        if (bytes.isEmpty()) throw IOException("RomM returned an empty state")
+        return bytes
+    }
+
+    /**
+     * Stores one save-state slot on RomM, replacing the state of the same
+     * file name. Returns RomM's record of it when it could be read.
+     * Requires assets.write.
+     */
+    internal suspend fun uploadSlotState(
+        connection: RommConnection,
+        romId: Int,
+        fileName: String,
+        content: ByteArray,
+    ): RommStateSlotPlan.Remote? {
+        require(romId > 0 && content.isNotEmpty() && content.size <= MAX_SYNC_SAVE_BYTES) { "Invalid state" }
+        require(safeAttachmentFileName(fileName)) { "Invalid state name" }
+        val body =
+            okhttp3.MultipartBody.Builder()
+                .setType(okhttp3.MultipartBody.FORM)
+                .addFormDataPart(
+                    "stateFile",
+                    fileName,
+                    content.toRequestBody("application/octet-stream".toMediaType()),
+                )
+                .build()
+        val params = listOf("rom_id" to romId.toString(), "emulator" to SYNC_EMULATOR)
+        val (code, bytes) =
+            syncCall(connection, buildUrl(connection, listOf("api", "states"), params), body, MAX_NEGOTIATION_BYTES)
+        if (code !in 200..299) throw RommSyncHttpException(code)
+        return runCatching { RommStateSlotPlan.parseOne(JSONObject(String(bytes, Charsets.UTF_8))) }.getOrNull()
+    }
+
     /**
      * One cancellable request that returns the status and a bounded body
      * instead of throwing on every non-2xx code, so a 409 can be told apart.

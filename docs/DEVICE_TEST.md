@@ -72,3 +72,10 @@ Before starting: in RomM, create a new client token with **assets.read, assets.w
 - **All of A–C pass:** the app is ready for the Play internal-testing track once signing is set up.
 - **D21 passes:** RetroAchievements Casual can be advertised.
 - **E passes:** the RomM gate for the public release is met, including two-way save sync.
+
+### Save-state slots and exit sync (added 2026-11-14)
+
+34. Play a battery-save game, save in-game, quit to the library and wait about 30 seconds without tapping Sync now. RomM shows the new save.
+35. Save to state slot 1, quit. RomM lists `<game>.state1` for the game.
+36. On a second device (or after deleting the slot's files), sync: slot 1 appears and loads.
+37. Tap Play with the server unreachable: "Starting game…" shows at once and the game opens within about 6 seconds.

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+- **Phone-test round 2 (2026-11-14):**
+  - **Save sync after a game closes now works.** The upload used to start while the closed game's process was still shutting down, so sync skipped exactly the game just played, and it could also be dropped as a "duplicate" of a library-open sync. It now waits for the game process to end (up to 20 s, then retries) and queues behind any other sync.
+  - **Save-state slots sync with RomM (device acceptance pending).** The four slots of each matched game sync as `Game.state1`…`Game.state4` under `fceumm` (RetroArch's naming, raw core state). Each slot remembers what was last synced; the unchanged side takes the other's newer state, and when both changed the more recent one wins. A slot replaced on the phone is first copied to a private folder. The Resume autosave state and Hardcore states are not synced. RomM has no version history for states, so a state replaced on the server is gone.
+  - **Loading screens:** tapping Play immediately shows a full-screen "Starting game…" (then "Checking RomM for a newer save…") instead of a frozen library and a toast. The opening screen's minimum time now counts from the first drawn frame.
+  - **Covers for RomM downloads:** a downloaded game that the library scan gave no cover now uses the cover RomM shows for the same file (IGDB image host only; never replaces an existing or custom cover).
+  - **Library:** games that are only on RomM are grayed out again (dimmer still when the server is offline) and keep the cloud badge.
+  - **Rewind button** stays visible whenever rewind is on; it is dimmed until there is something to rewind to.
+  - **Settings** opens on a short menu (Library, Controls, Gameplay, Display, RetroAchievements, RomM, Advanced, About), each a small page. Save transfer and Hardcore moved into Advanced. RomM settings lead with **Scan QR code**; code/token entry is behind "Connect with a code or token instead", and Check connection / Browse moved under Advanced tools.
+
 - **New app icon (2026-11-14):** Joseph's original cartridge pixel art on the Classic Hardware red. The launcher icon is a vector built from the 32×47 drawing, so it stays sharp at every size; it includes a line-art version for Android 13 themed icons and a 512 px Play Store icon. The source drawing is in `docs/brand/`.
 
 - **Settings and first launch redone (2026-11-14):** Settings is now grouped into Library, Controls, Gameplay, Display, Online, More and About, each row with an icon and plain wording; options that only matter when another is on (HD quality) hide until then, and the rewind switch moved from Advanced to Gameplay. RomM settings show the connection and Save sync first, with backups, archives and browse results under **Advanced tools**. First launch is a four-step guide (welcome, choose your games folder right there, pick controller colors with a live preview, optional RetroAchievements and RomM); every step can be skipped.

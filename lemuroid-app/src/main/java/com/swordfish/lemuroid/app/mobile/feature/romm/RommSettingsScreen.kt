@@ -128,6 +128,7 @@ fun RommSettingsScreen(
     }
     var signedInAs by remember { mutableStateOf<String?>(null) }
     var showAdvanced by rememberSaveable { mutableStateOf(false) }
+    var showManualConnect by rememberSaveable { mutableStateOf(false) }
     var registeredDeviceId by remember(context) {
         mutableStateOf(
             deviceIdentity.pinnedDevice(
@@ -423,37 +424,9 @@ fun RommSettingsScreen(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(stringResource(R.string.opennes_romm_explanation))
                 if (!configured) {
-                    OutlinedTextField(
-                        value = serverUrl,
-                        onValueChange = { serverUrl = it },
-                        label = { Text(stringResource(R.string.opennes_romm_server)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OutlinedTextField(
-                        value = tokenInput,
-                        onValueChange = { tokenInput = it },
-                        label = { Text(stringResource(R.string.opennes_romm_token)) },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Text(stringResource(R.string.opennes_romm_explanation))
                     Button(
-                        enabled = !busy && serverUrl.isNotBlank() && tokenInput.isNotBlank(),
-                        onClick = {
-                            if (RommApiClient.isPrivateLanHttp(serverUrl)) {
-                                confirmPlainHttpManual = true
-                            } else {
-                                connectManually()
-                            }
-                        },
-                    ) {
-                        Text(stringResource(R.string.opennes_romm_connect))
-                    }
-                    Text(stringResource(R.string.opennes_romm_pair_instructions))
-                    OutlinedButton(
                         enabled = !busy,
                         onClick = {
                             qrScanner.launch(
@@ -467,80 +440,87 @@ fun RommSettingsScreen(
                     ) {
                         Text(stringResource(R.string.opennes_romm_scan_qr))
                     }
-                    OutlinedTextField(
-                        value = pairingCodeInput,
-                        onValueChange = { pairingCodeInput = it.take(12) },
-                        label = { Text(stringResource(R.string.opennes_romm_pair_code)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OutlinedButton(
-                        enabled = !busy && serverUrl.isNotBlank() && pairingCodeInput.isNotBlank(),
-                        onClick = {
-                            runCatching {
-                                RommPairing.Request(
-                                    RommApiClient.validatedServerUrl(serverUrl),
-                                    RommPairing.normalizeCode(pairingCodeInput),
-                                )
-                            }.onSuccess { pendingPairing = it }
-                                .onFailure {
-                                    status = context.getString(R.string.opennes_romm_pair_code_invalid)
-                                }
-                        },
-                    ) {
-                        Text(stringResource(R.string.opennes_romm_pair_code_action))
+                    TextButton(onClick = { showManualConnect = !showManualConnect }) {
+                        Text(stringResource(R.string.opennes_romm_connect_other))
                     }
-                    if (RommApiClient.isPrivateLanHttp(serverUrl)) {
-                        Text(stringResource(R.string.opennes_romm_http_warning))
+                    if (showManualConnect) {
+                        OutlinedTextField(
+                            value = serverUrl,
+                            onValueChange = { serverUrl = it },
+                            label = { Text(stringResource(R.string.opennes_romm_server)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            value = pairingCodeInput,
+                            onValueChange = { pairingCodeInput = it.take(12) },
+                            label = { Text(stringResource(R.string.opennes_romm_pair_code)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedButton(
+                            enabled = !busy && serverUrl.isNotBlank() && pairingCodeInput.isNotBlank(),
+                            onClick = {
+                                runCatching {
+                                    RommPairing.Request(
+                                        RommApiClient.validatedServerUrl(serverUrl),
+                                        RommPairing.normalizeCode(pairingCodeInput),
+                                    )
+                                }.onSuccess { pendingPairing = it }
+                                    .onFailure {
+                                        status = context.getString(R.string.opennes_romm_pair_code_invalid)
+                                    }
+                            },
+                        ) {
+                            Text(stringResource(R.string.opennes_romm_pair_code_action))
+                        }
+                        OutlinedTextField(
+                            value = tokenInput,
+                            onValueChange = { tokenInput = it },
+                            label = { Text(stringResource(R.string.opennes_romm_token)) },
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Button(
+                            enabled = !busy && serverUrl.isNotBlank() && tokenInput.isNotBlank(),
+                            onClick = {
+                                if (RommApiClient.isPrivateLanHttp(serverUrl)) {
+                                    confirmPlainHttpManual = true
+                                } else {
+                                    connectManually()
+                                }
+                            },
+                        ) {
+                            Text(stringResource(R.string.opennes_romm_connect))
+                        }
+                        if (RommApiClient.isPrivateLanHttp(serverUrl)) {
+                            Text(stringResource(R.string.opennes_romm_http_warning))
+                        }
                     }
                 } else {
                     Text(stringResource(R.string.opennes_romm_connected, serverUrl))
                     signedInAs?.let {
                         Text(stringResource(R.string.opennes_romm_verified, it))
                     }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Button(
-                            enabled = !busy,
-                            onClick = {
-                                perform("Checking connection") {
-                                    val connection =
-                                        withContext(Dispatchers.IO) {
-                                            store.load() ?: error("Reconnect to RomM")
-                                        }
-                                    val profile = client.checkAccountProfile(connection)
-                                    withContext(Dispatchers.IO) {
-                                        store.pinVerifiedAccount(connection, profile)
-                                    }
-                                    signedInAs = profile.username
-                                    status = "Connection verified"
-                                }
-                            },
-                        ) { Text(stringResource(R.string.opennes_romm_check)) }
-                        OutlinedButton(
-                            enabled = !busy,
-                            onClick = {
-                                perform("Disconnecting") {
-                                    withContext(Dispatchers.IO) { store.disconnect() }
-                                    configured = false
-                                    tokenInput = ""
-                                    signedInAs = null
-                                    registeredDeviceId = null
-                                    syncPreview = null
-                                    page = null
-                                    remoteSaves = null
-                                    selectedSaveGame = null
-                                    pendingSave = null
-                                    status = "Disconnected"
-                                }
-                            },
-                        ) { Text(stringResource(R.string.opennes_romm_disconnect)) }
-                    }
-                    Button(enabled = !busy, onClick = { browse(0) }) {
-                        Text(stringResource(R.string.opennes_romm_browse))
-                    }
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            perform("Disconnecting") {
+                                withContext(Dispatchers.IO) { store.disconnect() }
+                                configured = false
+                                tokenInput = ""
+                                signedInAs = null
+                                registeredDeviceId = null
+                                syncPreview = null
+                                page = null
+                                remoteSaves = null
+                                selectedSaveGame = null
+                                pendingSave = null
+                                status = "Disconnected"
+                            }
+                        },
+                    ) { Text(stringResource(R.string.opennes_romm_disconnect)) }
                 }
                 if (busy) {
                     Text(stringResource(R.string.opennes_romm_action_busy, operation))
@@ -571,6 +551,36 @@ fun RommSettingsScreen(
             )
         }
         if (showAdvanced) {
+            if (configured) {
+                OpenNesSettingsGroup {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        OutlinedButton(
+                            enabled = !busy,
+                            onClick = {
+                                perform("Checking connection") {
+                                    val connection =
+                                        withContext(Dispatchers.IO) {
+                                            store.load() ?: error("Reconnect to RomM")
+                                        }
+                                    val profile = client.checkAccountProfile(connection)
+                                    withContext(Dispatchers.IO) {
+                                        store.pinVerifiedAccount(connection, profile)
+                                    }
+                                    signedInAs = profile.username
+                                    status = "Connection verified"
+                                }
+                            },
+                        ) { Text(stringResource(R.string.opennes_romm_check)) }
+                        OutlinedButton(enabled = !busy, onClick = { browse(0) }) {
+                            Text(stringResource(R.string.opennes_romm_browse))
+                        }
+                    }
+                }
+            }
             OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_romm_notice_settings)) }) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),

@@ -6,7 +6,7 @@
 
 Decided for 1.0 by the owner on 2026-11-14. Off until the player turns on **Settings → RomM → Save sync**, which registers the device (`POST /api/devices`) if needed.
 
-**What syncs:** casual-profile battery saves only (`saves/<rom stem>.srm`). Save states are never synced: they depend on the exact core build.
+**What syncs:** casual-profile battery saves (`saves/<rom stem>.srm`) and the four casual save-state slots (`<rom stem>.state1`…`.state4`, emulator `fceumm`, raw core state, via `/api/states`). States depend on the core build, so one made here may not load in a different FCEUmm version; the Resume autosave state and Hardcore states are never synced. State slots use a per-slot last-synced record (phone MD5 + server id/time/size); when both sides changed the newer wins, and RomM keeps no older versions of a state.
 
 **Protocol (RomM 5.4, verified against the 5.4.1 source):**
 1. `POST /api/sync/negotiate` with each paired game's save (`rom_id`, `file_name`, `slot: "autosave"`, `emulator: "fceumm"`, MD5 `content_hash`, file mtime, size) and `rom_ids` of every installed game that RomM also has. `autosave`/`fceumm` are what RomM's web player and RetroArch sync use, so saves pair across them.

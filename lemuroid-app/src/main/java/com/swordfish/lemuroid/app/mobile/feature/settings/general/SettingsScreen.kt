@@ -12,7 +12,6 @@ import androidx.compose.material.icons.outlined.HighQuality
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Refresh
@@ -52,9 +51,19 @@ import com.swordfish.lemuroid.app.utils.android.settings.indexPreferenceState
 import com.swordfish.lemuroid.app.utils.android.settings.intPreferenceState
 import com.swordfish.lemuroid.app.utils.android.stringListResource
 
+/** Which settings page to show: the short menu, or one of its sub-pages. */
+enum class SettingsPage {
+    HOME,
+    GAMES,
+    CONTROLS,
+    GAMEPLAY,
+    DISPLAY,
+    ABOUT,
+}
+
 /**
- * Settings, grouped the way a player looks for things: games, controls,
- * gameplay, picture, online services, saves, then the rarely needed rest.
+ * Settings opens on a short menu; each row leads to one small page. Rarely
+ * needed tools (save transfer, Hardcore, diagnostics) live under Advanced.
  * Every preference key and default is unchanged from earlier builds.
  */
 @Composable
@@ -62,6 +71,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel,
     navController: NavController,
+    page: SettingsPage = SettingsPage.HOME,
 ) {
     val state =
         viewModel.uiState
@@ -79,23 +89,104 @@ fun SettingsScreen(
             .value
 
     OpenNesSettingsPage(modifier = modifier) {
-        LibrarySettings(
-            state = state,
-            onChangeFolder = { viewModel.changeLocalStorageFolder() },
-            indexingInProgress = indexingInProgress,
-            scanInProgress = scanInProgress,
-            onLibraryMaintenance = { navController.navigateToRoute(MainRoute.SETTINGS_LIBRARY) },
+        when (page) {
+            SettingsPage.HOME -> SettingsMenu(state.isSaveSyncSupported, navController)
+            SettingsPage.GAMES ->
+                LibrarySettings(
+                    state = state,
+                    onChangeFolder = { viewModel.changeLocalStorageFolder() },
+                    indexingInProgress = indexingInProgress,
+                    scanInProgress = scanInProgress,
+                    onLibraryMaintenance = { navController.navigateToRoute(MainRoute.SETTINGS_LIBRARY) },
+                )
+            SettingsPage.CONTROLS -> ControlsSettings(navController = navController)
+            SettingsPage.GAMEPLAY -> GameplaySettings()
+            SettingsPage.DISPLAY -> DisplaySettings()
+            SettingsPage.ABOUT -> AboutSettings()
+        }
+    }
+}
+
+@Composable
+private fun SettingsMenu(
+    isSaveSyncSupported: Boolean,
+    navController: NavController,
+) {
+    @Composable
+    fun row(
+        icon: ImageVector,
+        title: Int,
+        subtitle: Int,
+        route: MainRoute,
+    ) {
+        OpenNesSettingsLink(
+            icon = { SettingIcon(icon) },
+            title = { Text(text = stringResource(title)) },
+            subtitle = { Text(text = stringResource(subtitle)) },
+            onClick = { navController.navigateToRoute(route) },
         )
-        ControlsSettings(navController = navController)
-        GameplaySettings()
-        DisplaySettings()
-        OnlineSettings(
-            isSaveSyncSupported = state.isSaveSyncSupported,
-            navController = navController,
+    }
+    OpenNesSettingsGroup(title = { Text(text = stringResource(R.string.opennes_settings_group_play)) }) {
+        row(
+            Icons.Outlined.Folder,
+            R.string.opennes_settings_library,
+            R.string.opennes_settings_library_summary,
+            MainRoute.SETTINGS_GAMES,
         )
-        OpenNesSaveMigrationSettings()
-        MoreSettings(navController = navController)
-        AboutSettings()
+        row(
+            Icons.Outlined.SportsEsports,
+            R.string.opennes_settings_controls,
+            R.string.opennes_settings_controls_summary,
+            MainRoute.SETTINGS_CONTROLS,
+        )
+        row(
+            Icons.Outlined.Save,
+            R.string.opennes_settings_gameplay,
+            R.string.opennes_settings_gameplay_summary,
+            MainRoute.SETTINGS_GAMEPLAY,
+        )
+        row(
+            Icons.Outlined.Wallpaper,
+            R.string.opennes_settings_display,
+            R.string.opennes_settings_display_summary,
+            MainRoute.SETTINGS_DISPLAY,
+        )
+    }
+    OpenNesSettingsGroup(title = { Text(text = stringResource(R.string.opennes_settings_online)) }) {
+        row(
+            Icons.Outlined.EmojiEvents,
+            R.string.opennes_ra_settings_title,
+            R.string.opennes_ra_settings_subtitle,
+            MainRoute.SETTINGS_RETROACHIEVEMENTS,
+        )
+        row(
+            Icons.Outlined.Cloud,
+            R.string.opennes_romm_title,
+            R.string.opennes_romm_settings_description,
+            MainRoute.SETTINGS_ROMM,
+        )
+        if (isSaveSyncSupported) {
+            row(
+                Icons.Outlined.Cloud,
+                R.string.settings_title_save_sync,
+                R.string.settings_description_save_sync,
+                MainRoute.SETTINGS_SAVE_SYNC,
+            )
+        }
+    }
+    OpenNesSettingsGroup(title = { Text(text = stringResource(R.string.opennes_settings_more)) }) {
+        row(
+            Icons.Outlined.Tune,
+            R.string.settings_title_advanced_settings,
+            R.string.opennes_settings_advanced_description,
+            MainRoute.SETTINGS_ADVANCED,
+        )
+        row(
+            Icons.Outlined.Info,
+            R.string.opennes_about_title,
+            R.string.opennes_settings_about_summary,
+            MainRoute.SETTINGS_ABOUT,
+        )
     }
 }
 
@@ -270,53 +361,6 @@ private fun DisplaySettings() {
             state = immersiveMode,
             title = { Text(text = stringResource(id = R.string.settings_title_immersive_mode)) },
             subtitle = { Text(text = stringResource(id = R.string.settings_description_immersive_mode)) },
-        )
-    }
-}
-
-@Composable
-private fun OnlineSettings(
-    isSaveSyncSupported: Boolean,
-    navController: NavController,
-) {
-    OpenNesSettingsGroup(title = { Text(text = stringResource(R.string.opennes_settings_online)) }) {
-        OpenNesSettingsLink(
-            icon = { SettingIcon(Icons.Outlined.EmojiEvents) },
-            title = { Text(text = stringResource(R.string.opennes_ra_settings_title)) },
-            subtitle = { Text(text = stringResource(R.string.opennes_ra_settings_subtitle)) },
-            onClick = { navController.navigateToRoute(MainRoute.SETTINGS_RETROACHIEVEMENTS) },
-        )
-        OpenNesSettingsLink(
-            icon = { SettingIcon(Icons.Outlined.Cloud) },
-            title = { Text(text = stringResource(id = R.string.opennes_romm_title)) },
-            subtitle = { Text(text = stringResource(id = R.string.opennes_romm_settings_description)) },
-            onClick = { navController.navigateToRoute(MainRoute.SETTINGS_ROMM) },
-        )
-        if (isSaveSyncSupported) {
-            OpenNesSettingsLink(
-                icon = { SettingIcon(Icons.Outlined.Cloud) },
-                title = { Text(text = stringResource(id = R.string.settings_title_save_sync)) },
-                subtitle = { Text(text = stringResource(id = R.string.settings_description_save_sync)) },
-                onClick = { navController.navigateToRoute(MainRoute.SETTINGS_SAVE_SYNC) },
-            )
-        }
-        OpenNesSettingsLink(
-            icon = { SettingIcon(Icons.Outlined.Lock) },
-            title = { Text(text = stringResource(R.string.opennes_hardcore_settings_title)) },
-            subtitle = { Text(text = stringResource(R.string.opennes_hardcore_settings_subtitle)) },
-            onClick = { navController.navigateToRoute(MainRoute.SETTINGS_HARDCORE) },
-        )
-    }
-}
-
-@Composable
-private fun MoreSettings(navController: NavController) {
-    OpenNesSettingsGroup(title = { Text(text = stringResource(R.string.opennes_settings_more)) }) {
-        OpenNesSettingsLink(
-            icon = { SettingIcon(Icons.Outlined.Tune) },
-            title = { Text(text = stringResource(id = R.string.settings_title_advanced_settings)) },
-            subtitle = { Text(text = stringResource(R.string.opennes_settings_advanced_description)) },
-            onClick = { navController.navigateToRoute(MainRoute.SETTINGS_ADVANCED) },
         )
     }
 }

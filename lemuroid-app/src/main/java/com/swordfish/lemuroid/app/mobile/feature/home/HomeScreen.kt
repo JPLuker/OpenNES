@@ -215,6 +215,9 @@ fun HomeScreen(
             viewModel.checkRomMConnectivity()
         }
     }
+    LaunchedEffect(romm.games, localFileNames) {
+        viewModel.backfillRommCovers(romm.games)
+    }
     LaunchedEffect(localFileNames, romm.awaitingIndexIds) {
         RommLibraryCatalog.reconcileIndexed(localFileNames)
         if (romm.awaitingIndexIds.isNotEmpty()) {
@@ -529,7 +532,14 @@ private fun OpenNesLibrary(
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
-                                            .alpha(if (game.id < 0 && romm.serverReachable != true) 0.55f else 1f)
+                                            // Not on this phone: grayed out (more when RomM is offline).
+                                            .alpha(
+                                                when {
+                                                    game.id >= 0 -> 1f
+                                                    romm.serverReachable == true -> 0.5f
+                                                    else -> 0.35f
+                                                },
+                                            )
                                             .clickable { onGameDetailsClick(game) },
                                 )
                                 // A game that is only on the RomM server is
@@ -551,7 +561,7 @@ private fun OpenNesLibrary(
                             }
                             Text(
                                 game.displayName(),
-                                color = LibraryColors.foreground,
+                                color = if (game.id < 0) LibraryColors.muted else LibraryColors.foreground,
                                 fontSize = 12.sp,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,

@@ -368,6 +368,8 @@ class BaseGameScreenViewModel(
 
     fun canHoldRewind(): Flow<Boolean> = rewind.canHoldRewind()
 
+    fun rewindOffered(): Flow<Boolean> = rewind.rewindOffered()
+
     /**
      * Touch down starts incremental, one-second native state restores. Touch
      * release stops scheduling new steps and allows the current locked restore

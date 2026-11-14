@@ -490,7 +490,8 @@
     <string name="opennes_romm_preview_noop">Identical — no changes: %1$s</string>
     <string name="opennes_romm_preview_more">Additional proposed operations are hidden. No operations were executed.</string>
     <string name="opennes_romm_settings_description">Download games and sync saves with your RomM server</string>
-    <string name="opennes_romm_explanation">Connect to your own RomM server to browse and manually import NES or Famicom games. Your ROM folder must be selected first.</string>
+    <string name="opennes_romm_explanation">In RomM, open Client API Tokens, create a token for OpenNES and choose Pair device. Then scan the QR code it shows.</string>
+    <string name="opennes_romm_connect_other">Connect with a code or token instead</string>
     <string name="opennes_romm_server">RomM server URL</string>
     <string name="opennes_romm_scan_qr">Scan RomM QR code</string>
     <string name="opennes_romm_scan_prompt">Scan the pairing QR code shown in RomM</string>
@@ -569,8 +570,8 @@
     <string name="opennes_romm_download_failed">Download failed</string>
     <string name="opennes_fast_forward_accessibility">Fast-forward: toggles double speed</string>
     <string name="opennes_romm_sync_title">Save sync</string>
-    <string name="opennes_romm_sync_switch">Sync battery saves with RomM</string>
-    <string name="opennes_romm_sync_description">In-game saves continue between this phone, RomM\'s web player and RetroArch. Syncs before a game starts and after it closes. Save states stay on this phone.</string>
+    <string name="opennes_romm_sync_switch">Sync saves with RomM</string>
+    <string name="opennes_romm_sync_description">In-game saves and your four save-state slots sync with RomM before a game starts and after it closes. In-game saves also continue in RomM\'s web player and RetroArch.</string>
     <string name="opennes_romm_sync_running">Syncing saves…</string>
     <string name="opennes_romm_sync_now">Sync now</string>
     <string name="opennes_romm_sync_last_run">Last synced %1$s · %2$d games matched with RomM · %3$d uploaded, %4$d downloaded</string>
@@ -584,9 +585,16 @@
     <string name="opennes_romm_sync_keep_phone_body">Send this phone\'s save for %1$s to RomM. RomM keeps its current save as an older version.</string>
     <string name="opennes_romm_sync_use_server_body">Replace this phone\'s save for %1$s with RomM\'s. This phone\'s save is backed up first and can be exported from the backups list below.</string>
     <string name="opennes_romm_sync_confirm">Continue</string>
+    <string name="opennes_game_starting">Starting game…</string>
     <string name="opennes_romm_sync_checking">Checking RomM for a newer save…</string>
     <string name="opennes_romm_advanced_title">Advanced tools</string>
-    <string name="opennes_romm_advanced_description">Connection notices, browse and import, save backups and recovery</string>
+    <string name="opennes_romm_advanced_description">Check connection, browse, save backups and recovery</string>
+    <string name="opennes_settings_group_play">Playing</string>
+    <string name="opennes_settings_library_summary">Games folder, rescan, details and artwork</string>
+    <string name="opennes_settings_controls_summary">Controller look, vibration, gamepads</string>
+    <string name="opennes_settings_gameplay_summary">Resume and rewind</string>
+    <string name="opennes_settings_display_summary">Filter, HD mode, picture position</string>
+    <string name="opennes_settings_about_summary">Version, source code, privacy</string>
     <string name="opennes_settings_library">Library</string>
     <string name="opennes_settings_controls">Controls</string>
     <string name="opennes_settings_gameplay">Gameplay</string>
@@ -599,7 +607,7 @@
     <string name="opennes_settings_resume_description">Saves your spot when you quit a game and picks up there next time</string>
     <string name="opennes_settings_rewind_description">Hold the rewind button while playing to go back a few seconds</string>
     <string name="opennes_settings_picture_position">Picture position</string>
-    <string name="opennes_settings_advanced_description">Audio, rumble, tilt controls, storage and reset</string>
+    <string name="opennes_settings_advanced_description">Audio, rumble, save transfer, storage and reset</string>
     <string name="opennes_about_title">About</string>
     <string name="opennes_about_version">Version</string>
     <string name="opennes_about_source">Source code and license</string>

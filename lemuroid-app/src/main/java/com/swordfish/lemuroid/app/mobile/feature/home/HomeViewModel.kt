@@ -17,6 +17,7 @@ import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
 import com.swordfish.lemuroid.app.shared.metadata.WikidataNesMetadataSource
 import com.swordfish.lemuroid.app.shared.metadata.needsOnlineMetadata
 import com.swordfish.lemuroid.app.shared.romm.RommApiClient
+import com.swordfish.lemuroid.app.shared.romm.RommCoverBackfill
 import com.swordfish.lemuroid.app.shared.romm.RommLibraryCatalog
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
 import com.swordfish.lemuroid.lib.library.SystemID
@@ -87,6 +88,21 @@ class HomeViewModel(
 
     fun refreshRomMLibrary(force: Boolean = false) {
         viewModelScope.launch { RommLibraryCatalog.refresh(context, force) }
+    }
+
+    /** Give downloaded RomM games without art the cover RomM shows for them. */
+    fun backfillRommCovers(remote: List<RommApiClient.Rom>) {
+        if (remote.isEmpty()) return
+        viewModelScope.launch(Dispatchers.IO) {
+            val dao = retrogradeDb.gameDao()
+            val local =
+                dao.selectAllNesGames().map {
+                    RommCoverBackfill.LocalGame(it.id, it.fileName, it.coverFrontUrl, it.customCoverUri)
+                }
+            RommCoverBackfill.covers(local, remote).forEach { (gameId, url) ->
+                dao.updateCatalogueCover(gameId, url)
+            }
+        }
     }
 
     fun checkRomMConnectivity() {

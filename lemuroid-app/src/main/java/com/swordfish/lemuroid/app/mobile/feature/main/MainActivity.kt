@@ -38,10 +38,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -67,6 +69,7 @@ import com.swordfish.lemuroid.app.mobile.feature.settings.general.ControllerAppe
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.HardcoreSettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.LibraryMaintenanceScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.RetroAchievementsSettingsScreen
+import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsPage
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsScreen
 import com.swordfish.lemuroid.app.mobile.feature.settings.general.SettingsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.settings.inputdevices.InputDevicesSettingsScreen
@@ -150,42 +153,76 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 if (showingStartup) {
                     // Stay up until the first library snapshot (bounded),
                     // never for RomM or cover downloads.
+                    // Count the minimum from when the screen is really drawn:
+                    // a slow first frame used to eat most of it.
+                    withFrameNanos { }
+                    withFrameNanos { }
                     OpenNesStartupGate.awaitHandoff(waitForLibrary = opensLibrary)
                     showingStartup = false
                 }
             }
             Box(modifier = Modifier.fillMaxSize()) {
                 MainScreen(navController)
+                val preparingGame by GameLauncher.preparing.collectAsState()
+                val preparing = preparingGame
                 if (showingStartup) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = ComposeColor(0xFF0F1013),
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                        ) {
-                            Text(
-                                "OpenNES",
-                                color = ComposeColor.White,
-                                style = MaterialTheme.typography.headlineLarge,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            CircularProgressIndicator(
-                                modifier = Modifier.padding(top = 24.dp).size(26.dp),
-                                color = ComposeColor(0xFFD77B80),
-                                strokeWidth = 2.dp,
-                            )
-                            Text(
-                                stringResource(R.string.opennes_library_loading),
-                                modifier = Modifier.padding(top = 18.dp),
-                                color = ComposeColor(0xFFB9BAC0),
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
-                    }
+                    OpenNesLoadingScreen(
+                        title = "OpenNES",
+                        message = stringResource(R.string.opennes_library_loading),
+                    )
+                } else if (preparing != null) {
+                    // Tapping Play opens this at once, so the RomM save check
+                    // before a game starts never looks like a frozen screen.
+                    OpenNesLoadingScreen(
+                        title = preparing.title,
+                        message =
+                            stringResource(
+                                if (preparing.checkingSave) {
+                                    R.string.opennes_romm_sync_checking
+                                } else {
+                                    R.string.opennes_game_starting
+                                },
+                            ),
+                    )
                 }
+            }
+        }
+    }
+
+    @Composable
+    private fun OpenNesLoadingScreen(
+        title: String,
+        message: String,
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = ComposeColor(0xFF0F1013),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    title,
+                    color = ComposeColor.White,
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(top = 24.dp).size(26.dp),
+                    color = ComposeColor(0xFFD77B80),
+                    strokeWidth = 2.dp,
+                )
+                Text(
+                    message,
+                    modifier = Modifier.padding(top = 18.dp),
+                    color = ComposeColor(0xFFB9BAC0),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }
@@ -461,25 +498,35 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             onResetSearchQuery = { mainViewModel.changeQueryString("") },
                         )
                     }
-                    composable(MainRoute.SETTINGS) {
-                        SettingsScreen(
-                            modifier = Modifier.padding(padding),
-                            viewModel =
-                                viewModel(
-                                    factory =
-                                        SettingsViewModel.Factory(
-                                            applicationContext,
-                                            settingsInteractor,
-                                            saveSyncManager,
-                                            FlowSharedPreferences(
-                                                SharedPreferencesHelper.getLegacySharedPreferences(
-                                                    applicationContext,
+                    mapOf(
+                        MainRoute.SETTINGS to SettingsPage.HOME,
+                        MainRoute.SETTINGS_GAMES to SettingsPage.GAMES,
+                        MainRoute.SETTINGS_CONTROLS to SettingsPage.CONTROLS,
+                        MainRoute.SETTINGS_GAMEPLAY to SettingsPage.GAMEPLAY,
+                        MainRoute.SETTINGS_DISPLAY to SettingsPage.DISPLAY,
+                        MainRoute.SETTINGS_ABOUT to SettingsPage.ABOUT,
+                    ).forEach { (route, page) ->
+                        composable(route) {
+                            SettingsScreen(
+                                modifier = Modifier.padding(padding),
+                                viewModel =
+                                    viewModel(
+                                        factory =
+                                            SettingsViewModel.Factory(
+                                                applicationContext,
+                                                settingsInteractor,
+                                                saveSyncManager,
+                                                FlowSharedPreferences(
+                                                    SharedPreferencesHelper.getLegacySharedPreferences(
+                                                        applicationContext,
+                                                    ),
                                                 ),
                                             ),
-                                        ),
-                                ),
-                            navController = navController,
-                        )
+                                    ),
+                                navController = navController,
+                                page = page,
+                            )
+                        }
                     }
                     composable(MainRoute.SETTINGS_LIBRARY) {
                         LibraryMaintenanceScreen(

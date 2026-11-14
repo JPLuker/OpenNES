@@ -21,6 +21,7 @@ import androidx.navigation.NavHostController
 import com.swordfish.lemuroid.BuildConfig
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
+import com.swordfish.lemuroid.app.mobile.feature.settings.general.OpenNesSaveMigrationSettings
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsLink
@@ -52,6 +53,16 @@ fun AdvancedSettingsScreen(
 
         InputSettings()
         GeneralSettings(uiState.cache, viewModel, navController)
+        OpenNesSaveMigrationSettings()
+        OpenNesSettingsGroup(
+            title = { Text(text = stringResource(R.string.opennes_hardcore_settings_title)) },
+        ) {
+            OpenNesSettingsLink(
+                title = { Text(text = stringResource(R.string.opennes_hardcore_settings_title)) },
+                subtitle = { Text(text = stringResource(R.string.opennes_hardcore_settings_subtitle)) },
+                onClick = { navController.navigate(MainRoute.SETTINGS_HARDCORE.route) },
+            )
+        }
         SupportDiagnostics()
     }
 }

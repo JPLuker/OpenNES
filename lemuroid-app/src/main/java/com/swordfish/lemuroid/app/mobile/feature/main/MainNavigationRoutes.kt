@@ -43,10 +43,35 @@ enum class MainRoute(
         route = "settings/home",
         titleId = R.string.title_settings,
     ),
+    SETTINGS_GAMES(
+        route = "settings/games",
+        titleId = R.string.opennes_settings_library,
+        parent = SETTINGS,
+    ),
+    SETTINGS_CONTROLS(
+        route = "settings/controls",
+        titleId = R.string.opennes_settings_controls,
+        parent = SETTINGS,
+    ),
+    SETTINGS_GAMEPLAY(
+        route = "settings/gameplay",
+        titleId = R.string.opennes_settings_gameplay,
+        parent = SETTINGS,
+    ),
+    SETTINGS_DISPLAY(
+        route = "settings/display",
+        titleId = R.string.opennes_settings_display,
+        parent = SETTINGS,
+    ),
+    SETTINGS_ABOUT(
+        route = "settings/about",
+        titleId = R.string.opennes_about_title,
+        parent = SETTINGS,
+    ),
     SETTINGS_LIBRARY(
         route = "settings/library",
         titleId = R.string.opennes_library_maintenance,
-        parent = SETTINGS,
+        parent = SETTINGS_GAMES,
     ),
     SETTINGS_ADVANCED(
         route = "settings/advanced",
@@ -56,12 +81,12 @@ enum class MainRoute(
     SETTINGS_INPUT_DEVICES(
         route = "settings/inputdevices",
         titleId = R.string.settings_title_gamepad_settings,
-        parent = SETTINGS,
+        parent = SETTINGS_CONTROLS,
     ),
     SETTINGS_CONTROLLER_APPEARANCE(
         route = "settings/controller-appearance",
         titleId = R.string.opennes_controller_appearance_title,
-        parent = SETTINGS,
+        parent = SETTINGS_CONTROLS,
     ),
     SETTINGS_SAVE_SYNC(
         route = "settings/savesync",
@@ -81,7 +106,7 @@ enum class MainRoute(
     SETTINGS_HARDCORE(
         route = "settings/hardcore",
         titleId = R.string.opennes_hardcore_settings_title,
-        parent = SETTINGS,
+        parent = SETTINGS_ADVANCED,
     ),
     ;
 

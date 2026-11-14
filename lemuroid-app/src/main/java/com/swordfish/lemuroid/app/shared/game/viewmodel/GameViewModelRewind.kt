@@ -46,6 +46,11 @@ internal class GameViewModelRewind(
 
     fun canHoldRewind(): StateFlow<Boolean> = canHoldRewindState
 
+    // Rewind is switched on for this session (even before there is history).
+    private val rewindOfferedState = MutableStateFlow(false)
+
+    fun rewindOffered(): StateFlow<Boolean> = rewindOfferedState
+
     fun beginHold(): Boolean {
         if (!canRewindStep()) return false
         holdActive = true
@@ -67,6 +72,8 @@ internal class GameViewModelRewind(
         captureJob =
             scope.launch {
                 captureEnabled = settingsManager.rewindEnabled()
+                rewindOfferedState.value =
+                    captureEnabled && HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.REWIND)
                 canHoldRewindState.value = canRewindStep()
                 if (!captureEnabled) {
                     history.clear()

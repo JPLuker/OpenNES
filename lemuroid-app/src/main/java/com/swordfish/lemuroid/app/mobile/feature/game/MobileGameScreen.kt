@@ -54,6 +54,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -196,6 +197,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 touchControlsVisibleState.value
         val isLoading = viewModel.loadingState.collectAsState(true).value
         val rewindHoldAvailable = viewModel.canHoldRewind().collectAsState(false).value
+        val rewindOffered = viewModel.rewindOffered().collectAsState(false).value
 
         // First-game onboarding waits until real NES controls are visible.
         // A paired physical gamepad does not cause an unusable setup popup.
@@ -438,6 +440,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     settings = touchControllerSettings,
                     editing = dragEditMode,
                     rewindAvailable = rewindHoldAvailable,
+                    rewindOffered = rewindOffered,
                     onRewindPress = viewModel::startHoldRewind,
                     onRewindRelease = viewModel::stopHoldRewind,
                     onRewindStep = viewModel::rewindAccessibleStep,
@@ -1266,6 +1269,7 @@ private fun NesTransportControls(
     settings: TouchControllerSettingsManager.Settings,
     editing: Boolean,
     rewindAvailable: Boolean,
+    rewindOffered: Boolean,
     onRewindPress: () -> Unit,
     onRewindRelease: () -> Unit,
     onRewindStep: () -> Unit,
@@ -1311,9 +1315,10 @@ private fun NesTransportControls(
             control = NesEditableControl.REWIND,
             defaultX = menuBounds.left - fullBounds.left - 2f * (buttonPx + gapPx),
         ) { modifier ->
-            if (rewindAvailable || editing) {
+            // Shown whenever rewind is on; dimmed until there is something to rewind to.
+            if (rewindOffered || editing) {
                 NesRewindHoldButton(
-                    modifier = modifier,
+                    modifier = modifier.alpha(if (rewindAvailable || editing) 1f else 0.4f),
                     onPress = if (editing) ({}) else onRewindPress,
                     onRelease = if (editing) ({}) else onRewindRelease,
                     haptics = if (editing) null else haptics,

@@ -524,6 +524,19 @@ internal object RommTwoWaySync {
             }
         }
 
+        // Save-state slots ride along; a problem there never fails battery saves.
+        try {
+            val slots = RommStateSlotSync.sync(app, session.connection, session.owner, pairs, client)
+            uploaded += slots.uploaded
+            downloaded += slots.downloaded
+            failed += slots.failed
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w("RomM state sync stopped: %s", e.javaClass.simpleName)
+            failed++
+        }
+
         val run =
             RommTwoWaySyncState.LastRun(
                 atMillis = System.currentTimeMillis(),

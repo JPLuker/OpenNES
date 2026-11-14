@@ -1,6 +1,8 @@
 package com.swordfish.lemuroid.app.shared.game
 
 import android.app.Activity
+import android.os.Handler
+import android.os.Looper
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.swordfish.lemuroid.R
@@ -14,6 +16,8 @@ import com.swordfish.lemuroid.lib.library.GameSystem
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
@@ -53,10 +57,12 @@ class GameLauncher(
                 if (activity.isFinishing || activity.isDestroyed) return@launch
                 // Pull a newer save made on another device. Bounded: an
                 // unreachable server never holds up play.
+                // Cover the gap until the game's own loading screen appears.
+                preparingState.value = Preparing(game.title, checkingSave = false)
                 val slowNotice =
                     launch {
                         delay(800)
-                        activity.displayToast(R.string.opennes_romm_sync_checking)
+                        preparingState.value = Preparing(game.title, checkingSave = true)
                     }
                 try {
                     RommTwoWaySync.syncBeforeLaunch(activity.applicationContext, game)
@@ -93,11 +99,23 @@ class GameLauncher(
                     }
                 }
             }
-        }.invokeOnCompletion { launchInProgress.set(false) }
+        }.invokeOnCompletion {
+            launchInProgress.set(false)
+            // On success the game's window covers this; clear it after the
+            // transition so the library doesn't flash in between. Not tied
+            // to the lifecycle, so it can never stay up on a failed launch.
+            Handler(Looper.getMainLooper()).postDelayed({ preparingState.value = null }, HANDOFF_MS)
+        }
         return true
     }
 
+    /** A game is being prepared: shown full screen until the game opens. */
+    data class Preparing(val title: String, val checkingSave: Boolean)
+
     companion object {
+        private const val HANDOFF_MS = 600L
         private val launchInProgress = AtomicBoolean(false)
+        private val preparingState = MutableStateFlow<Preparing?>(null)
+        val preparing: StateFlow<Preparing?> = preparingState
     }
 }

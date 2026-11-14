@@ -30,10 +30,10 @@ connects to these services, and only for the purpose shown.
 | Your RomM server (address you enter) | Only after you connect a RomM server | Your RomM sign-in for that server, and requests to list and download your NES games and the save backups you ask for. If you turn on **Save sync**, also your in-game save files (battery saves) and a random device name for this phone |
 | GitHub (`api.github.com`, `raw.githubusercontent.com`) | Only when you search the Libretro cheat catalogue from the Cheats screen | The game name used to find a cheat file |
 
-Game files are never uploaded. Save files are uploaded only to your own RomM
-server, and only after you turn on **Settings → RomM → Save sync**. Save states
-are never uploaded. Before a save on the phone is replaced by one from RomM, the
-phone's copy is backed up on the phone.
+Game files are never uploaded. Save files and your four save-state slots are
+uploaded only to your own RomM server, and only after you turn on
+**Settings → RomM → Save sync**. Before a save or state on the phone is replaced
+by one from RomM, the phone's copy is kept on the phone.
 
 Each of these services sees your IP address and ordinary connection details,
 as any website does, and handles them under its own privacy policy. A RomM

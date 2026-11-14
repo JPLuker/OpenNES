@@ -77,7 +77,7 @@ class GameLaunchTaskHandler(private val retrogradeDb: RetrogradeDatabase) {
         // Let's slightly delay the sync. Maybe the user wants to play another game.
         SaveSyncWork.enqueueAutoWork(context, 5)
         // Upload the progress just made, if RomM save sync is on.
-        RommSaveSyncWork.enqueue(context)
+        RommSaveSyncWork.enqueueAfterGame(context)
         CacheCleanerWork.enqueueCleanCacheLRU(context)
     }
 
