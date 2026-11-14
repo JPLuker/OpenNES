@@ -102,11 +102,7 @@ fun GameMenuHomeScreen(
             // Decoded before the first frame, so the cover never pops in.
             val savedCover =
                 remember(gameMenuRequest.game) {
-                    if (gameMenuRequest.game.customCoverUri.isNullOrBlank()) {
-                        NesLaunchCover.load(coverContext, gameMenuRequest.game)?.asImageBitmap()
-                    } else {
-                        null
-                    }
+                    NesLaunchCover.load(coverContext, gameMenuRequest.game)?.asImageBitmap()
                 }
             if (savedCover != null) {
                 Image(

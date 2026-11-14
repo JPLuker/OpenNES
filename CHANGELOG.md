@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Pause menu cover, second attempt (2026-11-14):** before launch the library now saves the exact bitmap it has on screen (falling back to loading each candidate cover), and the pause menu always uses that saved file first.
+
 - **Phone-test round 6 (2026-11-14):**
   - **Factory reset** now also disconnects RomM, turns save sync off and returns to first-time setup. Saves and save states are still kept.
   - **Scanning is visible:** the setup card no longer hides when RomM games are listed, and a "Finding your NES games" line shows while a scan runs with games already present.

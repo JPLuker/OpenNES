@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.graphics.drawable.toBitmap
 import coil.imageLoader
+import coil.memory.MemoryCache
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.swordfish.lemuroid.lib.library.db.entity.Game
@@ -22,7 +23,7 @@ import java.io.File
  */
 object NesLaunchCover {
     private const val DIR = "launch-covers"
-    private const val SAVE_TIMEOUT_MS = 1_500L
+    private const val SAVE_TIMEOUT_MS = 3_000L
     private const val KEEP = 12
 
     private fun file(
@@ -38,33 +39,45 @@ object NesLaunchCover {
         val app = context.applicationContext
         val primary = game.displayCoverUrl()?.takeIf { it.isNotBlank() }
         val fallback = NesBoxArtUrls.romFilenameFallback(game)
-        val url = NesCoverResolutionCache.preferred(primary, fallback) ?: primary ?: fallback
+        val candidates =
+            listOfNotNull(NesCoverResolutionCache.preferred(primary, fallback), primary, fallback).distinct()
         val target = file(app, game)
-        if (url == null) {
+        if (candidates.isEmpty()) {
             withContext(Dispatchers.IO) { target.delete() }
             return
         }
-        withTimeoutOrNull(SAVE_TIMEOUT_MS) {
-            val result =
-                app.imageLoader.execute(
-                    ImageRequest.Builder(app)
-                        .data(url)
-                        .size(CoverUtils.COVER_DECODE_WIDTH_PX, CoverUtils.COVER_DECODE_HEIGHT_PX)
-                        .allowHardware(false)
-                        .build(),
-                )
-            val bitmap = (result as? SuccessResult)?.drawable?.toBitmap() ?: return@withTimeoutOrNull
-            withContext(Dispatchers.IO) {
-                val dir = target.parentFile ?: return@withContext
-                if (!dir.mkdirs() && !dir.isDirectory) return@withContext
-                val temp = File(dir, target.name + ".tmp")
-                temp.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
-                if (!temp.renameTo(target)) temp.delete()
-                dir.listFiles()
-                    ?.sortedByDescending { it.lastModified() }
-                    ?.drop(KEEP)
-                    ?.forEach { it.delete() }
+        // First choice: the very bitmap the library is showing right now.
+        val shown =
+            candidates.firstNotNullOfOrNull { url ->
+                app.imageLoader.memoryCache?.get(MemoryCache.Key(CoverUtils.coverMemoryKey(url)))?.bitmap
             }
+        val bitmap =
+            shown?.let { runCatching { it.copy(Bitmap.Config.ARGB_8888, false) }.getOrNull() }
+                ?: withTimeoutOrNull(SAVE_TIMEOUT_MS) {
+                    candidates.firstNotNullOfOrNull { url ->
+                        val result =
+                            app.imageLoader.execute(
+                                ImageRequest.Builder(app)
+                                    .data(url)
+                                    .size(CoverUtils.COVER_DECODE_WIDTH_PX, CoverUtils.COVER_DECODE_HEIGHT_PX)
+                                    .allowHardware(false)
+                                    .build(),
+                            )
+                        (result as? SuccessResult)?.drawable?.toBitmap()
+                    }
+                }
+                ?: return
+        withContext(Dispatchers.IO) {
+            val dir = target.parentFile ?: return@withContext
+            if (!dir.mkdirs() && !dir.isDirectory) return@withContext
+            val temp = File(dir, target.name + ".tmp")
+            temp.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+            target.delete()
+            if (!temp.renameTo(target)) temp.delete()
+            dir.listFiles()
+                ?.sortedByDescending { it.lastModified() }
+                ?.drop(KEEP)
+                ?.forEach { it.delete() }
         }
     }
 
