@@ -1,4 +1,4 @@
-# OpenNES — Agent handoff (2026-11-13, evening)
+# OpenNES — Agent handoff (2026-11-14)
 
 **Read this first, then [AGENTS.md](AGENTS.md).** The one-page status is the table at the top of [ROADMAP.md](ROADMAP.md). The owner's phone checklist is [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md).
 
@@ -36,17 +36,22 @@ This session then:
 
 Deliberately left for after 1.0: the `SystemID` / `CoreID` enums still list Lemuroid's other consoles, and the DeSmuME/MelonDS save migrators and other-console shader tables remain. None of it ships a core (CI inspects the APK), but the enum names match stored database values and migration paths. Remove them only with a device available to check an upgrade from an old install.
 
+## 2026-11-14
+
+The owner chose to ship **two-way RomM save sync in 1.0**. It is built and CI-green; see the top section of [docs/ROMM_INTEGRATION.md](docs/ROMM_INTEGRATION.md) for the protocol, decision rule and safety order. The owner is home with the server and will run checklist section E of [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md). Expect fixes from that session: the client follows RomM 5.4.1's source, but no live server has answered it yet.
+
+Local test harness note: the sync logic (`RommTwoWaySyncPlan`, `RommTwoWaySyncState`, `RommLocalSaveFiles`, protocol parser and request builder) runs under plain `kotlinc` with `org.json` built from https://github.com/stleary/JSON-java, a JUnit shim and a stub of `RommApiClient.validatedServerUrl`.
+
 ## What only the owner can do
 
 1. Run [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md) on the phone and report pass or fail by number.
-2. Run its RomM section against the home server.
-3. Decide whether 1.0 ships RomM as download plus manual backups, or waits for two-way save sync.
-4. Create the Play upload key, add the `OPENNES_RELEASE_*` secrets to the protected `production-signing` environment, and open the Play Console listing. Store text and form answers are drafted in [docs/PLAY_LISTING.md](docs/PLAY_LISTING.md); original screenshots and icon artwork are still needed.
+2. Run its RomM section against the home server, including two-way save sync.
+3. Create the Play upload key, add the `OPENNES_RELEASE_*` secrets to the protected `production-signing` environment, and open the Play Console listing. Store text and form answers are drafted in [docs/PLAY_LISTING.md](docs/PLAY_LISTING.md); original screenshots and icon artwork are still needed.
 
 ## Next agent
 
 - If device results arrive: fix failures in batches, each with a test that fails on the old code, and wait for exact-commit CI before the next push. A push cancels the run in progress.
-- If no results have arrived: remaining source-only work is small. Candidates: the line-by-line transitive dependency license audit, removing inherited non-NES source and resources (M8 hygiene), moving hard-coded English strings in newer screens into `strings.xml`.
+- If no results have arrived: remaining source-only work is small. Candidates: the line-by-line transitive dependency license audit, and the post-1.0 removal of other-console enums described above.
 - Close an issue when its fix is accepted on a phone, with a comment giving the date and build version. Do not close #10–#14 or #8 on CI alone.
 
 ## Working without an Android SDK

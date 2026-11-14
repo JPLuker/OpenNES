@@ -2,6 +2,43 @@
 
 **Status (2026-11-10): M7 integration in progress.** A scoped read-only API client (HTTPS or explicitly approved private IPv4 HTTP), Android Keystore-backed token store, immutable offline archives and server-bound non-executing request staging exist. Offline integrity auditing, local request review, strict conflict ancestry checks and a read-only RomM 5.4 negotiation parser passed [CI run 42927257071](https://github.com/JPLuker/OpenNES/actions/runs/42927257071). No real RomM server or Android UI acceptance has been verified. Per-account device registration now has a **source implementation** but has not passed a live registration; remote save writes remain disabled.
 
+## Two-way save sync (2026-11-14, built; live-server acceptance pending)
+
+Decided for 1.0 by the owner on 2026-11-14. Off until the player turns on **Settings → RomM → Save sync**, which registers the device (`POST /api/devices`) if needed.
+
+**What syncs:** casual-profile battery saves only (`saves/<rom stem>.srm`). Save states are never synced: they depend on the exact core build.
+
+**Protocol (RomM 5.4, verified against the 5.4.1 source):**
+1. `POST /api/sync/negotiate` with each paired game's save (`rom_id`, `file_name`, `slot: "autosave"`, `emulator: "fceumm"`, MD5 `content_hash`, file mtime, size) and `rom_ids` of every installed game that RomM also has. `autosave`/`fceumm` are what RomM's web player and RetroArch sync use, so saves pair across them.
+2. Per operation, `RommTwoWaySyncPlan` decides what the phone does (below).
+3. Upload: multipart `POST /api/saves?rom_id&slot&emulator&device_id&content_hash&session_id&overwrite=false`. RomM answers **409** if its copy moved on since this device last synced; that becomes a conflict, never a retry.
+4. Download: `GET /api/saves/{id}/content?device_id&session_id`, then `POST /api/saves/{id}/downloaded {device_id, content_hash}`.
+5. `POST /api/sync/sessions/{id}/complete` with real counts.
+
+Games are paired with server ROMs by exact file name, ignoring case; two server ROMs with one name are skipped.
+
+**Decision rule (`RommTwoWaySyncPlan`, unit tested):** the phone keeps a per-game *baseline*, the MD5 last known identical on both sides. A transfer happens only when one side is provably unchanged since that baseline. RomM itself compares timestamps when a device has no history, so with no baseline and different content on each side the phone asks instead (`NO_SHARED_HISTORY`). Identical content on both sides becomes the baseline whatever RomM suggested. `delete` is never acted on.
+
+**Safety:**
+- A download is verified against RomM's hash, the local file must still match what negotiation saw, the local save is backed up into the existing verified archive (`romm-save-archive-v1`), and the game's autosave state and metadata are moved into `romm-replaced-autosaves`, because a save state carries battery RAM and would otherwise overwrite the downloaded progress at launch. Then an atomic write and a read-back check (`RommLocalSaveFiles`).
+- An upload re-reads the file and refuses if it changed since negotiation.
+- The running game, or a game in the two seconds before its process marks itself running, is never touched. If a game is running but can't be identified, nothing syncs.
+- State (`romm-two-way-sync-v1.json` in no-backup storage) is bound to server fingerprint + account id; another owner starts clean and disabled.
+
+**Conflicts** appear in Settings → RomM → Save sync with **Keep phone save** (upload with `overwrite=true`; RomM keeps the replaced save as an older version) or **Use RomM save** (download with the same backup and autosave handling).
+
+**Triggers:** before launch (6 s cap, "Checking RomM" toast after 0.8 s); after a game closes (`RommSaveSyncWork`, network required, retried with backoff); when the library opens (at most every 2 minutes); **Sync now**.
+
+**Token scopes:** `assets.read`, `assets.write`, `devices.read`, `devices.write` in addition to the browsing scopes.
+
+**Fixed along the way:** `RommDeviceSyncProtocol` rejected RomM 5.4's `upload` operation when it named the paired server save, which broke the most common case.
+
+**Code:** `RommTwoWaySync` (engine), `RommTwoWaySyncPlan`, `RommTwoWaySyncState`, `RommLocalSaveFiles`, `RommSaveSyncWork`, `RommSaveSyncSection`; API calls at the end of `RommApiClient`.
+
+**Not yet verified:** anything against a live server. Checklist section E of [DEVICE_TEST.md](DEVICE_TEST.md).
+
+> The sections below are the earlier history of the RomM work, kept for reference. Statements in them that two-way sync "does not exist" predate the section above.
+
 ## Connection & security
 
 - Use a **RomM Client API Token** restricted to `me.read`, `platforms.read` and `roms.read`. Generate the token in your own RomM instance; never paste it into source, issues or logs.
