@@ -159,7 +159,7 @@ internal object RommStateSlotSync {
     ) {
         val slots = JSONObject()
         baselines.entries.toList().takeLast(MAX_BASELINES).forEach { (key, value) ->
-            slots.put(key, JSONObject().put("md5", value.md5).put("stamp", value.stamp ?: JSONObject.NULL))
+            slots.put(key, JSONObject().put("md5", value.md5).put("stamp", value.remoteStamp ?: JSONObject.NULL))
         }
         val text = JSONObject().put("owner", owner).put("slots", slots).toString()
         val stream = store.startWrite()
