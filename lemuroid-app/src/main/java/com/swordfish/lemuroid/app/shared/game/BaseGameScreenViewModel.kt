@@ -264,11 +264,12 @@ class BaseGameScreenViewModel(
         gameLoader: GameLoader,
         requestLoadSave: Boolean,
         requestHardcore: Boolean = false,
+        testUnapprovedHardcore: Boolean = false,
     ) {
         Timber.i("Calling load game: $game")
         // Hardcore is only entered here, for a freshly booted game with no
-        // restored state. It needs RetroAchievements approval, or a debug
-        // build (the library offers the test switch only in debug builds).
+        // restored state. RetroAchievements is told Casual unless OpenNES
+        // is approved (or a debug build's test switch is on).
         HardcoreRuntime.nativeDowngrade = { RetroAchievementsNative.downgradeGameSessionToCasual() }
         HardcoreRuntime.onLeftHardcore = {
             sideEffects.showToast(appContext.getString(R.string.opennes_hardcore_ended))
@@ -277,9 +278,10 @@ class BaseGameScreenViewModel(
             romUri = game.fileUri,
             requestHardcore = requestHardcore,
             freshBoot = !requestLoadSave,
-            testUnapproved = BuildConfig.DEBUG,
+            testUnapproved = BuildConfig.DEBUG && testUnapprovedHardcore,
         )
         val hardcore = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
+        if (hardcore) sideEffects.showToast(appContext.getString(R.string.opennes_hardcore_started))
         retroGameView.initialize(applicationContext, game, systemCoreConfig, gameLoader, requestLoadSave && !hardcore)
     }
 

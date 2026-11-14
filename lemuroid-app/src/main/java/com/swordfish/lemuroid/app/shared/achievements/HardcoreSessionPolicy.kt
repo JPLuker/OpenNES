@@ -88,9 +88,9 @@ internal class HardcoreSessionPolicy(
 }
 
 /**
- * The one switch that makes Hardcore available to players. It stays false
- * until RetroAchievements approves OpenNES as a Hardcore-compliant emulator;
- * unapproved clients must not offer Hardcore credit.
+ * Whether RetroAchievements has approved OpenNES as a Hardcore-compliant
+ * emulator. While false, OpenNES's own Hardcore mode still works as a local
+ * challenge mode, but RetroAchievements is always told the session is Casual.
  */
 internal object HardcoreGate {
     const val EMULATOR_APPROVED = false
@@ -104,8 +104,10 @@ internal object HardcoreGate {
  * the native rc_client to Casual *before* this policy lifts its restrictions.
  */
 internal object HardcoreRuntime {
-    private var policy = HardcoreSessionPolicy(HardcoreGate.EMULATOR_APPROVED, nativeHardcoreAvailable = true)
+    // OpenNES's own mode needs no outside approval.
+    private var policy = HardcoreSessionPolicy(emulatorApproved = true, nativeHardcoreAvailable = true)
     private var currentRomUri: String? = null
+    private var reportToRetroAchievements = false
 
     /** Switches the native client to Casual; set by the game screen. Must not throw to succeed. */
     @Volatile
@@ -116,9 +118,9 @@ internal object HardcoreRuntime {
     var onLeftHardcore: (() -> Unit)? = null
 
     /**
-     * Start a game. Hardcore needs the approval gate (or a debug build's
-     * explicit test switch, [testUnapproved]), a fresh boot with no restored
-     * state, and no cheats.
+     * Start a game. Hardcore needs a fresh boot with no restored state and
+     * no cheats. RetroAchievements is told Hardcore only when OpenNES is
+     * approved, or in a debug build's explicit test ([testUnapproved]).
      */
     @Synchronized
     fun begin(
@@ -128,20 +130,23 @@ internal object HardcoreRuntime {
         testUnapproved: Boolean = false,
     ): HardcoreSessionPolicy.Activation {
         currentRomUri = romUri
-        policy =
-            HardcoreSessionPolicy(
-                emulatorApproved = HardcoreGate.EMULATOR_APPROVED || testUnapproved,
-                nativeHardcoreAvailable = true,
-            )
+        policy = HardcoreSessionPolicy(emulatorApproved = true, nativeHardcoreAvailable = true)
+        reportToRetroAchievements = HardcoreGate.EMULATOR_APPROVED || testUnapproved
         if (!requestHardcore) return HardcoreSessionPolicy.Activation.UNAVAILABLE
         return policy.requestHardcore(freshReset = freshBoot, cheatsActive = false)
     }
+
+    /** True only when this session may count as Hardcore on RetroAchievements. */
+    @Synchronized
+    fun retroAchievementsHardcore(): Boolean =
+        policy.mode == HardcoreSessionPolicy.Mode.HARDCORE && reportToRetroAchievements
 
     @Synchronized
     fun end(romUri: String) {
         if (currentRomUri != romUri) return
         currentRomUri = null
-        policy = HardcoreSessionPolicy(HardcoreGate.EMULATOR_APPROVED, nativeHardcoreAvailable = true)
+        policy = HardcoreSessionPolicy(emulatorApproved = true, nativeHardcoreAvailable = true)
+        reportToRetroAchievements = false
     }
 
     /** The app left the screen while the pause menu was open. */
@@ -172,7 +177,4 @@ internal object HardcoreRuntime {
 
     @Synchronized
     fun mode(): HardcoreSessionPolicy.Mode = policy.mode
-
-    @Synchronized
-    fun hardcoreAvailable(): Boolean = policy.canRequestHardcore
 }

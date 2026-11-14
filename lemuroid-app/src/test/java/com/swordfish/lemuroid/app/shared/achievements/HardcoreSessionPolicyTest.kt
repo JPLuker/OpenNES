@@ -20,7 +20,6 @@ class HardcoreSessionPolicyTest {
         )
         assertEquals(HardcoreSessionPolicy.Mode.CASUAL, unapproved.mode)
         assertEquals(HardcoreSessionPolicy.Mode.CASUAL, nativeMissing.mode)
-        assertFalse(HardcoreRuntime.hardcoreAvailable())
         assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
     }
 
@@ -90,13 +89,18 @@ class HardcoreSessionPolicyTest {
     }
 
     @Test
-    fun runtimeRefusesHardcoreWithoutApprovalOrFreshBoot() {
+    fun localHardcoreNeedsFreshBootAndIsCasualForRetroAchievementsUntilApproved() {
         assertFalse(HardcoreGate.EMULATOR_APPROVED)
+        HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = false)
+        assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
         HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = true)
-        assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
-        HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = false, testUnapproved = true)
-        assertEquals(HardcoreSessionPolicy.Mode.CASUAL, HardcoreRuntime.mode())
+        assertEquals(HardcoreSessionPolicy.Mode.HARDCORE, HardcoreRuntime.mode())
+        assertFalse(HardcoreRuntime.allow(HardcoreSessionPolicy.Operation.LOAD_STATE))
+        assertFalse(HardcoreRuntime.retroAchievementsHardcore())
+        HardcoreRuntime.begin("rom", requestHardcore = true, freshBoot = true, testUnapproved = true)
+        assertTrue(HardcoreRuntime.retroAchievementsHardcore())
         HardcoreRuntime.end("rom")
+        assertFalse(HardcoreRuntime.retroAchievementsHardcore())
     }
 
     @Test

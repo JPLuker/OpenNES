@@ -40,7 +40,6 @@ import com.swordfish.lemuroid.app.mobile.feature.gamemenu.GameMenuStyle
 import com.swordfish.lemuroid.app.mobile.feature.home.NesBoxArtwork
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreGate
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreRuntime
-import com.swordfish.lemuroid.app.shared.achievements.HardcoreSessionPolicy
 import com.swordfish.lemuroid.app.shared.achievements.NesRetroAchievementsHash
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsDisplayState
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameStateStore
@@ -211,7 +210,7 @@ fun GameMenuAchievementsScreen(
                 Text(
                     text =
                         stringResource(
-                            if (HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE) {
+                            if (HardcoreRuntime.retroAchievementsHardcore()) {
                                 R.string.opennes_ra_mode_hardcore
                             } else {
                                 R.string.opennes_ra_mode_casual

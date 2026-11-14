@@ -8,7 +8,9 @@ Authoritative rules:
 
 ## Status on 2026-11-14: implemented behind the approval gate (no device test yet)
 
-The single switch is `HardcoreGate.EMULATOR_APPROVED` (false). Release builds cannot enter Hardcore. **Debug builds only** have Settings → Advanced → Hardcore → "Test build only", which lets the developer and RetroAchievements reviewers exercise the mode before approval.
+**Local mode (added later on 2026-11-14):** OpenNES's own Hardcore is available to players as a local challenge mode with the same restrictions, labeled everywhere as not applying to RetroAchievements. While `HardcoreGate.EMULATOR_APPROVED` is false, rc_client is always started in Casual (softcore), so no Hardcore unlock request is ever sent from a release build.
+
+The single switch for RetroAchievements Hardcore is `HardcoreGate.EMULATOR_APPROVED` (false). **Debug builds only** have Settings → Advanced → Hardcore → "Test build only", which lets the developer and RetroAchievements reviewers exercise the mode before approval.
 
 | Requirement | Implementation | Verified |
 | --- | --- | --- |

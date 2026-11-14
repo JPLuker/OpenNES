@@ -50,8 +50,9 @@ internal class RetroAchievementsGameSessionRunner(
             var outcome = SessionEnd.Failed
             // Only the first session of a freshly booted game may be Hardcore.
             // A later sign-in or retry would join a game already in progress.
-            if (!firstSession) HardcoreRuntime.switchToCasual()
-            val hardcore = firstSession && HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
+            // (OpenNES's own Hardcore, which RetroAchievements sees as Casual, is unaffected.)
+            if (!firstSession && HardcoreRuntime.retroAchievementsHardcore()) HardcoreRuntime.switchToCasual()
+            val hardcore = firstSession && HardcoreRuntime.retroAchievementsHardcore()
             firstSession = false
             try {
                 withContext(Dispatchers.IO) {
@@ -187,10 +188,11 @@ internal class RetroAchievementsGameSessionRunner(
                             ticket,
                             md5,
                             context.getString(
-                                if (nativeHardcore) {
-                                    R.string.opennes_ra_mode_hardcore
-                                } else {
-                                    R.string.opennes_ra_mode_casual
+                                when {
+                                    nativeHardcore -> R.string.opennes_ra_mode_hardcore
+                                    HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE ->
+                                        R.string.opennes_ra_mode_local_hardcore
+                                    else -> R.string.opennes_ra_mode_casual
                                 },
                             ),
                         )

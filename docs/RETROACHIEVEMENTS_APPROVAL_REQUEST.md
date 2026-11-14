@@ -28,7 +28,7 @@ How Hardcore works in OpenNES:
 - The current mode is shown when a game starts; leaderboard attempts, challenge indicators and measured progress are shown during play; the achievement list is in the pause menu.
 - Unlocks that fail to send are retried by rc_client while the game is running.
 
-Until approved, release builds cannot enter Hardcore at all. Only the test build has a clearly labeled switch (Settings → Advanced → Hardcore → Test build only) so the mode can be reviewed.
+Until approved, release builds never report Hardcore to RetroAchievements: the app has its own local "Hardcore" challenge mode, labeled as not applying to RetroAchievements, and the client always runs in softcore. Only the test build has a clearly labeled switch (Settings → Advanced → Hardcore → Test build only) so the mode can be reviewed.
 
 Two things I'd like your guidance on: whether pending unlocks must survive closing the game, and whether dropping to Casual on app background is what you expect.
 

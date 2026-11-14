@@ -2,29 +2,32 @@ package com.swordfish.lemuroid.app.mobile.feature.home
 
 import android.content.Context
 import com.swordfish.lemuroid.BuildConfig
-import com.swordfish.lemuroid.app.shared.achievements.HardcoreGate
 import java.security.MessageDigest
 
-/** ROM-specific launch preference; never falls back to a global mode. */
+/** Casual or Hardcore per game, falling back to the player's default. */
 internal class NesRomLaunchModeStore(context: Context) {
     private val preferences =
         context.applicationContext.getSharedPreferences("opennes_rom_launch_mode_v1", Context.MODE_PRIVATE)
 
-    /**
-     * Hardcore can be chosen once RetroAchievements has approved OpenNES.
-     * Before that, only a debug build with its test switch on offers it.
-     */
+    /** OpenNES's own Hardcore mode is always available. */
     val hardcoreAvailable: Boolean
-        get() = HardcoreGate.EMULATOR_APPROVED || testUnapproved
+        get() = true
 
-    /** Debug builds only: try Hardcore before approval. Never on in a release build. */
+    /** The mode for games the player has not set individually. */
+    var defaultHardcore: Boolean
+        get() = preferences.getBoolean(DEFAULT_KEY, false)
+        set(value) {
+            preferences.edit().putBoolean(DEFAULT_KEY, value).apply()
+        }
+
+    /** Debug builds only: also report Hardcore to RetroAchievements before approval. Never on in a release build. */
     var testUnapproved: Boolean
         get() = BuildConfig.DEBUG && preferences.getBoolean(TEST_KEY, false)
         set(value) {
             preferences.edit().putBoolean(TEST_KEY, BuildConfig.DEBUG && value).apply()
         }
 
-    fun wantsHardcore(romUri: String): Boolean = hardcoreAvailable && preferences.getBoolean(keyFor(romUri), false)
+    fun wantsHardcore(romUri: String): Boolean = preferences.getBoolean(keyFor(romUri), defaultHardcore)
 
     fun select(
         romUri: String,
@@ -36,6 +39,7 @@ internal class NesRomLaunchModeStore(context: Context) {
     }
 
     companion object {
+        private const val DEFAULT_KEY = "default_hardcore"
         private const val TEST_KEY = "test_unapproved_hardcore"
 
         /** Never store private ROM file paths as SharedPreferences property names. */

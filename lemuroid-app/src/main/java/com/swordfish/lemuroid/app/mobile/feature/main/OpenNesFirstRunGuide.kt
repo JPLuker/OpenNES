@@ -50,12 +50,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.home.NesRomLaunchModeStore
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors
 import com.swordfish.lemuroid.app.shared.settings.StorageFrameworkPickerLauncher
@@ -340,6 +342,7 @@ private fun OnlineStep(onOpenSettings: (MainRoute) -> Unit) {
         stringResource(R.string.opennes_welcome_online_title),
         stringResource(R.string.opennes_welcome_online_body),
     )
+    PlayStyleCard()
     ServiceCard(
         icon = Icons.Outlined.EmojiEvents,
         title = stringResource(R.string.opennes_ra_settings_title),
@@ -352,6 +355,60 @@ private fun OnlineStep(onOpenSettings: (MainRoute) -> Unit) {
         body = stringResource(R.string.opennes_welcome_romm_body),
         onSetUp = { onOpenSettings(MainRoute.SETTINGS_ROMM) },
     )
+}
+
+/** Casual or Hardcore as the default for every game; each game can still differ. */
+@Composable
+private fun PlayStyleCard() {
+    val colors = LocalOpenNesAppColors.current
+    val context = LocalContext.current.applicationContext
+    val store = remember(context) { NesRomLaunchModeStore(context) }
+    var hardcore by remember { mutableStateOf(store.defaultHardcore) }
+    Card {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                stringResource(R.string.opennes_welcome_style_title),
+                color = colors.foreground,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(false to R.string.opennes_mode_casual, true to R.string.opennes_mode_hardcore).forEach {
+                        (value, label) ->
+                    val selected = hardcore == value
+                    Surface(
+                        onClick = {
+                            store.defaultHardcore = value
+                            hardcore = value
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        color = colors.surface,
+                        border =
+                            BorderStroke(
+                                if (selected) 2.dp else 1.dp,
+                                if (selected) colors.red else colors.border,
+                            ),
+                    ) {
+                        Text(
+                            stringResource(label),
+                            color = colors.foreground,
+                            modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+            Text(
+                stringResource(
+                    if (hardcore) R.string.opennes_welcome_style_hardcore else R.string.opennes_welcome_style_casual,
+                ),
+                color = colors.muted,
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+            )
+        }
+    }
 }
 
 @Composable

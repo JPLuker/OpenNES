@@ -79,8 +79,17 @@ class GameLauncher(
                 gameLaunchTaskHandler.handleGameStart(activity.applicationContext)
                 backgroundWorkPaused = true
                 // Hardcore always boots the game fresh: no restored state.
-                val hardcore = NesRomLaunchModeStore(activity.applicationContext).wantsHardcore(game.fileUri)
-                BaseGameActivity.launchGame(activity, coreConfig, game, loadSave && !hardcore, leanback, hardcore)
+                val modes = NesRomLaunchModeStore(activity.applicationContext)
+                val hardcore = modes.wantsHardcore(game.fileUri)
+                BaseGameActivity.launchGame(
+                    activity,
+                    coreConfig,
+                    game,
+                    loadSave && !hardcore,
+                    leanback,
+                    hardcore,
+                    testUnapprovedHardcore = modes.testUnapproved,
+                )
                 launchDispatched = true
             } catch (e: CancellationException) {
                 throw e

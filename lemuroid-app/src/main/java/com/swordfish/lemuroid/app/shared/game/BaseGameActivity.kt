@@ -161,6 +161,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                 gameLoader,
                 intent.getBooleanExtra(EXTRA_LOAD_SAVE, false),
                 requestHardcore = intent.getBooleanExtra(EXTRA_HARDCORE, false),
+                testUnapprovedHardcore = intent.getBooleanExtra(EXTRA_HARDCORE_TEST, false),
             )
         }
 
@@ -497,6 +498,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         private const val EXTRA_GAME = "GAME"
         private const val EXTRA_LOAD_SAVE = "LOAD_SAVE"
         private const val EXTRA_HARDCORE = "HARDCORE"
+        private const val EXTRA_HARDCORE_TEST = "HARDCORE_TEST"
         private const val EXTRA_LEANBACK = "LEANBACK"
         private const val EXTRA_SYSTEM_CORE_CONFIG = "EXTRA_SYSTEM_CORE_CONFIG"
 
@@ -517,6 +519,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             loadSave: Boolean,
             useLeanback: Boolean,
             hardcore: Boolean = false,
+            testUnapprovedHardcore: Boolean = false,
         ) {
             // OpenNES is mobile-only; retain the legacy boolean in the intent
             // for stored session/result compatibility, not activity selection.
@@ -525,6 +528,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                     putExtra(EXTRA_GAME, game)
                     putExtra(EXTRA_LOAD_SAVE, loadSave)
                     putExtra(EXTRA_HARDCORE, hardcore)
+                    putExtra(EXTRA_HARDCORE_TEST, testUnapprovedHardcore)
                     putExtra(EXTRA_LEANBACK, useLeanback)
                     putExtra(EXTRA_SYSTEM_CORE_CONFIG, systemCoreConfig)
                 },

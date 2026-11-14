@@ -27,14 +27,39 @@ import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettings
 import com.swordfish.lemuroid.app.shared.achievements.HardcoreGate
 
 /**
- * Explains the proposed rules without offering a nonfunctional Hardcore switch.
- * The official mode is gated on native enforcement and RetroAchievements approval.
+ * OpenNES's own Hardcore mode: the default for new games and its rules. It is
+ * not RetroAchievements Hardcore until OpenNES is approved.
  */
 @Composable
 fun HardcoreSettingsScreen(modifier: Modifier = Modifier) {
     OpenNesSettingsPage(modifier = modifier) {
         OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_hardcore_status_title)) }) {
             HardcoreInfoText(stringResource(R.string.opennes_hardcore_unavailable))
+        }
+        run {
+            val context = LocalContext.current
+            val store = remember(context) { NesRomLaunchModeStore(context) }
+            var defaultHardcore by remember { mutableStateOf(store.defaultHardcore) }
+            OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_hardcore_default_title)) }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.opennes_hardcore_default_body),
+                        modifier = Modifier.weight(1f),
+                        color = OpenNesSettingsColors.foreground,
+                    )
+                    Switch(
+                        checked = defaultHardcore,
+                        onCheckedChange = {
+                            store.defaultHardcore = it
+                            defaultHardcore = it
+                        },
+                    )
+                }
+            }
         }
         // Test builds only: lets the developer and RetroAchievements reviewers
         // exercise Hardcore before approval. Absent from release builds.

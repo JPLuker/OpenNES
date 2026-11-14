@@ -1093,6 +1093,11 @@ private fun GameDetailsSheet(
                     color = if (launchModeStore.hardcoreAvailable) LibraryColors.foreground else LibraryColors.muted,
                 )
             }
+            Text(
+                stringResource(R.string.opennes_hardcore_local_note),
+                color = LibraryColors.muted,
+                fontSize = 12.sp,
+            )
         }
     }
 
