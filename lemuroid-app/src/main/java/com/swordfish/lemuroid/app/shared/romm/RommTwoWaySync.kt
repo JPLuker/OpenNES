@@ -51,6 +51,24 @@ internal object RommTwoWaySync {
     const val BEFORE_LAUNCH_TIMEOUT_MS = 6_000L
 
     private val mutex = Mutex()
+
+    // The game being launched, before its own process marks it as running.
+    @Volatile private var launching: Pair<Int, Long>? = null
+    private const val LAUNCH_GUARD_MS = 2 * 60 * 1000L
+
+    /** Called once a game's pre-launch sync is done; its save is then off limits. */
+    fun protectLaunchingGame(gameId: Int) {
+        launching = gameId to System.currentTimeMillis()
+    }
+
+    /** Called when the game has closed or failed to start. */
+    fun clearLaunchingGame() {
+        launching = null
+    }
+
+    private fun launchingGameId(): Int? =
+        launching?.takeIf { System.currentTimeMillis() - it.second in 0 until LAUNCH_GUARD_MS }?.first
+
     private val status = MutableStateFlow(Status())
     val statusFlow: StateFlow<Status> = status.asStateFlow()
 
@@ -315,7 +333,9 @@ internal object RommTwoWaySync {
     ) {
         val app = context.applicationContext
         val running = ActiveGameSession.current(app)
-        if (running?.gameId == game.id) throw ProblemException("Close the game before changing its save.")
+        if (running?.gameId == game.id || launchingGameId() == game.id) {
+            throw ProblemException("Close the game before changing its save.")
+        }
         if (running == null && runCatching { GameProcessLock.isHeldByAnotherProcess(app) }.getOrDefault(true)) {
             throw ProblemException("Close the running game first.")
         }
@@ -332,7 +352,8 @@ internal object RommTwoWaySync {
         val running = ActiveGameSession.current(app)
         val gameRunning = runCatching { GameProcessLock.isHeldByAnotherProcess(app) }.getOrDefault(true)
         if (gameRunning && running == null) throw ProblemException("Close the running game first.")
-        val pairs = allPairs.filter { (game, _) -> game.id != running?.gameId }
+        val launchingId = launchingGameId()
+        val pairs = allPairs.filter { (game, _) -> game.id != running?.gameId && game.id != launchingId }
 
         val file = stateFile(app)
         var state = withContext(Dispatchers.IO) { file.read() }.forOwner(session.owner)

@@ -64,6 +64,7 @@ class GameLauncher(
                     slowNotice.cancel()
                 }
                 if (activity.isFinishing || activity.isDestroyed) return@launch
+                RommTwoWaySync.protectLaunchingGame(game.id)
                 gameLaunchTaskHandler.handleGameStart(activity.applicationContext)
                 backgroundWorkPaused = true
                 BaseGameActivity.launchGame(activity, coreConfig, game, loadSave, leanback)

@@ -50,6 +50,10 @@ class RommSaveSyncWork(context: Context, params: WorkerParameters) :
         private const val ONLY_IF_DUE = "only_if_due"
         private const val MIN_INTERVAL_MS = 2 * 60 * 1000L
 
+        fun cancel(context: Context) {
+            WorkManager.getInstance(context.applicationContext).cancelUniqueWork(UNIQUE_WORK)
+        }
+
         /** For frequent triggers such as opening the library. */
         fun enqueueIfDue(context: Context) = enqueue(context, onlyIfDue = true)
 
