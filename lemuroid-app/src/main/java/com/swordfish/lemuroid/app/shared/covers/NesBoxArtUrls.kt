@@ -15,11 +15,17 @@ object NesBoxArtUrls {
             game.fileName.substringAfterLast('/')
                 .replace(Regex("""\.(?:nes|zip|7z)$""", RegexOption.IGNORE_CASE), "")
         val region = Regex("""\((?:USA|Europe|Japan|World)(?:[,)]|\s)""", RegexOption.IGNORE_CASE)
-        if (!region.containsMatchIn(fileTitle)) return null
+        // No region in the file name: try the catalogue's US name for the title.
+        val stem =
+            if (region.containsMatchIn(fileTitle)) {
+                fileTitle
+            } else {
+                NesBoxArtNameGuess.usaStem(game.displayName()) ?: return null
+            }
 
         return "https://thumbnails.libretro.com/" +
             "Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/" +
-            Uri.encode(fileTitle) + ".png"
+            Uri.encode(stem) + ".png"
     }
 
     fun remoteCandidates(game: Game): List<String> {

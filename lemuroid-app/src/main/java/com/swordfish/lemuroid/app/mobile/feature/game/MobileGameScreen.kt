@@ -432,7 +432,8 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                 }
             }
 
-            if (showTouchPads && touchControllerSettings != null && !isLoading && !onboardingVisible.value) {
+            // Not gated on loading: rewind and fast-forward appear with the pad.
+            if (showTouchPads && touchControllerSettings != null && !onboardingVisible.value) {
                 NesTransportControls(
                     menuBounds = controlBounds[NesEditableControl.MENU],
                     fullBounds = fullScreenPosition.value,

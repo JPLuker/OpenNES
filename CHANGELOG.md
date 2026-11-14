@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **Phone-test round 4 (2026-11-14):**
+  - **RomM names and details:** a game downloaded from RomM now shows RomM's name, and takes RomM's genre and description when it has none. A name you chose yourself is never replaced.
+  - **More covers:** a game with no cover and no region in its file name now tries the Libretro catalogue's US box art for its title.
+  - **Rewind and fast-forward appear with the controller** instead of after the game finishes loading.
+  - **Pause menu:** the cover is decoded before the first frame, so it no longer pops in over a letter tile.
+
 - **Phone-test round 3 (2026-11-14):**
   - **Covers come from RomM itself.** A RomM game's cover is now the image RomM stores for it (`path_cover_large`, served by your own server without a token), falling back to IGDB. Before, only IGDB-hosted covers were accepted, so games RomM matched elsewhere showed letter tiles.
   - **The opening screen waits for covers.** It now stays until the library, the RomM catalogue and the covers of the first shelves are loaded (at most 8 s), so the library is complete when it appears.

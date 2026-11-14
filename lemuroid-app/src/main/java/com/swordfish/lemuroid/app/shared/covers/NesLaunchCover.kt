@@ -2,6 +2,7 @@ package com.swordfish.lemuroid.app.shared.covers
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.graphics.drawable.toBitmap
 import coil.imageLoader
@@ -80,4 +81,13 @@ object NesLaunchCover {
             game
         }
     }
+
+    /** In the game process: the saved cover, decoded at once (it is a small file). */
+    fun load(
+        context: Context,
+        game: Game,
+    ): Bitmap? =
+        runCatching {
+            file(context, game).takeIf { it.isFile && it.length() > 0 }?.let { BitmapFactory.decodeFile(it.path) }
+        }.getOrNull()
 }

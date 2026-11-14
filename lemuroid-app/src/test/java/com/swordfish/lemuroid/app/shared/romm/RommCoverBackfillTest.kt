@@ -51,4 +51,25 @@ class RommCoverBackfillTest {
             RommCoverBackfill.covers(listOf(local("Kirby (USA).nes")), listOf(rom("Kirby.nes"))),
         )
     }
+
+    @Test
+    fun `RomM's name and details fill in but never replace the player's own`() {
+        val kirby =
+            RommApiClient.Rom(7, 1, "Kirby's Adventure", "k.nes", 1L, null, "A pink hero.", null, listOf("Platform"))
+        val plain = RommCoverBackfill.LocalGame(1, "k.nes", null, null, displayName = "Kirby's Adventure Rev PRG1")
+        assertEquals(
+            mapOf(1 to RommCoverBackfill.Details("Kirby's Adventure", "Platform", "A pink hero.")),
+            RommCoverBackfill.details(listOf(plain), listOf(kirby)),
+        )
+        val renamed = plain.copy(customName = "Kirby", genre = "Action", description = "Mine")
+        assertEquals(
+            emptyMap<Int, RommCoverBackfill.Details>(),
+            RommCoverBackfill.details(listOf(renamed), listOf(kirby)),
+        )
+        val other = plain.copy(fileName = "other.nes")
+        assertEquals(
+            emptyMap<Int, RommCoverBackfill.Details>(),
+            RommCoverBackfill.details(listOf(other), listOf(kirby)),
+        )
+    }
 }

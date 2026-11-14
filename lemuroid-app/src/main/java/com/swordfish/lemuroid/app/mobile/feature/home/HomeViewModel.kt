@@ -101,12 +101,12 @@ class HomeViewModel(
             val dao = retrogradeDb.gameDao()
             val remote = RommLibraryCatalog.state.value.games
             val stored = dao.selectAllNesGames()
-            val covers =
-                RommCoverBackfill.covers(
-                    stored.map { RommCoverBackfill.LocalGame(it.id, it.fileName, it.coverFrontUrl, it.customCoverUri) },
-                    remote,
-                )
+            val known = stored.map(::rommLocalGame)
+            val covers = RommCoverBackfill.covers(known, remote)
             covers.forEach { (gameId, url) -> dao.updateCatalogueCover(gameId, url) }
+            RommCoverBackfill.details(known, remote).forEach { (gameId, d) ->
+                dao.fillRommDetails(gameId, d.name, d.genre, d.description)
+            }
             val local = stored.map { game -> covers[game.id]?.let { game.copy(coverFrontUrl = it) } ?: game }
             val shelf =
                 local.filter { it.lastPlayedAt != null }.sortedByDescending { it.lastPlayedAt }.take(4) +
@@ -129,15 +129,27 @@ class HomeViewModel(
         if (remote.isEmpty()) return
         viewModelScope.launch(Dispatchers.IO) {
             val dao = retrogradeDb.gameDao()
-            val local =
-                dao.selectAllNesGames().map {
-                    RommCoverBackfill.LocalGame(it.id, it.fileName, it.coverFrontUrl, it.customCoverUri)
-                }
+            val local = dao.selectAllNesGames().map(::rommLocalGame)
             RommCoverBackfill.covers(local, remote).forEach { (gameId, url) ->
                 dao.updateCatalogueCover(gameId, url)
             }
+            RommCoverBackfill.details(local, remote).forEach { (gameId, d) ->
+                dao.fillRommDetails(gameId, d.name, d.genre, d.description)
+            }
         }
     }
+
+    private fun rommLocalGame(game: Game) =
+        RommCoverBackfill.LocalGame(
+            id = game.id,
+            fileName = game.fileName,
+            coverFrontUrl = game.coverFrontUrl,
+            customCoverUri = game.customCoverUri,
+            displayName = game.displayName(),
+            customName = game.customName,
+            genre = game.genre,
+            description = game.description,
+        )
 
     fun checkRomMConnectivity() {
         viewModelScope.launch { RommLibraryCatalog.checkConnectivity(context) }

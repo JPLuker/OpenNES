@@ -235,6 +235,26 @@ interface GameDao {
     ): Int
 
     /**
+     * Details from the player's own RomM server for a game downloaded from
+     * it. Never replaces a name the player chose or details already present.
+     */
+    @Query(
+        """
+        UPDATE games
+        SET customName = COALESCE(customName, :name),
+            genre = COALESCE(genre, :genre),
+            description = COALESCE(description, :description)
+        WHERE id = :gameId AND systemId = 'nes'
+        """,
+    )
+    suspend fun fillRommDetails(
+        gameId: Int,
+        name: String?,
+        genre: String?,
+        description: String?,
+    ): Int
+
+    /**
      * Catalogue box art for a title confirmed in Fix Match. A cover the
      * player chose themselves (customCoverUri) is stored separately and
      * still takes priority when shown.

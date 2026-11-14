@@ -16,7 +16,45 @@ internal object RommCoverBackfill {
         val fileName: String,
         val coverFrontUrl: String?,
         val customCoverUri: String?,
+        val displayName: String = "",
+        val customName: String? = null,
+        val genre: String? = null,
+        val description: String? = null,
     )
+
+    /** RomM's name and details for a library game; null fields change nothing. */
+    data class Details(val name: String?, val genre: String?, val description: String?)
+
+    /**
+     * Game id to the RomM details it is missing. RomM's name becomes the
+     * shown name only when the player has not chosen one; genre and
+     * description only fill blanks.
+     */
+    fun details(
+        local: List<LocalGame>,
+        remote: List<RommApiClient.Rom>,
+    ): Map<Int, Details> {
+        val byFile = remote.associateBy { key(it.fileName) }
+        return local.mapNotNull { game ->
+            val rom = byFile[key(game.fileName)] ?: return@mapNotNull null
+            val name =
+                rom.name.trim().takeIf {
+                    game.customName == null && it.isNotBlank() && it != rom.fileName && it != game.displayName
+                }
+            val genre = rom.genres.joinToString(", ").takeIf { game.genre.isNullOrBlank() && it.isNotBlank() }
+            val description = rom.description?.takeIf { game.description.isNullOrBlank() && it.isNotBlank() }
+            if (name == null && genre == null && description == null) {
+                null
+            } else {
+                game.id to
+                    Details(
+                        name,
+                        genre,
+                        description,
+                    )
+            }
+        }.toMap()
+    }
 
     /** Game id to the trusted RomM cover URL it should get. */
     fun covers(

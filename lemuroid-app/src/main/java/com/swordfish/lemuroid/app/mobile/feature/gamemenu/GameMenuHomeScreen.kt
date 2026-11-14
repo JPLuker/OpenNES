@@ -3,10 +3,13 @@ package com.swordfish.lemuroid.app.mobile.feature.gamemenu
 import android.content.Intent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -91,11 +97,29 @@ fun GameMenuHomeScreen(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             val coverContext = LocalContext.current
-            val coverGame =
+            // Decoded before the first frame, so the cover never pops in.
+            val savedCover =
                 remember(gameMenuRequest.game) {
-                    NesLaunchCover.withSavedCover(coverContext, gameMenuRequest.game)
+                    if (gameMenuRequest.game.customCoverUri.isNullOrBlank()) {
+                        NesLaunchCover.load(coverContext, gameMenuRequest.game)?.asImageBitmap()
+                    } else {
+                        null
+                    }
                 }
-            NesBoxArtwork(game = coverGame, modifier = Modifier.width(66.dp))
+            if (savedCover != null) {
+                Image(
+                    bitmap = savedCover,
+                    contentDescription = gameMenuRequest.game.displayName(),
+                    contentScale = ContentScale.Fit,
+                    modifier =
+                        Modifier
+                            .width(66.dp)
+                            .aspectRatio(savedCover.width.toFloat() / savedCover.height.coerceAtLeast(1))
+                            .border(1.dp, Color(0xFF55545A)),
+                )
+            } else {
+                NesBoxArtwork(game = gameMenuRequest.game, modifier = Modifier.width(66.dp))
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
