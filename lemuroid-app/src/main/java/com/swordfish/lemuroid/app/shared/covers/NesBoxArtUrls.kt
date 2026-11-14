@@ -1,6 +1,5 @@
 package com.swordfish.lemuroid.app.shared.covers
 
-import android.net.Uri
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 
 /**
@@ -25,8 +24,18 @@ object NesBoxArtUrls {
 
         return "https://thumbnails.libretro.com/" +
             "Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/" +
-            Uri.encode(stem) + ".png"
+            encode(stem) + ".png"
     }
+
+    /** Same result as android.net.Uri.encode, without needing Android (unit tests). */
+    private fun encode(text: String): String =
+        java.net.URLEncoder.encode(text, "UTF-8")
+            .replace("+", "%20")
+            .replace("%21", "!")
+            .replace("%27", "'")
+            .replace("%28", "(")
+            .replace("%29", ")")
+            .replace("%7E", "~")
 
     fun remoteCandidates(game: Game): List<String> {
         // A custom cover is authoritative. Do not fetch unrelated catalogue

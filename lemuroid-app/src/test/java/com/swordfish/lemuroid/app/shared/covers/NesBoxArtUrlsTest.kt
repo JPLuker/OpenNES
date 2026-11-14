@@ -23,7 +23,12 @@ class NesBoxArtUrlsTest {
     @Test
     fun regularNesArtworkStillPrefetches() {
         assertEquals(
-            listOf("https://thumbnails.libretro.com/example.png"),
+            listOf(
+                "https://thumbnails.libretro.com/example.png",
+                // No region in the file name: the US box art for the title is the fallback.
+                "https://thumbnails.libretro.com/" +
+                    "Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Example%20(USA).png",
+            ),
             NesBoxArtUrls.remoteCandidates(game()),
         )
     }
