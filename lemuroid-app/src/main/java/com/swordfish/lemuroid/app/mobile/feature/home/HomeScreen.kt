@@ -425,7 +425,8 @@ private fun OpenNesLibrary(
 
         if (
             missingRomFolder ||
-            (state.showNoGamesCard && (allGames.isEmpty() || !state.hasRomDirectory)) ||
+            // Judged by the games on this phone: RomM's list must not hide setup.
+            (state.showNoGamesCard && (state.discoveryGames.isEmpty() || !state.hasRomDirectory)) ||
             (state.scanError != null && !state.scanInProgress)
         ) {
             item {
@@ -437,6 +438,27 @@ private fun OpenNesLibrary(
                     onChooseFolder = onSetDirectoryClicked,
                     onRescan = onRescanClicked,
                 )
+            }
+        }
+
+        if (state.scanInProgress && state.discoveryGames.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = LibraryColors.red,
+                        strokeWidth = 2.dp,
+                    )
+                    Text(
+                        stringResource(R.string.opennes_setup_scanning_title),
+                        color = LibraryColors.muted,
+                        fontSize = 13.sp,
+                    )
+                }
             }
         }
 

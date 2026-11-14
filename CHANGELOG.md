@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **Phone-test round 6 (2026-11-14):**
+  - **Factory reset** now also disconnects RomM, turns save sync off and returns to first-time setup. Saves and save states are still kept.
+  - **Scanning is visible:** the setup card no longer hides when RomM games are listed, and a "Finding your NES games" line shows while a scan runs with games already present.
+  - **QR scanner** opens in portrait instead of the library's default landscape.
+  - **Pause menu:** the Game audio row matches the other rows' height and has an icon.
+
 - **Phone-test round 5 (2026-11-14):**
   - **Continue card redone:** the last game played sits on one tappable panel with a larger title and a full-width Resume button, and is no longer repeated in Recently played.
   - **"Running game" no longer sticks after Quit:** the library keeps checking until the closed game has finished shutting down.

@@ -198,7 +198,10 @@ private fun FactoryResetDialog(
             TextButton(
                 onClick = {
                     viewModel.resetAllSettings()
-                    navController.popBackStack(MainRoute.SETTINGS.route, false)
+                    // Start over at first-launch setup, with nothing to go back to.
+                    navController.navigate(MainRoute.ONBOARDING.route) {
+                        popUpTo(MainRoute.HOME.route) { inclusive = true }
+                    }
                 },
             ) {
                 Text(text = stringResource(id = R.string.ok))

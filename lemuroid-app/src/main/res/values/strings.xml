@@ -61,7 +61,7 @@
     <string name="settings_bios_category_not_detected">Supported</string>
 
     <string name="settings_title_reset_settings">Factory reset</string>
-    <string name="settings_description_reset_settings">Reset OpenNES preferences and controller settings</string>
+    <string name="settings_description_reset_settings">Reset settings, disconnect RomM and run setup again. Saves are kept.</string>
 
     <string name="settings_title_advanced_settings">Advanced settings</string>
     <string name="settings_description_advanced_settings">Display advanced settings</string>
@@ -81,7 +81,7 @@
     <string name="settings_description_enable_device_rumble">When no controller is connected vibrate the device instead</string>
 
     <string name="reset_settings_warning_message_title">Are you sure?</string>
-    <string name="reset_settings_warning_message_description">This resets OpenNES preferences, including selected folders and controller settings. Your existing game saves and save states will be preserved.</string>
+    <string name="reset_settings_warning_message_description">This resets OpenNES preferences, including the games folder and controller settings, disconnects RomM and shows first-time setup again. Your game saves and save states are kept.</string>
 
     <string name="settings_title_save_sync">Cloud saves</string>
     <string name="settings_description_save_sync">Back up and Sync your saves on the cloud</string>

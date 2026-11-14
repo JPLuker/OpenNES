@@ -20,6 +20,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -373,6 +375,8 @@ private fun GameMenuSwitchAction(
         modifier =
             Modifier
                 .fillMaxWidth()
+                // Same height as the other menu rows.
+                .defaultMinSize(minHeight = 48.dp)
                 .toggleable(
                     value = checked,
                     role = Role.Switch,
@@ -383,10 +387,15 @@ private fun GameMenuSwitchAction(
         border = BorderStroke(1.dp, GameMenuStyle.border),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            Icon(
+                imageVector = if (checked) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
+                contentDescription = null,
+                tint = GameMenuStyle.foreground,
+            )
             Text(
                 text = title,
                 color = GameMenuStyle.foreground,

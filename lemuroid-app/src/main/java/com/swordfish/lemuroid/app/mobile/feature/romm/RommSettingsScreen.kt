@@ -434,7 +434,7 @@ fun RommSettingsScreen(
                                     .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
                                     .setPrompt(context.getString(R.string.opennes_romm_scan_prompt))
                                     .setBeepEnabled(false)
-                                    .setOrientationLocked(false),
+                                    .setOrientationLocked(true),
                             )
                         },
                     ) {
