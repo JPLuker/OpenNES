@@ -17,7 +17,7 @@ Two words are used precisely here. **Built** means the code is on `master` and C
 | M5 Gameplay and saves | Yes | Two games with sound, saves, pause, relaunch and switching passed. Rewind, Zapper and cheats have never been tried on a phone |
 | M6 RetroAchievements (Casual) | Yes | Sign-in and achievement lists work. A newly earned unlock saved on the server is not confirmed. Hardcore is off until RetroAchievements approves the emulator |
 | M7 RomM | Browse, download and manual save backups | Not tested against a live server. Two-way save sync is not built and its 1.0 scope is undecided |
-| M8 Google Play release | API 36, unsigned bundle checks, privacy policy, notices, About screen | Needs the owner's signing key and Play Console account |
+| M8 Google Play release | API 36, unsigned bundle checks, privacy policy, notices, About screen, Play listing text, all UI text translatable, dead Google-services module removed | Needs the owner's signing key and Play Console account |
 
 **Release order:** M7 acceptance comes before the M8 public release.
 
@@ -29,7 +29,7 @@ Two words are used precisely here. **Built** means the code is on `master` and C
 4. **Play release setup:** create the upload key, add the `OPENNES_RELEASE_*` secrets, open the Play Console listing and take original screenshots. Owner. Listing text and form answers are drafted in [docs/PLAY_LISTING.md](docs/PLAY_LISTING.md). Steps are in [docs/PLAY_BUILD_VALIDATION.md](docs/PLAY_BUILD_VALIDATION.md) and [docs/RELEASE_GATE.md](docs/RELEASE_GATE.md).
 5. **RetroAchievements Hardcore** needs emulator approval from RetroAchievements. It is not required for 1.0; 1.0 ships Casual only.
 
-Open issues: [#10 gameplay](https://github.com/JPLuker/OpenNES/issues/10), [#13 controller](https://github.com/JPLuker/OpenNES/issues/13), [#11 rewind](https://github.com/JPLuker/OpenNES/issues/11), [#12 Zapper](https://github.com/JPLuker/OpenNES/issues/12), [#8 RomM](https://github.com/JPLuker/OpenNES/issues/8), [#14 Play release](https://github.com/JPLuker/OpenNES/issues/14), [#4 menus](https://github.com/JPLuker/OpenNES/issues/4), [#5 metadata](https://github.com/JPLuker/OpenNES/issues/5), [#16 privacy mode](https://github.com/JPLuker/OpenNES/issues/16).
+Open issues: [#44 haptics](https://github.com/JPLuker/OpenNES/issues/44), [#10 gameplay](https://github.com/JPLuker/OpenNES/issues/10), [#13 controller](https://github.com/JPLuker/OpenNES/issues/13), [#11 rewind](https://github.com/JPLuker/OpenNES/issues/11), [#12 Zapper](https://github.com/JPLuker/OpenNES/issues/12), [#8 RomM](https://github.com/JPLuker/OpenNES/issues/8), [#14 Play release](https://github.com/JPLuker/OpenNES/issues/14), [#4 menus](https://github.com/JPLuker/OpenNES/issues/4), [#5 metadata](https://github.com/JPLuker/OpenNES/issues/5), [#16 privacy mode](https://github.com/JPLuker/OpenNES/issues/16).
 
 Dated progress notes that used to sit here are in [CHANGELOG.md](CHANGELOG.md) and the git history. Detailed per-module notes are in [docs/MODULE_PROGRESS.md](docs/MODULE_PROGRESS.md).
 

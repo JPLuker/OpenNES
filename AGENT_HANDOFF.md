@@ -1,4 +1,4 @@
-# OpenNES — Agent handoff (2026-11-13, afternoon)
+# OpenNES — Agent handoff (2026-11-13, evening)
 
 **Read this first, then [AGENTS.md](AGENTS.md).** The one-page status is the table at the top of [ROADMAP.md](ROADMAP.md). The owner's phone checklist is [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md).
 
@@ -23,6 +23,18 @@ Source fixes for every failure in the last phone test (0.1.6-dev.1066, Pixel 9 P
 8. **Docs:** `ROADMAP.md` reduced to one current status table; this file rewritten; `docs/DEVICE_TEST.md` added.
 
 Audited, no change needed: Casual rewind (#11) and touchscreen Zapper (#12) are implemented in source (`GameViewModelRewind`, `BoundedRewindHistory`, `NesZapperController`, the pointer routing in `scripts/prepare-libretrodroid-bridge.py`). The issue text saying "not implemented" was stale.
+
+## Evening (2026-11-13)
+
+A second session merged PRs #27–#56: RomM ZIP and save-archive hardening, rewind and fast-forward buttons beside Menu (draggable, per orientation), pause-menu duplicates removed, startup screen also waits for the first RomM check (still capped at 4 s), RomM tiles start dimmed until the server answers, Leanback removed, onboarding localized.
+
+This session then:
+
+1. **Haptics (#44):** the rewind and fast-forward buttons, which live outside PadKit, now vibrate with PadKit's own effects under the same Touch feedback setting (`NesTouchHaptics`, `NesHapticPolicy`). The setting is re-read on every resume. Full answer on #44.
+2. **Translatable text:** the last hard-coded English in Kotlin UI moved into `strings.xml`. The fast-forward button got a TalkBack label.
+3. **Removed `lemuroid-app-ext-play`** (Drive sync, Play review, Play core delivery). It was already outside the build.
+
+Deliberately left for after 1.0: the `SystemID` / `CoreID` enums still list Lemuroid's other consoles, and the DeSmuME/MelonDS save migrators and other-console shader tables remain. None of it ships a core (CI inspects the APK), but the enum names match stored database values and migration paths. Remove them only with a device available to check an upgrade from an old install.
 
 ## What only the owner can do
 
