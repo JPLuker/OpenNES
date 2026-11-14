@@ -1,9 +1,6 @@
 package com.swordfish.lemuroid.app.mobile.feature.romm
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,17 +10,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,8 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -94,7 +85,6 @@ internal fun RommGameDetailsSheet(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .then(if (busy) Modifier.blur(14.dp) else Modifier)
                         .verticalScroll(rememberScrollState())
                         .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -165,10 +155,28 @@ internal fun RommGameDetailsSheet(
                                 contentColor = appColors.onAccent,
                             ),
                     ) {
+                        // The button itself shows progress; the sheet stays usable.
+                        val portion =
+                            progress?.totalBytes?.takeIf { it > 0 }?.let {
+                                (progress.receivedBytes * 100 / it).toInt().coerceIn(0, 100)
+                            }
                         Text(
                             when {
                                 queued -> stringResource(R.string.opennes_romm_phase_queued)
-                                downloading -> stringResource(R.string.opennes_romm_phase_downloading)
+                                downloading ->
+                                    when (progress?.stage) {
+                                        RommApiClient.ImportStage.DOWNLOADING ->
+                                            if (portion != null) {
+                                                stringResource(R.string.opennes_romm_downloading_percent, portion)
+                                            } else {
+                                                stringResource(R.string.opennes_romm_downloading_short)
+                                            }
+                                        RommApiClient.ImportStage.VERIFYING,
+                                        RommApiClient.ImportStage.IMPORTING,
+                                        RommApiClient.ImportStage.INDEXING,
+                                        -> stringResource(R.string.opennes_romm_phase_indexing)
+                                        else -> stringResource(R.string.opennes_romm_downloading_short)
+                                    }
                                 indexing -> stringResource(R.string.opennes_romm_phase_indexing)
                                 error != null -> stringResource(R.string.opennes_romm_retry_download)
                                 else -> stringResource(R.string.opennes_romm_download)
@@ -222,83 +230,6 @@ internal fun RommGameDetailsSheet(
                         border = BorderStroke(1.dp, border),
                     ) {
                         Text(stringResource(R.string.opennes_romm_retry_indexing))
-                    }
-                }
-            }
-
-            if (busy) {
-                val phase = progress?.stage ?: RommApiClient.ImportStage.CONNECTING
-                val message =
-                    when {
-                        queued -> R.string.opennes_romm_phase_queued
-                        phase == RommApiClient.ImportStage.CONNECTING -> R.string.opennes_romm_phase_connecting
-                        phase == RommApiClient.ImportStage.DOWNLOADING -> R.string.opennes_romm_phase_downloading
-                        phase == RommApiClient.ImportStage.VERIFYING -> R.string.opennes_romm_phase_verifying
-                        phase == RommApiClient.ImportStage.IMPORTING -> R.string.opennes_romm_phase_importing
-                        else -> R.string.opennes_romm_phase_indexing
-                    }
-                val portion =
-                    progress?.totalBytes?.takeIf { it > 0 }?.let {
-                        (progress.receivedBytes.toFloat() / it.toFloat()).coerceIn(0f, 1f)
-                    }
-                Box(
-                    modifier =
-                        Modifier
-                            .matchParentSize()
-                            .background(Color(0xD0111317))
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                            ) {},
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Surface(
-                        color = appColors.surface,
-                        shape = RoundedCornerShape(18.dp),
-                        border = BorderStroke(1.dp, border),
-                        modifier = Modifier.fillMaxWidth(0.84f),
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
-                        ) {
-                            CircularProgressIndicator(color = red)
-                            Text(
-                                stringResource(message),
-                                color = foreground,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp,
-                            )
-                            Text(
-                                rom.name,
-                                color = muted,
-                                fontSize = 13.sp,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (phase == RommApiClient.ImportStage.DOWNLOADING) {
-                                if (portion != null) {
-                                    LinearProgressIndicator(
-                                        progress = { portion },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        color = red,
-                                    )
-                                    Text(
-                                        "${(portion * 100).toInt()}%",
-                                        color = foreground,
-                                        fontSize = 13.sp,
-                                    )
-                                } else {
-                                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = red)
-                                }
-                            }
-                            Text(
-                                stringResource(R.string.opennes_romm_can_leave_download),
-                                color = muted,
-                                fontSize = 12.sp,
-                            )
-                        }
                     }
                 }
             }

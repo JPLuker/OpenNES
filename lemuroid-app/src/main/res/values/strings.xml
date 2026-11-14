@@ -529,6 +529,8 @@
     <string name="opennes_romm_retry_connection">Retry</string>
     <string name="opennes_romm_phase_connecting">Connecting to RomM…</string>
     <string name="opennes_romm_phase_downloading">Downloading game…</string>
+    <string name="opennes_romm_downloading_short">Downloading…</string>
+    <string name="opennes_romm_downloading_percent">Downloading… %1$d%%</string>
     <string name="opennes_romm_phase_verifying">Verifying ROM…</string>
     <string name="opennes_romm_phase_importing">Saving to your NES folder…</string>
     <string name="opennes_romm_phase_indexing">Adding to your library…</string>

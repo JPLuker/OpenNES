@@ -29,6 +29,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -528,7 +529,28 @@ private fun PadContainer(
     // One housing surface replaces overlapping inherited glass rectangles.
     // Decorative only: all NES input events remain handled by PadKit.
     Canvas(modifier = modifier.fillMaxSize()) {
-        val inset = if (portrait) 6.dp.toPx() else 3.dp.toPx()
+        if (portrait) {
+            // Portrait housing runs edge to edge like a handheld's lower
+            // half: no side inset and no rounded corners at the screen edges.
+            drawRect(color = palette.panel.copy(alpha = 0.90f * theme.opacity))
+            drawLine(
+                color = palette.outline.copy(alpha = 0.48f * theme.opacity),
+                start = Offset(0f, 0.75.dp.toPx()),
+                end = Offset(size.width, 0.75.dp.toPx()),
+                strokeWidth = 1.5.dp.toPx(),
+            )
+            if (size.width > 56.dp.toPx()) {
+                val y = 10.dp.toPx()
+                drawLine(
+                    color = palette.accent.copy(alpha = 0.88f * theme.opacity),
+                    start = Offset(28.dp.toPx(), y),
+                    end = Offset(size.width - 28.dp.toPx(), y),
+                    strokeWidth = 3.dp.toPx(),
+                )
+            }
+            return@Canvas
+        }
+        val inset = 3.dp.toPx()
         val panelSize =
             Size(
                 (size.width - 2f * inset).coerceAtLeast(0f),
@@ -551,15 +573,7 @@ private fun PadContainer(
             style = Stroke(width = 1.5.dp.toPx()),
         )
 
-        if (portrait && panelSize.width > 56.dp.toPx()) {
-            val y = origin.y + 10.dp.toPx()
-            drawLine(
-                color = palette.accent.copy(alpha = 0.88f * theme.opacity),
-                start = Offset(origin.x + 28.dp.toPx(), y),
-                end = Offset(origin.x + panelSize.width - 28.dp.toPx(), y),
-                strokeWidth = 3.dp.toPx(),
-            )
-        } else if (innerEdge != null && panelSize.height > 56.dp.toPx()) {
+        if (innerEdge != null && panelSize.height > 56.dp.toPx()) {
             val isLeftEdge = innerEdge == LandscapePanelInnerEdge.LEFT
             val x =
                 if (isLeftEdge) {
@@ -1326,10 +1340,11 @@ private fun NesTransportControls(
                         },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "⏩",
-                    color = androidx.compose.ui.graphics.Color.White,
-                    style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
+                Icon(
+                    imageVector = Icons.Filled.FastForward,
+                    contentDescription = null,
+                    tint = androidx.compose.ui.graphics.Color.White,
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }

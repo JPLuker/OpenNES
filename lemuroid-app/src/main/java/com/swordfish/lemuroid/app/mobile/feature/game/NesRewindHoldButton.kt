@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FastRewind
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -24,7 +25,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 
@@ -91,11 +91,11 @@ internal fun NesRewindHoldButton(
                 .padding(4.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = "⏪",
-            color = androidx.compose.ui.graphics.Color.White,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.labelMedium,
+        Icon(
+            imageVector = Icons.Filled.FastRewind,
+            contentDescription = null,
+            tint = androidx.compose.ui.graphics.Color.White,
+            modifier = Modifier.size(20.dp),
         )
     }
 }
