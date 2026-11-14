@@ -7,9 +7,9 @@
 
 ## Secret custody and build provenance
 
-- [ ] Create a unique OpenNES release keystore off-repository, secure a backup and record certificate fingerprints privately.
+- [x] Create a unique OpenNES release keystore off-repository, secure a backup and record certificate fingerprints privately. *(Owner, 2026-11-14. Upload certificate SHA-256 `B70AEEB4…E4C8A3`, the public half.)*
 - [x] Prepare a **manual** signed Play AAB validation workflow bound to the protected `production-signing` environment, with no release/Play publishing and no debug-key fallback.
-- [ ] Supply a unique private upload key, keystore credentials and a separately pinned SHA-256 upload-certificate fingerprint as protected environment secrets; configure required environment reviewers, then run the signed validation workflow. This has **not** been executed.
+- [x] Supply a unique private upload key, keystore credentials and a separately pinned SHA-256 upload-certificate fingerprint as protected environment secrets; configure required environment reviewers, then run the signed validation workflow. *Done 2026-11-14: [run 43604032372](https://github.com/JPLuker/OpenNES/actions/runs/43604032372) matched the pinned certificate and built a signed `com.jpluker.opennes` AAB. Open point: the environment let an admin-triggered run start without approval.*
 - [x] Derive production versionCode monotonically from the `VERSION` semantic tuple, independent of the increasing Actions-run debug code.
 
 - [x] Remove Lemuroid's inherited hardcoded release credentials. Without all four `OPENNES_RELEASE_*` environment variables, release signing is not configured.

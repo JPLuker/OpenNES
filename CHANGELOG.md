@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Play signing set up:** the owner's upload key is in the protected `production-signing` environment, and the first signed production bundle (`com.jpluker.opennes`) built and matched its pinned certificate ([run 43604032372](https://github.com/JPLuker/OpenNES/actions/runs/43604032372)).
+
 - **RomM two-way save sync (#8, device and server acceptance pending).** Settings → RomM → **Save sync** turns it on (it registers the phone with RomM automatically). In-game battery saves then sync with your RomM server before a game starts (at most 6 s, so an offline server never blocks play), after it closes, when the library opens and on **Sync now**. Uses RomM 5.4's device sync with the `autosave` slot and `fceumm` emulator, the names RomM's web player and RetroArch sync use, so a save continues on any of them.
   - A save moves only when one side is provably unchanged since the last sync (a per-game record of the last synced save). Otherwise, including the first sync of a game that has a different save on each side, you choose **Keep phone save** or **Use RomM save**. RomM keeps replaced server saves as older versions.
   - Before a downloaded save replaces the phone's, the phone's copy is backed up (listed with the other RomM backups) and the game's autosave state is set aside, so it can't be restored over the new progress.

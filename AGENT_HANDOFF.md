@@ -46,7 +46,7 @@ Local test harness note: the sync logic (`RommTwoWaySyncPlan`, `RommTwoWaySyncSt
 
 1. Run [docs/DEVICE_TEST.md](docs/DEVICE_TEST.md) on the phone and report pass or fail by number.
 2. Run its RomM section against the home server, including two-way save sync.
-3. Create the Play upload key, add the `OPENNES_RELEASE_*` secrets to the protected `production-signing` environment, and open the Play Console listing. Store text and form answers are drafted in [docs/PLAY_LISTING.md](docs/PLAY_LISTING.md); original screenshots and icon artwork are still needed.
+3. ~~Create the Play upload key and add its secrets~~ (done 2026-11-14; signed bundle built in [run 43604032372](https://github.com/JPLuker/OpenNES/actions/runs/43604032372)). Open the Play Console listing. Store text and form answers are drafted in [docs/PLAY_LISTING.md](docs/PLAY_LISTING.md); original screenshots and icon artwork are still needed.
 
 ## Next agent
 
