@@ -184,17 +184,26 @@ internal class RetroAchievementsGameSessionRunner(
                     if (!active) {
                         // Say which mode this session counts as, once, at the start.
                         val nativeHardcore = RetroAchievementsNative.gameSessionHardcore(session) == 1
+                        val localHardcore = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
                         RetroAchievementsGameStateStore.notifyMessage(
                             ticket,
                             md5,
-                            context.getString(
-                                when {
-                                    nativeHardcore -> R.string.opennes_ra_mode_hardcore
-                                    HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE ->
-                                        R.string.opennes_ra_mode_local_hardcore
-                                    else -> R.string.opennes_ra_mode_casual
-                                },
-                            ),
+                            message =
+                                context.getString(
+                                    when {
+                                        nativeHardcore -> R.string.opennes_ra_start_hardcore
+                                        localHardcore -> R.string.opennes_ra_start_local_hardcore
+                                        else -> R.string.opennes_ra_start_casual
+                                    },
+                                ),
+                            label =
+                                context.getString(
+                                    if (nativeHardcore || localHardcore) {
+                                        R.string.opennes_ra_start_label_hardcore
+                                    } else {
+                                        R.string.opennes_ra_start_label_casual
+                                    },
+                                ),
                         )
                     }
                     active = true

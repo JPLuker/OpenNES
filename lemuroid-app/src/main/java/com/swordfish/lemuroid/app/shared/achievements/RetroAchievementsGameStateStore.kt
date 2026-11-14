@@ -15,6 +15,8 @@ internal object RetroAchievementsGameStateStore {
         val id: Int,
         val title: String,
         val sequence: Long,
+        // Small heading above the title; null for an achievement unlock.
+        val label: String? = null,
     )
 
     data class Snapshot(
@@ -82,13 +84,17 @@ internal object RetroAchievementsGameStateStore {
         ticket: Long,
         romMd5: String,
         message: String,
+        label: String? = null,
     ): Boolean {
         if (ticket != currentTicket || mutable.value.romMd5 != romMd5 ||
             message.isBlank() || message.any(Char::isISOControl)
         ) {
             return false
         }
-        mutable.value = mutable.value.copy(notice = UnlockNotice(0, message.take(220), ++unlockSequence))
+        mutable.value =
+            mutable.value.copy(
+                notice = UnlockNotice(0, message.take(220), ++unlockSequence, label?.take(60)),
+            )
         return true
     }
 

@@ -54,6 +54,7 @@ class HomeViewModel(
         const val CAROUSEL_MAX_ITEMS = 10
         const val DEBOUNCE_TIME = 100L
         private const val ONLINE_BATCH_SIZE = 12
+        private const val MAX_COVER_SEARCH = 400
         private const val ONLINE_BATCH_GAP_MS = 2_500L
         private const val ONLINE_RETRY_INTERVAL_MS = 30L * 24L * 60L * 60L * 1000L
     }
@@ -108,18 +109,26 @@ class HomeViewModel(
                 dao.fillRommDetails(gameId, d.name, d.genre, d.description)
             }
             val local = stored.map { game -> covers[game.id]?.let { game.copy(coverFrontUrl = it) } ?: game }
-            val shelf =
-                local.filter { it.lastPlayedAt != null }.sortedByDescending { it.lastPlayedAt }.take(4) +
-                    (
-                        local +
-                            RommLibraryCatalog.available(remote, local.map { it.fileName }.toSet())
-                                .map(RommLibraryCatalog::asPreview)
-                    )
-                        .sortedBy { it.displayName().lowercase(java.util.Locale.ROOT) }
+            // Every game on the phone gets a cover that really loads: try
+            // what it has, then the catalogue's names for it, and remember
+            // the one that worked so the next launch is instant.
+            val working =
+                coverPrefetcher.resolve(
+                    local.take(MAX_COVER_SEARCH)
+                        .associate { it.id to NesBoxArtUrls.searchCandidates(it) }
+                        .filterValues { it.isNotEmpty() },
+                )
+            local.forEach { game ->
+                val url = working[game.id] ?: return@forEach
+                val shown =
+                    game.coverFrontUrl?.replace("http://thumbnails.libretro.com/", "https://thumbnails.libretro.com/")
+                if (url != shown) dao.updateCatalogueCover(game.id, url)
+            }
+            // Then the RomM-only games of the first screens.
             coverPrefetcher.warm(
-                shelf.mapNotNull { game ->
-                    game.displayCoverUrl()?.takeIf { it.isNotBlank() } ?: NesBoxArtUrls.romFilenameFallback(game)
-                },
+                RommLibraryCatalog.available(remote, local.map { it.fileName }.toSet())
+                    .sortedBy { it.name.lowercase(java.util.Locale.ROOT) }
+                    .mapNotNull { it.coverUrl },
             )
         }
     }

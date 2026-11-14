@@ -33,4 +33,12 @@ class NesBoxArtNameGuessTest {
     fun `nothing to go on gives nothing`() {
         assertNull(NesBoxArtNameGuess.usaStem(" (USA) "))
     }
+
+    @Test
+    fun `other regions are tried after USA`() {
+        val stems = NesBoxArtNameGuess.stems("Excitebike")
+        assertEquals("Excitebike (USA)", stems.first())
+        assertEquals(true, "Excitebike (Japan, USA)" in stems)
+        assertEquals(emptyList<String>(), NesBoxArtNameGuess.stems(""))
+    }
 }

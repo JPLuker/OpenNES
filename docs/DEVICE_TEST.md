@@ -44,7 +44,7 @@ individual fixes: everything that can only be judged on a phone is here.
 
 20. Sign in. Start a supported game: the achievement list and your past unlocks show.
 21. Earn one new achievement. The banner appears, and the unlock shows on the RetroAchievements website afterward.
-22. Hardcore (OpenNES's own mode) can be chosen per game and as a default; in it Load, Cheats and rewind are gone, and the banner reads "OpenNES Hardcore · RetroAchievements: Casual". The RetroAchievements profile shows the unlock as Casual (softcore).
+22. Hardcore (OpenNES's own mode) can be chosen per game and as a default; in it Load, Cheats and rewind are gone, and when signed in to RetroAchievements a HARDCORE banner says the session is recorded as Casual. The RetroAchievements profile shows the unlock as Casual (softcore).
 
 ## E. RomM (needs your server on the network)
 

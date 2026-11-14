@@ -102,6 +102,44 @@ class NesCoverPrefetcher(context: Context) {
         }
     }
 
+    /**
+     * For each game, find the first candidate cover that really loads.
+     * Returns game id to that address; games with no working cover are absent.
+     */
+    suspend fun resolve(candidates: Map<Int, List<String>>): Map<Int, String> {
+        val gate = Semaphore(WARM_PARALLEL)
+        val found = java.util.concurrent.ConcurrentHashMap<Int, String>()
+        coroutineScope {
+            candidates.forEach { (gameId, urls) ->
+                launch {
+                    gate.withPermit {
+                        for (url in urls) {
+                            val result =
+                                try {
+                                    imageLoader.execute(
+                                        ImageRequest.Builder(appContext)
+                                            .data(url)
+                                            .size(CoverUtils.COVER_DECODE_WIDTH_PX, CoverUtils.COVER_DECODE_HEIGHT_PX)
+                                            .memoryCacheKey(CoverUtils.coverMemoryKey(url))
+                                            .build(),
+                                    )
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
+                                } catch (_: Exception) {
+                                    null
+                                }
+                            if (result is SuccessResult) {
+                                found[gameId] = url
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return found
+    }
+
     companion object {
         private const val WARM_MAX = 30
         private const val WARM_PARALLEL = 6

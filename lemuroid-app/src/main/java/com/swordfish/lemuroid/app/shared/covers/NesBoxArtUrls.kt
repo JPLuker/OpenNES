@@ -37,6 +37,22 @@ object NesBoxArtUrls {
             .replace("%29", ")")
             .replace("%7E", "~")
 
+    private const val BOXARTS =
+        "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/"
+
+    /**
+     * Every cover address worth trying for a game with no working cover:
+     * what the library shows now, the file-name match, then the catalogue's
+     * regional names for the title. Empty for custom covers.
+     */
+    fun searchCandidates(game: Game): List<String> {
+        if (game.systemId != "nes" || !game.customCoverUri.isNullOrBlank()) return emptyList()
+        return (
+            remoteCandidates(game) +
+                NesBoxArtNameGuess.stems(game.displayName()).map { BOXARTS + encode(it) + ".png" }
+        ).distinct()
+    }
+
     fun remoteCandidates(game: Game): List<String> {
         // A custom cover is authoritative. Do not fetch unrelated catalogue
         // artwork in the background when the player has supplied their own.

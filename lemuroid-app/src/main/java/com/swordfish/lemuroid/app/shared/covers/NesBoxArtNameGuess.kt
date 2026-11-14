@@ -24,4 +24,13 @@ internal object NesBoxArtNameGuess {
         val joined = if (parts.size > 1) "$main - ${parts[1].trim()}" else main
         return joined.replace(forbidden, "_") + " (USA)"
     }
+
+    private val regions = listOf("(USA)", "(Japan, USA)", "(USA, Europe)", "(World)", "(Europe)", "(Japan)")
+
+    /** Every regional catalogue name worth trying for [title], most likely first. */
+    fun stems(title: String): List<String> {
+        val usa = usaStem(title) ?: return emptyList()
+        val base = usa.removeSuffix(" (USA)")
+        return regions.map { "$base $it" }
+    }
 }

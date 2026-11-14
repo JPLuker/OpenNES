@@ -538,6 +538,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         if (nativeUnlock != null && !isLoading && !onboardingVisible.value) {
             RetroAchievementUnlockBanner(
                 title = nativeUnlock.title,
+                label = nativeUnlock.label,
                 modifier =
                     Modifier
                         .align(Alignment.TopCenter)

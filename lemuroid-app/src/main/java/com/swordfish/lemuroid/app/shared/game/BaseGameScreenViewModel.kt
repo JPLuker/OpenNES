@@ -281,7 +281,6 @@ class BaseGameScreenViewModel(
             testUnapproved = BuildConfig.DEBUG && testUnapprovedHardcore,
         )
         val hardcore = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
-        if (hardcore) sideEffects.showToast(appContext.getString(R.string.opennes_hardcore_started))
         retroGameView.initialize(applicationContext, game, systemCoreConfig, gameLoader, requestLoadSave && !hardcore)
     }
 

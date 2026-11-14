@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Covers and the Hardcore notice (2026-11-14):** at startup every game on the phone is now checked for a cover that really loads: its current one, the file-name match, then the catalogue's regional names for its title (USA; Japan, USA; USA, Europe; World; Europe; Japan). The one that works is saved, so the next launch is instant. The start-of-game mode notice is now a single styled banner shown only when RetroAchievements is signed in and connected; the separate Hardcore toast is gone.
+
 - **OpenNES Hardcore is available as the app's own mode (2026-11-14, no device test yet).** Choose Casual or Hardcore per game, as a default in Settings → Advanced → Hardcore, or during first-time setup. Hardcore starts the game fresh and turns off loading states, rewind, cheats and Game Genie. It is labeled throughout as not applying to RetroAchievements: until OpenNES is approved, RetroAchievements is always told the session is Casual.
 
 - **Hardcore mode built, locked until RetroAchievements approves OpenNES (2026-11-14, no device test yet).** Release builds are still Casual-only. Hardcore is chosen per game before launch and boots the game fresh; the achievements client is told the mode once, before sign-in. Switching to Casual mid-game is allowed (pause menu); leaving the app also drops to Casual, opening the pause menu does not. Leaderboard attempts, challenge indicators, measured progress and the session's mode are shown in play, and Restart resets achievement logic. Debug builds have a labeled test switch under Settings → Advanced → Hardcore. See `docs/HARDCORE_COMPLIANCE_AUDIT.md` and the draft request in `docs/RETROACHIEVEMENTS_APPROVAL_REQUEST.md`. The privacy policy now states retention, server locations and GDPR.
