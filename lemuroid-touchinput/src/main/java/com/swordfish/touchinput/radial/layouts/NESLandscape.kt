@@ -45,7 +45,7 @@ fun PadKitScope.NESLandscapeLeft(
         val sideHeight = maxHeight
         val fullWidth = maxWidth
         // The D-pad grip is on the right in the left-handed layout.
-        val sideCenter = (if (LocalNesLeftHanded.current) 1f else -1f) * (maxWidth - sideWidth) / 2f
+        val sideCenter = (maxWidth - sideWidth) / 2f * (if (LocalNesLeftHanded.current) 1f else -1f)
         val report = LocalNesControlBoundsReporter.current
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.leftScale ?: settings.scale)
         val x =
@@ -105,7 +105,7 @@ fun PadKitScope.NESLandscapeRight(
         val sideWidth = gripWidthDp.takeIf { it > 0f }?.dp ?: maxWidth
         val sideHeight = maxHeight
         val fullWidth = maxWidth
-        val sideCenter = (if (LocalNesLeftHanded.current) -1f else 1f) * (maxWidth - sideWidth) / 2f
+        val sideCenter = (maxWidth - sideWidth) / 2f * (if (LocalNesLeftHanded.current) -1f else 1f)
         val dialSize = landscapeDialSize(sideWidth, sideHeight, settings.rightScale ?: settings.scale)
         val x =
             NesLandscapeDragLimits.horizontalTravelDp(sideWidth.value, dialSize.value).dp *
