@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Left-handed layout (2026-11-14, no device test yet):** Settings → Controls → **Left-handed layout** puts the D-pad (with Select) on the right and A/B (with Start and Menu) on the left, in portrait and landscape. Each side is mirrored as a whole, but B stays to the left of A. Rewind and fast-forward move to the screen-centre side of Menu. Saved button positions and sizes are kept per cluster.
+- **Left-handed layout (2026-11-14, no device test yet):** Settings → Controls → **Left-handed layout** puts the D-pad (with Select) on the right and A/B (with Start and Menu) on the left, in portrait and landscape. Each side is mirrored as a whole, but B stays to the left of A. Rewind and fast-forward move to the screen-centre side of Menu. Saved button positions and sizes are kept per cluster. First-time setup asks Standard or Left-handed on the controller step.
 
 - **Covers and the Hardcore notice (2026-11-14):** at startup every game on the phone is now checked for a cover that really loads: its current one, the file-name match, then the catalogue's regional names for its title (USA; Japan, USA; USA, Europe; World; Europe; Japan). The one that works is saved, so the next launch is instant. The start-of-game mode notice is now a single styled banner shown only when RetroAchievements is signed in and connected; the separate Hardcore toast is gone.
 

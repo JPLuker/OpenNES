@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.game.NesLeftHandedStore
 import com.swordfish.lemuroid.app.mobile.feature.home.NesRomLaunchModeStore
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LocalOpenNesAppColors
@@ -319,9 +320,66 @@ private fun ControllerStep() {
             if (pair.size == 1) Spacer(Modifier.weight(1f))
         }
     }
+    HandCard()
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Icon(Icons.Outlined.Palette, contentDescription = null, tint = colors.muted, modifier = Modifier.size(18.dp))
         Text(stringResource(R.string.opennes_welcome_controller_more), color = colors.muted, fontSize = 13.sp)
+    }
+}
+
+/** Which hand holds the D-pad; stored with the controller settings the game reads. */
+@Composable
+private fun HandCard() {
+    val colors = LocalOpenNesAppColors.current
+    val context = LocalContext.current.applicationContext
+    val preferences = remember(context) { SharedPreferencesHelper.getSharedPreferences(context) }
+    var leftHanded by remember { mutableStateOf(preferences.getBoolean(NesLeftHandedStore.KEY, false)) }
+    Card {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                stringResource(R.string.opennes_welcome_hand_title),
+                color = colors.foreground,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(
+                    false to R.string.opennes_welcome_hand_right,
+                    true to R.string.opennes_welcome_hand_left,
+                ).forEach { (value, label) ->
+                    val selected = leftHanded == value
+                    Surface(
+                        onClick = {
+                            preferences.edit().putBoolean(NesLeftHandedStore.KEY, value).apply()
+                            leftHanded = value
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        color = colors.surface,
+                        border =
+                            BorderStroke(
+                                if (selected) 2.dp else 1.dp,
+                                if (selected) colors.red else colors.border,
+                            ),
+                    ) {
+                        Text(
+                            stringResource(label),
+                            color = colors.foreground,
+                            modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+            Text(
+                stringResource(
+                    if (leftHanded) R.string.opennes_welcome_hand_left_body else R.string.opennes_welcome_hand_right_body,
+                ),
+                color = colors.muted,
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+            )
+        }
     }
 }
 
