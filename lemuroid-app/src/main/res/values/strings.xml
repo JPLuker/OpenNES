@@ -930,11 +930,6 @@
     <string name="opennes_welcome_games_romm_hint">Keep your games on a RomM server instead? You can connect it on the last step.</string>
     <string name="opennes_welcome_controller_title">Pick your controller</string>
     <string name="opennes_welcome_controller_body">Choose a color style. You can change it any time.</string>
-    <string name="opennes_welcome_hand_title">Which hand for the D-pad?</string>
-    <string name="opennes_welcome_hand_right">Standard</string>
-    <string name="opennes_welcome_hand_left">Left-handed</string>
-    <string name="opennes_welcome_hand_right_body">D-pad on the left, A and B on the right, like the original controller.</string>
-    <string name="opennes_welcome_hand_left_body">D-pad on the right, A and B on the left. B stays to the left of A.</string>
     <string name="opennes_welcome_controller_more">Custom colors are in Settings. To move or resize buttons, pause a game and choose Edit Controls.</string>
     <string name="opennes_welcome_online_title">Extras (optional)</string>
     <string name="opennes_welcome_online_body">Both are optional and can be set up later in Settings.</string>

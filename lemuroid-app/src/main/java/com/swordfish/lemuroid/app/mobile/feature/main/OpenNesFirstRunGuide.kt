@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -47,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -327,62 +331,37 @@ private fun ControllerStep() {
     }
 }
 
-/** Which hand holds the D-pad; stored with the controller settings the game reads. */
+/** Left-handed layout; stored with the controller settings the game reads. */
 @Composable
 private fun HandCard() {
     val colors = LocalOpenNesAppColors.current
     val context = LocalContext.current.applicationContext
     val preferences = remember(context) { SharedPreferencesHelper.getSharedPreferences(context) }
     var leftHanded by remember { mutableStateOf(preferences.getBoolean(NesLeftHandedStore.KEY, false)) }
-    Card {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                stringResource(R.string.opennes_welcome_hand_title),
-                color = colors.foreground,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf(
-                    false to R.string.opennes_welcome_hand_right,
-                    true to R.string.opennes_welcome_hand_left,
-                ).forEach { (value, label) ->
-                    val selected = leftHanded == value
-                    Surface(
-                        onClick = {
-                            preferences.edit().putBoolean(NesLeftHandedStore.KEY, value).apply()
-                            leftHanded = value
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        color = colors.surface,
-                        border =
-                            BorderStroke(
-                                if (selected) 2.dp else 1.dp,
-                                if (selected) colors.red else colors.border,
-                            ),
-                    ) {
-                        Text(
-                            stringResource(label),
-                            color = colors.foreground,
-                            modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            }
-            Text(
-                stringResource(
-                    if (leftHanded) {
-                        R.string.opennes_welcome_hand_left_body
-                    } else {
-                        R.string.opennes_welcome_hand_right_body
-                    },
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .toggleable(value = leftHanded, role = Role.Checkbox) {
+                    preferences.edit().putBoolean(NesLeftHandedStore.KEY, it).apply()
+                    leftHanded = it
+                },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(
+            checked = leftHanded,
+            onCheckedChange = null,
+            colors =
+                CheckboxDefaults.colors(
+                    checkedColor = colors.red,
+                    uncheckedColor = colors.muted,
+                    checkmarkColor = colors.onAccent,
                 ),
-                color = colors.muted,
-                fontSize = 13.sp,
-                lineHeight = 19.sp,
-            )
+        )
+        Spacer(Modifier.size(12.dp))
+        Column {
+            Text(stringResource(R.string.opennes_left_handed_title), color = colors.foreground, fontSize = 15.sp)
+            Text(stringResource(R.string.opennes_left_handed_description), color = colors.muted, fontSize = 13.sp)
         }
     }
 }
