@@ -21,6 +21,9 @@ internal class RetroAchievementsGameSessionRunner(
     private val context: Context,
     private val transport: RetroAchievementsNativeHttpTransport = RetroAchievementsNativeHttpTransport(),
 ) {
+    // Read on each use, so a change in Settings applies without a restart.
+    private val options = RetroAchievementsOptions(context)
+
     suspend fun run(game: Game) {
         val identity =
             try {
@@ -38,7 +41,6 @@ internal class RetroAchievementsGameSessionRunner(
         var previousCredentials: NativeCredentials? = null
         var previousRetryVersion = 0L
         var firstSession = true
-        val options = RetroAchievementsOptions(context)
 
         // Bound to the game ViewModel: signing in, signing out, switching
         // accounts and manually retrying can all happen without restarting
@@ -92,7 +94,6 @@ internal class RetroAchievementsGameSessionRunner(
     }
 
     private fun noticeText(event: NativeGameEvent.Notice): String? {
-        val options = RetroAchievementsOptions(context)
         val wanted =
             when (event.kind) {
                 "lb_start", "lb_fail", "lb_submit" -> options.notifyLeaderboards
