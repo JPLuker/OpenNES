@@ -373,7 +373,11 @@ private fun HandCard() {
             }
             Text(
                 stringResource(
-                    if (leftHanded) R.string.opennes_welcome_hand_left_body else R.string.opennes_welcome_hand_right_body,
+                    if (leftHanded) {
+                        R.string.opennes_welcome_hand_left_body
+                    } else {
+                        R.string.opennes_welcome_hand_right_body
+                    },
                 ),
                 color = colors.muted,
                 fontSize = 13.sp,
