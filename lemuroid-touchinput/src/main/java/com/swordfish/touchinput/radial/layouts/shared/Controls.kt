@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.controls.LemuroidControlAnalog
 import com.swordfish.touchinput.radial.controls.LemuroidControlButton
+import com.swordfish.touchinput.radial.layouts.nesSideAngle
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import gg.padkit.PadKitScope
 import gg.padkit.ids.Id
@@ -108,7 +109,7 @@ fun SecondaryButtonMenuPlaceholder(settings: TouchControllerSettingsManager.Sett
     Box(
         modifier =
             Modifier.radialPosition(
-                -120f - 2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
+                nesSideAngle(-120f - 2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION),
             ),
     )
 }

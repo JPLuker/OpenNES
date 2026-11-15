@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VerticalAlignCenter
 import androidx.compose.material.icons.outlined.Vibration
@@ -36,6 +37,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.NavController
 import com.swordfish.lemuroid.BuildConfig
 import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.mobile.feature.game.NesLeftHandedStore
 import com.swordfish.lemuroid.app.mobile.feature.main.MainRoute
 import com.swordfish.lemuroid.app.mobile.feature.main.navigateToRoute
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsChoice
@@ -268,6 +270,12 @@ private fun ControlsSettings(navController: NavController) {
             title = { Text(text = stringResource(R.string.opennes_controller_appearance_title)) },
             subtitle = { Text(text = stringResource(R.string.opennes_controller_appearance_description)) },
             onClick = { navController.navigateToRoute(MainRoute.SETTINGS_CONTROLLER_APPEARANCE) },
+        )
+        OpenNesSettingsSwitch(
+            icon = { SettingIcon(Icons.Outlined.SwapHoriz) },
+            state = booleanPreferenceState(NesLeftHandedStore.KEY, false),
+            title = { Text(text = stringResource(R.string.opennes_left_handed_title)) },
+            subtitle = { Text(text = stringResource(R.string.opennes_left_handed_description)) },
         )
         OpenNesSettingsChoice(
             icon = { SettingIcon(Icons.Outlined.Vibration) },

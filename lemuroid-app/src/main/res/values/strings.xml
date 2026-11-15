@@ -601,6 +601,8 @@
     <string name="opennes_settings_display">Display</string>
     <string name="opennes_settings_online">Online</string>
     <string name="opennes_settings_more">More</string>
+    <string name="opennes_left_handed_title">Left-handed layout</string>
+    <string name="opennes_left_handed_description">D-pad on the right, A and B on the left</string>
     <string name="opennes_settings_gamepads">Gamepads and keyboards</string>
     <string name="opennes_settings_gamepads_description">Bluetooth and USB controllers, and button mapping</string>
     <string name="opennes_settings_resume_title">Resume where you left off</string>

@@ -48,10 +48,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -75,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.ControllerAppearancePreview
 import com.swordfish.lemuroid.app.mobile.shared.compose.controller.NesColorWheelDialog
@@ -82,6 +85,7 @@ import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsGameState
 import com.swordfish.lemuroid.app.shared.game.BaseGameScreenViewModel
 import com.swordfish.lemuroid.app.shared.game.viewmodel.GameViewModelTouchControls.Companion.MENU_LOADING_ANIMATION_MILLIS
 import com.swordfish.lemuroid.app.shared.settings.HapticFeedbackMode
+import com.swordfish.lemuroid.app.utils.android.ComposableLifecycle
 import com.swordfish.lemuroid.lib.controller.ControllerConfig
 import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
@@ -94,6 +98,7 @@ import com.swordfish.touchinput.radial.layouts.LocalNesControlBoundsReporter
 import com.swordfish.touchinput.radial.layouts.LocalNesDpadEditMode
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeHandheld
 import com.swordfish.touchinput.radial.layouts.LocalNesLandscapeMinimal
+import com.swordfish.touchinput.radial.layouts.LocalNesLeftHanded
 import com.swordfish.touchinput.radial.layouts.LocalNesPortraitLayout
 import com.swordfish.touchinput.radial.layouts.NESLandscapeLeft
 import com.swordfish.touchinput.radial.layouts.NESLandscapeRight
@@ -199,6 +204,11 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
         val isLoading = viewModel.loadingState.collectAsState(true).value
         val rewindHoldAvailable = viewModel.canHoldRewind().collectAsState(false).value
         val rewindOffered = viewModel.rewindOffered().collectAsState(false).value
+        // Read on each resume, so a change in Settings applies when returning.
+        var leftHanded by remember { mutableStateOf(NesLeftHandedStore(appContext).leftHanded) }
+        ComposableLifecycle { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) leftHanded = NesLeftHandedStore(appContext).leftHanded
+        }
 
         // First-game onboarding waits until real NES controls are visible.
         // A paired physical gamepad does not cause an unusable setup popup.
@@ -354,6 +364,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                         LocalNesDpadEditMode provides dragEditMode,
                         LocalNesPortraitLayout provides !isLandscape,
                         LocalNesLandscapeHandheld provides handheldActive,
+                        LocalNesLeftHanded provides leftHanded,
                         LocalNesLandscapeMinimal provides (
                             isLandscape && allowTouchOverlay && touchControllerSettings.landscapeMinimal
                         ),
@@ -406,17 +417,22 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                                 onPrimaryBounds = { rightPadBounds.value = it },
                             )
                         } else {
+                            // Left-handed: the D-pad cluster takes the right slot.
+                            val leftSlot = GameScreenLayout.CONSTRAINTS_LEFT_PAD
+                            val rightSlot = GameScreenLayout.CONSTRAINTS_RIGHT_PAD
+                            val dpadSlot = if (leftHanded) rightSlot else leftSlot
+                            val buttonSlot = if (leftHanded) leftSlot else rightSlot
                             leftGamePad?.invoke(
                                 this,
                                 Modifier
-                                    .layoutId(GameScreenLayout.CONSTRAINTS_LEFT_PAD)
+                                    .layoutId(dpadSlot)
                                     .onGloballyPositioned { leftPadBounds.value = it.boundsInRoot() },
                                 touchControllerSettings,
                             )
                             rightGamePad?.invoke(
                                 this,
                                 Modifier
-                                    .layoutId(GameScreenLayout.CONSTRAINTS_RIGHT_PAD)
+                                    .layoutId(buttonSlot)
                                     .onGloballyPositioned { rightPadBounds.value = it.boundsInRoot() },
                                 touchControllerSettings,
                             )
@@ -443,6 +459,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
                     editing = dragEditMode,
                     rewindAvailable = rewindHoldAvailable,
                     rewindOffered = rewindOffered,
+                    leftHanded = leftHanded,
                     onRewindPress = viewModel::startHoldRewind,
                     onRewindRelease = viewModel::stopHoldRewind,
                     onRewindStep = viewModel::rewindAccessibleStep,
@@ -1303,6 +1320,7 @@ private fun NesTransportControls(
     editing: Boolean,
     rewindAvailable: Boolean,
     rewindOffered: Boolean,
+    leftHanded: Boolean,
     onRewindPress: () -> Unit,
     onRewindRelease: () -> Unit,
     onRewindStep: () -> Unit,
@@ -1346,7 +1364,13 @@ private fun NesTransportControls(
         TransportPosition(
             geometry = settings.rewindButton,
             control = NesEditableControl.REWIND,
-            defaultX = menuBounds.left - fullBounds.left - 2f * (buttonPx + gapPx),
+            // Beside Menu, on the side facing the screen's centre.
+            defaultX =
+                if (leftHanded) {
+                    menuBounds.right - fullBounds.left + gapPx
+                } else {
+                    menuBounds.left - fullBounds.left - 2f * (buttonPx + gapPx)
+                },
         ) { modifier ->
             // Shown whenever rewind is on; history fills within a moment.
             if (rewindOffered || rewindAvailable || editing) {
@@ -1362,7 +1386,12 @@ private fun NesTransportControls(
         TransportPosition(
             geometry = settings.fastForwardButton,
             control = NesEditableControl.FAST_FORWARD,
-            defaultX = menuBounds.left - fullBounds.left - buttonPx - gapPx,
+            defaultX =
+                if (leftHanded) {
+                    menuBounds.right - fullBounds.left + 2f * gapPx + buttonPx
+                } else {
+                    menuBounds.left - fullBounds.left - buttonPx - gapPx
+                },
         ) { modifier ->
             Box(
                 modifier =

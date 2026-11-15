@@ -31,6 +31,16 @@ val LocalNesPortraitLayout = compositionLocalOf { false }
 val LocalNesLandscapeMinimal = compositionLocalOf { false }
 val LocalNesLandscapeHandheld = compositionLocalOf { false }
 
+/**
+ * Left-handed layout: the D-pad side and the A/B side trade places. Each
+ * side is mirrored as a whole, but B stays to the left of A.
+ */
+val LocalNesLeftHanded = compositionLocalOf { false }
+
+/** A radial angle mirrored across the vertical axis when left-handed. */
+@Composable
+internal fun nesSideAngle(degrees: Float): Float = if (LocalNesLeftHanded.current) 180f - degrees else degrees
+
 /** NES-only touch presentation. Keep the existing PadKit input event IDs. */
 @Composable
 fun PadKitScope.NESLeft(
@@ -159,7 +169,7 @@ private fun NesSecondarySelect(settings: TouchControllerSettingsManager.Settings
     ControlButton(
         modifier =
             Modifier
-                .radialPosition(if (handheld) 60f else 120f)
+                .radialPosition(nesSideAngle(if (handheld) 60f else 120f))
                 .radialScale(scale * buttonScale)
                 .offset(x = buttonX, y = buttonY)
                 .onGloballyPositioned { report(NesEditableControl.SELECT, it.boundsInRoot()) },
@@ -195,7 +205,7 @@ private fun NesSecondaryStart(settings: TouchControllerSettingsManager.Settings)
     ControlButton(
         modifier =
             Modifier
-                .radialPosition(if (handheld) 120f else 60f)
+                .radialPosition(nesSideAngle(if (handheld) 120f else 60f))
                 .radialScale(scale * buttonScale)
                 .offset(x = buttonX, y = buttonY + if (LocalNesPortraitLayout.current) 10.dp else 0.dp)
                 .onGloballyPositioned { report(NesEditableControl.START, it.boundsInRoot()) },
@@ -233,8 +243,10 @@ private fun NesSecondaryMenu(settings: TouchControllerSettingsManager.Settings) 
         modifier =
             Modifier
                 .radialPosition(
-                    (if (handheld) -120f else -60f) +
-                        2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
+                    nesSideAngle(
+                        (if (handheld) -120f else -60f) +
+                            2f * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
+                    ),
                 )
                 .radialScale(scale * buttonScale)
                 .offset(x = buttonX, y = buttonY)

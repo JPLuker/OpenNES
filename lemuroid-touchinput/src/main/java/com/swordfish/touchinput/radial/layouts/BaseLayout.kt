@@ -37,11 +37,15 @@ fun BaseLayoutLeft(
         TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y *
             settings.leftOffsetY.coerceIn(-1f, 1f) + settings.leftDragY
 
+    val leftHanded = LocalNesLeftHanded.current
+    val sideMargin = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX
     LayoutRadial(
         modifier =
             modifier
                 .absolutePadding(
-                    left = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX,
+                    // The edge margin follows the side this cluster is on.
+                    left = if (leftHanded) 0.dp else sideMargin,
+                    right = if (leftHanded) sideMargin else 0.dp,
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
                 )
                 .offset(x = xOffsetDp.dp, y = yOffsetDp.dp)
@@ -50,7 +54,8 @@ fun BaseLayoutLeft(
         secondaryDials = secondaryDials,
         primaryDialMaxSize =
             TouchControllerSettingsManager.BASE_DIAL_SIZE_DP.dp * interpolatedDialSize,
-        secondaryDialsBaseRotationInDegrees = settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
+        secondaryDialsBaseRotationInDegrees =
+            (if (leftHanded) -1f else 1f) * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
 }
 
@@ -68,11 +73,14 @@ fun BaseLayoutRight(
     val yOffsetDp =
         TouchControllerSettingsManager.MAX_CLUSTER_OFFSET_Y *
             settings.rightOffsetY.coerceIn(-1f, 1f) + settings.rightDragY
+    val leftHanded = LocalNesLeftHanded.current
+    val sideMargin = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX
     LayoutRadial(
         modifier =
             modifier
                 .absolutePadding(
-                    right = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginX,
+                    left = if (leftHanded) sideMargin else 0.dp,
+                    right = if (leftHanded) 0.dp else sideMargin,
                     bottom = TouchControllerSettingsManager.MAX_MARGINS.dp * settings.marginY,
                 )
                 .offset(x = xOffsetDp.dp, y = yOffsetDp.dp)
@@ -86,6 +94,7 @@ fun BaseLayoutRight(
                     TouchControllerSettingsManager.MAX_SCALE,
                     (settings.rightScale ?: settings.scale).coerceIn(0f, 1f),
                 ),
-        secondaryDialsBaseRotationInDegrees = -settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
+        secondaryDialsBaseRotationInDegrees =
+            (if (leftHanded) 1f else -1f) * settings.rotation * TouchControllerSettingsManager.MAX_ROTATION,
     )
 }
