@@ -167,9 +167,15 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 val preparingGame by GameLauncher.preparing.collectAsState()
                 val preparing = preparingGame
                 if (showingStartup) {
+                    val covers by OpenNesStartupGate.coverProgress.collectAsState()
                     OpenNesLoadingScreen(
                         title = "OpenNES",
-                        message = stringResource(R.string.opennes_library_loading),
+                        message =
+                            if (covers.total > 0) {
+                                stringResource(R.string.opennes_loading_covers, covers.done, covers.total)
+                            } else {
+                                stringResource(R.string.opennes_library_loading)
+                            },
                     )
                 } else if (preparing != null) {
                     // Tapping Play opens this at once, so the RomM save check

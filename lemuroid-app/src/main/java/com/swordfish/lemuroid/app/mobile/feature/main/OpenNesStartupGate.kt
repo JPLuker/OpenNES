@@ -2,24 +2,40 @@ package com.swordfish.lemuroid.app.mobile.feature.main
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Decides how long the opening loading screen stays up.
  *
- * It covers the first library snapshot, the RomM catalogue and the covers of
- * the first shelves, so the library is complete when it appears. It is always
- * bounded: a slow database, server or image host cannot hold the screen.
+ * It stays until the library, the RomM catalogue and every cover in the
+ * library have loaded, so nothing pops in after it lifts. A hard limit keeps
+ * an offline server or image host from trapping the player on it.
  */
 object OpenNesStartupGate {
     const val MINIMUM_MS = 1_000L
-    const val MAXIMUM_MS = 8_000L
+    const val MAXIMUM_MS = 20_000L
 
     private val libraryReady = MutableStateFlow(false)
     private val remoteReady = MutableStateFlow(false)
     private val coversReady = MutableStateFlow(false)
+
+    /** Covers loaded so far and in total, for the loading screen's counter. */
+    data class CoverProgress(val done: Int, val total: Int)
+
+    private val coverProgressState = MutableStateFlow(CoverProgress(0, 0))
+    val coverProgress: StateFlow<CoverProgress> = coverProgressState
+
+    fun startCovers(total: Int) {
+        coverProgressState.value = CoverProgress(0, total)
+    }
+
+    fun coverDone() {
+        coverProgressState.update { it.copy(done = (it.done + 1).coerceAtMost(it.total)) }
+    }
 
     /**
      * A new library screen is starting. Its covers must be ready again: the
@@ -28,6 +44,7 @@ object OpenNesStartupGate {
      */
     fun beginHandoff() {
         coversReady.value = false
+        coverProgressState.value = CoverProgress(0, 0)
     }
 
     /** The covers of the first shelves are decoded and ready to draw. */

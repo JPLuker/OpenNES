@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Opening screen waits for every cover (2026-11-15):** it now stays until all box art in the library has loaded, local and RomM (previously the first 30 RomM covers, with an 8 s limit), showing "Loading box art · 12 of 48". Covers load 8 at a time. A 20 s limit keeps an offline server from holding it.
+
 - **RetroAchievements options (2026-11-15, no device test yet):** Settings → RetroAchievements now has Encore mode, Unofficial achievements and Spectator mode (applied when a game starts), and Notification switches for unlocks, the session-start banner, progress, leaderboards and on-screen trackers. The in-game Achievements screen shows how many frames the achievements client has checked this session, to confirm it is evaluating the game.
 
 - **No more cover flashes (2026-11-15):** a cover that is still loading now shows the blank box and fades in, instead of the green letter card; the letter card is only for a game with no cover at all. The opening screen waits for covers every time the library opens (it used to skip that wait when Android had kept the app running), and waits until the library actually shows any cover it just fixed. Games with no cover anywhere are rechecked weekly instead of on every launch, so they can't hold the opening screen.

@@ -585,6 +585,7 @@
     <string name="opennes_romm_sync_keep_phone_body">Send this phone\'s save for %1$s to RomM. RomM keeps its current save as an older version.</string>
     <string name="opennes_romm_sync_use_server_body">Replace this phone\'s save for %1$s with RomM\'s. This phone\'s save is backed up first and can be exported from the backups list below.</string>
     <string name="opennes_romm_sync_confirm">Continue</string>
+    <string name="opennes_loading_covers">Loading box art · %1$d of %2$d</string>
     <string name="opennes_game_starting">Starting game…</string>
     <string name="opennes_romm_sync_checking">Checking RomM for a newer save…</string>
     <string name="opennes_romm_advanced_title">Advanced tools</string>

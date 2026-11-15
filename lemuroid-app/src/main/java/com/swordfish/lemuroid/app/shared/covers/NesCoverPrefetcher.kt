@@ -81,10 +81,14 @@ class NesCoverPrefetcher(context: Context) {
      * Decode the covers the library opens on, several at a time, so they are
      * already in memory when the loading screen lifts. Best effort.
      */
-    suspend fun warm(urls: List<String>) {
+    suspend fun warm(
+        urls: List<String>,
+        limit: Int = WARM_MAX,
+        onEach: () -> Unit = {},
+    ) {
         val gate = Semaphore(WARM_PARALLEL)
         coroutineScope {
-            urls.distinct().take(WARM_MAX).forEach { url ->
+            urls.distinct().take(limit).forEach { url ->
                 launch {
                     gate.withPermit {
                         runCatching {
@@ -96,6 +100,7 @@ class NesCoverPrefetcher(context: Context) {
                                     .build(),
                             )
                         }.onFailure { if (it is CancellationException) throw it }
+                        onEach()
                     }
                 }
             }
@@ -106,7 +111,10 @@ class NesCoverPrefetcher(context: Context) {
      * For each game, find the first candidate cover that really loads.
      * Returns game id to that address; games with no working cover are absent.
      */
-    suspend fun resolve(candidates: Map<Int, List<String>>): Map<Int, String> {
+    suspend fun resolve(
+        candidates: Map<Int, List<String>>,
+        onEach: () -> Unit = {},
+    ): Map<Int, String> {
         val gate = Semaphore(WARM_PARALLEL)
         val found = java.util.concurrent.ConcurrentHashMap<Int, String>()
         coroutineScope {
@@ -133,6 +141,7 @@ class NesCoverPrefetcher(context: Context) {
                                 break
                             }
                         }
+                        onEach()
                     }
                 }
             }
@@ -142,7 +151,7 @@ class NesCoverPrefetcher(context: Context) {
 
     companion object {
         private const val WARM_MAX = 30
-        private const val WARM_PARALLEL = 6
+        private const val WARM_PARALLEL = 8
         private const val MAX_COVERS = 24
         private const val MAX_ATTEMPTS = 3
     }

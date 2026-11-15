@@ -32,6 +32,7 @@ import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -130,7 +131,20 @@ class HomeViewModel(
                             it,
                         )
                 }.filterValues { it.isNotEmpty() }
-            val working = coverPrefetcher.resolve(candidates)
+            val remoteCovers =
+                RommLibraryCatalog.available(remote, local.map { it.fileName }.toSet())
+                    .mapNotNull { it.coverUrl }
+                    .distinct()
+            // Every cover in the library, local and RomM, loads before the
+            // loading screen lifts; both kinds load at the same time.
+            OpenNesStartupGate.startCovers(candidates.size + remoteCovers.size)
+            val working =
+                coroutineScope {
+                    launch {
+                        coverPrefetcher.warm(remoteCovers, limit = Int.MAX_VALUE) { OpenNesStartupGate.coverDone() }
+                    }
+                    coverPrefetcher.resolve(candidates) { OpenNesStartupGate.coverDone() }
+                }
             val changed = mutableMapOf<Int, String>()
             local.forEach { game ->
                 val url = working[game.id] ?: return@forEach
@@ -161,12 +175,6 @@ class HomeViewModel(
                     }
                 }
             }
-            // Then the RomM-only games of the first screens.
-            coverPrefetcher.warm(
-                RommLibraryCatalog.available(remote, local.map { it.fileName }.toSet())
-                    .sortedBy { it.name.lowercase(java.util.Locale.ROOT) }
-                    .mapNotNull { it.coverUrl },
-            )
         }
     }
 
