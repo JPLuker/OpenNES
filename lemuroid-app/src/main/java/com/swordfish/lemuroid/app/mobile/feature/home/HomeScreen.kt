@@ -83,6 +83,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -2150,6 +2151,9 @@ fun GameCover(
     val currentArtworkUrl = rememberUpdatedState(artworkUrl)
     val context = LocalContext.current
     val coverKey = artworkUrl?.takeIf { it.isNotBlank() }?.let(CoverUtils::coverMemoryKey)
+    val loadingPainter = remember { ColorPainter(Color(0xFF15171B)) }
+    val hasBackup =
+        game.customCoverUri.isNullOrBlank() && !usingRomArtwork && romArtwork != null && artworkUrl != romArtwork
     // An explicit placeholder painter replaces Coil's cached-bitmap
     // placeholder. Only paint the generated title card while loading when
     // this cover has never been decoded; otherwise keep showing the cover.
@@ -2170,7 +2174,9 @@ fun GameCover(
                         placeholderMemoryCacheKey(coverKey)
                         size(CoverUtils.COVER_DECODE_WIDTH_PX, CoverUtils.COVER_DECODE_HEIGHT_PX)
                     }
-                    crossfade(false)
+                    // A cover already in memory appears at once; a new one
+                    // fades in over the blank box instead of popping.
+                    crossfade(if (alreadyDecoded) 0 else COVER_FADE_MS)
                 }
                 .listener(
                     onSuccess = { _, _ ->
@@ -2194,13 +2200,16 @@ fun GameCover(
         // Preserve the full printed NES carton rather than cropping it.
         modifier = modifier.aspectRatio(NES_BOX_ART_ASPECT_RATIO),
         contentScale = ContentScale.Fit,
-        // A cover seen before stays on screen while it is requested again;
-        // a title card is shown only for a first load or missing artwork.
-        placeholder = if (alreadyDecoded) null else fallbackPainter,
+        // While a cover loads the box stays blank: the generated title card
+        // is only for a game with no cover at all, never a loading state.
+        placeholder = if (alreadyDecoded) null else loadingPainter,
         fallback = fallbackPainter,
-        error = fallbackPainter,
+        // A failed address that still has a backup to try stays blank too.
+        error = if (hasBackup) loadingPainter else fallbackPainter,
     )
 }
+
+private const val COVER_FADE_MS = 160
 
 @Composable
 private fun playTimeLabel(game: Game): String {

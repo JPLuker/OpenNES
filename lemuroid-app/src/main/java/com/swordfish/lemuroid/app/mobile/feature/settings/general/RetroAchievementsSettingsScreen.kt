@@ -45,12 +45,16 @@ import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.achievements.RetroAchievementsWebSection
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsColors
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsGroup
 import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsPage
+import com.swordfish.lemuroid.app.mobile.shared.compose.settings.OpenNesSettingsSwitch
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsEmulatorLogin
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsLoginFlow
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeAccountStore
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeHttpTransport
 import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsNativeTokenVerifier
+import com.swordfish.lemuroid.app.shared.achievements.RetroAchievementsOptions
+import com.swordfish.lemuroid.app.utils.android.settings.booleanPreferenceState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -372,6 +376,7 @@ fun RetroAchievementsSettingsScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
+        RetroAchievementsOptionSettings()
     }
 
     if (confirmSignOut) {
@@ -417,3 +422,73 @@ fun RetroAchievementsSettingsScreen(modifier: Modifier = Modifier) {
 }
 
 private val verifiedColor = Color(0xFF78C9A1)
+
+/** Gameplay options take effect the next time a game starts. */
+@Composable
+private fun RetroAchievementsOptionSettings() {
+    @Composable
+    fun option(
+        key: String,
+        default: Boolean,
+        title: Int,
+        subtitle: Int,
+    ) {
+        OpenNesSettingsSwitch(
+            state = booleanPreferenceState(key, default),
+            title = { Text(stringResource(title)) },
+            subtitle = { Text(stringResource(subtitle)) },
+        )
+    }
+    OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_ra_options_title)) }) {
+        option(
+            RetroAchievementsOptions.KEY_ENCORE,
+            false,
+            R.string.opennes_ra_option_encore,
+            R.string.opennes_ra_option_encore_description,
+        )
+        option(
+            RetroAchievementsOptions.KEY_UNOFFICIAL,
+            false,
+            R.string.opennes_ra_option_unofficial,
+            R.string.opennes_ra_option_unofficial_description,
+        )
+        option(
+            RetroAchievementsOptions.KEY_SPECTATOR,
+            false,
+            R.string.opennes_ra_option_spectator,
+            R.string.opennes_ra_option_spectator_description,
+        )
+    }
+    OpenNesSettingsGroup(title = { Text(stringResource(R.string.opennes_ra_notifications_title)) }) {
+        option(
+            RetroAchievementsOptions.KEY_NOTIFY_UNLOCKS,
+            true,
+            R.string.opennes_ra_notify_unlocks,
+            R.string.opennes_ra_notify_unlocks_description,
+        )
+        option(
+            RetroAchievementsOptions.KEY_NOTIFY_START,
+            true,
+            R.string.opennes_ra_notify_start,
+            R.string.opennes_ra_notify_start_description,
+        )
+        option(
+            RetroAchievementsOptions.KEY_NOTIFY_PROGRESS,
+            true,
+            R.string.opennes_ra_notify_progress,
+            R.string.opennes_ra_notify_progress_description,
+        )
+        option(
+            RetroAchievementsOptions.KEY_NOTIFY_LEADERBOARDS,
+            true,
+            R.string.opennes_ra_notify_leaderboards,
+            R.string.opennes_ra_notify_leaderboards_description,
+        )
+        option(
+            RetroAchievementsOptions.KEY_SHOW_INDICATORS,
+            true,
+            R.string.opennes_ra_show_indicators,
+            R.string.opennes_ra_show_indicators_description,
+        )
+    }
+}

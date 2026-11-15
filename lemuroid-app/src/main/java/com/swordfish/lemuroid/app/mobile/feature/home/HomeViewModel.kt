@@ -12,6 +12,7 @@ import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import com.swordfish.lemuroid.app.mobile.feature.main.OpenNesStartupGate
 import com.swordfish.lemuroid.app.shared.covers.NesBoxArtUrls
 import com.swordfish.lemuroid.app.shared.covers.NesCoverPrefetcher
+import com.swordfish.lemuroid.app.shared.covers.NesCoverResolutionCache
 import com.swordfish.lemuroid.app.shared.covers.NesFixMatchCover
 import com.swordfish.lemuroid.app.shared.library.LibraryScanStatus
 import com.swordfish.lemuroid.app.shared.library.PendingOperationsMonitor
@@ -37,11 +38,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 @OptIn(FlowPreview::class)
@@ -55,6 +58,8 @@ class HomeViewModel(
         const val DEBOUNCE_TIME = 100L
         private const val ONLINE_BATCH_SIZE = 12
         private const val MAX_COVER_SEARCH = 400
+        private const val COVER_MISS_RETRY_MS = 7L * 24L * 60L * 60L * 1000L
+        private const val COVER_UPDATE_WAIT_MS = 1_500L
         private const val ONLINE_BATCH_GAP_MS = 2_500L
         private const val ONLINE_RETRY_INTERVAL_MS = 30L * 24L * 60L * 60L * 1000L
     }
@@ -111,18 +116,50 @@ class HomeViewModel(
             val local = stored.map { game -> covers[game.id]?.let { game.copy(coverFrontUrl = it) } ?: game }
             // Every game on the phone gets a cover that really loads: try
             // what it has, then the catalogue's names for it, and remember
-            // the one that worked so the next launch is instant.
-            val working =
-                coverPrefetcher.resolve(
-                    local.take(MAX_COVER_SEARCH)
-                        .associate { it.id to NesBoxArtUrls.searchCandidates(it) }
-                        .filterValues { it.isNotEmpty() },
-                )
+            // the one that worked so the next launch is instant. Games known
+            // to have no cover anywhere are rechecked weekly, not every launch.
+            val misses = coverMisses()
+            val now = System.currentTimeMillis()
+            val toSearch =
+                local.take(MAX_COVER_SEARCH)
+                    .filter { now - (misses[it.id] ?: 0L) !in 0 until COVER_MISS_RETRY_MS }
+            val candidates =
+                toSearch.associate {
+                    it.id to
+                        NesBoxArtUrls.searchCandidates(
+                            it,
+                        )
+                }.filterValues { it.isNotEmpty() }
+            val working = coverPrefetcher.resolve(candidates)
+            val changed = mutableMapOf<Int, String>()
             local.forEach { game ->
                 val url = working[game.id] ?: return@forEach
+                // The library tile picks the working address at once, even
+                // before the database change reaches it.
+                NesCoverResolutionCache.recordSuccess(
+                    game.displayCoverUrl(),
+                    NesBoxArtUrls.romFilenameFallback(game),
+                    url,
+                )
                 val shown =
                     game.coverFrontUrl?.replace("http://thumbnails.libretro.com/", "https://thumbnails.libretro.com/")
-                if (url != shown) dao.updateCatalogueCover(game.id, url)
+                if (url != shown) {
+                    dao.updateCatalogueCover(game.id, url)
+                    changed[game.id] = url
+                }
+            }
+            saveCoverMisses(
+                misses.filterKeys { it !in working } +
+                    (candidates.keys - working.keys).associateWith { now },
+            )
+            // Hold the loading screen until the library shows the new addresses.
+            if (changed.isNotEmpty()) {
+                withTimeoutOrNull(COVER_UPDATE_WAIT_MS) {
+                    uiStates.first { state ->
+                        val shown = (state.discoveryGames + state.recentGames).associateBy { it.id }
+                        changed.all { (id, url) -> shown[id]?.let { it.coverFrontUrl == url } ?: true }
+                    }
+                }
             }
             // Then the RomM-only games of the first screens.
             coverPrefetcher.warm(
@@ -131,6 +168,21 @@ class HomeViewModel(
                     .mapNotNull { it.coverUrl },
             )
         }
+    }
+
+    private val coverMissPrefs =
+        appContext.applicationContext.getSharedPreferences("opennes_cover_misses_v1", Context.MODE_PRIVATE)
+
+    private fun coverMisses(): Map<Int, Long> =
+        coverMissPrefs.all.mapNotNull { (key, value) ->
+            val id = key.toIntOrNull() ?: return@mapNotNull null
+            (value as? Long)?.let { id to it }
+        }.toMap()
+
+    private fun saveCoverMisses(misses: Map<Int, Long>) {
+        val editor = coverMissPrefs.edit().clear()
+        misses.forEach { (id, at) -> editor.putLong(id.toString(), at) }
+        editor.apply()
     }
 
     /** Later catalogue or library changes: keep filling in missing covers. */

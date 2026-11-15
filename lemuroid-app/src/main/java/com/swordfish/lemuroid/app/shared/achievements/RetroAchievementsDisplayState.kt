@@ -22,6 +22,10 @@ sealed interface RetroAchievementsDisplayState {
         val compatibilityNotices: List<String> = emptyList(),
         val richPresence: String? = null,
         val leaderboards: List<VerifiedLeaderboard> = emptyList(),
+        // Frames the achievements client has checked this session (diagnostic).
+        val framesChecked: Long = 0,
+        val spectator: Boolean = false,
+        val encore: Boolean = false,
     ) : RetroAchievementsDisplayState
 }
 

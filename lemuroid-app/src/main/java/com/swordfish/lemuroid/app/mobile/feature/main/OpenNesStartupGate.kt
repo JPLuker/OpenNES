@@ -21,6 +21,15 @@ object OpenNesStartupGate {
     private val remoteReady = MutableStateFlow(false)
     private val coversReady = MutableStateFlow(false)
 
+    /**
+     * A new library screen is starting. Its covers must be ready again: the
+     * flag would otherwise stay set from an earlier screen in this process,
+     * after Android may have dropped the decoded images.
+     */
+    fun beginHandoff() {
+        coversReady.value = false
+    }
+
     /** The covers of the first shelves are decoded and ready to draw. */
     fun markCoversReady() {
         coversReady.value = true

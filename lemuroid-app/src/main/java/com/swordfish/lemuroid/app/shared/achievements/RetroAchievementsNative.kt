@@ -62,7 +62,11 @@ internal object RetroAchievementsNative {
         token: String,
         romMd5: String,
         hardcore: Boolean,
+        options: Int,
     ): Long
+
+    /** Frames rc_client has evaluated in this session; -1 when it is not current. */
+    external fun gameFramesProcessed(session: Long): Long
 
     /** Switch the current session, if any, to Casual. Allowed at any time. */
     external fun downgradeGameSessionToCasual()

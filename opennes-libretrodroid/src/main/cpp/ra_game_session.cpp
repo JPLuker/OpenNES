@@ -41,6 +41,8 @@ std::string expectedHash;
 int sessionState = -2; // 0=login, 1=load, 3=map pending, 2=active, -1=failure, -2=closed
 bool disposing = false;
 bool memoryMapped = false;
+// Frames evaluated by rc_client in the current session, for diagnostics.
+uint64_t framesProcessed = 0;
 
 struct Request {
     std::string url;
@@ -282,6 +284,7 @@ void onEmulatedFrame(uint64_t id) {
     frameReadingSessionId = id;
     rc_client_do_frame(gameClient);
     frameReadingSessionId = 0;
+    ++framesProcessed;
 }
 
 void closeClient() {
@@ -333,7 +336,8 @@ extern "C" bool OpenNESIsAchievementSessionActive() {
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_startGameSession(
-    JNIEnv* env, jobject, jstring rawName, jstring rawToken, jstring rawHash, jboolean hardcore
+    JNIEnv* env, jobject, jstring rawName, jstring rawToken, jstring rawHash, jboolean hardcore,
+    jint options
 ) {
     auto name = copyUtf(env, rawName);
     auto token = copyUtf(env, rawToken);
@@ -366,6 +370,13 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_star
         // Hardcore is decided once, before login, for a freshly booted game.
         // Kotlin only passes true when its own policy gates allow it.
         rc_client_set_hardcore_enabled(gameClient, hardcore == JNI_TRUE ? 1 : 0);
+        // Player options, applied before the game loads: 1=encore (unlocked
+        // achievements can trigger again), 2=unofficial sets, 4=spectator
+        // (nothing is sent to the server).
+        rc_client_set_encore_mode_enabled(gameClient, (options & 1) ? 1 : 0);
+        rc_client_set_unofficial_enabled(gameClient, (options & 2) ? 1 : 0);
+        rc_client_set_spectator_mode_enabled(gameClient, (options & 4) ? 1 : 0);
+        framesProcessed = 0;
         rc_client_set_event_handler(gameClient, onEvent);
         rc_client_begin_login_with_token(gameClient, name.c_str(), token.c_str(), onLogin, nullptr);
     }
@@ -480,6 +491,15 @@ Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_rese
         if (!gameClient || disposing || sessionState != 2) return;
         rc_client_reset(gameClient);
     });
+}
+
+extern "C" JNIEXPORT jlong JNICALL
+Java_com_swordfish_lemuroid_app_shared_achievements_RetroAchievementsNative_gameFramesProcessed(
+    JNIEnv*, jobject, jlong session
+) {
+    std::lock_guard<std::recursive_mutex> lock(clientMutex);
+    if (session <= 0 || activeId.load() != static_cast<uint64_t>(session)) return -1;
+    return static_cast<jlong>(framesProcessed);
 }
 
 // 1 when the current session is in Hardcore, 0 when Casual, -1 when there is none.

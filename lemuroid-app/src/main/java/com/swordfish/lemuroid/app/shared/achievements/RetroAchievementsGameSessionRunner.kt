@@ -38,6 +38,7 @@ internal class RetroAchievementsGameSessionRunner(
         var previousCredentials: NativeCredentials? = null
         var previousRetryVersion = 0L
         var firstSession = true
+        val options = RetroAchievementsOptions(context)
 
         // Bound to the game ViewModel: signing in, signing out, switching
         // accounts and manually retrying can all happen without restarting
@@ -62,6 +63,7 @@ internal class RetroAchievementsGameSessionRunner(
                             credentials.token,
                             md5,
                             hardcore,
+                            options.nativeFlags(),
                         )
                     if (session > 0L) {
                         outcome = pollGame(session, ticket, md5, credentials, accountStore)
@@ -89,7 +91,19 @@ internal class RetroAchievementsGameSessionRunner(
         }
     }
 
-    private fun noticeText(event: NativeGameEvent.Notice): String? =
+    private fun noticeText(event: NativeGameEvent.Notice): String? {
+        val options = RetroAchievementsOptions(context)
+        val wanted =
+            when (event.kind) {
+                "lb_start", "lb_fail", "lb_submit" -> options.notifyLeaderboards
+                "progress" -> options.notifyProgress
+                "complete" -> options.notifyUnlocks
+                else -> true
+            }
+        return if (wanted) noticeTextFor(event) else null
+    }
+
+    private fun noticeTextFor(event: NativeGameEvent.Notice): String? =
         when (event.kind) {
             "lb_start" -> context.getString(R.string.opennes_ra_notice_leaderboard_started, event.text)
             "lb_fail" -> context.getString(R.string.opennes_ra_notice_leaderboard_failed, event.text)
@@ -185,26 +199,28 @@ internal class RetroAchievementsGameSessionRunner(
                         // Say which mode this session counts as, once, at the start.
                         val nativeHardcore = RetroAchievementsNative.gameSessionHardcore(session) == 1
                         val localHardcore = HardcoreRuntime.mode() == HardcoreSessionPolicy.Mode.HARDCORE
-                        RetroAchievementsGameStateStore.notifyMessage(
-                            ticket,
-                            md5,
-                            message =
-                                context.getString(
-                                    when {
-                                        nativeHardcore -> R.string.opennes_ra_start_hardcore
-                                        localHardcore -> R.string.opennes_ra_start_local_hardcore
-                                        else -> R.string.opennes_ra_start_casual
-                                    },
-                                ),
-                            label =
-                                context.getString(
-                                    if (nativeHardcore || localHardcore) {
-                                        R.string.opennes_ra_start_label_hardcore
-                                    } else {
-                                        R.string.opennes_ra_start_label_casual
-                                    },
-                                ),
-                        )
+                        if (options.notifyStart) {
+                            RetroAchievementsGameStateStore.notifyMessage(
+                                ticket,
+                                md5,
+                                message =
+                                    context.getString(
+                                        when {
+                                            nativeHardcore -> R.string.opennes_ra_start_hardcore
+                                            localHardcore -> R.string.opennes_ra_start_local_hardcore
+                                            else -> R.string.opennes_ra_start_casual
+                                        },
+                                    ),
+                                label =
+                                    context.getString(
+                                        if (nativeHardcore || localHardcore) {
+                                            R.string.opennes_ra_start_label_hardcore
+                                        } else {
+                                            R.string.opennes_ra_start_label_casual
+                                        },
+                                    ),
+                            )
+                        }
                     }
                     active = true
                 }
@@ -255,7 +271,7 @@ internal class RetroAchievementsGameSessionRunner(
                             lastLeaderboardRefresh = 0L
                         }
                         is NativeGameEvent.Unlock -> {
-                            if (connection.observe(event)) {
+                            if (connection.observe(event) && options.notifyUnlocks) {
                                 RetroAchievementsGameStateStore.notifyUnlock(
                                     ticket = ticket,
                                     romMd5 = md5,
@@ -275,7 +291,9 @@ internal class RetroAchievementsGameSessionRunner(
                             }
                         }
                         is NativeGameEvent.Indicator ->
-                            RetroAchievementsGameStateStore.setIndicator(ticket, md5, event.key, event.text)
+                            if (options.showIndicators || event.text == null) {
+                                RetroAchievementsGameStateStore.setIndicator(ticket, md5, event.key, event.text)
+                            }
                         null -> Unit
                     }
                 }
@@ -308,6 +326,9 @@ internal class RetroAchievementsGameSessionRunner(
                                 compatibilityNotices = notices,
                                 richPresence = presence,
                                 leaderboards = leaderboards,
+                                framesChecked = RetroAchievementsNative.gameFramesProcessed(session),
+                                spectator = options.spectator,
+                                encore = options.encore,
                             ),
                         )
                         lastRefresh = now

@@ -143,6 +143,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
         )
         super.onCreate(savedInstanceState)
 
+        if (savedInstanceState == null) OpenNesStartupGate.beginHandoff()
         setContent {
             val navController = rememberNavController()
             var showingStartup by remember { mutableStateOf(savedInstanceState == null) }

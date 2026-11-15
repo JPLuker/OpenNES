@@ -302,6 +302,15 @@ fun GameMenuAchievementsScreen(
                     }
                 }
             }
+            // Proof the achievements client is evaluating the game, plus
+            // any option that changes what an unlock means.
+            listOfNotNull(
+                stringResource(R.string.opennes_ra_frames_checked, sessionData.framesChecked.coerceAtLeast(0)),
+                if (sessionData.spectator) stringResource(R.string.opennes_ra_option_spectator_active) else null,
+                if (sessionData.encore) stringResource(R.string.opennes_ra_option_encore_active) else null,
+            ).forEach { line ->
+                Text(text = line, color = GameMenuStyle.muted, fontSize = 12.sp)
+            }
             VerifiedAchievementList(
                 username = sessionData.username,
                 romMd5 = sessionData.romMd5,
